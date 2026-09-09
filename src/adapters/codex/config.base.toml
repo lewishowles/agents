@@ -12,6 +12,7 @@ writable_roots = ["{{HOME}}/Dev/Configuration/Agents", "{{HOME}}/Dev/Configurati
 [tui]
 status_line = ["run-state", "project-name", "used-tokens", "context-used", "five-hour-limit", "weekly-limit", "model-with-reasoning"]
 status_line_use_colors = true
+alternate_screen = "never"
 
 [mcp_servers.codebase-memory-mcp]
 startup_timeout_sec = 60
@@ -30,5 +31,6 @@ default_tools_approval_mode = "approve"
 url = "https://mcp.mdn.mozilla.net/"
 enabled = false
 
-[tui]
-alternate_screen = "never"
+[mcp_servers.sketch]
+url = "http://localhost:31126/mcp"
+enabled = false
