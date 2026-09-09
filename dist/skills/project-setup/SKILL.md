@@ -79,6 +79,7 @@ Enables autonomous multi-hour execution while keeping the main agent as architec
 - Multiple small sections over one large one; each independently reviewable
 - "Files likely to change" reduces re-exploration in future sessions
 - Record every known section as a chunk. Later chunks may stay concise until work starts, but their boundaries and order belong in `progress` as soon as they are known
+- Record why the task is split the way it is in `--split-rationale`; a single-chunk task must explain why the substantive-concern inventory found only one reviewable concern
 - Store session handoff in the progress CLI context record with `progress context set`; start with `progress next --json` and stop after the returned task and chunk unless deeper context is genuinely needed.
 
 ### Planning-quality gate
