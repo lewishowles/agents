@@ -33,6 +33,7 @@ from codex_insights_facets_narrative import (
 from codex_insights_facets_patterns import (
 	configuration_markers_for_pattern,
 	configuration_status,
+	run_selftest as run_patterns_selftest,
 )
 
 # Names re-exported here so codex_insights_render.py can import them from this module.
@@ -330,6 +331,7 @@ def run_selftest() -> None:
 		else:
 			raise AssertionError("tampered narrative provenance was accepted")
 
+	run_patterns_selftest()
 	print("codex_insights_facets selftest passed")
 
 
