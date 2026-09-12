@@ -75,7 +75,7 @@ PATTERN_KINDS = (
 	"rollback",
 	"tool_failure",
 	"verification_gap",
-	"successful_behaviour",
+	"recovery",
 )
 
 
@@ -101,8 +101,8 @@ def parse_timestamp(value: object) -> datetime.datetime | None:
 
 def format_timestamp(value: object) -> str | None:
 	"""Return a canonical UTC timestamp, or null for unavailable evidence."""
-	parsed = parse_timestamp(value)
-	if parsed is None:
+	parsed = value if isinstance(value, datetime.datetime) else parse_timestamp(value)
+	if parsed is None or parsed.tzinfo is None:
 		return None
 
 	return parsed.isoformat().replace("+00:00", "Z")
@@ -568,17 +568,15 @@ def event_classification(kind: str, status: object = None) -> dict[str, object]:
 	"""Classify deterministic evidence without presenting it as a model conclusion."""
 	if kind in {"correction", "tool_failure"}:
 		label = "agent_failure" if kind == "correction" else "workflow_failure"
-	elif kind == "successful_behaviour":
-		label = "successful_behaviour"
+	elif kind == "recovery":
+		label = "workflow_recovery"
 	elif kind in {"interruption", "rollback", "verification_gap"}:
 		label = "workflow_failure"
 	else:
 		label = "mixed_causes"
 
 	confidence = (
-		"high"
-		if kind in {"correction", "tool_failure", "successful_behaviour"}
-		else "medium"
+		"high" if kind in {"correction", "tool_failure", "recovery"} else "medium"
 	)
 	return {
 		"label": label,
