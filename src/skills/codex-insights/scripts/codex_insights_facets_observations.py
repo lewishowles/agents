@@ -188,12 +188,15 @@ def recovery_event(
 		"source": friction_event["kind"],
 		"target": target,
 		"status": ledger_entry.get("status"),
-		"descriptor": descriptor_for_entries(
-			"recovery",
-			[ledger_entry],
-			rollout.get("project_path"),
-			ledger_entry.get("status"),
-		),
+		"descriptor": {
+			**descriptor_for_entries(
+				"recovery",
+				[ledger_entry],
+				rollout.get("project_path"),
+				ledger_entry.get("status"),
+			),
+			"source": friction_event["kind"],
+		},
 		"expected_probe": ledger_entry.get("expected_probe"),
 		"evidence_references": evidence_references,
 		"timestamp": earliest_timestamp(
@@ -214,7 +217,13 @@ def recovery_observations(
 	observations: list[dict[str, object]],
 	evidence_index: dict[str, dict[str, object]],
 ) -> list[dict[str, object]]:
-	"""Build recovery observations when friction precedes a passing tool action."""
+	"""Build recovery observations when friction precedes a passing tool action.
+
+	A friction event pairs with the first later successful ledger entry that has the
+	same target text and tool. Each success resolves at most one friction event, so
+	a single passing run cannot count as recovery for several earlier failures.
+	Friction events without a target never pair.
+	"""
 	resolving_actions = []
 	for rollout in rollouts:
 		for ledger_value in rollout.get("tool_ledger", []):
@@ -238,9 +247,10 @@ def recovery_observations(
 				resolving_actions.append((parsed_timestamp, rollout, ledger_entry))
 
 	resolving_actions.sort(key=lambda value: value[0])
-	recoveries = []
-	for friction_event in observations:
-		if friction_event["kind"] not in {
+
+	friction_events = []
+	for index, event in enumerate(observations):
+		if event["kind"] not in {
 			"tool_failure",
 			"correction",
 			"rollback",
@@ -248,21 +258,43 @@ def recovery_observations(
 		}:
 			continue
 
-		friction_timestamp = parse_timestamp(friction_event.get("timestamp"))
-		if friction_timestamp is None:
+		friction_timestamp = parse_timestamp(event.get("timestamp"))
+		if friction_timestamp is not None:
+			friction_events.append((friction_timestamp, index, event))
+	friction_events.sort(key=lambda value: (value[0], value[1]))
+	recoveries = []
+	used_resolutions = set()
+	for friction_timestamp, _, friction_event in friction_events:
+		friction_target = bounded_text(friction_event.get("target"), 280)
+		if friction_target is None:
 			continue
+
+		friction_descriptor = friction_event.get("descriptor")
+		friction_tool = (
+			friction_descriptor.get("tool")
+			if isinstance(friction_descriptor, dict)
+			else None
+		)
 		resolving_action = next(
 			(
-				resolution
-				for resolution in resolving_actions
-				if resolution[0] > friction_timestamp
+				(index, resolution)
+				for index, resolution in enumerate(resolving_actions)
+				if (
+					index not in used_resolutions
+					and resolution[0] > friction_timestamp
+					and friction_target
+					== bounded_text(resolution[2].get("target"), 280)
+					and friction_tool == resolution[2].get("tool")
+				)
 			),
 			None,
 		)
 		if resolving_action is None:
 			continue
 
-		_, rollout, ledger_entry = resolving_action
+		resolution_index, resolution = resolving_action
+		used_resolutions.add(resolution_index)
+		_, rollout, ledger_entry = resolution
 		recoveries.append(
 			recovery_event(friction_event, rollout, ledger_entry, evidence_index)
 		)
@@ -316,6 +348,10 @@ def derive_observations(
 def event_summary(event: dict[str, object]) -> str:
 	"""Describe one observation without exposing more transcript content than needed."""
 	kind = event["kind"]
+	if kind == "recovery":
+		source = event.get("source")
+		if isinstance(source, str) and source:
+			kind = f"{kind} from {source}"
 	target = event.get("target")
 	if isinstance(target, str) and target:
 		return f"{kind}: {target}"
@@ -340,21 +376,26 @@ def conversation_facet(
 	rollouts: list[dict[str, object]],
 	evidence_index: dict[str, dict[str, object]],
 ) -> tuple[dict[str, object], list[dict[str, object]]]:
-	"""Build one bounded per-conversation facet and its pattern observations."""
+	"""Build one bounded per-conversation facet and its pattern observations.
+
+	Recoveries take up to half of MAX_EVENTS_PER_CONVERSATION and the other
+	observations fill whatever remains, so a conversation with no recoveries keeps
+	the full cap for them.
+	"""
 	all_evidence = []
-	all_observations = []
+	base_observations = []
 	for rollout in rollouts:
 		all_evidence.extend(
 			entry for entry in rollout.get("evidence", []) if isinstance(entry, dict)
 		)
-		all_observations.extend(derive_observations(rollout, evidence_index))
-	available_observations = MAX_EVENTS_PER_CONVERSATION - len(all_observations)
-	if available_observations > 0:
-		all_observations.extend(
-			recovery_observations(rollouts, all_observations, evidence_index)[
-				:available_observations
-			]
-		)
+		base_observations.extend(derive_observations(rollout, evidence_index))
+	max_recoveries = MAX_EVENTS_PER_CONVERSATION // 2
+	recoveries = recovery_observations(rollouts, base_observations, evidence_index)
+	kept_recoveries = recoveries[:max_recoveries]
+	base_observations = base_observations[
+		: MAX_EVENTS_PER_CONVERSATION - len(kept_recoveries)
+	]
+	all_observations = base_observations + kept_recoveries
 	authored_messages = [
 		entry for entry in all_evidence if entry.get("kind") == "authored_user_message"
 	]
@@ -573,13 +614,20 @@ def run_selftest() -> None:
 			"timestamp": timestamp,
 		}
 		for reference, timestamp in (
+			("early-success-call", "2026-08-08T10:00:00Z"),
+			("early-success-result", "2026-08-08T10:00:01Z"),
 			("failure-call", "2026-08-08T10:01:00Z"),
 			("failure-result", "2026-08-08T10:01:01Z"),
-			("correction", "2026-08-08T10:02:00Z"),
-			("rollback", "2026-08-08T10:03:00Z"),
-			("interruption", "2026-08-08T10:04:00Z"),
-			("success-call", "2026-08-08T10:05:00Z"),
-			("success-result", "2026-08-08T10:05:01Z"),
+			("success-call-1", "2026-08-08T10:02:00Z"),
+			("success-result-1", "2026-08-08T10:02:01Z"),
+			("success-call-2", "2026-08-08T10:03:00Z"),
+			("success-result-2", "2026-08-08T10:03:01Z"),
+			("success-call-3", "2026-08-08T10:04:00Z"),
+			("success-result-3", "2026-08-08T10:04:01Z"),
+			("success-call-4", "2026-08-08T10:05:00Z"),
+			("success-result-4", "2026-08-08T10:05:01Z"),
+			("unrelated-success-call", "2026-08-08T10:06:00Z"),
+			("unrelated-success-result", "2026-08-08T10:06:01Z"),
 		)
 	}
 	recovery_rollout = {
@@ -588,24 +636,72 @@ def run_selftest() -> None:
 		"project_path": "/tmp/project",
 		"tool_ledger": [
 			{
-				"call_reference": "failure-call",
-				"result_reference": "failure-result",
-				"status": "failure",
+				"call_reference": "early-success-call",
+				"result_reference": "early-success-result",
+				"status": "success",
+				"target": "ruff check",
 				"tool": "exec",
 				"command_argv": ["ruff", "check"],
 			},
 			{
-				"call_reference": "success-call",
-				"result_reference": "success-result",
-				"status": "success",
+				"call_reference": "failure-call",
+				"result_reference": "failure-result",
+				"status": "failure",
+				"target": "ruff check",
 				"tool": "exec",
 				"command_argv": ["ruff", "check"],
 			},
+			{
+				"call_reference": "success-call-1",
+				"result_reference": "success-result-1",
+				"status": "success",
+				"target": "ruff check",
+				"tool": "exec",
+				"command_argv": ["ruff", "check"],
+			},
+			{
+				"call_reference": "success-call-2",
+				"result_reference": "success-result-2",
+				"status": "success",
+				"target": "ruff check",
+				"tool": "exec",
+				"command_argv": ["ruff", "check"],
+			},
+			{
+				"call_reference": "success-call-3",
+				"result_reference": "success-result-3",
+				"status": "success",
+				"target": "ruff check",
+				"tool": "exec",
+				"command_argv": ["ruff", "check"],
+			},
+			{
+				"call_reference": "success-call-4",
+				"result_reference": "success-result-4",
+				"status": "success",
+				"target": "ruff check",
+				"tool": "exec",
+				"command_argv": ["ruff", "check"],
+			},
+			{
+				"call_reference": "unrelated-success-call",
+				"result_reference": "unrelated-success-result",
+				"status": "success",
+				"target": "pytest tests",
+				"tool": "exec",
+				"command_argv": ["pytest", "tests"],
+			},
 		],
 		"candidates": {
-			"corrections": [{"evidence_references": ["correction"]}],
-			"rollbacks": [{"evidence_references": ["rollback"]}],
-			"interruptions": [{"evidence_references": ["interruption"]}],
+			"corrections": [
+				{"evidence_references": ["failure-call"], "target": "ruff check"}
+			],
+			"rollbacks": [
+				{"evidence_references": ["failure-call"], "target": "ruff check"}
+			],
+			"interruptions": [
+				{"evidence_references": ["failure-call"], "target": "ruff check"}
+			],
 		},
 		"evidence": [],
 	}
@@ -622,14 +718,82 @@ def run_selftest() -> None:
 		"rollback",
 		"interruption",
 	}
-	assert all(
-		event["evidence_references"][-2:] == ["success-call", "success-result"]
-		for event in recovery_values
-	)
+	assert {
+		event["source"]: event["evidence_references"][-2:] for event in recovery_values
+	} == {
+		"correction": ["success-call-1", "success-result-1"],
+		"interruption": ["success-call-2", "success-result-2"],
+		"rollback": ["success-call-3", "success-result-3"],
+		"tool_failure": ["success-call-4", "success-result-4"],
+	}
+	assert all(event["target"] == "ruff check" for event in recovery_values)
 	assert all(
 		event["kind"]
 		in {"tool_failure", "correction", "rollback", "interruption", "recovery"}
 		for event in recovery_observation_values
+	)
+
+	negative_recovery_evidence_index = {
+		reference: {
+			"reference": reference,
+			"timestamp": timestamp,
+		}
+		for reference, timestamp in (
+			("null-target-friction", "2026-08-08T10:07:00Z"),
+			("null-target-success-call", "2026-08-08T10:08:00Z"),
+			("null-target-success-result", "2026-08-08T10:08:01Z"),
+			("different-tool-friction-call", "2026-08-08T10:09:00Z"),
+			("different-tool-friction-result", "2026-08-08T10:09:01Z"),
+			("different-tool-success-call", "2026-08-08T10:10:00Z"),
+			("different-tool-success-result", "2026-08-08T10:10:01Z"),
+		)
+	}
+	negative_recovery_rollout = {
+		"rollout_id": "negative-recovery-rollout",
+		"conversation_id": "negative-recovery-conversation",
+		"project_path": "/tmp/project",
+		"tool_ledger": [
+			{
+				"call_reference": "null-target-success-call",
+				"result_reference": "null-target-success-result",
+				"status": "success",
+				"target": None,
+				"tool": None,
+			},
+			{
+				"call_reference": "different-tool-friction-call",
+				"result_reference": "different-tool-friction-result",
+				"status": "failure",
+				"target": "ruff check",
+				"tool": "exec",
+				"command_argv": ["ruff", "check"],
+			},
+			{
+				"call_reference": "different-tool-success-call",
+				"result_reference": "different-tool-success-result",
+				"status": "success",
+				"target": "ruff check",
+				"tool": "other",
+			},
+		],
+		"candidates": {
+			"corrections": [
+				{"evidence_references": ["null-target-friction"]},
+				{
+					"evidence_references": ["different-tool-friction-call"],
+					"target": "ruff check",
+				},
+			]
+		},
+		"evidence": [],
+	}
+	_, negative_recovery_observations = conversation_facet(
+		"negative-recovery-conversation",
+		[negative_recovery_rollout],
+		negative_recovery_evidence_index,
+	)
+	assert not any(
+		event["kind"] == "recovery" for event in negative_recovery_observations
 	)
 
 	from codex_insights_facets_patterns import build_patterns
@@ -638,12 +802,46 @@ def run_selftest() -> None:
 	recovery_patterns = [
 		pattern for pattern in patterns if pattern["kind"] == "recovery"
 	]
-	assert len(recovery_patterns) == 1
+	assert len(recovery_patterns) == 4
+	assert {pattern["observed_pattern"] for pattern in recovery_patterns} == {
+		"recovery from correction: ruff check",
+		"recovery from interruption: ruff check",
+		"recovery from rollback: ruff check",
+		"recovery from tool_failure: ruff check",
+	}
 	assert not any(pattern["kind"] == "recovery" for pattern in repeated_patterns)
+
+	base_evidence_index = {
+		f"base-{index}": {
+			"reference": f"base-{index}",
+			"timestamp": f"2026-08-08T11:{index // 60:02d}:{index % 60:02d}Z",
+		}
+		for index in range(MAX_EVENTS_PER_CONVERSATION)
+	}
+	base_only_rollout = {
+		"rollout_id": "base-only-rollout",
+		"conversation_id": "base-only-conversation",
+		"project_path": "/tmp/project",
+		"tool_ledger": [],
+		"candidates": {
+			"corrections": [
+				{
+					"evidence_references": [f"base-{index}"],
+					"target": f"target-{index}",
+				}
+				for index in range(MAX_EVENTS_PER_CONVERSATION)
+			]
+		},
+		"evidence": [],
+	}
+	_, base_only_observations = conversation_facet(
+		"base-only-conversation", [base_only_rollout], base_evidence_index
+	)
+	assert len(base_only_observations) == MAX_EVENTS_PER_CONVERSATION
 
 	success_only_rollout = {
 		**recovery_rollout,
-		"tool_ledger": [recovery_rollout["tool_ledger"][1]],
+		"tool_ledger": [recovery_rollout["tool_ledger"][2]],
 		"candidates": {},
 	}
 	_, success_only_observations = conversation_facet(

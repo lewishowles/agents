@@ -101,8 +101,8 @@ def parse_timestamp(value: object) -> datetime.datetime | None:
 
 def format_timestamp(value: object) -> str | None:
 	"""Return a canonical UTC timestamp, or null for unavailable evidence."""
-	parsed = value if isinstance(value, datetime.datetime) else parse_timestamp(value)
-	if parsed is None or parsed.tzinfo is None:
+	parsed = parse_timestamp(value)
+	if parsed is None:
 		return None
 
 	return parsed.isoformat().replace("+00:00", "Z")
@@ -500,7 +500,7 @@ def earliest_timestamp(
 			if timestamp is not None:
 				timestamps.append(timestamp)
 
-	return format_timestamp(min(timestamps)) if timestamps else None
+	return format_timestamp(min(timestamps).isoformat()) if timestamps else None
 
 
 def descriptor_pattern_key(descriptor: object) -> str:
@@ -511,6 +511,8 @@ def descriptor_pattern_key(descriptor: object) -> str:
 	File targets become repo-relative and the repo collapses to its directory name,
 	so a temp-directory checkout and a permanent one produce the same key. Missing
 	parts are written as "null" rather than dropped, which keeps the key shape fixed.
+	A recovery descriptor always carries the friction kind it recovered from as a
+	final "source" part, so recoveries from different friction kinds stay apart.
 	"""
 	descriptor = descriptor if isinstance(descriptor, dict) else {}
 	action = descriptor.get("action")
@@ -554,14 +556,17 @@ def descriptor_pattern_key(descriptor: object) -> str:
 		elif not target_path.is_absolute():
 			target_value = target_path.as_posix()
 
-	return "|".join(
-		(
-			action_value or "null",
-			target_type or "null",
-			target_value or "null",
-			repo_key or "null",
-		)
-	)
+	key_parts = [
+		action_value or "null",
+		target_type or "null",
+		target_value or "null",
+		repo_key or "null",
+	]
+	source = descriptor.get("source")
+	if isinstance(source, str) and source.strip():
+		key_parts.append(" ".join(source.casefold().split()))
+
+	return "|".join(key_parts)
 
 
 def event_classification(kind: str, status: object = None) -> dict[str, object]:
