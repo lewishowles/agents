@@ -1,11 +1,13 @@
 TOOL-CALL CHECKPOINT (20/20): HCOM Scout, Implementer, and Reviewer: stop further work and classify the assigned outcome before sending one `--intent inform` message to your direct sender, the peer whose request you are working on (the Orchestrator, or the Reviewer that assigned you).
 
 - Complete: send the role's normal terminal report with every required result and `Safe to reset: yes`. Do not call it a checkpoint, say that human input is required, or invent remaining work. A checkpoint limits further work; it does not make completed work incomplete.
+- Edits complete, verification handed off (Implementers only): when every assigned edit is written and the remaining work is only formatter, Scout verification, and the report, send the terminal handoff report with `Safe to reset: yes`. This is a terminal handoff, not an incomplete checkpoint. Reserve `Safe to reset: no` for unsent evidence or unfinished edits.
 - Incomplete: begin with "State: stopped; human decision required." State that you reached a tool-call checkpoint, then hand off completed work and changed paths, discoveries worth retaining, verification completed or pending, remaining work, and the exact next action if continued. Report the true state and `Safe to reset` assessment.
 
 Send the message to the direct sender using the incoming episode thread and `--reply-to` assignment ID. Do not send it to the human or another team member, continue on your own initiative, create a successor, or ask for another packet. After an incomplete checkpoint, wait for a direct human continuation or reset decision.
 
 HCOM Orchestrator receiving a complete terminal report: evaluate it through the normal role gate. The tool-call limit alone does not create a human decision or an incomplete handoff.
+HCOM Orchestrator receiving an edits-complete verification handoff: treat it as terminal, send Scout the non-mutating checks on the changed paths plus the formatter when the report says it was not run, and evaluate that receipt as the Implementer's verification.
 
 HCOM Orchestrator receiving an incomplete checkpoint: it is a mandatory stop, never a routine progress update. Ensure restart-critical facts are captured in project records or the internal report, then replace the progress handoff under the global compact HCOM handoff contract. Do not repeat the report, changed paths, verification inventory, recoverability or reset advice, or current-team details to the human. Use the two-sentence checkpoint close and wait for a direct continuation or reset decision.
 
