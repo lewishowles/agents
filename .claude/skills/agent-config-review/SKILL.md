@@ -68,6 +68,19 @@ When `check-instruction-budgets.sh` reports growth:
 
 Never raise baselines before the review, refresh unreviewed baselines in bulk, or compress clear instructions into ambiguous shorthand. A justified final size may remain above the old soft budget; the reviewed post-trim size becomes the new baseline.
 
+### Frontier-model migration
+
+When the default model family changes, review the instructions for semantic drift as well as size. Check always-loaded rules, relevant skills, and tool descriptions for:
+
+- model-specific settings that the new model no longer supports
+- instructions that contradict each other
+- mandatory scratchpads, reasoning templates, or fixed thinking procedures
+- verification or thoroughness wording that causes repeated reasoning or tool calls
+
+Use current friction and representative tasks to decide whether a finding causes a real problem. Preserve safety, permission, recovery, and evidence requirements even when their wording is emphatic. Do not remove or weaken guidance solely because a prompt audit flags it.
+
+Compare any proposed change against the existing behaviour on representative tasks. Record observed quality and tool use, and record latency or usage only when the runtime exposes them. Treat external prompt-audit tools as evidence rather than authority, and verify their source, licence, dependencies, and permissions before use.
+
 ### Rule and skill boundary
 
 Use this decision test:
