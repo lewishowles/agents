@@ -75,7 +75,7 @@ PATTERN_KINDS = (
 	"rollback",
 	"tool_failure",
 	"verification_gap",
-	"successful_behaviour",
+	"recovery",
 )
 
 
@@ -500,30 +500,88 @@ def earliest_timestamp(
 			if timestamp is not None:
 				timestamps.append(timestamp)
 
-	return format_timestamp(min(timestamps)) if timestamps else None
+	return format_timestamp(min(timestamps).isoformat()) if timestamps else None
 
 
-def normalise_pattern_key(value: object) -> str:
-	"""Return a stable, bounded grouping key for a candidate target or phrase."""
-	text = bounded_text(value, 240) or "unavailable"
-	return " ".join(text.casefold().split())
+def descriptor_pattern_key(descriptor: object) -> str:
+	"""Build the grouping key for one observation from its structured descriptor.
+
+	The key joins action, target type, target value and repo with "|" so that two
+	observations of the same behaviour group together wherever the checkout lived.
+	File targets become repo-relative and the repo collapses to its directory name,
+	so a temp-directory checkout and a permanent one produce the same key. Missing
+	parts are written as "null" rather than dropped, which keeps the key shape fixed.
+	A recovery descriptor always carries the friction kind it recovered from as a
+	final "source" part, so recoveries from different friction kinds stay apart.
+	"""
+	descriptor = descriptor if isinstance(descriptor, dict) else {}
+	action = descriptor.get("action")
+	if isinstance(action, str) and action.strip():
+		action_value = " ".join(action.casefold().split())
+	else:
+		action_value = None
+
+	target = descriptor.get("target")
+	if isinstance(target, dict):
+		target_type = target.get("type")
+		target_value = target.get("value")
+	else:
+		target_type = None
+		target_value = None
+	if target_type not in {"file", "executable", "skill", "repo", "hcom_peer"}:
+		target_type = None
+	if not isinstance(target_value, str) or not target_value.strip():
+		target_value = None
+
+	repo_text = descriptor.get("repo")
+	repo_path = Path(repo_text) if isinstance(repo_text, str) and repo_text else None
+	if repo_path is not None and repo_path.is_absolute():
+		repo_key = repo_path.name or repo_path.anchor
+	elif repo_path is not None:
+		repo_key = repo_path.as_posix()
+	else:
+		repo_key = None
+
+	if target_type == "file" and target_value:
+		target_path = Path(target_value)
+		if (
+			target_path.is_absolute()
+			and repo_path is not None
+			and repo_path.is_absolute()
+		):
+			try:
+				target_value = target_path.relative_to(repo_path).as_posix()
+			except ValueError:
+				target_value = target_path.as_posix()
+		elif not target_path.is_absolute():
+			target_value = target_path.as_posix()
+
+	key_parts = [
+		action_value or "null",
+		target_type or "null",
+		target_value or "null",
+		repo_key or "null",
+	]
+	source = descriptor.get("source")
+	if isinstance(source, str) and source.strip():
+		key_parts.append(" ".join(source.casefold().split()))
+
+	return "|".join(key_parts)
 
 
 def event_classification(kind: str, status: object = None) -> dict[str, object]:
 	"""Classify deterministic evidence without presenting it as a model conclusion."""
 	if kind in {"correction", "tool_failure"}:
 		label = "agent_failure" if kind == "correction" else "workflow_failure"
-	elif kind == "successful_behaviour":
-		label = "successful_behaviour"
+	elif kind == "recovery":
+		label = "workflow_recovery"
 	elif kind in {"interruption", "rollback", "verification_gap"}:
 		label = "workflow_failure"
 	else:
 		label = "mixed_causes"
 
 	confidence = (
-		"high"
-		if kind in {"correction", "tool_failure", "successful_behaviour"}
-		else "medium"
+		"high" if kind in {"correction", "tool_failure", "recovery"} else "medium"
 	)
 	return {
 		"label": label,

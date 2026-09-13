@@ -14,9 +14,9 @@ from codex_insights_facets_common import (
 	MAX_EVIDENCE_REFERENCES_PER_CITATION,
 	MAX_PATTERN_CITATIONS,
 	MAX_PATTERN_OBSERVATIONS,
+	descriptor_pattern_key,
 	format_timestamp,
 	hash_bytes,
-	normalise_pattern_key,
 	parse_timestamp,
 	references_for_entries,
 )
@@ -30,21 +30,18 @@ def pattern_id(kind: str, key: str) -> str:
 
 
 def pattern_key(observation: dict[str, object]) -> str:
-	"""Return the grouping key that keeps unrelated observations separate."""
+	"""Return the grouping key for one observation.
+
+	Corrections and approach changes keep one fixed key each until the extractor
+	links them to the tool call being corrected; every other kind groups by its
+	structured descriptor.
+	"""
 	kind = observation["kind"]
-	if kind in {
-		"tool_failure",
-		"successful_behaviour",
-		"retry",
-		"configuration_touch",
-		"verification_gap",
-	}:
-		return normalise_pattern_key(observation.get("target"))
 	if kind == "correction":
 		return "user-authored-correction"
 	if kind == "approach_change":
 		return "user-authored-approach-change"
-	return normalise_pattern_key(observation.get("source") or kind)
+	return descriptor_pattern_key(observation.get("descriptor"))
 
 
 def pattern_configuration_target(observation: dict[str, object]) -> bool:
@@ -207,7 +204,7 @@ def build_patterns(
 	observations: list[dict[str, object]],
 	configuration_cache: dict[tuple[str, str], dict[str, object]],
 ) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
-	"""Group observations by kind and normalised target across unique conversations."""
+	"""Group observations by kind and descriptor key across unique conversations."""
 	groups: dict[tuple[str, str], list[dict[str, object]]] = {}
 	for observation in observations[:MAX_PATTERN_OBSERVATIONS]:
 		key = (observation["kind"], pattern_key(observation))
@@ -338,3 +335,95 @@ def layer_for_surface(surface: object) -> str:
 	if "script" in value:
 		return "script"
 	return "tooling"
+
+
+def run_selftest() -> None:
+	"""Check that descriptor grouping merges same-file edits across checkouts and keeps unlike actions or files apart."""
+	observations = [
+		{
+			"kind": "tool_failure",
+			"target": "edit /tmp/run-a/project/src/check.py",
+			"descriptor": {
+				"action": "edit file",
+				"tool": "apply_patch",
+				"target": {
+					"type": "file",
+					"value": "/tmp/run-a/project/src/check.py",
+				},
+				"repo": "/tmp/run-a/project",
+				"outcome": "fail",
+			},
+			"evidence_references": [],
+			"conversation_id": "conversation-a",
+			"rollout_id": "rollout-a",
+			"timestamp": "2026-08-08T10:00:00Z",
+			"classification": {},
+		},
+		{
+			"kind": "tool_failure",
+			"target": "edit /private/tmp/run-b/project/src/check.py",
+			"descriptor": {
+				"action": "edit file",
+				"tool": "apply_patch",
+				"target": {
+					"type": "file",
+					"value": "/private/tmp/run-b/project/src/check.py",
+				},
+				"repo": "/private/tmp/run-b/project",
+				"outcome": "fail",
+			},
+			"evidence_references": [],
+			"conversation_id": "conversation-b",
+			"rollout_id": "rollout-b",
+			"timestamp": "2026-08-08T10:01:00Z",
+			"classification": {},
+		},
+		{
+			"kind": "tool_failure",
+			"target": "ruff check",
+			"descriptor": {
+				"action": "run lint",
+				"tool": "exec",
+				"target": {"type": "executable", "value": "ruff"},
+				"repo": "/tmp/run-c/project",
+				"outcome": "fail",
+			},
+			"evidence_references": [],
+			"conversation_id": "conversation-c",
+			"rollout_id": "rollout-c",
+			"timestamp": "2026-08-08T10:02:00Z",
+			"classification": {},
+		},
+		{
+			"kind": "tool_failure",
+			"target": "edit /tmp/run-d/project/src/other.py",
+			"descriptor": {
+				"action": "edit file",
+				"tool": "apply_patch",
+				"target": {"type": "file", "value": "/tmp/run-d/project/src/other.py"},
+				"repo": "/tmp/run-d/project",
+				"outcome": "fail",
+			},
+			"evidence_references": [],
+			"conversation_id": "conversation-d",
+			"rollout_id": "rollout-d",
+			"timestamp": "2026-08-08T10:03:00Z",
+			"classification": {},
+		},
+	]
+
+	assert pattern_key(observations[0]) == "edit file|file|src/check.py|project"
+	patterns, repeated_patterns = build_patterns(observations, {})
+	assert len(patterns) == 3
+	assert len(repeated_patterns) == 1
+	assert repeated_patterns[0]["key"] == "edit file|file|src/check.py|project"
+	assert repeated_patterns[0]["unique_conversation_count"] == 2
+	assert {pattern["key"] for pattern in patterns} == {
+		"edit file|file|src/check.py|project",
+		"edit file|file|src/other.py|project",
+		"run lint|executable|ruff|project",
+	}
+
+
+if __name__ == "__main__":
+	run_selftest()
