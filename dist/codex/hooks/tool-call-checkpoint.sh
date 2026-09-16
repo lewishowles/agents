@@ -2,14 +2,20 @@
 #
 # tool-call-checkpoint — advisory work-cycle boundary for Claude and Codex.
 #
-# Counts PreToolUse events per runtime/session in temporary storage. The 20th
-# call returns one advisory checkpoint; a pre-compaction event returns a context
-# checkpoint without changing the counter. A clear-session start resets the same
-# session's counter without touching project or HCOM state.
+# Counts PreToolUse events per runtime/session in temporary storage. The call
+# that reaches the limit returns one advisory checkpoint; a pre-compaction event
+# returns a context checkpoint without changing the counter. A clear-session
+# start resets the same session's counter without touching project or HCOM state.
+#
+# Every tool call counts, including reads, because the limit bounds context
+# growth. The limit is 20 by default and 40 for HCOM Scouts and Implementers,
+# recognised from the agent name hcom exports as HCOM_NAME. Setting
+# AGENT_TOOL_CALL_LIMIT overrides both for a session.
 
 set -euo pipefail
 
-readonly TOOL_CALL_LIMIT=20
+readonly DEFAULT_TOOL_CALL_LIMIT=20  # Calls before the advisory for any session without a role-specific limit.
+readonly WORKER_TOOL_CALL_LIMIT=40  # Calls before the advisory for HCOM Scouts and Implementers, whose startup reads need room before the first review point.
 readonly COMPACTION_CONTEXT="CONTEXT CHECKPOINT: This session is about to compact. Before continuing, hand off or record the current scope, changed paths, verification, blockers and next decision. Do not expand scope or reset peers."
 # Resolve managed hook symlinks so the companion remains beside the generated script.
 script_path="${BASH_SOURCE[0]}"
@@ -44,6 +50,22 @@ trace_event_structure() {
 		}
 	' >> "$trace_file" 2>/dev/null || true
 }
+
+# Prints the tool-call limit for this session: an explicit override, then the
+# HCOM role read from the exported agent name, then the default.
+resolve_tool_call_limit() {
+	if [[ "${AGENT_TOOL_CALL_LIMIT:-}" =~ ^[1-9][0-9]*$ ]]; then
+		printf '%s\n' "$AGENT_TOOL_CALL_LIMIT"
+		return 0
+	fi
+
+	case "${HCOM_NAME:-}" in
+	*-scout-*|*-implementer-*) printf '%s\n' "$WORKER_TOOL_CALL_LIMIT" ;;
+	*) printf '%s\n' "$DEFAULT_TOOL_CALL_LIMIT" ;;
+	esac
+}
+
+readonly TOOL_CALL_LIMIT="$(resolve_tool_call_limit)"  # Limit applied to this session's counter.
 
 runtime="${1:-}"
 case "$runtime" in

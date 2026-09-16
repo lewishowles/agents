@@ -1,6 +1,6 @@
 {
 	"name": "tool-call-checkpoint",
-	"description": "Adds advisory checkpoints after 20 tool calls and before context compaction in a Claude worker session.",
+	"description": "Adds one advisory checkpoint when a Claude session reaches its tool-call limit (20 by default, 40 for HCOM Scouts and Implementers) and a context checkpoint before compaction.",
 	"command": "bash \"$HOME/.claude/hooks/tool-call-checkpoint.sh\" claude",
 	"runtime": "claude",
 	"events": [
