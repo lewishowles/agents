@@ -1,5 +1,6 @@
 {
   "extraIgnoreDirs": [
+    ".agent",
     "dist",
     "project-skill-packs",
     "reviews",
