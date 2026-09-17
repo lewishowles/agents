@@ -1,11 +1,11 @@
 {
 	"name": "project-review-task",
 	"title": "Project review task",
-	"description": "Use this skill when assessing a task file or implementation plan before coding, or consolidating independent peer review packets, checking repository truth, scope, evidence, and readiness.",
+	"description": "Use this skill when assessing a task record or implementation plan before coding, or consolidating independent peer review packets, checking repository truth, scope, evidence, and readiness.",
 	"when": "When assessing or consolidating a task contract before implementation",
 	"triggers": [
 		"review task contract",
-		"review task file",
+		"review task record",
 		"review implementation task",
 		"assess task readiness",
 		"check task before implementation",

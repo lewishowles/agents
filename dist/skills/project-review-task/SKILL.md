@@ -3,7 +3,7 @@
 name: project-review-task
 displayName: Project review task
 description: >
-  Use this skill when assessing a task file or implementation plan before coding, or consolidating independent peer review packets, checking repository truth, scope, evidence, and readiness.
+  Use this skill when assessing a task record or implementation plan before coding, or consolidating independent peer review packets, checking repository truth, scope, evidence, and readiness.
 ---
 # Project review task
 

@@ -1,7 +1,7 @@
 {
 	"name": "project-continue",
 	"title": "Project continue",
-	"description": "Use this skill to resume work from the progress CLI's task, chunk, and handoff records; compacts stale context, verifies completed work, and picks up where the last session left off.",
+	"description": "Use this skill to resume work from the progress CLI's task, chunk, and handoff records, verify completed work, and pick up where the last session left off.",
 	"when": "When resuming work from progress CLI records; checks optional root PROGRESS.md freeform prose only when needed",
 	"triggers": [
 		"resume work",
@@ -11,7 +11,7 @@
 	],
 	"filePatterns": [],
 	"pathPatterns": [],
-	"dependencies": ["project-compact-progress"],
+	"dependencies": [],
 	"capabilities": {
 		"promptTriggering": false,
 		"fileTriggering": false

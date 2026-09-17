@@ -33,7 +33,6 @@ ALLOWLIST = {
 	frozenset({"frontend-design", "skill-craft"}),  # known overlap, out of scope: "design" is generic
 	frozenset({"frontend-design", "swift-ui"}),  # known overlap, out of scope: "composition" is generic
 	frozenset({"frontend-design", "vue"}),  # known overlap, out of scope: "composition" is generic
-	frozenset({"global-rules", "project-compact-progress"}),  # known overlap, out of scope: both reference progress.md
 	frozenset({"library-release", "vue-project-stack"}),  # known overlap, out of scope: "@lewishowles" prefix overlap
 	frozenset({"library-release", "writing"}),  # known overlap, out of scope: "changelog" is generic
 	frozenset({"source-extraction", "writing"}),  # known overlap, out of scope: "article" is generic

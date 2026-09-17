@@ -28,7 +28,6 @@
 	"skillOverrides": {
 		"accessibility": "name-only",
 		"bash": "name-only",
-		"project-compact-progress": "name-only",
 		"project-continue": "name-only",
 		"claude-api": "name-only",
 		"code-style": "on",

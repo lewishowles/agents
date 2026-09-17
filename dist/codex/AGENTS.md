@@ -221,7 +221,7 @@ A commit boundary is a review boundary, not a release boundary. An API introduce
 
 **`progress` is the source of truth for project state.** When it is installed and the repository is initialised, use `progress next --json` at session start for the active task and chunk. Use the CLI's project, release, task, chunk, discovery, decision, and context records for task, queue, roadmap, notes, and handoff state. If `progress` is unavailable or the project is uninitialised, inspect `WORKSPACE.md`, `AGENTS.md`, package scripts, and nearby project docs. Do not create a markdown plan or guess a project identity as a fallback; ask the user to initialise or install `progress` before writing progress records.
 
-See the project-continue skill for command syntax, the `progress next` scope caveat, and the `PROGRESS.md` freeform-prose boundary. For task naming, queue order, chunking, handoff, and compaction mechanics, see the matching project-management skill (project-plan-task, project-setup, project-compact-progress) and `docs/progress-format.md` where available.
+See the project-continue skill for command syntax, the `progress next` scope caveat, and the `PROGRESS.md` freeform-prose boundary. For task naming, queue order, chunking, and handoff mechanics, see the matching project-management skill (project-plan-task, project-setup) and `docs/progress-format.md` where available.
 
 ## Identity & expertise
 

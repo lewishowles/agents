@@ -3,9 +3,7 @@
 name: project-continue
 displayName: Project continue
 description: >
-  Use this skill to resume work from the progress CLI's task, chunk, and handoff records; compacts stale context, verifies completed work, and picks up where the last session left off.
-related-skills:
-  - project-compact-progress
+  Use this skill to resume work from the progress CLI's task, chunk, and handoff records, verify completed work, and pick up where the last session left off.
 ---
 # Project continue
 
