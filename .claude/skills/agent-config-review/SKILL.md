@@ -1,7 +1,7 @@
 ---
 name: agent-config-review
 description: >
-  Use this repo-local skill when reviewing the Configuration/Agents repository as an agent behaviour system: token footprint, instruction-budget warnings, global-rule placement, skill boundaries, validation coverage, generated-output drift, and setup ergonomics.
+  Use this repo-local skill when reviewing the Configuration/Agents repository as an agent behaviour system: token footprint, global-rule placement, skill boundaries, validation coverage, generated-output drift, and setup ergonomics.
 do-not-use-when:
   - Auditing a normal project for agent-readiness; use project-audit instead
   - Reviewing code changes, PRs, commits, or worktrees; use the project review skills instead
@@ -52,21 +52,6 @@ Check:
 - `skillOverrides` or target-specific distribution reducing cost without hiding essentials?
 
 Reduce tokens only while preserving reliability. Don't move guidance from global rules if it must apply every turn.
-
-### Instruction budget warnings
-
-When `check-instruction-budgets.sh` reports growth:
-
-1. Scope the review to the reported artefacts and their source hints. Inspect hand-authored sources; never edit `dist/`.
-2. Record each artefact's current bytes, checked-in baseline, soft budget, and overage. The warning prompts review; it is not a quota that overrides reliability.
-3. Identify the unique behaviour each artefact owns. Classify candidate guidance as keep, condense, remove, or move. Remove only proven duplication, stale guidance, excess detail, or wasteful formatting: cite the specific text or location each removal duplicates. Discovery candidates flagged as optional, lower-confidence, or "if needed" are excluded by default; include one only after it earns its own proven-duplication citation, never to close a remaining byte gap.
-4. Preserve trigger specificity, failure modes, invariants, exceptions, recovery paths, and verification requirements. Don't move always-required guidance into a triggered skill solely to reduce bytes.
-5. Review shared `src/rules/` and agent fragments before individual skills because one shared edit can affect both always-loaded artefacts. When a batch touches shared or always-loaded files, get those cuts confirmed on their own before extending the same cut logic to the rest of the batch. Regenerate before measuring final sizes.
-6. Present the proposed trims and behavioural effect for approval. A request to review warnings is analysis-only; edit only after explicit implementation approval.
-7. After approved edits, run `bash scripts/sync.sh`, measure the generated artefacts with `wc -c`, and update only the reviewed entries in `scripts/validate/instruction-budgets.json` to their exact post-trim sizes.
-8. Run `bash scripts/validate.sh` directly. Report before and after sizes, baseline changes, checks, and any warning whose remaining content earns its cost.
-
-Never raise baselines before the review, refresh unreviewed baselines in bulk, or compress clear instructions into ambiguous shorthand. A justified final size may remain above the old soft budget; the reviewed post-trim size becomes the new baseline.
 
 ### Frontier-model migration
 
@@ -152,7 +137,7 @@ Recommended next step
 <one concrete action>
 ```
 
-`Removals` is required, not optional. Name each cut with the evidence for it, or state plainly that nothing should be cut and why. Never omit the element: a review that only adds and adjusts is how always-loaded guidance grows past its budget unnoticed. When `check-instruction-budgets.sh` reports growth, this element carries that review's outcome, including a decision to keep the content and re-baseline instead.
+`Removals` is required, not optional. Name each cut with the evidence for it, or state plainly that nothing should be cut and why. Never omit the element: a review that only adds and adjusts is how guidance grows unnoticed.
 
 No findings: say so plainly and list supporting checks.
 

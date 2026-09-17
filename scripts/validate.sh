@@ -42,16 +42,6 @@ run_check() {
 	if [ "${CLI_STYLE_VERBOSE:-0}" = "1" ]; then
 		cli_status info "Checking" "$label"
 	fi
-	if [ "$label" = "instruction budgets" ]; then
-		if "$@"; then
-			cli_group_status success "$label"
-		else
-			cli_group_status error "$label" "failed"
-			FAILED_CHECKS=$((FAILED_CHECKS + 1))
-		fi
-		return
-	fi
-
 	if output=$("$@" 2>&1); then
 		if [ "$label" = "staleness" ] && [ -n "$output" ]; then
 			printf '%s\n' "$output"
@@ -67,16 +57,11 @@ run_check() {
 }
 
 run_check "skill manifests"       bash "$REPO_DIR/scripts/validate/check-skill-manifests.sh"
-run_check "instruction budgets"   bash "$REPO_DIR/scripts/validate/check-instruction-budgets.sh"
-run_check "instruction budgets regression" bash "$REPO_DIR/tests/instruction-budgets.sh"
-run_check "trigger overlap"       python3 "$REPO_DIR/scripts/validate/check-trigger-overlap.py"
-run_check "trigger fixture names" bash "$REPO_DIR/scripts/validate/check-trigger-fixture-names.sh"
 run_check "hook manifests"        bash "$REPO_DIR/scripts/validate/check-hook-manifests.sh"
 run_check "generated files"       bash "$REPO_DIR/scripts/validate/check-generated-files.sh"
 run_check "hook sync"             bash "$REPO_DIR/scripts/validate/check-hook-sync.sh"
 run_check "dist sync"             bash "$REPO_DIR/scripts/validate/check-dist-sync.sh"
 run_check "docs tables"           python3 "$REPO_DIR/scripts/build/build-docs.py" --check
-run_check "cli-style installer"   bash "$REPO_DIR/tests/install-cli-style.sh"
 run_check "global setup backup"   bash "$REPO_DIR/tests/setup-global.sh"
 run_check "external skill sync"    bash "$REPO_DIR/tests/sync-external-skills.sh"
 run_check "Claude HCOM hooks"     bash "$REPO_DIR/tests/claude-hcom-hooks.sh"

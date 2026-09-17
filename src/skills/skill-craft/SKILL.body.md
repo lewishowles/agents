@@ -37,14 +37,6 @@ If any of the three fails, extend an existing skill or discard the idea.
 3. Regenerate indexes: `PATH="/opt/homebrew/bin:$PATH" bash scripts/sync.sh </dev/null`.
 4. Validate: `PATH="/opt/homebrew/bin:$PATH" bash scripts/validate.sh </dev/null 2>&1 | tail -5`.
 
-## Byte budgets
-
-- The checked-in file scripts/validate/instruction-budgets.json records separate byte baselines for always-loaded generated instructions (`dist/codex/AGENTS.md`, `dist/claude/CLAUDE.md`), triggered bodies (`dist/skills/*/SKILL.md`), and eager metadata (`skills/**/skill.json`).
-- `scripts/validate.sh` warns, without failing, when an artefact grows past its baseline; only malformed or missing baseline entries fail.
-- Deliberate growth needs a hand-edited, reviewed baseline update. Validation never raises ceilings silently.
-- Trimming a skill in response to a budget warning is not complete until the baseline is updated to the trimmed size. Once a skill has been cut as far as reasonable for the current rule set, that size is the new baseline — leaving the old number in place could re-trigger the same warning on the next incidental byte change.
-- Each artefact has its own baseline. `global-rules` mirrors baseline rules for triggered delivery, so its size does not set limits for other skills or always-loaded files.
-
 ## Eval
 
 After writing or materially changing a skill, run these checks without re-reading the skill body:
