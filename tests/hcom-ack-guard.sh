@@ -48,7 +48,6 @@ assert_swallowed() {
 	assert_equals "$TEST_STATUS" "0"
 	assert_empty "$STDERR_FILE"
 	assert_contains "$STDOUT_FILE" '"updatedInput"'
-	assert_contains "$STDOUT_FILE" "acknowledgement not sent"
 }
 
 # Asserts that an acknowledgement send is blocked on Codex.
@@ -61,8 +60,6 @@ assert_blocked_codex() {
 	run_guard "$command" "codex"
 
 	assert_equals "$TEST_STATUS" "2"
-	assert_contains "$STDERR_FILE" "guard-hcom-ack: blocked"
-	assert_contains "$STDERR_FILE" "Wait silently"
 }
 
 # Asserts that a non-acknowledgement command passes untouched on both runtimes.

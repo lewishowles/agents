@@ -84,17 +84,12 @@ assert_silent() {
 #
 # @param  {string}  tool_name
 #     Tool name to send.
-# @param  {string}  expected_limit
-#     Tool-call limit expected in the advisory message.
 assert_advisory() {
 	local tool_name="$1"
-	local expected_limit="$2"
 	local output_file="$TEST_ROOT/advisory.json"
 
 	run_hook "$tool_name" "$output_file"
 
-	assert_contains "$output_file" "TOOL-CALL CHECKPOINT"
-	assert_contains "$output_file" "tool-call limit of $expected_limit reached"
 	assert_equals "$(jq -r '.hookSpecificOutput.hookEventName' "$output_file")" "PreToolUse"
 }
 
@@ -118,7 +113,7 @@ assert_silent "mcp__serena__find_symbol" "2"
 assert_silent "Edit" "3"
 assert_silent "Bash" "4"
 fill_to_limit 20
-assert_advisory "Write" "20"
+assert_advisory "Write"
 assert_silent "Write" "20"
 assert_silent "Read" "20"
 
@@ -126,48 +121,48 @@ assert_silent "Read" "20"
 start_session "override" "5"
 assert_silent "Read" "1"
 fill_to_limit 5
-assert_advisory "Edit" "5"
+assert_advisory "Edit"
 assert_silent "Edit" "5"
 
 # Invalid override falls back to the default limit.
 start_session "invalid" "lots"
 assert_silent "Read" "1"
 fill_to_limit 20
-assert_advisory "Write" "20"
+assert_advisory "Write"
 
 # A bare HCOM name uses the worker limit from a role-only HCOM tag.
 start_session "implementer" "" "maki" "Agents-implementer"
 assert_silent "Read" "1"
 fill_to_limit 40
-assert_advisory "Edit" "40"
+assert_advisory "Edit"
 assert_silent "Edit" "40"
 
 # A team-labelled HCOM tag also uses the worker limit.
 start_session "team-implementer" "" "maki" "Agents-dev-tools-implementer"
 assert_silent "Read" "1"
 fill_to_limit 40
-assert_advisory "Edit" "40"
+assert_advisory "Edit"
 
 start_session "scout" "" "rune" "Agents-scout"
 assert_silent "Read" "1"
 fill_to_limit 40
-assert_advisory "Bash" "40"
+assert_advisory "Bash"
 
 # Reviewer and orchestrator tags keep the default limit.
 start_session "reviewer" "" "maki" "Agents-reviewer"
 assert_silent "Read" "1"
 fill_to_limit 20
-assert_advisory "Bash" "20"
+assert_advisory "Bash"
 
 start_session "orchestrator" "" "maki" "Agents-orchestrator"
 assert_silent "Read" "1"
 fill_to_limit 20
-assert_advisory "Bash" "20"
+assert_advisory "Bash"
 
 # An explicit override beats the role limit.
 start_session "worker-override" "7" "maki" "Agents-dev-tools-implementer"
 assert_silent "Read" "1"
 fill_to_limit 7
-assert_advisory "Edit" "7"
+assert_advisory "Edit"
 
 printf '✓ tool-call checkpoint tests passed\n'

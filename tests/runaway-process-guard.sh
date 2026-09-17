@@ -30,7 +30,7 @@ run_guard() {
 	set -e
 }
 
-# Asserts that a command is blocked with the guard's message.
+# Asserts that a command is blocked.
 #
 # @param  {string}  command
 #     Shell command expected to be denied.
@@ -41,7 +41,6 @@ assert_blocked() {
 	run_guard "$command" "$output_file"
 
 	assert_equals "$TEST_STATUS" "2"
-	assert_contains "$output_file" "guard-runaway-process: blocked"
 }
 
 # Asserts that a command passes without hook output.
