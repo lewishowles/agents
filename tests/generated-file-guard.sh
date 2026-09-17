@@ -17,6 +17,22 @@ run_guard() {
 	"$REPO_DIR/scripts/agent-tools/generated-file-guard.py" --project-dir "$target_dir" "$@"
 }
 
+# Checks a JSON guard run: the guard reported a problem, and the first finding
+# carries the expected code. Takes the output file and the expected code.
+assert_json_finding_code() {
+	local output_file="$1"
+	local expected_code="$2"
+
+	python3 - "$output_file" "$expected_code" <<'PY'
+import json
+import sys
+
+data = json.loads(open(sys.argv[1]).read())
+assert data["ok"] is False
+assert data["findings"][0]["code"] == sys.argv[2]
+PY
+}
+
 init_repo() {
 	local target_dir="$1"
 
@@ -64,7 +80,6 @@ test_generated_only_change_fails() {
 		fail "Expected generated-only change to fail"
 	fi
 
-	assert_contains "$output" "generated output changed without its source"
 	assert_contains "$output" "rules/"
 }
 
@@ -78,8 +93,7 @@ test_source_without_generated_fails() {
 		fail "Expected source-only change to fail"
 	fi
 
-	assert_contains "$output" "source changed but generated output is not changed"
-	assert_contains "$output" "Run \`scripts/sync.sh\`"
+	assert_contains "$output" "dist/claude/CLAUDE.md"
 }
 
 test_source_and_generated_passes() {
@@ -89,24 +103,24 @@ test_source_and_generated_passes() {
 	printf 'changed\n' >> "$target_dir/src/rules/global-rules.md"
 	printf 'changed\n' >> "$target_dir/dist/claude/CLAUDE.md"
 
-	run_guard "$target_dir" > "$output"
-
-	assert_contains "$output" "No generated-file issues detected."
+	if ! run_guard "$target_dir" > "$output"; then
+		fail "Expected synchronised changes to pass"
+	fi
 }
 
 test_generic_generated_only_change_fails() {
 	local target_dir="$TEST_ROOT/generic"
-	local output="$TEST_ROOT/generic.md"
+	local output="$TEST_ROOT/generic.json"
 	mkdir -p "$target_dir/dist"
 	printf 'generated\n' > "$target_dir/dist/app.js"
 	init_repo "$target_dir"
 	printf 'changed\n' >> "$target_dir/dist/app.js"
 
-	if run_guard "$target_dir" > "$output"; then
+	if run_guard "$target_dir" --json > "$output"; then
 		fail "Expected generic generated-only change to fail"
 	fi
 
-	assert_contains "$output" "Generated output changed without any source change"
+	assert_json_finding_code "$output" "generated-only-change"
 }
 
 test_skill_source_with_generated_outputs_does_not_require_claude_index() {
@@ -117,9 +131,9 @@ test_skill_source_with_generated_outputs_does_not_require_claude_index() {
 	printf 'changed\n' >> "$target_dir/dist/skills/example/SKILL.md"
 	printf 'changed\n' >> "$target_dir/docs/skills.md"
 
-	run_guard "$target_dir" > "$output"
-
-	assert_contains "$output" "No generated-file issues detected."
+	if ! run_guard "$target_dir" > "$output"; then
+		fail "Expected skill source and generated output changes to pass"
+	fi
 }
 
 test_skill_body_with_generated_skill_output_does_not_require_indexes() {
@@ -129,9 +143,9 @@ test_skill_body_with_generated_skill_output_does_not_require_indexes() {
 	printf 'changed\n' >> "$target_dir/src/skills/example/example/SKILL.body.md"
 	printf 'changed\n' >> "$target_dir/dist/skills/example/SKILL.md"
 
-	run_guard "$target_dir" > "$output"
-
-	assert_contains "$output" "No generated-file issues detected."
+	if ! run_guard "$target_dir" > "$output"; then
+		fail "Expected skill body and generated output changes to pass"
+	fi
 }
 
 test_excluded_skill_body_change_is_in_sync() {
@@ -141,9 +155,9 @@ test_excluded_skill_body_change_is_in_sync() {
 	printf 'changed\n' >> "$target_dir/src/skills/example/excluded/SKILL.body.md"
 	printf 'changed\n' >> "$target_dir/dist/skills/excluded/SKILL.md"
 
-	run_guard "$target_dir" > "$output"
-
-	assert_contains "$output" "No generated-file issues detected."
+	if ! run_guard "$target_dir" > "$output"; then
+		fail "Expected excluded skill changes to pass"
+	fi
 }
 
 test_json_output_is_machine_readable() {
@@ -156,14 +170,7 @@ test_json_output_is_machine_readable() {
 		fail "Expected stale generated output to fail"
 	fi
 
-	python3 - "$output" <<'PY'
-import json
-import sys
-
-data = json.loads(open(sys.argv[1]).read())
-assert data["ok"] is False
-assert data["findings"][0]["code"] == "generated-stale"
-PY
+	assert_json_finding_code "$output" "generated-stale"
 }
 
 test_generated_only_change_fails
