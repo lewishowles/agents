@@ -66,7 +66,7 @@ For non-routine or consequential work, establish only the prompts that apply:
 - Smallest usable end-to-end path, including deliberate manual steps
 - For production-affecting work, deployment, observation, support, and reversal needs
 
-Record the resulting durable facts against the task in `discovery` and `decision` records rather than adding them to an unstructured plan file. When a decision replaces an earlier one, link it as superseding that decision.
+Record the resulting durable facts in `discovery` and `decision` records rather than in an unstructured plan file. Attach each one to the release when every task in it shares the fact, and to the task otherwise. When a decision replaces an earlier one, link it as superseding that decision.
 
 End each `decision` body with the condition that would reopen it: a dependency release, a measurement, a product change, or an explicit statement that nothing would. Compaction checks that stated condition to decide whether the entry still earns its place, instead of re-judging every decision from scratch.
 
@@ -122,7 +122,7 @@ Apply the clear planning language gate from `docs/progress-format.md` to task re
 
 For larger spikes or ambiguous features, create or reference a per-feature spec under `.agent/specs/` instead of putting design history in task fields or chunks. Keep the task record focused on execution state and add the spec path to the task's `--file` or `--contract-step` value. Do not create specs for small changes, direct bug fixes, routine docs edits, or work fitting one task.
 
-A spec explains why now, the problem, goals, non-goals, approach, entry point and files to inspect, API or schema changes, decisions and open questions, acceptance criteria, risks, and verification. Read or update it only when working on that feature. Full outline lives in the `project-setup` skill's feature-spec section.
+Put planning content that release records can hold in `progress release add` or `progress release edit` and in discoveries and decisions attached with `--release`, not a separate spec file; keep the spec for design detail the records cannot hold. A spec explains why now, the problem, goals, non-goals, approach, entry point and files to inspect, API or schema changes, decisions and open questions, acceptance criteria, risks, and verification. Read or update it only when working on that feature. Full outline lives in the `project-setup` skill's feature-spec section.
 
 ## Task records and chunks
 
@@ -130,7 +130,7 @@ Use one `task` record for the work and its stable contract: identity, overview, 
 
 The contract is the stable "what": an ordered list of steps, one `--contract-step` each, with the order preserved as given. The steps describe observable outcomes, public behaviour, invariants, constraints, and relevant states, independent of tools. For public, user-visible, or behaviourally significant work, name only the applicable failure and recovery states, such as loading, empty, denied, error, partial, stale, interrupted, or recovery. Keep it observable and invariant-focused, not implementation or testing steps; route accessibility, security, error-handling, and testing mechanics to specialist skills.
 
-Make the final `--contract-step` an explicit out-of-scope statement naming the adjacent work a reader could reasonably assume is included. There is no separate non-goals field, and every delegation packet has to state explicit non-scope, so a task without this makes each handoff redraw the boundary from memory. Name a specific exclusion or leave the statement out; a generic "nothing else is in scope" line adds nothing.
+Make the final `--contract-step` an explicit out-of-scope statement naming the adjacent work a reader could reasonably assume is included; put release-wide exclusions in the release `--out-of-scope` field. Tasks have no separate non-goals field, and every delegation packet has to state explicit non-scope, so a task without this makes each handoff redraw the boundary from memory. Name a specific exclusion or leave the statement out; a generic "nothing else is in scope" line adds nothing.
 
 Files are a list too. Give each file or spec path its own `--file`, rather than joining several into one value.
 

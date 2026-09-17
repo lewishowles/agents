@@ -27,8 +27,8 @@ progress task start <task_id>                     # id is positional
 progress task complete <task_id>                  # when no pending or active chunks remain
 progress chunk start <chunk_id>
 progress chunk complete <chunk_id>
-progress discovery add --task <task_id> '<body>'  # body is positional, not --body
-progress decision add --task <task_id> '<body>'   # body is positional; --supersedes <note_id> optional
+progress discovery add (--release <release_id> | --task <task_id>) '<body>'  # body is positional, not --body
+progress decision add (--release <release_id> | --task <task_id>) '<body>'   # body is positional; --supersedes <note_id> optional
 progress context get --json
 ```
 
@@ -132,7 +132,7 @@ Make one Edit/Write call covering every section below, not a separate call per b
 - If nothing remains for the current goal, clear the handoff rather than leaving stale TODOs in it
 - Compact now if the project keeps root-level `PROGRESS.md` prose and it has grown significantly; current context makes it cheaper
 
-Before settling the handoff, distil what was learned: add verified facts with `progress discovery add --task <task-id> "<note>"`, choices with `progress decision add --task <task-id> "<note>"`, and record failed approaches in the task record or linked spec only when they will help future work. Add only what isn't already captured.
+Before settling the handoff, distil what was learned: add verified facts with `progress discovery add (--release <release_id> | --task <task_id>) "<note>"`, choices with `progress decision add (--release <release_id> | --task <task_id>) "<note>"`. Give each note exactly one owner: the release when every task in it shares the fact, otherwise the task. Record failed approaches in the task record or linked spec only when they will help future work. Add only what isn't already captured.
 
 After settling the handoff, do not print or paraphrase its fields. Outside a tool-call checkpoint, present:
 

@@ -18,8 +18,8 @@ The database is scoped to the project bound to the current Git repository. Its d
 | `release`   | Groups related tasks in roadmap order.                      | `planned`, `active`, or `done`; tasks may refer to it.                                                    |
 | `task`      | Stores one reviewable outcome and its planning fields.      | `ready`, `in-progress`, `blocked`, `needs-decision`, or `done`; may have dependencies, chunks, and notes. |
 | `chunk`     | Stores one unit of work within a task.                      | `pending`, `active`, `done`, or `skipped`; at most one is active per task.                                |
-| `discovery` | Stores a verified finding that helps future work.           | A note attached to the project and optionally a task.                                                     |
-| `decision`  | Stores a decision and, when needed, the note it supersedes. | A note attached to the project and optionally a task.                                                     |
+| `discovery` | Stores a verified finding that helps future work.           | A note belonging to exactly one release or task.                                                          |
+| `decision`  | Stores a decision and, when needed, the note it supersedes. | A note belonging to exactly one release or task.                                                          |
 | `context`   | Stores the current handoff for one project.                 | One record per project, replaced by `progress context set`.                                               |
 
 Use `progress next`, `progress context get`, and `progress ready` for bounded read surfaces. Use `progress --help`, then `progress <noun> --help`, for the exact command and flag syntax. Use `--json` when another tool or hook needs the stable agent response envelope. The active task is the project's single `in-progress` task. Its active chunk is the next unit of work. `progress next --json` returns that task and chunk; `progress ready --json` lists tasks whose dependencies allow them to start. Task position, release position, dependency edges, and lifecycle status are stored in the database, so no queue table is needed in `PROGRESS.md`.
@@ -58,7 +58,9 @@ The CLI stores one handoff context record per project. It contains `current_goal
 
 ## Roadmap
 
-Releases are the ordered roadmap, stored in the CLI's `release` records rather than in `PROGRESS.md`. A release has an ID, slug, title, overview, status, and position. Its status is `planned`, `active`, or `done`; tasks can refer to a release ID. Use `progress release` commands to inspect and change releases instead of maintaining a roadmap table in `PROGRESS.md`.
+Releases are the ordered roadmap, stored in the CLI's `release` records rather than in `PROGRESS.md`. A release has an ID, slug, title, overview, status, position, purpose, risks, and out-of-scope items, shown by `progress release get`. Its status is `planned`, `active`, or `done`; tasks can refer to a release ID. Use `progress release` commands to inspect and change releases instead of maintaining a roadmap table in `PROGRESS.md`.
+
+Use the release for planning facts shared by every task in it, such as its purpose, shared risks, first-version exclusions, and cross-task decisions. Use the task for everything else.
 
 ## Tolerance
 
