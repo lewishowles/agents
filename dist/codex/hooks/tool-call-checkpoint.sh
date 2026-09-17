@@ -9,8 +9,8 @@
 #
 # Every tool call counts, including reads, because the limit bounds context
 # growth. The limit is 20 by default and 40 for HCOM Scouts and Implementers,
-# recognised from the agent name hcom exports as HCOM_NAME. Setting
-# AGENT_TOOL_CALL_LIMIT overrides both for a session.
+# recognised from the role suffix in HCOM_TAG. Setting AGENT_TOOL_CALL_LIMIT
+# overrides both for a session.
 
 set -euo pipefail
 
@@ -51,16 +51,16 @@ trace_event_structure() {
 	' >> "$trace_file" 2>/dev/null || true
 }
 
-# Prints the tool-call limit for this session: an explicit override, then the
-# HCOM role read from the exported agent name, then the default.
+# Prints the tool-call limit for this session: an explicit override, then a
+# Scout or Implementer role from HCOM_TAG, then the default.
 resolve_tool_call_limit() {
 	if [[ "${AGENT_TOOL_CALL_LIMIT:-}" =~ ^[1-9][0-9]*$ ]]; then
 		printf '%s\n' "$AGENT_TOOL_CALL_LIMIT"
 		return 0
 	fi
 
-	case "${HCOM_NAME:-}" in
-	*-scout-*|*-implementer-*) printf '%s\n' "$WORKER_TOOL_CALL_LIMIT" ;;
+	case "${HCOM_TAG:-}" in
+	scout|implementer|*-scout|*-implementer) printf '%s\n' "$WORKER_TOOL_CALL_LIMIT" ;;
 	*) printf '%s\n' "$DEFAULT_TOOL_CALL_LIMIT" ;;
 	esac
 }
@@ -143,6 +143,10 @@ printf '%s\n' "$count" > "$state_file"
 
 [[ -f "$TOOL_CALL_CONTEXT_FILE" ]] || exit 0
 
+# Replace the message placeholder with the limit that fired for this session.
+checkpoint_context="$(<"$TOOL_CALL_CONTEXT_FILE")"
+checkpoint_context="${checkpoint_context//__TOOL_CALL_LIMIT__/$TOOL_CALL_LIMIT}"
+
 jq -n \
-	--rawfile context "$TOOL_CALL_CONTEXT_FILE" \
+	--arg context "$checkpoint_context" \
 	'{hookSpecificOutput: {hookEventName: "PreToolUse", additionalContext: $context}}'
