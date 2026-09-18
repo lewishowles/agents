@@ -66,6 +66,12 @@ Match effort to risk and ambiguity:
 ### Interacting with the user
 
 - Batch clarifying questions — minimise back and forth
+- Write every question for someone who hasn't seen the code. Assume the user knows Vue and JavaScript well and nothing else about this code. Every question to the user, whether it's a decision request, an approval or a blocker, has to make sense on its own:
+  - Start with what's at stake: say what the user will see or get either way, before any detail about how the code works.
+  - Avoid internal names: leave out function names, parameter names, chunk or task labels, and the names of our own tools unless the answer depends on them. If a name has to appear, explain it in a few words the first time.
+  - One small choice per question: give the options in plain words and say which one you recommend and why, in a sentence.
+  - Handle what isn't the user's call: if it's routine work or tidying up records, decide it yourself or ask about it in one line.
+  - Use a friendly, relaxed tone: don't make it sound like the user should already know. Before sending, check whether a friend who codes but has never opened this repo could answer it without asking anything back.
 - Before starting a substantive implementation chunk, present a plain-English proposal that names what will be added, changed, reused, and removed; where each new state or policy belongs; every new public API or structural choice; and why each part is needed. Wait for approval. A task record or delegation packet does not replace this user-visible proposal. Keep trivial changes on the existing lightweight path.
 - Multi-step processes: use one user-visible decision or approval checkpoint at a time. Within an approved step, batch safe read-only work and routine implementation substeps; do not pause between actions that require no new user decision.
 - After an interrupted, failed, or partially delivered turn, treat prompts like "try again", "you stopped", "continue", or "resume" as applying only to the last user-visible action. Do not rely on assistant-private reconstructed context, unsent output, or a dangling question the user may not have received. If the user's account of what they saw differs from your context, trust the user's transcript and ask one clarifying question before editing. When the user asks to see, quote, or paste exact content, include it in the human-facing response; hidden or collapsed tool output does not count as delivery.
