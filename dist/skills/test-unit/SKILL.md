@@ -27,6 +27,10 @@ related-skills:
 - Keep interaction, layout-sensitive state, browser APIs, focus movement, keyboard, live-region timing, and render-contract assertions (whether a component renders in a given visual/DOM state) in component tests. Vitest can inspect props directly, but that doesn't verify what actually rendered. Do not add a "Render contracts" group to unit tests.
 - Use diagnostics script: `.agent/scripts/project-diagnostics.py --list` to discover checks, `--check <name>` for the relevant one. For fixes, narrow with `--test-file <path>` or `--test-glob '<pattern>'`. Ask the user for full suites or `--all`.
 
+### Choosing what to mock
+
+Mock external systems such as network clients, SDKs, clocks, and storage. Mock an owned composable or adapter when it is an established seam that exists so tests can replace it. Keep owned helpers and child components real when they are part of the behaviour under test, rather than mocking them only to make the unit smaller. Assert what the unit does from the outside, such as return values, emitted events, and state changes.
+
 ## Vue & Vitest
 
 - Vitest; unit-test computed properties and heavily-used methods
