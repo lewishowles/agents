@@ -26,7 +26,6 @@ This creates the project's `AGENTS.md` and other per-project config. Run it from
 - [Skills](docs/skills.md): available skills and trigger behaviour
 - [Commands](docs/commands.md): built-in and skill commands
 - [Hooks](docs/hooks.md): Claude and Codex hook behaviour
-- [ChatGPT](docs/chatgpt.md): optional gateway setup and system instructions
 
 ## Shell aliases
 

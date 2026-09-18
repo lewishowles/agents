@@ -41,11 +41,6 @@
 			"label": "runtime skills"
 		},
 		{
-			"generated": ["dist/chatgpt/"],
-			"sources": ["src/fragments/chatgpt/", "scripts/build/build-chatgpt-target.py"],
-			"label": "ChatGPT target"
-		},
-		{
 			"generated": [
 				"docs/commands.md",
 				"docs/hooks.md",

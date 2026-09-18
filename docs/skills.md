@@ -143,11 +143,11 @@ Project setup does not create a local `.claude/settings.json` by default. Prefer
     Content here.
     ```
 
-4. Run `scripts/sync.sh` to generate `dist/skills/<name>/SKILL.md`, refresh the skill tables in this file and [docs/commands.md](commands.md), and rebuild the Claude, Codex, and ChatGPT targets.
+4. Run `scripts/sync.sh` to generate `dist/skills/<name>/SKILL.md`, refresh the skill tables in this file and [docs/commands.md](commands.md), and rebuild the Claude and Codex outputs.
 
 5. Run `bash scripts/validate.sh` to check generated output and markers before you install the skill.
 
-After `scripts/setup-global.sh`, shared skills are available to Claude via `~/.claude/skills/` and to Codex via `~/.agents/skills/`. The ChatGPT target requires a manual re-upload to the Custom GPT knowledge base after running sync.
+After `scripts/setup-global.sh`, shared skills are available to Claude via `~/.claude/skills/` and to Codex via `~/.agents/skills/`.
 
 ## Add an external skill
 
@@ -156,6 +156,6 @@ Use this for official upstream skills that should stay managed externally.
 1. Add an entry to `external-skills.json` with `slug`, `name`, `source`, `skill_url`, optional `references_api_url`, optional `commit_api_url`, and `license`.
 2. Run `scripts/sync-external-skills.sh`.
 3. Add local trigger metadata in `skill.json` if the upstream defaults need adjustment.
-4. Run `scripts/sync.sh` to regenerate docs and targets.
+4. Run `scripts/sync.sh` to regenerate docs and the Claude and Codex outputs.
 
 Do not edit synced external `SKILL.body.md` files directly. Change the upstream source or local trigger and documentation around it.

@@ -8,7 +8,7 @@ source "$(cd "$(dirname "$0")/.." && pwd)/lib/validation-helpers.sh"
 validate_require_jq
 
 VALID_CAPS=("fileTriggering" "promptTriggering")
-VALID_TARGETS=("chatgpt" "claude" "codex")
+VALID_TARGETS=("claude" "codex")
 
 declare -A SKILL_NAMES
 while IFS= read -r -d '' manifest; do

@@ -34,8 +34,7 @@ Configuration/Agents/
 │   │           └── SKILL.body.md   # Editable instructional content
 │   └── fragments/                # Per-tool preamble fragments assembled by sync.sh
 │       ├── claude/header.md, subagent-delegation.md
-│       ├── codex/header.md
-│       └── chatgpt/system.md
+│       └── codex/header.md
 ├── dist/                       # Generated output — never author; regenerate with scripts/sync.sh
 │   ├── skills/<name>/          # Flattened runtime skill directories
 │   │   └── SKILL.md
@@ -43,9 +42,8 @@ Configuration/Agents/
 │   │   ├── CLAUDE.md
 │   │   ├── settings.json
 │   │   └── hooks/              # Copies of hook scripts synced from src/hooks/claude/
-│   ├── codex/
-│   │   └── AGENTS.md
-│   └── chatgpt/                # Optional ChatGPT target from build-chatgpt-target.py
+│   └── codex/
+│       └── AGENTS.md
 ├── .claude/skills/agent-config/ # This repo-local maintenance skill
 ├── .agents/skills/agent-config  # Symlink to the above
 ├── .claude/skills/agent-config-review/ # Repo-local review skill (token footprint, rule/skill boundaries, drift)
@@ -66,8 +64,7 @@ Configuration/Agents/
 │   ├── build/
 │   │   ├── build-docs.py            # Generates docs/ tables from manifests
 │   │   ├── build-settings.py        # Generates dist/claude/settings.json from settings.base.json
-│   │   ├── build-skill-mds.py       # Generates dist/skills/ from skill.json + SKILL.body.md
-│   │   └── build-chatgpt-target.py  # Generates dist/chatgpt/INSTRUCTIONS.md (skills served live via the gateway)
+│   │   └── build-skill-mds.py       # Generates dist/skills/ from skill.json + SKILL.body.md
 │   ├── setup-global.sh          # Creates global symlinks for Claude and Codex
 │   ├── setup-project.sh         # Scaffolds AGENTS.md for a new project
 │   └── sync-external-skills.sh  # Fetches managed external skills
@@ -151,7 +148,7 @@ Use the strongest layer that fits the failure mode. Don't place agent-critical b
 ## When adding or changing a skill
 
 1. Create `src/skills/<group>/<name>/skill.json` + `SKILL.body.md`
-2. Run `bash scripts/sync.sh` — regenerates `dist/skills/`, settings, docs, and other dist targets
+2. Run `bash scripts/sync.sh` — regenerates `dist/skills/`, settings, docs, and Claude/Codex outputs
 3. Check `scripts/validate.sh` exits 0
 
 ## When creating a new hook

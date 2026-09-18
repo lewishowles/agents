@@ -6,9 +6,8 @@
 #   2. Docs tables generated from skill/hook manifests (build-docs.py)
 #   3. dist/claude/hooks/ (copied from src/hooks/claude/ source)
 #   4. dist/claude/CLAUDE.md and dist/codex/AGENTS.md (assembled from src/rules/)
-#   5. dist/chatgpt/ (build-chatgpt-target.py)
-#   6. dist/claude/settings.json (build-settings.py)
-#   7. Validation (validate.sh)
+#   5. dist/claude/settings.json (build-settings.py)
+#   6. Validation (validate.sh)
 
 set -euo pipefail
 
@@ -65,7 +64,6 @@ python3 "$REPO_DIR/scripts/build/build-docs.py" >/dev/null
 copy_hooks
 write_target "$CLAUDE_TARGET" "${CLAUDE_PARTS[@]}"
 write_target "$CODEX_TARGET" "${CODEX_PARTS[@]}"
-python3 "$REPO_DIR/scripts/build/build-chatgpt-target.py" >/dev/null
 python3 "$REPO_DIR/scripts/build/build-settings.py" >/dev/null
 
 # Copy static config files from adapters to dist.
@@ -80,7 +78,6 @@ cp "$REPO_DIR/src/adapters/codex/hooks.json" "$REPO_DIR/dist/codex/hooks.json"
 
 cli_status success "synced" "dist/claude/CLAUDE.md"
 cli_status success "synced" "dist/codex/AGENTS.md"
-cli_status success "synced" "dist/chatgpt/"
 cli_status success "synced" "manifest-backed docs tables"
 cli_status success "synced" "dist/claude/settings.json"
 cli_status success "synced" "dist/codex/hooks.json"

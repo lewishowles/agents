@@ -1,7 +1,0 @@
-tunnel: 5cef190d-1c58-46c8-991b-1998b98f9bf6
-credentials-file: /Users/lewis/.cloudflared/5cef190d-1c58-46c8-991b-1998b98f9bf6.json
-
-ingress:
-  - hostname: local-repo-gateway.howles.dev
-    service: http://127.0.0.1:8754
-  - service: http_status:404
