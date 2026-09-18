@@ -46,7 +46,6 @@ Apply across all projects. See individual skills for detailed rules. Use project
 - `/vue-pinia-colada` — When using `@pinia/colada` for async server state — `useQuery`, `useMutation`, cache management, optimistic updates
 - `/vue-project-stack` — When working in Vue + Bun + Vitest + Tailwind + Gitflow stack
 - `/vue-router` — When using Vue Router routes, guards, params, query strings, and redirects
-- `/vue-use` — When using VueUse composables for Vue/Nuxt features
 - `/vue-vite` — When configuring vite.config.ts, Vite project patterns
 - `/web-performance` — When optimising Core Web Vitals, bundle size, or asset loading for Vue/Vite/GitHub Pages projects
 - `/web-performance-audit` — When conducting a performance audit of a page, PR, or app; preparing a performance report

@@ -49,7 +49,7 @@ Always apply `code-review` standards. Load additional skills only when the touch
 - `frontend-security` for user input, auth, tokens, secrets, sanitisation, CSP, redirects, or external data
 - `accessibility` or `accessibility-audit` for UI, HTML, components, forms, keyboard interaction, colour, ARIA, or interface copy
 - `web-performance` for runtime performance, asset loading, bundle size, Core Web Vitals, rendering, or reactivity cost
-- `typescript`, `vue`, `vue-router`, `vue-pinia`, `vue-pinia-colada`, `vue-vite`, or `vue-use` for matching Vue/TypeScript files and APIs
+- `typescript`, `vue`, `vue-router`, `vue-pinia`, `vue-pinia-colada`, or `vue-vite` for matching Vue/TypeScript files and APIs
 - `swift` or `swift-ui` for Swift or SwiftUI changes
 - `bash` for shell scripts, hooks, installers, environment files, or command snippets
 - `dependencies` for package additions, removals, upgrades, lockfile changes, or dependency recommendations

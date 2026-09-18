@@ -78,7 +78,6 @@ Every skill can be invoked manually as a command. Type the skill name with a `/`
 | `/vue-pinia-colada` | `vue-pinia-colada` | When using `@pinia/colada` for async server state — `useQuery`, `useMutation`, cache management, optimistic updates |
 | `/vue-project-stack` | `vue-project-stack` | When working in Vue + Bun + Vitest + Tailwind + Gitflow stack |
 | `/vue-router` | `vue-router` | When using Vue Router routes, guards, params, query strings, and redirects |
-| `/vue-use` | `vue-use` | When using VueUse composables for Vue/Nuxt features |
 | `/vue-vite` | `vue-vite` | When configuring vite.config.ts, Vite project patterns |
 | `/web-performance` | `web-performance` | When optimising Core Web Vitals, bundle size, or asset loading for Vue/Vite/GitHub Pages projects |
 | `/web-performance-audit` | `web-performance-audit` | When conducting a performance audit of a page, PR, or app; preparing a performance report |

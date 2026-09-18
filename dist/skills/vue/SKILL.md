@@ -12,7 +12,6 @@ related-skills:
   - vue-pinia
   - vue-project-stack
   - vue-router
-  - vue-use
   - typescript
 ---
 # Vue

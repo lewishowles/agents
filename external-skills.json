@@ -1,13 +1,1 @@
-[
-	{
-		"slug": "vue-use",
-		"group": "vue",
-		"name": "VueUse Functions",
-		"source": "https://github.com/vueuse/skills/tree/main/skills/vueuse-functions",
-		"skill_url": "https://raw.githubusercontent.com/vueuse/skills/main/skills/vueuse-functions/SKILL.md",
-		"upstream_content_target": "SKILL.ref.md",
-		"references_api_url": "https://api.github.com/repos/vueuse/skills/contents/skills/vueuse-functions/references?ref=main",
-		"commit_api_url": "https://api.github.com/repos/vueuse/skills/commits/main",
-		"license": "MIT"
-	}
-]
+[]

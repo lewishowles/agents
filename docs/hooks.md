@@ -65,7 +65,7 @@ Extension-to-skill mapping:
 | `*.swift` | `code-style`, `swift`, `swift-ui`, `accessibility` |
 | `*.ts` | `code-style`, `typescript` |
 | `*.tsx` | `code-style`, `typescript` |
-| `*.vue` | `code-style`, `vue`, `vue-pinia`, `vue-project-stack`, `vue-router`, `vue-use`, `typescript`, `dependencies` |
+| `*.vue` | `code-style`, `vue`, `vue-pinia`, `vue-project-stack`, `vue-router`, `typescript`, `dependencies` |
 | `latest.json` | `codex-insights`, `writing` |
 | `latest-narrative.json` | `codex-insights`, `writing` |
 | `codex_insights_*.py` | `codex-insights`, `writing` |
