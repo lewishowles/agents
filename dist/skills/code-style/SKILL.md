@@ -81,7 +81,8 @@ Before writing new logic for a problem a sibling module already solves (prop det
 - Avoid shared "switchboard" helpers that accumulate one option per caller; let each caller own its formatting/behaviour, or name distinct modes explicitly
 - Prefer explicit, obviously-correct control flow over clever tricks (sentinel loops, index arithmetic) even when the clever version is correct
 - For repeated structural logic, compare explicit code, existing code, a helper, and a shared abstraction. Add one only when the behaviour and callers become clearer.
-- Place each declaration next to what it composes and its callers. Setup calls (`watch`, `onClickOutside`, `useEventListener`, lifecycle hooks) group with the other setup calls near the top, not after the method block; a helper sits beside its one caller. Reading order should follow the data flow.
+- Order JavaScript modules like a Vue `script` block, including plain `.js` files and config files: variables first, then the main functions, then the helpers those functions call, then exports. A helper goes after the function that calls it, never before.
+- Place each declaration next to what it composes and its callers. Setup calls (`watch`, `onClickOutside`, `useEventListener`, lifecycle hooks) group with the other setup calls near the top, not after the method block. Reading order should follow the data flow.
 
 ## Comments & documentation
 
