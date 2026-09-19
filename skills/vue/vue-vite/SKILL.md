@@ -2,8 +2,6 @@
 name: vue-vite
 description: >
   Use this skill when configuring vite.config.ts, managing environment variables, or troubleshooting build/dev server issues. Covers config structure, environment variables, security boundaries, library mode, dev vs build differences, and common pitfalls.
-filePatterns: ["vite.config.ts", "vite.config.js"]
-pathPatterns: []
 ---
 > Modified from [ECC `vite-patterns`](https://github.com/affaan-m/everything-claude-code/blob/main/skills/vite-patterns/SKILL.md) — MIT © 2026 Affaan Mustafa. Adapted to focus on config, security, and build patterns relevant to Vue projects; omitted plugin authoring and framework-specific HMR details.
 

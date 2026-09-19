@@ -2,8 +2,6 @@
 name: vue-router
 description: >
   Use this skill when working with Vue Router routes, navigation guards, params, query strings, layouts, redirects, or route-driven state. Covers async guards, same-route param updates, side-effect cleanup, and the boundary between router state and component state.
-filePatterns: ["router.ts", "router.js"]
-pathPatterns: ["/router/", "/routes/", "/pages/"]
 ---
 # Vue Router
 

@@ -2,8 +2,6 @@
 name: project-setup
 description: >
   Use this skill to start a new project or feature — explores the repo, asks clarifying questions, and creates the initial plan as progress CLI records before any implementation begins.
-filePatterns: []
-pathPatterns: []
 ---
 # Project setup
 

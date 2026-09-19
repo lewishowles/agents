@@ -2,8 +2,6 @@
 name: project-review-commits
 description: >
   Use this skill when reviewing committed work across a Git range, especially every commit since the last tag. Assesses per-commit correctness, series coherence, verification, docs, and release readiness without editing files.
-filePatterns: []
-pathPatterns: []
 disable-model-invocation: true
 ---
 # Project review commits

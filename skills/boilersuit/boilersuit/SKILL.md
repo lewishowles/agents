@@ -2,8 +2,6 @@
 name: boilersuit
 description: >
   Use this skill when consuming an existing Boilersuit generator to create repeatable project files. Covers inspecting project support, listing and describing generators, previewing the complete planned file set, handling existing destinations, and generating only after preview.
-filePatterns: []
-pathPatterns: []
 ---
 # Boilersuit
 

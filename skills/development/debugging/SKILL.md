@@ -2,8 +2,6 @@
 name: debugging
 description: >
   Use this skill when encountering any bug, test failure, or unexpected behaviour — before proposing a fix. Covers root-cause investigation, hypothesis testing, and minimal targeted fixes for Vue/Vite/Vitest and Swift/SwiftUI projects.
-filePatterns: []
-pathPatterns: []
 ---
 # Debugging
 

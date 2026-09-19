@@ -2,8 +2,6 @@
 name: project-synthesise-feedback
 description: >
   Use this skill when asked to review, compare, or combine suggestions from another agent or reviewer. Turn feedback into practical next steps. For direct code or PR review, use code-review.
-filePatterns: []
-pathPatterns: []
 ---
 # Project synthesise feedback
 

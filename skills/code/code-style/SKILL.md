@@ -2,8 +2,6 @@
 name: code-style
 description: >
   Use this skill on every code change — even small snippets. Covers language-aware formatting, naming, documentation, organisation, and reuse. This is the baseline style guide for all code.
-filePatterns: ["*.js", "*.py", "*.swift", "*.ts", "*.tsx", "*.vue"]
-pathPatterns: []
 ---
 # Code style
 

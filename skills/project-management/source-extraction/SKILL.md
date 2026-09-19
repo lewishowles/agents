@@ -2,8 +2,6 @@
 name: source-extraction
 description: >
   Use this skill when asked to extract raw material from an external page or artefact — for another agent to run, or before feeding the result into project-learn-from-source — without summarising away meaning.
-filePatterns: []
-pathPatterns: []
 ---
 # Source extraction
 

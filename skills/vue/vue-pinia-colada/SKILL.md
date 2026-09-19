@@ -2,8 +2,6 @@
 name: vue-pinia-colada
 description: >
   Use this skill when working with @pinia/colada for async data fetching and server state in Vue projects. TRIGGER when: code imports from `@pinia/colada`, uses `useQuery`, `useMutation`, `defineQuery`, `defineMutation`, `useQueryCache`, or `invalidateQueries`; when setting up async data fetching in a Vue project; when working in `src/queries/`.
-filePatterns: []
-pathPatterns: ["/queries/", "/mutations/"]
 ---
 # Pinia Colada
 

@@ -2,8 +2,6 @@
 name: component-api-design
 description: >
   Use this skill when creating a component or designing its public API — props, slots, emits, v-model, expose — or reviewing whether an existing API is consistent and discoverable.
-filePatterns: []
-pathPatterns: []
 ---
 # Component API design
 

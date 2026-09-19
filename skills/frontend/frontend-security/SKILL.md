@@ -2,8 +2,6 @@
 name: frontend-security
 description: >
   Use this skill when writing or reviewing client-side code for security implications. Covers XSS prevention, Content Security Policy, safe v-html usage, authentication token handling, secrets hygiene, and dependency security for Vue/TypeScript projects. Apply proactively when handling user input, rendering dynamic content, or managing auth state.
-filePatterns: []
-pathPatterns: []
 ---
 # Frontend security
 

@@ -2,8 +2,6 @@
 name: insights-review
 description: >
   Use this skill when reviewing a supplied rendered insights report and consolidating independent proposal packets for minimal changes to src/rules/**/*.md or src/skills/**.
-filePatterns: []
-pathPatterns: []
 ---
 # Insights review
 

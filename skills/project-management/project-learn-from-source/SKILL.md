@@ -2,8 +2,6 @@
 name: project-learn-from-source
 description: >
   Use this skill to assess an external artefact at the user's requested level and identify verified lessons for the current repo.
-filePatterns: []
-pathPatterns: []
 ---
 # Project learn from source
 

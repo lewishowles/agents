@@ -2,8 +2,6 @@
 name: test-unit
 description: >
   Use this skill for unit tests, including Vitest, @testing-library/vue, composable tests, or XCTest; also applies to *.test.js, tests, specs, or coverage. For E2E, see test-e2e.
-filePatterns: ["*.test.ts", "*.test.js", "*.spec.ts", "*.spec.js", "*Tests.swift", "*Test.swift"]
-pathPatterns: []
 ---
 # Unit testing
 

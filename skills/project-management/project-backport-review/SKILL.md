@@ -2,8 +2,6 @@
 name: project-backport-review
 description: >
   Use this skill when comparing a client/consumer project against the boilerplate template it started from, to find backport candidates and then improve boilerplate itself for the next project.
-filePatterns: []
-pathPatterns: []
 ---
 # Project backport review
 

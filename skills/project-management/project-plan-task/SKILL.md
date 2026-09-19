@@ -2,8 +2,6 @@
 name: project-plan-task
 description: >
   Use this skill when introducing work into an existing progress CLI plan or splitting a planned task into chunks. Covers placement, releases, tasks, chunks, dependencies, and handoff context.
-filePatterns: []
-pathPatterns: []
 ---
 # Project plan task
 

@@ -2,8 +2,6 @@
 name: skill-craft
 description: >
   Use this skill when authoring, designing, or evaluating a new skill in this repo. Covers intake → design → build → lightweight eval lifecycle.
-filePatterns: []
-pathPatterns: []
 ---
 # Skill-craft
 

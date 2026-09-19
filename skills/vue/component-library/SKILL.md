@@ -2,8 +2,6 @@
 name: component-library
 description: >
   Use this skill when choosing, reusing, or wrapping components from @lewishowles/components, including sibling components inside the library. Prefer its CLI and docs before source searches.
-filePatterns: []
-pathPatterns: []
 ---
 # Component library
 

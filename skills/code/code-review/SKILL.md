@@ -2,8 +2,6 @@
 name: code-review
 description: >
   Use this skill when reviewing code — a PR, a diff, an individual file, or existing code at a named path — or when receiving review feedback. Applies your conventions (accessibility, code-style, error-handling, frontend-security, web-performance) as a checklist, and covers how to give and receive feedback.
-filePatterns: []
-pathPatterns: []
 ---
 # Code review
 

@@ -2,8 +2,6 @@
 name: frontend-design
 description: >
   Use this skill before public-facing UI where visual quality or brand distinctiveness matters. Covers typography, colour, motion, and composition. Distinct from accessibility and web-performance.
-filePatterns: []
-pathPatterns: []
 ---
 # Frontend design
 

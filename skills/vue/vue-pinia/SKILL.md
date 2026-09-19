@@ -2,8 +2,6 @@
 name: vue-pinia
 description: >
   Use this skill when working with Pinia client-side stores in Vue projects. Covers setup stores, state/getter/action usage, storeToRefs, SSR-safe access, HMR, testing with @pinia/testing, and the boundary between Pinia, Pinia Colada, and VueUse.
-filePatterns: []
-pathPatterns: ["/stores/"]
 ---
 # Pinia
 

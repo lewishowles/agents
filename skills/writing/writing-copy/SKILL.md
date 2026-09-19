@@ -2,8 +2,6 @@
 name: writing-copy
 description: >
   Use this skill when writing or reviewing UI microcopy: labels, errors, empty states, tooltips, CTAs, form help, confirmations. See writing for voice and accessibility for screen-reader phrasing.
-filePatterns: []
-pathPatterns: []
 ---
 # UI copy
 

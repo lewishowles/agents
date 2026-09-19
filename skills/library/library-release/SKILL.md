@@ -2,8 +2,6 @@
 name: library-release
 description: >
   Use this skill when preparing to release a supported @lewishowles library package.
-filePatterns: []
-pathPatterns: []
 ---
 # Library release
 

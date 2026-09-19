@@ -2,8 +2,6 @@
 name: swift
 description: >
   Use this skill when writing or editing any Swift code — macOS apps, command-line tools, scripts, system tools. Covers comment style, naming, spacing, concurrency, error handling, process management, and environment setup. For SwiftUI-specific patterns, use the swift-ui skill.
-filePatterns: ["*.swift"]
-pathPatterns: []
 ---
 # Swift code style
 

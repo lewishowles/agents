@@ -2,8 +2,6 @@
 name: project-audit
 description: >
   Use this skill when auditing a project for setup drift, stale generated output, missing diagnostics, command-safety gaps, or agent-readiness issues. Covers WORKSPACE.md, .agent/scripts tooling, PROGRESS.md handoff health, validation commands, and generated/source boundaries.
-filePatterns: []
-pathPatterns: []
 ---
 # Project audit
 

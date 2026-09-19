@@ -2,8 +2,6 @@
 name: test-e2e
 description: >
   Use this skill when writing, reviewing, or planning end-to-end tests with Playwright or Cypress, or when deliberately trying to find browser bugs before one is confirmed. For isolated logic or rendering tests without a browser, use test-unit.
-filePatterns: ["*.e2e.ts", "*.e2e.js", "*.cy.ts", "*.cy.js"]
-pathPatterns: ["/e2e/", "/tests/cypress/"]
 ---
 # End-to-end testing
 

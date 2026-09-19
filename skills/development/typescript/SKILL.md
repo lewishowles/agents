@@ -2,8 +2,6 @@
 name: typescript
 description: >
   Use this skill when working in TypeScript files (.ts, .tsx, .vue with lang="ts") or when type errors, type definitions, or generics are involved. Covers keeping types simple, when `as any` is acceptable, avoiding type gymnastics, and always explaining type errors rather than silently suppressing them.
-filePatterns: ["*.ts", "*.tsx"]
-pathPatterns: []
 ---
 # TypeScript
 

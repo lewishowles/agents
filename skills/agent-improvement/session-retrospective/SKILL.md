@@ -2,8 +2,6 @@
 name: session-retrospective
 description: >
   Use this skill when asked to learn from, retrospect on, review, or extract lessons from a difficult agent session without jumping straight to creating a new skill.
-filePatterns: []
-pathPatterns: []
 ---
 # Session retrospective
 

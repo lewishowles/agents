@@ -2,8 +2,6 @@
 name: writing
 description: >
   Use this skill when writing or editing prose, including blogs, docs, longform, marketing copy, commit messages, comments, docstrings, and written reports or handoffs. For README files, see writing-readme; for UI microcopy, see writing-copy.
-filePatterns: ["*.md"]
-pathPatterns: []
 ---
 # Writing style
 

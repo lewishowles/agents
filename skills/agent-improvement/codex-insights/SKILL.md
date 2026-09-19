@@ -2,8 +2,6 @@
 name: codex-insights
 description: >
   Use this skill when turning bounded Codex rollout extraction JSON into conversation facets, repeated-behaviour findings, and an evidence-backed narrative usage report.
-filePatterns: ["latest.json", "latest-narrative.json", "codex_insights_*.py"]
-pathPatterns: ["**/.codex/usage-data/**", "src/skills/codex-insights/**"]
 ---
 # Codex insights
 

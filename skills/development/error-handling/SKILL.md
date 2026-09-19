@@ -2,8 +2,6 @@
 name: error-handling
 description: >
   Use this skill when writing functions that accept parameters, making API calls, or handling any response data — even if errors aren't the main topic. Covers input validation with helper utilities, API response validation, graceful fallbacks, and what NOT to handle. Apply proactively when writing JavaScript/TypeScript functions.
-filePatterns: []
-pathPatterns: []
 ---
 # Error handling
 

@@ -2,8 +2,6 @@
 name: swift-ui
 description: >
   Use this skill when writing or reviewing SwiftUI code — views, state management, view composition, navigation, and performance. Covers modern patterns (@Observable, @Bindable), anti-patterns (ObservableObject, @Published), and optimization techniques for responsive interfaces.
-filePatterns: ["*.swift"]
-pathPatterns: []
 ---
 # SwiftUI patterns
 

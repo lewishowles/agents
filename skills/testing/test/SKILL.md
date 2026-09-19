@@ -2,8 +2,6 @@
 name: test
 description: >
   Use this skill when deciding what to test, at which layer, and in what order — before writing the tests themselves. Covers the test pyramid, TDD red-green-refactor workflow, and what to skip. For the mechanics of writing tests, see test-unit and test-e2e.
-filePatterns: []
-pathPatterns: []
 ---
 # Testing strategy
 

@@ -2,8 +2,6 @@
 name: human-friendly-cli
 description: >
   Use this skill when designing, reviewing, or extending CLI commands. Covers discoverable, restrained human-first CLIs that also work well for agents.
-filePatterns: []
-pathPatterns: []
 ---
 # Human-friendly CLI
 

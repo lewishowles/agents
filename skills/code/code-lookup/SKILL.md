@@ -2,8 +2,6 @@
 name: code-lookup
 description: >
   Use this skill when locating code, tracing behaviour, or choosing between Serena, codebase-memory, and text search.
-filePatterns: []
-pathPatterns: []
 ---
 # Code lookup
 

@@ -2,8 +2,6 @@
 name: project-continue
 description: >
   Use this skill to resume work from the progress CLI's task, chunk, and handoff records, verify completed work, and pick up where the last session left off.
-filePatterns: []
-pathPatterns: []
 ---
 # Project continue
 

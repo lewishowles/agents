@@ -2,8 +2,6 @@
 name: friction-review
 description: >
   Use this skill to turn recurring friction patterns from friction summary into specific, minimal, human-reviewed amendments to src/rules/ or src/skills/. Uses friction resolve after an accepted amendment, proposes a diff per pattern, and never auto-applies.
-filePatterns: []
-pathPatterns: []
 ---
 # Friction review
 

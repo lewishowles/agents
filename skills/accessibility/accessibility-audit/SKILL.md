@@ -2,8 +2,6 @@
 name: accessibility-audit
 description: >
   Use this skill when conducting an accessibility audit of a page, component, or PR — distinct from building accessibly (use the accessibility skill for that). Two modes: quick PR triage or full client audit. Triggers: "audit for accessibility", "a11y check", "WCAG compliance", "is this accessible?", preparing a client accessibility report.
-filePatterns: []
-pathPatterns: []
 ---
 # Accessibility audit
 

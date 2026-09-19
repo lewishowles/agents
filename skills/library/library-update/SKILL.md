@@ -2,8 +2,6 @@
 name: library-update
 description: >
   Use this skill to check supported @lewishowles project dependencies for newer releases, review release notes, and identify updates or APIs to adopt.
-filePatterns: []
-pathPatterns: []
 ---
 # Library update check
 
