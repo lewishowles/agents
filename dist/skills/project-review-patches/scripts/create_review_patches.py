@@ -61,7 +61,9 @@ def git_command(
 	return result
 
 
-def git_text(root: Path, arguments: list[str], *, expected_codes: tuple[int, ...] = (0,)) -> str:
+def git_text(
+	root: Path, arguments: list[str], *, expected_codes: tuple[int, ...] = (0,)
+) -> str:
 	"""Run Git and decode its text output with Git-compatible path handling."""
 	return git_command(root, arguments, expected_codes=expected_codes).stdout.decode(
 		"utf-8", errors="surrogateescape"
@@ -158,7 +160,9 @@ def diff_blocks(diff: str, path: str) -> list[str]:
 	if not diff:
 		raise PatchError(f"no diff found for changed path {path!r}")
 	lines = diff.splitlines(keepends=True)
-	starts = [index for index, line in enumerate(lines) if line.startswith("diff --git ")]
+	starts = [
+		index for index, line in enumerate(lines) if line.startswith("diff --git ")
+	]
 	if len(starts) != 1:
 		raise PatchError(f"expected one diff block for {path!r}, found {len(starts)}")
 	return ["".join(lines[starts[0] :])]
@@ -174,14 +178,18 @@ def hunk_ranges(block: str) -> list[tuple[int, int]]:
 	]
 
 
-def select_hunks(block: str, selected: list[int] | None, path: str) -> tuple[str, list[int]]:
+def select_hunks(
+	block: str, selected: list[int] | None, path: str
+) -> tuple[str, list[int]]:
 	"""Select complete hunks while retaining the Git header and metadata."""
 	ranges = hunk_ranges(block)
 	if selected is None:
 		return block, list(range(len(ranges)))
 	if not ranges:
 		raise PatchError(f"path {path!r} has no textual hunks and must be whole-file")
-	if len(set(selected)) != len(selected) or any(index < 0 or index >= len(ranges) for index in selected):
+	if len(set(selected)) != len(selected) or any(
+		index < 0 or index >= len(ranges) for index in selected
+	):
 		raise PatchError(f"invalid hunk selection for {path!r}: {selected!r}")
 	lines = block.splitlines(keepends=True)
 	prefix_end = ranges[0][0]
@@ -222,7 +230,11 @@ def load_plan(plan_path: Path) -> list[dict[str, Any]]:
 		plan = json.loads(plan_path.read_text(encoding="utf-8"))
 	except (OSError, json.JSONDecodeError) as error:
 		raise PatchError(f"cannot read plan {plan_path}: {error}") from error
-	if not isinstance(plan, dict) or not isinstance(plan.get("proposals"), list) or not plan["proposals"]:
+	if (
+		not isinstance(plan, dict)
+		or not isinstance(plan.get("proposals"), list)
+		or not plan["proposals"]
+	):
 		raise PatchError("plan must contain a non-empty proposals list")
 	proposals: list[dict[str, Any]] = []
 	proposal_ids: set[str] = set()
@@ -231,14 +243,22 @@ def load_plan(plan_path: Path) -> list[dict[str, Any]]:
 			raise PatchError("each proposal must be an object")
 		proposal_id = proposal.get("id")
 		changes = proposal.get("changes")
-		if not isinstance(proposal_id, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", proposal_id):
+		if not isinstance(proposal_id, str) or not re.fullmatch(
+			r"[A-Za-z0-9][A-Za-z0-9._-]*", proposal_id
+		):
 			raise PatchError(f"invalid proposal id: {proposal_id!r}")
 		if proposal_id in proposal_ids:
 			raise PatchError(f"duplicate proposal id: {proposal_id}")
 		if not isinstance(changes, list) or not changes:
 			raise PatchError(f"proposal {proposal_id} must contain changes")
 		proposal_ids.add(proposal_id)
-		proposals.append({"id": proposal_id, "title": proposal.get("title", proposal_id), "changes": changes})
+		proposals.append(
+			{
+				"id": proposal_id,
+				"title": proposal.get("title", proposal_id),
+				"changes": changes,
+			}
+		)
 	return proposals
 
 
@@ -257,11 +277,14 @@ def proposal_units(
 		if path in seen_paths:
 			raise PatchError(f"proposal {proposal['id']} repeats path {path!r}")
 		if path not in diffs:
-			raise PatchError(f"proposal {proposal['id']} does not match changed path {path!r}")
+			raise PatchError(
+				f"proposal {proposal['id']} does not match changed path {path!r}"
+			)
 		seen_paths.add(path)
 		selected = change.get("hunks")
 		if selected is not None and (
-			not isinstance(selected, list) or not all(isinstance(index, int) for index in selected)
+			not isinstance(selected, list)
+			or not all(isinstance(index, int) for index in selected)
 		):
 			raise PatchError(f"hunks for {path!r} must be a list of integers")
 		block, hunk_indexes = select_hunks(diffs[path], selected, path)
@@ -273,7 +296,9 @@ def proposal_units(
 			units.update((path, index) for index in hunk_indexes)
 		selections[path] = None if selected is None else hunk_indexes
 		if not block:
-			raise PatchError(f"proposal {proposal['id']} selected no patch content for {path!r}")
+			raise PatchError(
+				f"proposal {proposal['id']} selected no patch content for {path!r}"
+			)
 	return units, selections
 
 
@@ -305,7 +330,10 @@ def file_record(root: Path, path: str) -> dict[str, Any]:
 
 def write_json(path: Path, value: dict[str, Any]) -> None:
 	"""Write stable, human-readable JSON metadata."""
-	path.write_text(json.dumps(value, ensure_ascii=False, indent="\t", sort_keys=True) + "\n", encoding="utf-8")
+	path.write_text(
+		json.dumps(value, ensure_ascii=False, indent="\t", sort_keys=True) + "\n",
+		encoding="utf-8",
+	)
 
 
 def generate(
@@ -321,7 +349,9 @@ def generate(
 	if staged_policy not in {"refuse", "include"}:
 		raise PatchError(f"unsupported staged policy: {staged_policy}")
 	if has_staged_changes(root) and staged_policy == "refuse":
-		raise PatchError("the index contains staged changes; choose an explicit staged policy")
+		raise PatchError(
+			"the index contains staged changes; choose an explicit staged policy"
+		)
 	proposals = load_plan(plan_path)
 	current_paths = changed_paths(root)
 	if not current_paths:
@@ -333,7 +363,9 @@ def generate(
 		units, selections = proposal_units(proposal, diffs)
 		duplicate_units = all_units.intersection(units)
 		if duplicate_units:
-			raise PatchError(f"units assigned to more than one proposal: {sorted(duplicate_units)!r}")
+			raise PatchError(
+				f"units assigned to more than one proposal: {sorted(duplicate_units)!r}"
+			)
 		all_units.update(units)
 		proposal_records.append({"proposal": proposal, "selections": selections})
 	if all_units == set():
@@ -347,8 +379,12 @@ def generate(
 			expected_units.add((path, "whole"))
 	missing_units = expected_units - all_units
 	if missing_units:
-		raise PatchError(f"changed units are missing from the plan: {sorted(missing_units)!r}")
-	if refresh_id is not None and refresh_id not in {record["proposal"]["id"] for record in proposal_records}:
+		raise PatchError(
+			f"changed units are missing from the plan: {sorted(missing_units)!r}"
+		)
+	if refresh_id is not None and refresh_id not in {
+		record["proposal"]["id"] for record in proposal_records
+	}:
 		raise PatchError(f"cannot refresh unknown proposal {refresh_id!r}")
 	plan_hash = sha256(plan_path.read_bytes())
 	existing_manifest_proposals: dict[str, dict[str, Any]] = {}
@@ -357,8 +393,12 @@ def generate(
 		try:
 			existing_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
 		except (OSError, json.JSONDecodeError) as error:
-			raise PatchError(f"cannot refresh without an existing manifest: {error}") from error
-		if not isinstance(existing_manifest, dict) or not isinstance(existing_manifest.get("proposals"), list):
+			raise PatchError(
+				f"cannot refresh without an existing manifest: {error}"
+			) from error
+		if not isinstance(existing_manifest, dict) or not isinstance(
+			existing_manifest.get("proposals"), list
+		):
 			raise PatchError("cannot refresh from a manifest without a proposals list")
 		existing_manifest_proposals = {
 			proposal["id"]: proposal
@@ -399,7 +439,12 @@ def generate(
 			"base": base_revision,
 			"context_lines": CONTEXT_LINES,
 			"staged_policy": staged_policy,
-			"diff_options": ["--binary", "--full-index", "--no-ext-diff", "--no-renames"],
+			"diff_options": [
+				"--binary",
+				"--full-index",
+				"--no-ext-diff",
+				"--no-renames",
+			],
 			"changes": change_records,
 			"patch": {"path": patch_path.name, "sha256": sha256(patch_bytes)},
 			"freshness": "fresh",
@@ -429,7 +474,9 @@ def generate(
 	return manifest
 
 
-def check_metadata(root: Path, metadata_path: Path, base_revision: str) -> tuple[bool, list[str]]:
+def check_metadata(
+	root: Path, metadata_path: Path, base_revision: str
+) -> tuple[bool, list[str]]:
 	"""Check one patch metadata file against current inputs and patch bytes."""
 	try:
 		metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
@@ -531,45 +578,110 @@ def run_selftest() -> None:
 		plan_path = Path(directory) / "plan.json"
 		plan = {
 			"proposals": [
-				{"id": "patch-first", "title": "First hunk", "changes": [{"path": "tracked.txt", "hunks": [0]}]},
-				{"id": "patch-second", "title": "Second hunk", "changes": [{"path": "tracked.txt", "hunks": [1]}]},
-				{"id": "patch-new", "title": "New file", "changes": [{"path": "new.txt"}]},
-				{"id": "patch-delete", "title": "Deleted file", "changes": [{"path": "deleted.txt"}]},
+				{
+					"id": "patch-first",
+					"title": "First hunk",
+					"changes": [{"path": "tracked.txt", "hunks": [0]}],
+				},
+				{
+					"id": "patch-second",
+					"title": "Second hunk",
+					"changes": [{"path": "tracked.txt", "hunks": [1]}],
+				},
+				{
+					"id": "patch-new",
+					"title": "New file",
+					"changes": [{"path": "new.txt"}],
+				},
+				{
+					"id": "patch-delete",
+					"title": "Deleted file",
+					"changes": [{"path": "deleted.txt"}],
+				},
 			]
 		}
 		write_json(plan_path, plan)
 		output_directory = Path(directory) / "artefacts"
 		manifest = generate(root, plan_path, output_directory, staged_policy="refuse")
 		assert len(manifest["proposals"]) == 4
-		assert (output_directory / "patch-new.patch").read_text(encoding="utf-8").find("new file mode") >= 0
-		assert (output_directory / "patch-delete.patch").read_text(encoding="utf-8").find("deleted file mode") >= 0
+		assert (output_directory / "patch-new.patch").read_text(encoding="utf-8").find(
+			"new file mode"
+		) >= 0
+		assert (output_directory / "patch-delete.patch").read_text(
+			encoding="utf-8"
+		).find("deleted file mode") >= 0
 		assert all(
-			json.loads((output_directory / proposal["metadata"]).read_text(encoding="utf-8"))["apply_check"] == "passed"
+			json.loads(
+				(output_directory / proposal["metadata"]).read_text(encoding="utf-8")
+			)["apply_check"]
+			== "passed"
 			for proposal in manifest["proposals"]
 		)
 		assert check_directory(root, output_directory, plan_path) == 0
 		first_snapshot = (output_directory / "patch-first.patch").read_bytes()
 		second_patch_snapshot = (output_directory / "patch-second.patch").read_bytes()
 		second_metadata_snapshot = (output_directory / "patch-second.json").read_bytes()
-		generate(root, plan_path, output_directory, staged_policy="refuse", refresh_id="patch-first")
+		generate(
+			root,
+			plan_path,
+			output_directory,
+			staged_policy="refuse",
+			refresh_id="patch-first",
+		)
 		assert (output_directory / "patch-first.patch").read_bytes() == first_snapshot
 		write_file(root, "tracked.txt", "feedback changed\n")
 		assert check_directory(root, output_directory, plan_path) == 1
-		write_file(root, "tracked.txt", "".join(changed[:30] + ["untouched drift\n"] + changed[31:]))
+		write_file(
+			root,
+			"tracked.txt",
+			"".join(changed[:30] + ["untouched drift\n"] + changed[31:]),
+		)
 		assert check_directory(root, output_directory, plan_path) == 1
-		generate(root, plan_path, output_directory, staged_policy="refuse", refresh_id="patch-first")
-		assert (output_directory / "patch-second.patch").read_bytes() == second_patch_snapshot
-		assert (output_directory / "patch-second.json").read_bytes() == second_metadata_snapshot
+		generate(
+			root,
+			plan_path,
+			output_directory,
+			staged_policy="refuse",
+			refresh_id="patch-first",
+		)
+		assert (
+			output_directory / "patch-second.patch"
+		).read_bytes() == second_patch_snapshot
+		assert (
+			output_directory / "patch-second.json"
+		).read_bytes() == second_metadata_snapshot
 		assert check_directory(root, output_directory, plan_path) == 1
 		write_file(root, "tracked.txt", "".join(changed))
-		generate(root, plan_path, output_directory, staged_policy="refuse", refresh_id="patch-first")
+		generate(
+			root,
+			plan_path,
+			output_directory,
+			staged_policy="refuse",
+			refresh_id="patch-first",
+		)
 		assert check_directory(root, output_directory, plan_path) == 0
 		regrouped_plan = {
 			"proposals": [
-				{"id": "patch-first", "title": "First hunk", "changes": [{"path": "tracked.txt", "hunks": [1]}]},
-				{"id": "patch-second", "title": "Second hunk", "changes": [{"path": "tracked.txt", "hunks": [0]}]},
-				{"id": "patch-new", "title": "New file", "changes": [{"path": "new.txt"}]},
-				{"id": "patch-delete", "title": "Deleted file", "changes": [{"path": "deleted.txt"}]},
+				{
+					"id": "patch-first",
+					"title": "First hunk",
+					"changes": [{"path": "tracked.txt", "hunks": [1]}],
+				},
+				{
+					"id": "patch-second",
+					"title": "Second hunk",
+					"changes": [{"path": "tracked.txt", "hunks": [0]}],
+				},
+				{
+					"id": "patch-new",
+					"title": "New file",
+					"changes": [{"path": "new.txt"}],
+				},
+				{
+					"id": "patch-delete",
+					"title": "Deleted file",
+					"changes": [{"path": "deleted.txt"}],
+				},
 			]
 		}
 		write_json(plan_path, regrouped_plan)
@@ -578,7 +690,12 @@ def run_selftest() -> None:
 		assert check_directory(root, output_directory, plan_path) == 0
 		selftest_git(root, ["add", "tracked.txt"])
 		try:
-			generate(root, plan_path, Path(directory) / "staged-refuse", staged_policy="refuse")
+			generate(
+				root,
+				plan_path,
+				Path(directory) / "staged-refuse",
+				staged_policy="refuse",
+			)
 		except PatchError:
 			pass
 		else:
@@ -602,7 +719,12 @@ def run_selftest() -> None:
 			},
 		)
 		try:
-			generate(root, overlapping_plan, Path(directory) / "overlap-output", staged_policy="refuse")
+			generate(
+				root,
+				overlapping_plan,
+				Path(directory) / "overlap-output",
+				staged_policy="refuse",
+			)
 		except PatchError:
 			pass
 		else:
@@ -624,10 +746,20 @@ def parse_arguments() -> argparse.Namespace:
 	parser.add_argument("--selftest", action="store_true")
 	arguments = parser.parse_args()
 	if arguments.selftest:
-		if any((arguments.plan, arguments.check, arguments.refresh, arguments.include_staged, arguments.staged_policy)):
+		if any(
+			(
+				arguments.plan,
+				arguments.check,
+				arguments.refresh,
+				arguments.include_staged,
+				arguments.staged_policy,
+			)
+		):
 			parser.error("--selftest cannot be combined with another mode")
 		return arguments
-	if arguments.check is not None and any((arguments.refresh, arguments.include_staged, arguments.staged_policy)):
+	if arguments.check is not None and any(
+		(arguments.refresh, arguments.include_staged, arguments.staged_policy)
+	):
 		parser.error("--check cannot be combined with generation options")
 	if arguments.check is None and arguments.plan is None:
 		parser.error("--plan is required unless --check or --selftest is used")
@@ -648,12 +780,22 @@ def main() -> int:
 		return 0
 	root = repository_root(arguments.root.resolve())
 	if arguments.check is not None:
-		check_path = arguments.check if arguments.check.is_absolute() else root / arguments.check
-		plan_path = arguments.plan if arguments.plan is not None else check_path / "plan.json"
+		check_path = (
+			arguments.check if arguments.check.is_absolute() else root / arguments.check
+		)
+		plan_path = (
+			arguments.plan if arguments.plan is not None else check_path / "plan.json"
+		)
 		plan_path = plan_path if plan_path.is_absolute() else root / plan_path
 		return check_directory(root, check_path, plan_path)
-	plan_path = arguments.plan if arguments.plan.is_absolute() else root / arguments.plan
-	output_directory = arguments.output_dir if arguments.output_dir.is_absolute() else root / arguments.output_dir
+	plan_path = (
+		arguments.plan if arguments.plan.is_absolute() else root / arguments.plan
+	)
+	output_directory = (
+		arguments.output_dir
+		if arguments.output_dir.is_absolute()
+		else root / arguments.output_dir
+	)
 	manifest = generate(
 		root,
 		plan_path,

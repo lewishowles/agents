@@ -35,6 +35,7 @@ setup_claude() {
 	cli_group_end
 
 	cli_group_begin "Claude skills"
+	prune_stale_repo_links "$CLAUDE_DIR/skills" "$REPO_DIR/dist/skills" "legacy skills" "1"
 	prune_stale_repo_links "$CLAUDE_DIR/skills" "$REPO_DIR" "skills"
 	link_skills "$CLAUDE_DIR/skills"
 	cli_group_end
@@ -107,6 +108,7 @@ setup_codex() {
 	cli_group_end
 
 	cli_group_begin "Codex skills"
+	prune_stale_repo_links "$HOME/.agents/skills" "$REPO_DIR/dist/skills" "legacy skills" "1"
 	prune_stale_repo_links "$HOME/.agents/skills" "$REPO_DIR" "skills"
 	prune_stale_repo_links "$CODEX_DIR/skills" "$REPO_DIR" "legacy skills" "1"
 	link_skills "$HOME/.agents/skills"

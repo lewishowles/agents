@@ -69,14 +69,14 @@ Send one explicitly named Scout the coordinator-approved plan and the exact help
 Create the initial set with:
 
 ```sh
-python3 src/skills/project-management/project-review-patches/scripts/create_review_patches.py \
+python3 skills/project-management/project-review-patches/scripts/create_review_patches.py \
 	--plan .agent/review-patches/plan.json
 ```
 
 Check freshness before showing a patch again:
 
 ```sh
-python3 src/skills/project-management/project-review-patches/scripts/create_review_patches.py \
+python3 skills/project-management/project-review-patches/scripts/create_review_patches.py \
 	--check .agent/review-patches
 ```
 

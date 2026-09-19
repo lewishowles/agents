@@ -20,15 +20,15 @@ create_fixture_repo() {
 
 	mkdir -p \
 		"$target_dir/scripts" \
-		"$target_dir/src/skills/vue/default-skill" \
-		"$target_dir/src/skills/vue/vue-use"
+		"$target_dir/skills/vue/default-skill" \
+		"$target_dir/skills/vue/vue-use"
 	cp "$REPO_DIR/scripts/sync-external-skills.sh" "$target_dir/scripts/sync-external-skills.sh"
 	cp -R "$REPO_DIR/scripts/lib" "$target_dir/scripts/lib"
 	# The fixture has no cli-style install of its own, so point the copied sync script at this repo's copy.
 	export CLI_STYLE_BIN="$REPO_DIR/.agent/tools/cli-style/bin/cli-style"
 
-	printf '# Existing default body\n' > "$target_dir/src/skills/vue/default-skill/SKILL.body.md"
-	printf '# Local wrapper\n' > "$target_dir/src/skills/vue/vue-use/SKILL.body.md"
+	printf '# Existing default body\n' > "$target_dir/skills/vue/default-skill/SKILL.body.md"
+	printf '# Local wrapper\n' > "$target_dir/skills/vue/vue-use/SKILL.body.md"
 	printf '%s\n' \
 		'---' \
 		'name: upstream' \
@@ -99,11 +99,11 @@ test_upstream_content_target() {
 
 	bash "$target_dir/scripts/sync-external-skills.sh" > "$output"
 
-	assert_contains "$target_dir/src/skills/vue/default-skill/SKILL.body.md" "# Upstream catalogue"
-	assert_contains "$target_dir/src/skills/vue/vue-use/SKILL.body.md" "# Local wrapper"
-	assert_contains "$target_dir/src/skills/vue/vue-use/SKILL.ref.md" "# Upstream catalogue"
-	assert_contains "$target_dir/src/skills/vue/vue-use/SYNC.md" "Upstream content target | SKILL.ref.md"
-	assert_contains "$target_dir/src/skills/vue/vue-use/SYNC.md" "\`SKILL.ref.md\` is overwritten on each sync"
+	assert_contains "$target_dir/skills/vue/default-skill/SKILL.body.md" "# Upstream catalogue"
+	assert_contains "$target_dir/skills/vue/vue-use/SKILL.body.md" "# Local wrapper"
+	assert_contains "$target_dir/skills/vue/vue-use/SKILL.ref.md" "# Upstream catalogue"
+	assert_contains "$target_dir/skills/vue/vue-use/SYNC.md" "Upstream content target | SKILL.ref.md"
+	assert_contains "$target_dir/skills/vue/vue-use/SYNC.md" "\`SKILL.ref.md\` is overwritten on each sync"
 }
 
 test_upstream_content_target

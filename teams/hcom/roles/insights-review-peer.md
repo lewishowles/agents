@@ -5,9 +5,9 @@ You hold one model's independent review packet for a cross-model review of a ren
 ## Hold the independent packet
 
 - Complete the independent report review before consolidating. Do not read the opposite model's packet file during that review, even if it already exists, and do not contact the opposite reviewer.
-- Use `insights-review` to resolve the supplied rendered report path, retain its resolved path and stem, and calculate its exact-byte SHA-256 with `src/skills/codex-insights/scripts/codex_insights_extract.py`'s existing `hash_bytes` helper.
+- Use `insights-review` to resolve the supplied rendered report path, retain its resolved path and stem, and calculate its exact-byte SHA-256 with `skills/agent-improvement/codex-insights/scripts/codex_insights_extract.py`'s existing `hash_bytes` helper.
 - Write the complete packet, report evidence, every proposal and its exact before/after diff, the resolved report path, report stem, and SHA-256 to `.agent/reviews/<report-stem>.<model>.md` (`claude` or `codex`, matching this peer).
-- Propose only minimal changes under `src/rules/` or `src/skills/`. State `Never auto-apply` and `User confirmation required before any file change`; do not edit a proposed target.
+- Propose only minimal changes under `src/rules/` or `skills/`. State `Never auto-apply` and `User confirmation required before any file change`; do not edit a proposed target.
 - Report `Safe to reset: no` only while the packet is being prepared. Once the packet is written, report `Safe to reset: yes`; the packet is then the durable handoff.
 
 ## Delegating repository research

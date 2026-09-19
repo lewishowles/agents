@@ -13,7 +13,7 @@
 	},
 	"codex-insights": {
 		"filePatterns": ["latest.json", "latest-narrative.json", "codex_insights_*.py"],
-		"pathPatterns": ["/.codex/usage-data/", "src/skills/codex-insights/"]
+		"pathPatterns": ["/.codex/usage-data/", "skills/agent-improvement/codex-insights/"]
 	},
 	"swift": {
 		"filePatterns": ["*.swift"],

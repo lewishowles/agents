@@ -17,7 +17,7 @@ previous 30 complete UTC calendar days: `--until` is the start of the current UT
 is 30 days earlier.
 
 ```sh
-python3 src/skills/codex-insights/scripts/codex_insights_extract.py \
+python3 skills/agent-improvement/codex-insights/scripts/codex_insights_extract.py \
 	--since 2026-08-05T00:00:00Z \
 	--until 2026-08-06T00:00:00Z
 ```
@@ -32,7 +32,7 @@ for every later artefact.
 Run the bounded facet and narrative pass only against the selected extraction:
 
 ```sh
-python3 src/skills/codex-insights/scripts/codex_insights_facets.py
+python3 skills/agent-improvement/codex-insights/scripts/codex_insights_facets.py
 ```
 
 It writes `latest-facets.json` and `latest-narrative.json` beside `latest.json`. The pass derives
@@ -69,7 +69,7 @@ pattern count, and facets-file SHA-256. A stale or tampered input must fail befo
 Create the finding-specific authoring bundle after the narrative pass:
 
 ```sh
-python3 src/skills/codex-insights/scripts/codex_insights_author.py
+python3 skills/agent-improvement/codex-insights/scripts/codex_insights_author.py
 ```
 
 The bundle reads `latest.json` and `latest-narrative.json`, then gives each finding only a bounded,
@@ -90,7 +90,7 @@ human-reviewable authoring pass.
 Validate the draft and write the fallback-safe authored artefact:
 
 ```sh
-python3 src/skills/codex-insights/scripts/codex_insights_author.py --validate
+python3 skills/agent-improvement/codex-insights/scripts/codex_insights_author.py --validate
 ```
 
 Validation writes `latest-authored.json`, accepting only finding-specific prose grounded in a retained
@@ -104,7 +104,7 @@ artefacts present: `latest.json`, `latest-facets.json`, `latest-narrative.json`,
 `latest-authored.json`:
 
 ```sh
-python3 src/skills/codex-insights/scripts/codex_insights_render.py
+python3 skills/agent-improvement/codex-insights/scripts/codex_insights_render.py
 ```
 
 The renderer independently re-validates the full extraction, facets, narrative, and authored provenance

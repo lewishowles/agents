@@ -146,17 +146,45 @@ link_path() {
 	fi
 }
 
-# Links all generated runtime skills into the given target directory.
+# Links each skill folder under skills/<group>/ into the given target
+# directory, named after the folder. Returns 1 without creating any links when
+# two groups hold a skill with the same name, because one link would replace
+# the other. The array length checks keep macOS bash 3.2 from treating an
+# empty array as unset under `set -u`.
 #
 # @param  {string}  target_dir
 #     The directory to install skill symlinks into.
 link_skills() {
-	local target_dir="$1"
-	local skill slug
+	local target_dir="$1"  # Directory to install skill symlinks into.
+	local skill  # Canonical skill directory currently being checked or linked.
+	local slug  # Skill name taken from the canonical directory basename.
+	local other  # Previously collected skill directory used for duplicate checks.
+	local other_slug  # Skill name taken from the previously collected directory.
+	local skill_paths=()  # Canonical skill directories that passed duplicate checks.
 
-	for skill in "$REPO_DIR"/dist/skills/*; do
-		[ -d "$skill" ] || continue
+	for skill in "$REPO_DIR"/skills/*/*; do
+		if [ ! -d "$skill" ]; then
+			continue
+		fi
+
 		slug=$(basename "$skill")
-		link_path "$skill" "$target_dir/$slug" "skills/$slug"
+		if [ "${#skill_paths[@]}" -gt 0 ]; then
+			for other in "${skill_paths[@]}"; do
+				other_slug=$(basename "$other")
+				if [ "$other_slug" = "$slug" ]; then
+					cli_group_status failed "duplicate skill name" "$slug: $(display_path "$other") and $(display_path "$skill")"
+					return 1
+				fi
+			done
+		fi
+
+		skill_paths+=("$skill")
 	done
+
+	if [ "${#skill_paths[@]}" -gt 0 ]; then
+		for skill in "${skill_paths[@]}"; do
+			slug=$(basename "$skill")
+			link_path "$skill" "$target_dir/$slug" "skills/$slug"
+		done
+	fi
 }

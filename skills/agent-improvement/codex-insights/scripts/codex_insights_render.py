@@ -1056,7 +1056,7 @@ def parse_arguments() -> argparse.Namespace:
 	parser = argparse.ArgumentParser(
 		description=__doc__,
 		epilog=(
-			"Example: python3 src/skills/codex-insights/scripts/"
+			"Example: python3 skills/agent-improvement/codex-insights/scripts/"
 			"codex_insights_render.py --narrative "
 			"~/.codex/usage-data/latest-narrative.json"
 		),
