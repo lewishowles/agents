@@ -24,6 +24,8 @@ create_fixture_repo() {
 		"$target_dir/src/skills/vue/vue-use"
 	cp "$REPO_DIR/scripts/sync-external-skills.sh" "$target_dir/scripts/sync-external-skills.sh"
 	cp -R "$REPO_DIR/scripts/lib" "$target_dir/scripts/lib"
+	# The fixture has no cli-style install of its own, so point the copied sync script at this repo's copy.
+	export CLI_STYLE_BIN="$REPO_DIR/.agent/tools/cli-style/bin/cli-style"
 
 	printf '# Existing default body\n' > "$target_dir/src/skills/vue/default-skill/SKILL.body.md"
 	printf '# Local wrapper\n' > "$target_dir/src/skills/vue/vue-use/SKILL.body.md"
