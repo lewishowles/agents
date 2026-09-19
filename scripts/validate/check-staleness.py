@@ -32,7 +32,11 @@ def collect_files() -> list[Path]:
 	files = []
 	for directory, pattern in SCAN_GLOBS:
 		d = REPO_ROOT / directory
-		matches = sorted(path for path in d.glob(pattern) if path.is_file()) if d.is_dir() else []
+		matches = (
+			sorted(path for path in d.glob(pattern) if path.is_file())
+			if d.is_dir()
+			else []
+		)
 		if not matches:
 			raise SourceInventoryError(
 				f"Configured staleness source family is empty: {d} ({pattern})"
@@ -106,7 +110,9 @@ def main() -> int:
 			warnings += 1
 
 	if warnings:
-		print(f"  {warnings} stale file(s) — review for drift against current runtime behaviour")
+		print(
+			f"  {warnings} stale file(s) — review for drift against current runtime behaviour"
+		)
 
 	return 0
 

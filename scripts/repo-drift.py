@@ -41,7 +41,13 @@ class Issue:
 # Runs markdown-claims.py and returns its findings as Issue objects.
 def run_claims_check() -> list[Issue]:
 	result = subprocess.run(
-		[sys.executable, str(REPO_ROOT / "scripts" / "agent-tools" / "markdown-claims.py"), "--mode", "all", "--json"],
+		[
+			sys.executable,
+			str(REPO_ROOT / "scripts" / "agent-tools" / "markdown-claims.py"),
+			"--mode",
+			"all",
+			"--json",
+		],
 		capture_output=True,
 		text=True,
 	)
@@ -62,7 +68,9 @@ def deduplicate(issues: list[Issue]) -> list[Issue]:
 	best: dict[tuple[str, str], Issue] = {}
 	for issue in issues:
 		key = (issue.file, issue.claim)
-		if key not in best or DEDUCTIONS.get(issue.kind, 5) > DEDUCTIONS.get(best[key].kind, 5):
+		if key not in best or DEDUCTIONS.get(issue.kind, 5) > DEDUCTIONS.get(
+			best[key].kind, 5
+		):
 			best[key] = issue
 	return list(best.values())
 

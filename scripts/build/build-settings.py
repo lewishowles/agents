@@ -13,7 +13,9 @@ import json
 from pathlib import Path
 
 REPO_DIR = Path(__file__).resolve().parent.parent.parent
-BASE_FILE = REPO_DIR / "src" / "adapters" / "claude" / "settings.base.json"  # Editable settings source.
+BASE_FILE = (
+	REPO_DIR / "src" / "adapters" / "claude" / "settings.base.json"
+)  # Editable settings source.
 HOOKS_DIR = REPO_DIR / "src" / "hooks" / "claude"
 OUT_FILE = REPO_DIR / "dist" / "claude" / "settings.json"
 
@@ -28,7 +30,7 @@ def hook_command(manifest: dict) -> str:
 	if "command" in manifest:
 		return manifest["command"]
 	name = manifest["name"]
-	return f'bash -c \'bash "$HOME/.claude/hooks/{name}.sh"\''
+	return f"bash -c 'bash \"$HOME/.claude/hooks/{name}.sh\"'"
 
 
 # Build a single hook entry for the settings.json hooks block.
@@ -70,7 +72,9 @@ def main() -> None:
 	for entries in groups.values():
 		entries.sort(key=lambda x: x[0])
 
-	for (event, matcher), entries in sorted(groups.items(), key=lambda kv: (kv[0][0], kv[0][1] or "")):
+	for (event, matcher), entries in sorted(
+		groups.items(), key=lambda kv: (kv[0][0], kv[0][1] or "")
+	):
 		hook_entries = [build_hook_entry(ev, cmd) for _, cmd, ev in entries]
 		event_list: list = hooks_block.setdefault(event, [])
 		if matcher:

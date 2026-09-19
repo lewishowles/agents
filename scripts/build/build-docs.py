@@ -68,7 +68,9 @@ def replace_block(path: Path, name: str, body: str) -> None:
 	_, marker, after = rest.partition(end)
 	if not marker:
 		raise ValueError(f"Missing end marker {end} in {path}")
-	path.write_text(f"{before}{start}\n{generated_notice()}\n{body.rstrip()}\n{end}{after}")
+	path.write_text(
+		f"{before}{start}\n{generated_notice()}\n{body.rstrip()}\n{end}{after}"
+	)
 
 
 def generated_notice() -> str:
@@ -136,8 +138,12 @@ def build_registered_hooks_table() -> str:
 			events.append(label)
 		failure = manifest.get("failureMode", "")
 		dependencies = manifest.get("dependencies", [])
-		dependency_text = f"; requires {', '.join(dependencies)}" if dependencies else ""
-		lines.append(f"| `{name}` | {cell(description)} | {cell(', '.join(events))} | `{failure}`{dependency_text} |")
+		dependency_text = (
+			f"; requires {', '.join(dependencies)}" if dependencies else ""
+		)
+		lines.append(
+			f"| `{name}` | {cell(description)} | {cell(', '.join(events))} | `{failure}`{dependency_text} |"
+		)
 	return "\n".join(lines)
 
 
@@ -150,7 +156,9 @@ def build_file_trigger_table() -> str:
 			continue
 		name = manifest["name"]
 		skills = [name] + manifest.get("dependencies", [])
-		for pattern in manifest.get("filePatterns", []) + manifest.get("pathPatterns", []):
+		for pattern in manifest.get("filePatterns", []) + manifest.get(
+			"pathPatterns", []
+		):
 			if pattern not in by_pattern:
 				by_pattern[pattern] = []
 				pattern_order.append(pattern)
@@ -171,9 +179,21 @@ def build_file_trigger_table() -> str:
 def generated_blocks() -> list[tuple[Path, str, str]]:
 	return [
 		(REPO_DIR / "docs" / "skills.md", "user-skills", build_user_skills_table()),
-		(REPO_DIR / "docs" / "commands.md", "skill-commands", build_skill_commands_table()),
-		(REPO_DIR / "docs" / "hooks.md", "registered-hooks", build_registered_hooks_table()),
-		(REPO_DIR / "docs" / "hooks.md", "file-trigger-mapping", build_file_trigger_table()),
+		(
+			REPO_DIR / "docs" / "commands.md",
+			"skill-commands",
+			build_skill_commands_table(),
+		),
+		(
+			REPO_DIR / "docs" / "hooks.md",
+			"registered-hooks",
+			build_registered_hooks_table(),
+		),
+		(
+			REPO_DIR / "docs" / "hooks.md",
+			"file-trigger-mapping",
+			build_file_trigger_table(),
+		),
 	]
 
 
@@ -190,7 +210,9 @@ def check_blocks() -> int:
 
 def main() -> None:
 	parser = argparse.ArgumentParser()
-	parser.add_argument("--check", action="store_true", help="Check generated docs without writing.")
+	parser.add_argument(
+		"--check", action="store_true", help="Check generated docs without writing."
+	)
 	args = parser.parse_args()
 
 	if args.check:

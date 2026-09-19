@@ -66,7 +66,9 @@ def tool_result_failed(value: object) -> bool:
 	Returns:
 		True when the result contains an error flag, otherwise False.
 	"""
-	return isinstance(value, dict) and bool(value.get("is_error") or value.get("isError"))
+	return isinstance(value, dict) and bool(
+		value.get("is_error") or value.get("isError")
+	)
 
 
 def command_input(tool_input: dict[str, object]) -> str:
@@ -416,7 +418,9 @@ def finalise_driver_ledger(session: Session) -> None:
 	calls = session["_driver_calls"]
 	repetition_calls = [
 		(
-			call["classification"]["repeat_name"] if call["classification"] else call["name"],
+			call["classification"]["repeat_name"]
+			if call["classification"]
+			else call["name"],
 			call["classification"]["repeat_input"] if call["classification"] else {},
 			index,
 		)

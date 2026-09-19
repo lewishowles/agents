@@ -32,12 +32,16 @@ def session_paths(days):
 	@param  {int}  days
 	    Size of the window in days.
 	"""
-	cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=days)
+	cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(
+		days=days
+	)
 
 	paths = []
 
 	for path in glob.glob(os.path.join(ROOT, "*", "*.jsonl")):
-		mtime = datetime.datetime.fromtimestamp(os.stat(path).st_mtime, datetime.timezone.utc)
+		mtime = datetime.datetime.fromtimestamp(
+			os.stat(path).st_mtime, datetime.timezone.utc
+		)
 
 		if mtime >= cutoff:
 			paths.append(path)
@@ -74,7 +78,9 @@ def record_text(record):
 	for block in blocks(record):
 		if block.get("type") == "text":
 			parts.append(block.get("text", ""))
-		elif block.get("type") == "tool_result" and isinstance(block.get("content"), str):
+		elif block.get("type") == "tool_result" and isinstance(
+			block.get("content"), str
+		):
 			parts.append(block["content"][:RESULT_TEXT_LIMIT])
 
 	return " ".join(parts)
@@ -111,7 +117,11 @@ def classify_bash_command(command):
 
 		while tokens and tokens[0] in ("cd", "clear", "command", "env", "exec", "sudo"):
 			tokens.pop(0)
-			if tokens and tokens[0].startswith("/") and tokens[0].endswith(("/bash", "/zsh", "/sh")):
+			if (
+				tokens
+				and tokens[0].startswith("/")
+				and tokens[0].endswith(("/bash", "/zsh", "/sh"))
+			):
 				tokens.pop(0)
 
 		if tokens:
@@ -126,6 +136,7 @@ def section(title, finding):
 
 # --- Section 1: corpus size -------------------------------------------------
 
+
 def corpus(paths):
 	section("Corpus", "Scope and method")
 
@@ -136,6 +147,7 @@ def corpus(paths):
 
 
 # --- Section 2: PROGRESS.md churn -------------------------------------------
+
 
 def progress_churn(paths):
 	section("PROGRESS.md churn", "F1")
@@ -153,16 +165,26 @@ def progress_churn(paths):
 				continue
 
 			for name, params in tool_calls(record):
-				if name in ("Edit", "Write") and str(params.get("file_path", "")).endswith("PROGRESS.md"):
+				if name in ("Edit", "Write") and str(
+					params.get("file_path", "")
+				).endswith("PROGRESS.md"):
 					edits += 1
 
 		if edits > 1:
-			day = datetime.datetime.fromtimestamp(os.path.getmtime(path)).strftime("%Y-%m-%d")
+			day = datetime.datetime.fromtimestamp(os.path.getmtime(path)).strftime(
+				"%Y-%m-%d"
+			)
 			total += edits
 			sessions += 1
 			by_day[day][0] += edits
 			by_day[day][1] += 1
-			worst.append((edits, os.path.basename(path)[:8], os.path.basename(os.path.dirname(path))[-34:]))
+			worst.append(
+				(
+					edits,
+					os.path.basename(path)[:8],
+					os.path.basename(os.path.dirname(path))[-34:],
+				)
+			)
 
 	print(f"repeated PROGRESS.md edits: {total} across {sessions} sessions")
 	print("\nby day (edits / sessions):")
@@ -177,6 +199,7 @@ def progress_churn(paths):
 
 
 # --- Section 3: read-after-edit ---------------------------------------------
+
 
 def count_pairs(sequence, window, by_type):
 	"""Count edits followed by a read of the same path within `window` calls.
@@ -194,13 +217,17 @@ def count_pairs(sequence, window, by_type):
 		if name not in ("Edit", "Write"):
 			continue
 
-		for later_name, later_path in sequence[index + 1: index + 1 + window]:
+		for later_name, later_path in sequence[index + 1 : index + 1 + window]:
 			if later_name == "Read" and later_path == path_edited:
 				pairs += 1
 
 				if by_type is not None:
 					text = str(path_edited)
-					by_type["PROGRESS.md" if text.endswith("PROGRESS.md") else (os.path.splitext(text)[1] or "none")] += 1
+					by_type[
+						"PROGRESS.md"
+						if text.endswith("PROGRESS.md")
+						else (os.path.splitext(text)[1] or "none")
+					] += 1
 
 				break
 
@@ -245,13 +272,23 @@ def read_after_edit(paths):
 				# edit almost immediately, rather than one separated by a dozen
 				# greps and builds.
 				for name, params in tool_calls(record):
-					sequence.append((name, params.get("file_path"), bool(record.get("isSidechain"))))
+					sequence.append(
+						(name, params.get("file_path"), bool(record.get("isSidechain")))
+					)
 
 		# Main-agent pairs are counted separately from delegated ones: the report
 		# quotes the main-agent figure, since subagent transcripts are governed by
 		# their own delegation packets.
-		main = [(name, path_edited) for name, path_edited, side in sequence if not side and name != "NOTICE"]
-		delegated = [(name, path_edited) for name, path_edited, side in sequence if side and name != "NOTICE"]
+		main = [
+			(name, path_edited)
+			for name, path_edited, side in sequence
+			if not side and name != "NOTICE"
+		]
+		delegated = [
+			(name, path_edited)
+			for name, path_edited, side in sequence
+			if side and name != "NOTICE"
+		]
 
 		windows[3] += count_pairs(main, 3, by_type)
 		windows[5] += count_pairs(main, 5, None)
@@ -264,7 +301,7 @@ def read_after_edit(paths):
 			if name not in ("Edit", "Write"):
 				continue
 
-			lookahead = flat[index + 1: index + 6]
+			lookahead = flat[index + 1 : index + 6]
 			saw_notice = any(item[0] == "NOTICE" for item in lookahead)
 
 			for later_name, later_path in lookahead:
@@ -279,13 +316,16 @@ def read_after_edit(paths):
 	print(f"read-after-edit pairs, main agent (3-call window): {windows[3]}")
 	print(f"read-after-edit pairs, main agent (5-call window): {windows[5]}")
 	print(f"read-after-edit pairs, delegated agents (3-call window): {sidechain_pairs}")
-	print(f"\nby file type, main agent (3-call window): {dict(by_type.most_common(10))}")
+	print(
+		f"\nby file type, main agent (3-call window): {dict(by_type.most_common(10))}"
+	)
 	print(f"\nformatter notices in window: {notices}")
 	print(f"  re-reads that followed a notice:  {after_notice}")
 	print(f"  re-reads with no notice at all:   {without_notice}")
 
 
 # --- Section 4: friction CLI ------------------------------------------------
+
 
 def friction():
 	"""Print post-cutoff friction figures returned by the friction CLI."""
@@ -316,18 +356,25 @@ def friction():
 	categories = collections.Counter(row.get("category") for row in rows)
 	check_fails = [row for row in rows if row.get("category") == "check-fail"]
 	empty = [row for row in check_fails if not row.get("error")]
-	by_repo = collections.Counter(os.path.basename(str(row.get("cwd", ""))) for row in check_fails)
-	per_minute = collections.Counter(str(row.get("timestamp_utc", ""))[:16] for row in check_fails)
+	by_repo = collections.Counter(
+		os.path.basename(str(row.get("cwd", ""))) for row in check_fails
+	)
+	per_minute = collections.Counter(
+		str(row.get("timestamp_utc", ""))[:16] for row in check_fails
+	)
 
 	print(f"entries in window: {len(rows)}")
 	print(f"by category: {dict(categories.most_common())}")
-	print(f"\ncheck-fail rows with an empty error summary: {len(empty)} of {len(check_fails)}")
+	print(
+		f"\ncheck-fail rows with an empty error summary: {len(empty)} of {len(check_fails)}"
+	)
 	print(f"  as a share of all entries: {len(empty) / len(rows):.0%}")
 	print(f"\ncheck-fail by repository: {dict(by_repo.most_common(5))}")
 	print(f"\nbusiest minutes (retry clusters): {per_minute.most_common(5)}")
 
 
 # --- Section 5: response verbosity ------------------------------------------
+
 
 def verbosity(paths):
 	section("Assistant response verbosity", "Not findings")
@@ -352,7 +399,13 @@ def verbosity(paths):
 				lengths.append(len(text))
 
 				if len(text) > 4000:
-					large.append((len(text), os.path.basename(path)[:8], (record.get("timestamp") or "")[:16]))
+					large.append(
+						(
+							len(text),
+							os.path.basename(path)[:8],
+							(record.get("timestamp") or "")[:16],
+						)
+					)
 
 	lengths.sort()
 
@@ -368,6 +421,7 @@ def verbosity(paths):
 
 
 # --- Section 6: command discipline ------------------------------------------
+
 
 def commands(paths):
 	section("Command discipline", "Successful patterns")
@@ -399,11 +453,19 @@ def commands(paths):
 					scoped = re.search(r"--test-file|\.pw\.js|--grep|-g ", command)
 					counts["playwright scoped" if scoped else "playwright broad"] += 1
 
-	for key in ("bash total", "diagnostics wrapper", "raw npm or vitest", "output bounded", "playwright scoped", "playwright broad"):
+	for key in (
+		"bash total",
+		"diagnostics wrapper",
+		"raw npm or vitest",
+		"output bounded",
+		"playwright scoped",
+		"playwright broad",
+	):
 		print(f"  {key:22s} {counts[key]}")
 
 
 # --- Section 7: skill presence ----------------------------------------------
+
 
 def skills(paths):
 	section("code-style presence in source-editing sessions", "F5")
@@ -420,10 +482,14 @@ def skills(paths):
 		source_edits = 0
 
 		for record in records(path):
-			for name, params in tool_calls(record) if record.get("type") == "assistant" else ():
+			for name, params in (
+				tool_calls(record) if record.get("type") == "assistant" else ()
+			):
 				if name == "Skill":
 					loaded.add(params.get("skill"))
-				elif name in ("Edit", "Write") and str(params.get("file_path", "")).endswith((".vue", ".js", ".ts")):
+				elif name in ("Edit", "Write") and str(
+					params.get("file_path", "")
+				).endswith((".vue", ".js", ".ts")):
 					source_edits += 1
 
 			for match in injected.finditer(record_text(record)):
@@ -444,7 +510,9 @@ def skills(paths):
 
 def main():
 	parser = argparse.ArgumentParser(description=__doc__)
-	parser.add_argument("--days", type=int, default=21, help="window size in days (default 21)")
+	parser.add_argument(
+		"--days", type=int, default=21, help="window size in days (default 21)"
+	)
 	args = parser.parse_args()
 
 	paths = session_paths(args.days)

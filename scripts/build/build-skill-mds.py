@@ -66,10 +66,12 @@ def promote_general_configuration(text: str) -> str:
 	while lines and lines[0] == "":
 		lines.pop(0)
 
-	first_top_level = next((i for i, line in enumerate(lines) if line.startswith("## ")), len(lines))
+	first_top_level = next(
+		(i for i, line in enumerate(lines) if line.startswith("## ")), len(lines)
+	)
 	for i in range(first_top_level):
 		if lines[i].startswith("### "):
-			lines[i] = "## " + lines[i][len("### "):]
+			lines[i] = "## " + lines[i][len("### ") :]
 
 	return "\n".join(lines)
 
@@ -114,10 +116,12 @@ def generate_skill_md(skill_dir: Path) -> None:
 	if display_name:
 		parts.append(f"displayName: {display_name}")
 
-	parts.extend([
-		"description: >",
-		f"  {manifest.get('description', '')}",
-	])
+	parts.extend(
+		[
+			"description: >",
+			f"  {manifest.get('description', '')}",
+		]
+	)
 
 	do_not_use = manifest.get("do-not-use-when", [])
 	if do_not_use:
@@ -145,7 +149,9 @@ def generate_skill_md(skill_dir: Path) -> None:
 	if explicit_invocation_only and codex_enabled:
 		agents_dir = output_dir / "agents"
 		agents_dir.mkdir(parents=True, exist_ok=True)
-		(agents_dir / "openai.yaml").write_text("policy:\n  allow_implicit_invocation: false\n")
+		(agents_dir / "openai.yaml").write_text(
+			"policy:\n  allow_implicit_invocation: false\n"
+		)
 
 	for source in skill_dir.iterdir():
 		if source.name in SOURCE_FILENAMES:

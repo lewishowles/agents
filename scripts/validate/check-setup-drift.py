@@ -36,22 +36,50 @@ IGNORED_FLAGS = {
 
 # Known setup outputs/flags documented in prose rather than fenced examples.
 IGNORED_DRIFT = {
-	("setup_flag_not_in_docs", "--force-workspace"),  # documented in prose, not fenced block
-	("setup_path_not_documented", ".agent/scripts"),  # documented in prose as linked shared tools
-	("setup_path_not_documented", ".agent/scripts/change-impact.py"),  # covered by .agent/scripts prose
-	("setup_path_not_documented", ".agent/scripts/generated-file-guard.py"),  # covered by .agent/scripts prose
-	("setup_path_not_documented", ".agent/scripts/markdown-claims.py"),  # covered by .agent/scripts prose
-	("setup_path_not_documented", ".agent/scripts/repo-context.py"),  # covered by .agent/scripts prose
-	("setup_path_not_documented", ".claude"),  # documented in prose through Claude support files
-	("setup_path_not_documented", ".claude/.claudeignore"),  # documented in prose, not fenced block
+	(
+		"setup_flag_not_in_docs",
+		"--force-workspace",
+	),  # documented in prose, not fenced block
+	(
+		"setup_path_not_documented",
+		".agent/scripts",
+	),  # documented in prose as linked shared tools
+	(
+		"setup_path_not_documented",
+		".agent/scripts/change-impact.py",
+	),  # covered by .agent/scripts prose
+	(
+		"setup_path_not_documented",
+		".agent/scripts/generated-file-guard.py",
+	),  # covered by .agent/scripts prose
+	(
+		"setup_path_not_documented",
+		".agent/scripts/markdown-claims.py",
+	),  # covered by .agent/scripts prose
+	(
+		"setup_path_not_documented",
+		".agent/scripts/repo-context.py",
+	),  # covered by .agent/scripts prose
+	(
+		"setup_path_not_documented",
+		".claude",
+	),  # documented in prose through Claude support files
+	(
+		"setup_path_not_documented",
+		".claude/.claudeignore",
+	),  # documented in prose, not fenced block
 }
 
 RE_CODE_FENCE = re.compile(r"```([a-zA-Z0-9_-]*)\n(.*?)```", re.DOTALL)
 RE_FLAG = re.compile(r"(?<![\w-])--[a-zA-Z0-9-]+|(?<![\w-])-h(?![\w-])")
-RE_FUNCTION = re.compile(r"^([a-zA-Z_][a-zA-Z0-9_]*)\(\) \{\n(.*?)\n\}", re.MULTILINE | re.DOTALL)
+RE_FUNCTION = re.compile(
+	r"^([a-zA-Z_][a-zA-Z0-9_]*)\(\) \{\n(.*?)\n\}", re.MULTILINE | re.DOTALL
+)
 RE_PROJECT_PATH = re.compile(r'"\$PROJECT_DIR/([^"]+)"')
 RE_INLINE_CODE = re.compile(r"(?<!`)`([^`\n]+)`(?!`)")
-RE_LOCAL_PATH = re.compile(r"(?<![\w/.-])(?:WORKSPACE\.md|AGENT_CAPABILITIES\.md|AGENTS\.md|\.agent/[^\s`'\"),]+|\.claude/[^\s`'\"),]+)")
+RE_LOCAL_PATH = re.compile(
+	r"(?<![\w/.-])(?:WORKSPACE\.md|AGENT_CAPABILITIES\.md|AGENTS\.md|\.agent/[^\s`'\"),]+|\.claude/[^\s`'\"),]+)"
+)
 
 
 @dataclass
@@ -199,7 +227,9 @@ def parse_docs() -> tuple[set[str], set[str], list[tuple[str, set[str], set[str]
 
 		flags.update(block_flags)
 		paths.update(block_paths)
-		block_facts.append((f"{rel(path)} fenced block {index}", block_flags, block_paths))
+		block_facts.append(
+			(f"{rel(path)} fenced block {index}", block_flags, block_paths)
+		)
 
 	return flags, paths, block_facts
 
@@ -208,9 +238,13 @@ def extract_template_paths(text: str) -> set[str]:
 	paths = set()
 
 	for code in RE_INLINE_CODE.findall(text):
-		paths.update(normalise_path(match.group(0)) for match in RE_LOCAL_PATH.finditer(code))
+		paths.update(
+			normalise_path(match.group(0)) for match in RE_LOCAL_PATH.finditer(code)
+		)
 
-	paths.update(normalise_path(match.group(0)) for match in RE_LOCAL_PATH.finditer(text))
+	paths.update(
+		normalise_path(match.group(0)) for match in RE_LOCAL_PATH.finditer(text)
+	)
 
 	return paths
 
@@ -314,7 +348,9 @@ def print_issues(issues: list[Issue]) -> None:
 		print(f"  {issue.source}: {issue.message}")
 
 	if issues:
-		print(f"\n  {len(issues)} setup drift warning(s) — review docs/templates against setup-project.sh")
+		print(
+			f"\n  {len(issues)} setup drift warning(s) — review docs/templates against setup-project.sh"
+		)
 
 
 def main() -> None:
@@ -326,10 +362,18 @@ def main() -> None:
 	doc_flags, doc_paths, doc_blocks = parse_docs()
 	template_paths, _paths_by_file = parse_templates()
 	issues = find_issues(setup, doc_flags, doc_paths, doc_blocks, template_paths)
-	checked = [rel(path) for path in [*SETUP_FILES, REPO_ROOT / "docs" / "setup.md", *TEMPLATE_FILES]]
+	checked = [
+		rel(path)
+		for path in [*SETUP_FILES, REPO_ROOT / "docs" / "setup.md", *TEMPLATE_FILES]
+	]
 
 	if args.json:
-		print(json.dumps({"issues": [asdict(issue) for issue in issues], "checked": checked}, indent=2))
+		print(
+			json.dumps(
+				{"issues": [asdict(issue) for issue in issues], "checked": checked},
+				indent=2,
+			)
+		)
 	else:
 		print_issues(issues)
 

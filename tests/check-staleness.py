@@ -34,8 +34,12 @@ class StalenessTests(unittest.TestCase):
 		module = load_staleness_module()
 
 		files = module.collect_files()
-		rule_files = [path for path in files if module.REPO_ROOT / "src/rules" in path.parents]
-		skill_files = [path for path in files if module.REPO_ROOT / "src/skills" in path.parents]
+		rule_files = [
+			path for path in files if module.REPO_ROOT / "src/rules" in path.parents
+		]
+		skill_files = [
+			path for path in files if module.REPO_ROOT / "src/skills" in path.parents
+		]
 
 		self.assertGreater(len(rule_files), 0)
 		self.assertGreater(len(skill_files), 0)
@@ -49,11 +53,15 @@ class StalenessTests(unittest.TestCase):
 			rules_dir.mkdir(parents=True)
 			(rules_dir / "rule.md").write_text("rule\n")
 
-			with patch.object(module, "REPO_ROOT", root), patch.object(
-				module,
-				"SCAN_GLOBS",
-				[("src/rules", "*.md"), ("src/skills", "**/SKILL.body.md")],
-			), patch.object(sys, "argv", [str(SCRIPT_PATH)]):
+			with (
+				patch.object(module, "REPO_ROOT", root),
+				patch.object(
+					module,
+					"SCAN_GLOBS",
+					[("src/rules", "*.md"), ("src/skills", "**/SKILL.body.md")],
+				),
+				patch.object(sys, "argv", [str(SCRIPT_PATH)]),
+			):
 				stderr = io.StringIO()
 				with contextlib.redirect_stderr(stderr):
 					status = module.main()
@@ -71,12 +79,15 @@ class StalenessTests(unittest.TestCase):
 			rules_dir.mkdir(parents=True)
 			(rules_dir / "rule.md").write_text("rule\n")
 
-			with patch.object(module, "REPO_ROOT", root), patch.object(
-				module, "SCAN_GLOBS", [("src/rules", "*.md")]
-			), patch.object(module, "last_commit", return_value=("abc123", 0)), patch.object(
-				module, "commits_since", return_value=2
-			), patch.object(module.time, "time", return_value=2 * 86400), patch.object(
-				sys, "argv", [str(SCRIPT_PATH), "--days", "1", "--commits", "1"]
+			with (
+				patch.object(module, "REPO_ROOT", root),
+				patch.object(module, "SCAN_GLOBS", [("src/rules", "*.md")]),
+				patch.object(module, "last_commit", return_value=("abc123", 0)),
+				patch.object(module, "commits_since", return_value=2),
+				patch.object(module.time, "time", return_value=2 * 86400),
+				patch.object(
+					sys, "argv", [str(SCRIPT_PATH), "--days", "1", "--commits", "1"]
+				),
 			):
 				stdout = io.StringIO()
 				with contextlib.redirect_stdout(stdout):

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Detect redundant tool patterns: identical repeated bash, re-read after edit, repeated reads."""
+
 import collections
 import datetime
 import glob
@@ -61,7 +62,7 @@ def repeated_call_indexes(calls):
 
 		file_path = tool_input.get("file_path")
 		for read_index, (later_name, later_input, _) in enumerate(
-			calls[index + 1: index + 4],
+			calls[index + 1 : index + 4],
 			start=index + 1,
 		):
 			if later_name == "Read" and later_input.get("file_path") == file_path:
@@ -119,22 +120,33 @@ def main():
 
 		for command, indexes in repeated_bash.items():
 			agg["repeat_bash"] += 1
-			examples["repeat_bash"].append((len(indexes), project, session_id, command[:120]))
+			examples["repeat_bash"].append(
+				(len(indexes), project, session_id, command[:120])
+			)
 
 		for index in repeated:
 			name, tool_input, timestamp = calls[index]
 			if name in ("Edit", "Write"):
-				for read_name, read_input, _ in calls[index + 1: index + 4]:
-					if read_name == "Read" and read_input.get("file_path") == tool_input.get("file_path"):
+				for read_name, read_input, _ in calls[index + 1 : index + 4]:
+					if read_name == "Read" and read_input.get(
+						"file_path"
+					) == tool_input.get("file_path"):
 						agg["read_after_edit"] += 1
 						examples["read_after_edit"].append(
-							(project, session_id, timestamp, str(tool_input.get("file_path"))[-60:])
+							(
+								project,
+								session_id,
+								timestamp,
+								str(tool_input.get("file_path"))[-60:],
+							)
 						)
 						break
 
 		for file_path, indexes in repeated_reads.items():
 			agg["repeat_read"] += 1
-			examples["repeat_read"].append((len(indexes), project, session_id, str(file_path)[-70:]))
+			examples["repeat_read"].append(
+				(len(indexes), project, session_id, str(file_path)[-70:])
+			)
 
 	print(dict(agg))
 	for key in examples:
