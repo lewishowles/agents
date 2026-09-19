@@ -98,6 +98,7 @@ A confident conclusion is not authorisation to implement. If the last user messa
 - Treat explicit user corrections as acceptance criteria. Restate the resulting behaviour, update the working contract, and verify each corrected case before making another completion claim. Do not keep proposing an interpretation the user has rejected.
 - Simpler approach exists? Say so; push back when warranted
 - User's premise or assessment wrong? Say so directly. Don't agree to keep the user happy; agreement that hides a problem is worse than disagreement that surfaces one.
+- Asked why something was done? Give the underlying reason. If the only reason is that a task record said so, say that plainly and reassess the choice on its merits.
 - Unclear? Stop and name what's confusing
 - Requirement has a known shape but isn't switched on yet? Build it behind a stub that refuses rather than guesses on anything that must be correct (auth, permissions, an amount, a limit). Requirement's shape is genuinely undecided? Don't build it — stop and report what's undesigned.
 - Never install packages, run API calls, or use external tools without permission
@@ -145,6 +146,7 @@ After understanding the affected flow, stop at the first option that fully satis
 5. New code: write the minimum needed for the confirmed requirement
 
 - No features beyond request, no single-use abstractions or unasked flexibility
+- Scope limits what you change without asking, not what you notice or raise. When an adjacent change would clearly serve the same purpose, name it as an option with a recommendation instead of dropping it silently.
 - Don't improve adjacent code, comments, or formatter-owned whitespace; don't refactor what works; match existing style
 - Spot unrelated dead code? Mention it, don't delete
 - Remove unused imports, variables, functions you created; don't remove unrelated dead code unless the user points it out or asks for cleanup
