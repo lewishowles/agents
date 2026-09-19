@@ -6,6 +6,10 @@ set -euo pipefail
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 REPO_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 FIXTURE_DIR="$SCRIPT_DIR/fixtures"
+TEST_ROOT=$(mktemp -d) # Temporary root for generated fixture skill folders.
+FIXTURE_SKILLS_DIR="$TEST_ROOT/skills" # Temporary installed-skill fixture directory.
+
+trap 'rm -rf "$TEST_ROOT"' EXIT
 
 pass=0
 fail=0
@@ -31,6 +35,23 @@ read_skill_list() {
 	fi
 }
 
+# Creates the installed skill folders used by every standard fixture.
+#
+# @param  {string}  list_file
+#     Newline-delimited skill names to install in the temporary fixture.
+prepare_fixture_skills() {
+	local list_file="$1" # File containing the fixture skill names.
+	local skill # Current skill name from the fixture list.
+	local skills=() # Skill names read from the fixture list.
+
+	mkdir -p "$FIXTURE_SKILLS_DIR"
+	mapfile -t skills < <(read_skill_list "$list_file")
+
+	for skill in "${skills[@]}"; do
+		mkdir -p "$FIXTURE_SKILLS_DIR/$skill"
+	done
+}
+
 # Returns 0 when the skill name appears as a complete skill token in context.
 #
 # @param  {string}  context
@@ -44,17 +65,32 @@ has_skill() {
 	printf '%s' "$context" | grep -qE "(^|[[:space:]])${skill}([[:space:]]|\.)"
 }
 
+# Runs one hook input fixture and checks required and forbidden skills.
+#
+# @param  {string}  hook_script
+#     Hook script under test.
+# @param  {string}  fixture_dir
+#     Directory containing the input and expected skill lists.
+# @param  {string}  case_name
+#     Human-readable fixture name.
+# @param  {string}  skills_dir
+#     Installed skill directory for this fixture.
 run_fixture() {
 	local hook_script="$1"
 	local fixture_dir="$2"
 	local case_name="$3"
+	local skills_dir="${4-$FIXTURE_SKILLS_DIR}" # Installed skill directory for this fixture.
 
 	local input="$fixture_dir/input.json"
 	local expected_file="$fixture_dir/expected-skills.txt"
 	local forbidden_file="$fixture_dir/forbidden-skills.txt"
 	local output
 
-	output=$(bash "$hook_script" < "$input" 2>/dev/null || true)
+	# The hook reads the pattern list that ships beside it, so tests check the real list.
+	output=$(
+		SKILL_FILE_TRIGGER_SKILLS_DIR="$skills_dir" \
+		bash "$hook_script" < "$input" 2>/dev/null || true
+	)
 
 	local expected_skills=()
 	mapfile -t expected_skills < <(read_skill_list "$expected_file")
@@ -107,6 +143,45 @@ run_fixture() {
 	fi
 }
 
+# Runs one fixture through a symlink with no pattern file beside that symlink.
+#
+# @param  {string}  hook_script
+#     Real hook script under test.
+# @param  {string}  fixture_dir
+#     Symlink fixture directory.
+run_symlink_fixture() {
+	local hook_script="$1"
+	local fixture_dir="$2"
+	local symlink_path="$TEST_ROOT/skill-file-trigger.sh" # Temporary symlink with no adjacent pattern file.
+
+	ln -s "$hook_script" "$symlink_path"
+
+	run_fixture "$symlink_path" "$fixture_dir" "symlink-pattern-resolution"
+}
+
+# Runs the missing-skill case again after installing the matched skill.
+#
+# @param  {string}  hook_script
+#     Hook script under test.
+# @param  {string}  fixture_dir
+#     Fixture directory for the positive control case.
+run_missing_skill_control() {
+	local hook_script="$1"
+	local fixture_dir="$2"
+	local skills_dir="$TEST_ROOT/missing-skill-control" # Temporary skills directory for the positive control.
+
+	mkdir -p "$skills_dir/boilersuit-generator-authoring"
+	run_fixture "$hook_script" "$fixture_dir" "missing-skill-installed-control" "$skills_dir"
+}
+
+# Runs every fixture directory in a named fixture suite.
+#
+# @param  {string}  suite_name
+#     Human-readable suite name.
+# @param  {string}  hook_script
+#     Hook script under test.
+# @param  {string}  fixture_subdir
+#     Fixture directory below tests/fixtures.
 run_suite() {
 	local suite_name="$1"
 	local hook_script="$2"
@@ -120,9 +195,19 @@ run_suite() {
 	done
 }
 
+prepare_fixture_skills "$FIXTURE_DIR/skill-file-trigger/installed-skills.txt"
+
 run_suite "skill-file-trigger" \
 	"$REPO_DIR/dist/claude/hooks/skill-file-trigger.sh" \
 	"skill-file-trigger"
+
+run_symlink_fixture \
+	"$REPO_DIR/dist/claude/hooks/skill-file-trigger.sh" \
+	"$FIXTURE_DIR/skill-file-trigger-symlink-pattern-resolution"
+
+run_missing_skill_control \
+	"$REPO_DIR/dist/claude/hooks/skill-file-trigger.sh" \
+	"$FIXTURE_DIR/skill-file-trigger-missing-skill-control"
 
 printf '\n%d passed, %d failed\n' "$pass" "$fail"
 [[ $fail -eq 0 ]]
