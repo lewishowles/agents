@@ -74,6 +74,25 @@ const ui = createCliStyle({ argv, env, stdout });
 - Keep colour optional and non-TTY compatible.
 - Inject `argv`, `env`, `stdout` explicitly for deterministic test output.
 
+### Other languages
+
+Bash, Python, and Swift adapters call the same binary, so output matches the JavaScript renderers.
+
+Python installs and imports under different names, deliberately: PyPI already had something too close to `cli-style`.
+
+```sh
+pip install lewishowles-cli-style
+```
+
+```python
+from cli_style import render
+
+print(render("status", {"type": "success", "label": "Tests passed"}))
+```
+
+- Rendering runs through the `cli-style` binary, which must be on `PATH`.
+- Without the binary, `render()` returns plain `key: value` text. Pass `raise_on_missing=True` to fail instead of degrading.
+
 ## Agent use follows human use
 
 Don't create separate agent-only CLI unless normal CLI can't expose the action. Prefer constrained commands over prompts, `--help`/`list` over searching, `preview`/`doctor` over trial-and-error, structured output via `--json` not input. Test whether normal CLI can be clearer for humans before adding agent mode.
