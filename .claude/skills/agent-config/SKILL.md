@@ -1,7 +1,7 @@
 ---
 name: agent-config
 description: >
-  Use this skill when maintaining this specific agent configuration repository, including AGENTS.md, PROGRESS.md, .claude/skills/agent-config/SKILL.md, src/rules/**, src/adapters/**, src/hooks/claude/**/**, src/skills/*/SKILL.body.md, src/skills/*/skill.json, scripts/*.sh, scripts/*.py, docs/**, and templates/**. Covers this repo's source layout, skill conventions, hook conventions, trigger patterns, and generated dist files. Pair with bash or writing as needed.
+  Use this skill when maintaining this specific agent configuration repository, including AGENTS.md, PROGRESS.md, .claude/skills/agent-config/SKILL.md, skills/**, src/rules/**, src/adapters/**, src/hooks/claude/**/**, scripts/*.sh, scripts/*.py, docs/**, and templates/**. Covers this repo's source layout, canonical skill folders, hook conventions, trigger patterns, and generated dist files. Pair with bash or writing as needed.
 related-skills:
   - bash
   - writing
@@ -27,17 +27,12 @@ Configuration/Agents/
 │   ├── hooks/claude/<name>/     # Hook source; registered in settings.base.json
 │   │   ├── hook.json            # Hook metadata (event, description, timeout)
 │   │   └── <name>.sh            # Hook script
-│   ├── skills/                  # Grouped authored skill sources
-│   │   └── <group>/             # e.g. vue/, swift/, testing/, writing/, project-management/
-│   │       └── <name>/
-│   │           ├── skill.json      # Canonical metadata (triggers, filePatterns, capabilities)
-│   │           └── SKILL.body.md   # Editable instructional content
+│   ├── skills/                  # Canonical, copyable skill folders
+│   │   └── <group>/<name>/      # Final SKILL.md plus support files
 │   └── fragments/                # Per-tool preamble fragments assembled by sync.sh
 │       ├── claude/header.md, subagent-delegation.md
 │       └── codex/header.md
 ├── dist/                       # Generated output — never author; regenerate with scripts/sync.sh
-│   ├── skills/<name>/          # Flattened runtime skill directories
-│   │   └── SKILL.md
 │   ├── claude/
 │   │   ├── CLAUDE.md
 │   │   ├── settings.json
@@ -62,13 +57,12 @@ Configuration/Agents/
 │   ├── sync.sh                  # Full regen: src/ → dist; calls sub-builders
 │   ├── validate.sh              # Checks dist/ consistency; exits 0 on pass
 │   ├── build/
-│   │   ├── build-docs.py            # Generates docs/ tables from manifests
+│   │   ├── build-docs.py            # Generates docs/ tables from canonical skill and hook files
 │   │   ├── build-settings.py        # Generates dist/claude/settings.json from settings.base.json
-│   │   └── build-skill-mds.py       # Generates dist/skills/ from skill.json + SKILL.body.md
 │   ├── setup-global.sh          # Creates global symlinks for Claude and Codex
 │   ├── setup-project.sh         # Scaffolds AGENTS.md for a new project
 │   └── sync-external-skills.sh  # Fetches managed external skills
-├── external-skills.json         # Official upstream skills synced into src/skills/
+├── external-skills.json         # Official upstream skills synced into skills/
 ├── templates/                   # Project AGENTS.md templates only
 └── README.md
 ```
@@ -78,34 +72,22 @@ Durable script source belongs under `scripts/`. Keep `.agent/scripts/` as a syml
 ## Skill conventions
 
 - `agent-config` is repo-local: keep under `.claude/skills/agent-config/`, symlink to `.agents/skills/agent-config`
-- Global skills live under `src/skills/<group>/<name>/` (groups: `vue/`, `swift/`, `testing/`, `writing/`, `project-management/`)
-- External skills listed in `external-skills.json`, synced into `src/skills/`, marked with `SYNC.md`
+- Global skills live under `skills/<group>/<name>/` (groups: `vue/`, `swift/`, `testing/`, `writing/`, `project-management/`)
+- External skills listed in `external-skills.json`, synced into `skills/`, marked with `SYNC.md`
 - Folder name = skill slug (used in `/slug` commands, hook patterns, Codex discovery)
 - Codex links in `~/.codex/skills/`; Claude links in `~/.claude/skills/`
 
 ### Skill file layout
 
 ```
-src/skills/<group>/<name>/
-├── skill.json      # Metadata: name, description, triggers, filePatterns, capabilities
-└── SKILL.body.md   # Skill content
+skills/<group>/<name>/
+├── SKILL.md        # Final skill with Agent Skills front matter and instructions
+└── support files   # Optional references, scripts, or provenance
 ```
 
-After editing `skill.json` or `SKILL.body.md`, run `python3 scripts/build/build-skill-mds.py`. Output goes to `dist/skills/<name>/`.
+Each skill folder is copied and installed directly; no repository build step is needed to use an edited skill.
 
-### skill.json fields
-
-| Field                    | Required | Notes                                                                                                                                                        |
-| ------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `name`                   | Yes      | Skill slug                                                                                                                                                   |
-| `description`            | Yes      | Starts "Use this skill when…"; action-led, includes file globs                                                                                               |
-| `when`                   | Optional | Short one-liner for settings.json hook description                                                                                                           |
-| `filePatterns`           | Optional | Glob patterns for `skill-file-trigger.sh`                                                                                                                    |
-| `title`                  | Optional | Human display name; generates Codex-compatible `displayName`                                                                                                 |
-| `capabilities`           | Optional | `{"promptTriggering": bool, "fileTriggering": bool}`                                                                                                         |
-| `explicitInvocationOnly` | Optional | `true` blocks auto-invocation: `disable-model-invocation: true` in Claude `SKILL.md`, `allow_implicit_invocation: false` in Codex YAML. `/name` still works. |
-
-### Generated SKILL.md content rules
+### Skill file rules
 
 - `#` title, `##` sections — no banner comments or dividers
 - UK spelling
@@ -143,12 +125,12 @@ Use the strongest layer that fits the failure mode. Don't place agent-critical b
 ## Editing docs/
 
 - `docs/skills.md`, `docs/hooks.md`, `docs/commands.md` are generated by `scripts/build/build-docs.py`
-- Edit source manifests (`skill.json`, `hook.json`) instead; run `bash scripts/sync.sh` to regenerate
+- Edit canonical `SKILL.md` files, `hook.json`, or `skill-file-trigger.patterns.json`; run `bash scripts/sync.sh` to regenerate
 
 ## When adding or changing a skill
 
-1. Create `src/skills/<group>/<name>/skill.json` + `SKILL.body.md`
-2. Run `bash scripts/sync.sh` — regenerates `dist/skills/`, settings, docs, and Claude/Codex outputs
+1. Create `skills/<group>/<name>/SKILL.md` with `name` and `description` front matter, plus any support files
+2. Run `bash scripts/sync.sh` — regenerates settings, docs, and Claude/Codex outputs
 3. Check `scripts/validate.sh` exits 0
 
 ## When creating a new hook

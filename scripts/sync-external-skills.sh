@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Downloads and updates skills listed in external-skills.json.
 # Each skill's configured upstream content target is overwritten on sync.
-# SKILL.body.md remains the default target. A SYNC.md file records provenance
+# SKILL.md is the default target. A SYNC.md file records provenance
 # and upstream SHA so unchanged skills can be skipped.
 
 set -euo pipefail
@@ -72,31 +72,6 @@ vet_skill_file() {
 	fi
 }
 
-# Strips YAML frontmatter from a skill file and writes the body to a target path.
-#
-# @param  {string}  input_file
-#     Path to the downloaded SKILL.md with frontmatter.
-# @param  {string}  output_file
-#     Path to write the stripped body content.
-strip_frontmatter() {
-	local input_file="$1"
-	local output_file="$2"
-
-	python3 - "$input_file" "$output_file" <<'PYEOF'
-import sys
-
-content = open(sys.argv[1]).read()
-lines = content.splitlines()
-dashes = [i for i, line in enumerate(lines) if line.strip() == "---"]
-
-body_start = dashes[1] + 1 if len(dashes) >= 2 else 0
-while body_start < len(lines) and not lines[body_start].strip():
-    body_start += 1
-
-open(sys.argv[2], "w").write("\n".join(lines[body_start:]) + "\n")
-PYEOF
-}
-
 # Downloads any reference files listed in a GitHub contents API response and
 # writes them into the skill's references/ subdirectory.
 #
@@ -147,7 +122,7 @@ fetch_references() {
 # @param  {string}  license
 #     Licence identifier for SYNC.md.
 # @param  {string}  upstream_content_target
-#     Filename that receives the stripped upstream skill content.
+#     Filename that receives the downloaded upstream skill content.
 sync_skill() {
 	local slug="$1"
 	local group="$2"
@@ -195,7 +170,7 @@ sync_skill() {
 	vet_skill_file "$temp_file" "$slug"
 
 	mkdir -p "$target_dir"
-	strip_frontmatter "$temp_file" "$skill_file"
+	cp "$temp_file" "$skill_file"
 	rm "$temp_file"
 
 	if [ -n "$references_api_url" ]; then
@@ -246,7 +221,7 @@ sync_all_skills() {
 		references_api_url=$(jq -r ".[$index].references_api_url // \"\"" "$MANIFEST")
 		commit_api_url=$(jq -r ".[$index].commit_api_url // \"\"" "$MANIFEST")
 		license=$(jq -r ".[$index].license // \"unknown\"" "$MANIFEST")
-		upstream_content_target=$(jq -r ".[$index].upstream_content_target // \"SKILL.body.md\"" "$MANIFEST")
+		upstream_content_target=$(jq -r ".[$index].upstream_content_target // \"SKILL.md\"" "$MANIFEST")
 
 		sync_skill "$slug" "$group" "$name" "$source" "$skill_url" "$references_api_url" "$commit_api_url" "$license" "$upstream_content_target"
 	done

@@ -54,22 +54,6 @@ create_config_repo() {
 	init_repo "$target_dir"
 }
 
-create_skill_repo() {
-	local target_dir="$1"
-
-	mkdir -p "$target_dir/dist/claude" "$target_dir/dist/skills/example" "$target_dir/dist/skills/excluded" "$target_dir/docs" "$target_dir/src/rules" "$target_dir/scripts" "$target_dir/src/skills/example/example" "$target_dir/src/skills/example/excluded"
-	printf '#!/usr/bin/env bash\n' > "$target_dir/scripts/sync.sh"
-	printf '{"name":"example"}\n' > "$target_dir/src/skills/example/example/skill.json"
-	printf 'body\n' > "$target_dir/src/skills/example/example/SKILL.body.md"
-	printf 'generated skill\n' > "$target_dir/dist/skills/example/SKILL.md"
-	printf '{"name":"excluded","targets":["claude","codex"]}\n' > "$target_dir/src/skills/example/excluded/skill.json"
-	printf 'excluded body\n' > "$target_dir/src/skills/example/excluded/SKILL.body.md"
-	printf 'excluded generated skill\n' > "$target_dir/dist/skills/excluded/SKILL.md"
-	printf 'docs\n' > "$target_dir/docs/skills.md"
-	printf '{"rules": [{"generated": ["dist/skills/"], "sources": ["src/skills/"], "label": "runtime skills"}]}\n' > "$target_dir/generated-file-guard.config.json"
-	init_repo "$target_dir"
-}
-
 test_generated_only_change_fails() {
 	local target_dir="$TEST_ROOT/generated-only"
 	local output="$TEST_ROOT/generated-only.md"
@@ -123,43 +107,6 @@ test_generic_generated_only_change_fails() {
 	assert_json_finding_code "$output" "generated-only-change"
 }
 
-test_skill_source_with_generated_outputs_does_not_require_claude_index() {
-	local target_dir="$TEST_ROOT/skill"
-	local output="$TEST_ROOT/skill.md"
-	create_skill_repo "$target_dir"
-	printf '{"name":"example","description":"changed"}\n' > "$target_dir/src/skills/example/example/skill.json"
-	printf 'changed\n' >> "$target_dir/dist/skills/example/SKILL.md"
-	printf 'changed\n' >> "$target_dir/docs/skills.md"
-
-	if ! run_guard "$target_dir" > "$output"; then
-		fail "Expected skill source and generated output changes to pass"
-	fi
-}
-
-test_skill_body_with_generated_skill_output_does_not_require_indexes() {
-	local target_dir="$TEST_ROOT/skill-body"
-	local output="$TEST_ROOT/skill-body.md"
-	create_skill_repo "$target_dir"
-	printf 'changed\n' >> "$target_dir/src/skills/example/example/SKILL.body.md"
-	printf 'changed\n' >> "$target_dir/dist/skills/example/SKILL.md"
-
-	if ! run_guard "$target_dir" > "$output"; then
-		fail "Expected skill body and generated output changes to pass"
-	fi
-}
-
-test_excluded_skill_body_change_is_in_sync() {
-	local target_dir="$TEST_ROOT/excluded-skill-body"
-	local output="$TEST_ROOT/excluded-skill-body.md"
-	create_skill_repo "$target_dir"
-	printf 'changed\n' >> "$target_dir/src/skills/example/excluded/SKILL.body.md"
-	printf 'changed\n' >> "$target_dir/dist/skills/excluded/SKILL.md"
-
-	if ! run_guard "$target_dir" > "$output"; then
-		fail "Expected excluded skill changes to pass"
-	fi
-}
-
 test_json_output_is_machine_readable() {
 	local target_dir="$TEST_ROOT/json"
 	local output="$TEST_ROOT/guard.json"
@@ -177,9 +124,6 @@ test_generated_only_change_fails
 test_source_without_generated_fails
 test_source_and_generated_passes
 test_generic_generated_only_change_fails
-test_skill_source_with_generated_outputs_does_not_require_claude_index
-test_skill_body_with_generated_skill_output_does_not_require_indexes
-test_excluded_skill_body_change_is_in_sync
 test_json_output_is_machine_readable
 
 printf '✓ generated-file-guard tests passed\n'

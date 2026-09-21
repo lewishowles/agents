@@ -48,7 +48,7 @@ Check:
 - Always-loaded vs triggered-only content
 - Global rules repeating skill details?
 - Skill descriptions longer/broader than needed for discovery?
-- Generated mirrors (`skills/global-rules/SKILL.body.md`) duplicating or drifting?
+- Canonical skill instructions duplicating or drifting from the rule and hook contracts?
 - `skillOverrides` or target-specific distribution reducing cost without hiding essentials?
 
 Reduce tokens only while preserving reliability. Don't move guidance from global rules if it must apply every turn.

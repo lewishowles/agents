@@ -36,11 +36,6 @@
 			"label": "Claude hook scripts"
 		},
 		{
-			"generated": ["dist/skills/"],
-			"sources": ["src/skills/", "scripts/build/build-skill-mds.py"],
-			"label": "runtime skills"
-		},
-		{
 			"generated": [
 				"docs/commands.md",
 				"docs/hooks.md",

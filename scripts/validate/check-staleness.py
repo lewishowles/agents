@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Flag skills and rules files unchanged for too long.
+# Flag rule files unchanged for too long.
 # Warns when a file has not been committed in N days or N repo commits.
 # Staleness findings are advisory; an invalid source inventory fails validation.
 
@@ -18,7 +18,6 @@ DEFAULT_COMMITS = 200
 
 SCAN_GLOBS = [
 	("src/rules", "*.md"),
-	("src/skills", "**/SKILL.body.md"),
 ]
 
 

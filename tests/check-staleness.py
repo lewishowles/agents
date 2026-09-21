@@ -30,36 +30,24 @@ def load_staleness_module():
 class StalenessTests(unittest.TestCase):
 	"""Verify source inventory and advisory staleness behaviour."""
 
-	def test_canonical_source_families_contribute_files(self):
+	def test_canonical_rule_files_contribute_files(self):
 		module = load_staleness_module()
 
 		files = module.collect_files()
 		rule_files = [
 			path for path in files if module.REPO_ROOT / "src/rules" in path.parents
 		]
-		skill_files = [
-			path for path in files if module.REPO_ROOT / "src/skills" in path.parents
-		]
 
 		self.assertGreater(len(rule_files), 0)
-		self.assertGreater(len(skill_files), 0)
 
 	def test_empty_source_family_fails_validation(self):
 		module = load_staleness_module()
 
 		with tempfile.TemporaryDirectory() as temp_dir:
 			root = Path(temp_dir)
-			rules_dir = root / "src/rules"
-			rules_dir.mkdir(parents=True)
-			(rules_dir / "rule.md").write_text("rule\n")
 
 			with (
 				patch.object(module, "REPO_ROOT", root),
-				patch.object(
-					module,
-					"SCAN_GLOBS",
-					[("src/rules", "*.md"), ("src/skills", "**/SKILL.body.md")],
-				),
 				patch.object(sys, "argv", [str(SCRIPT_PATH)]),
 			):
 				stderr = io.StringIO()
@@ -68,7 +56,7 @@ class StalenessTests(unittest.TestCase):
 
 		self.assertEqual(status, 1)
 		self.assertIn("Configured staleness source family is empty", stderr.getvalue())
-		self.assertIn("src/skills", stderr.getvalue())
+		self.assertIn("src/rules", stderr.getvalue())
 
 	def test_stale_files_remain_advisory(self):
 		module = load_staleness_module()

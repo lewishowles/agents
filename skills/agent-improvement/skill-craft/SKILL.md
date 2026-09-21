@@ -31,14 +31,13 @@ If any of the three fails, extend an existing skill or discard the idea.
 3. **Write do-not-use-when** — at least one exclusion. Broad trigger coverage creates false positives.
 4. **File-triggered vs. prompt-triggered** — file-triggered loads on every edit of matching types; prompt-triggered loads when phrases appear. File-triggering applies to every edit of those types, not just mentions.
 5. **Avoid trigger competition:** reserve broad phrases for router or coordinator skills. Technique or task skills should use specific triggers that do not compete with their router.
-6. **Add support material only when it earns its cost:** keep the operational procedure in `SKILL.body.md`; put optional depth in `references/`, a reusable output shape or edge case in `examples/`, and deterministic checks in `scripts/`. A script must test a concrete mechanical contract, run without new dependencies where possible, and include `--selftest` when it has meaningful internal behaviour. Do not add empty directories or boilerplate examples.
+6. **Add support material only when it earns its cost:** keep the operational procedure in `SKILL.md`; put optional depth in `references/`, a reusable output shape or edge case in `examples/`, and deterministic checks in `scripts/`. A script must test a concrete mechanical contract, run without new dependencies where possible, and include `--selftest` when it has meaningful internal behaviour. Do not add empty directories or boilerplate examples.
 7. **Extract mechanical workflow:** when a skill repeatedly dispatches agents, re-evaluates their output, carries intermediate state, or mechanically adjudicates results, move those parts into a deterministic helper, hook, or validation. Keep model calls for judgement. Confirm equivalent black-box behaviour and report unresolved findings rather than treating a budget limit as success.
 8. **For conduct-style skills, consider the Intent/Evidence/Decision/Execution/Recovery lens:** what failure this prevents, what evidence triggers it, what's being decided, what the agent should do, and what to do when evidence is missing. Skip for mechanical, step-by-step skills where the lens adds no clarity.
 
 ## Build
 
-1. Create `skills/<name>/skill.json` — description under 200 characters; `when` under 100 characters; `promptTriggering: true` unless file-triggered.
-2. Create `skills/<name>/SKILL.body.md` — lead with the failure mode the skill corrects; prefer checklists over persona descriptions.
+1. Create `skills/<group>/<name>/SKILL.md` with `name` and `description` front matter; lead with the failure mode the skill corrects and prefer checklists over persona descriptions.
 3. Regenerate indexes: `PATH="/opt/homebrew/bin:$PATH" bash scripts/sync.sh </dev/null`.
 4. Validate: `PATH="/opt/homebrew/bin:$PATH" bash scripts/validate.sh </dev/null 2>&1 | tail -5`.
 
@@ -56,7 +55,7 @@ After writing or materially changing a skill, run these checks without re-readin
 
 ## Skill vs. rule boundary
 
-If guidance should apply on every turn regardless of task type, it belongs in `rules/global-rules.md`, not a skill. Skills are task-scoped; rules are always-on. When uncertain: if you'd want this applied even when the user hasn't said anything about the topic, it's a rule.
+If guidance should apply on every turn regardless of task type, it belongs in `src/rules/global-rules.md`, not a skill. Skills are task-scoped; rules are always-on. When uncertain: if you'd want this applied even when the user hasn't said anything about the topic, it's a rule.
 
 ## Attribution
 

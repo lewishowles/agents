@@ -2,12 +2,11 @@
 # Generates all dist/ output from source files.
 #
 # Build order:
-#   1. dist/skills/ runtime skills (build-skill-mds.py)
-#   2. Docs tables generated from skill/hook manifests (build-docs.py)
-#   3. dist/claude/hooks/ (copied from src/hooks/claude/ source)
-#   4. dist/claude/CLAUDE.md and dist/codex/AGENTS.md (assembled from src/rules/)
-#   5. dist/claude/settings.json (build-settings.py)
-#   6. Validation (validate.sh)
+#   1. Docs tables generated from canonical skill and hook files (build-docs.py)
+#   2. dist/claude/hooks/ (copied from src/hooks/claude/ source)
+#   3. dist/claude/CLAUDE.md and dist/codex/AGENTS.md (assembled from src/rules/)
+#   4. dist/claude/settings.json (build-settings.py)
+#   5. Validation (validate.sh)
 
 set -euo pipefail
 
@@ -59,7 +58,6 @@ mkdir -p "$REPO_DIR/dist/claude" "$REPO_DIR/dist/codex"
 
 cli_section "Generated outputs" "Build dist files and manifests"
 
-python3 "$REPO_DIR/scripts/build/build-skill-mds.py" >/dev/null
 python3 "$REPO_DIR/scripts/build/build-docs.py" >/dev/null
 copy_hooks
 write_target "$CLAUDE_TARGET" "${CLAUDE_PARTS[@]}"

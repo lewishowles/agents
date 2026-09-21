@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Verifies external skill content can be routed without overwriting a local skill body.
+# Verifies external skill content can be routed without overwriting a local skill.
 
 set -euo pipefail
 
@@ -27,8 +27,8 @@ create_fixture_repo() {
 	# The fixture has no cli-style install of its own, so point the copied sync script at this repo's copy.
 	export CLI_STYLE_BIN="$REPO_DIR/.agent/tools/cli-style/bin/cli-style"
 
-	printf '# Existing default body\n' > "$target_dir/skills/vue/default-skill/SKILL.body.md"
-	printf '# Local wrapper\n' > "$target_dir/skills/vue/vue-use/SKILL.body.md"
+	printf '# Existing default skill\n' > "$target_dir/skills/vue/default-skill/SKILL.md"
+	printf '# Local wrapper\n' > "$target_dir/skills/vue/vue-use/SKILL.md"
 	printf '%s\n' \
 		'---' \
 		'name: upstream' \
@@ -99,8 +99,9 @@ test_upstream_content_target() {
 
 	bash "$target_dir/scripts/sync-external-skills.sh" > "$output"
 
-	assert_contains "$target_dir/skills/vue/default-skill/SKILL.body.md" "# Upstream catalogue"
-	assert_contains "$target_dir/skills/vue/vue-use/SKILL.body.md" "# Local wrapper"
+	assert_contains "$target_dir/skills/vue/default-skill/SKILL.md" "# Upstream catalogue"
+	assert_contains "$target_dir/skills/vue/vue-use/SKILL.md" "# Local wrapper"
+	assert_contains "$target_dir/skills/vue/vue-use/SKILL.ref.md" "name: upstream"
 	assert_contains "$target_dir/skills/vue/vue-use/SKILL.ref.md" "# Upstream catalogue"
 	assert_contains "$target_dir/skills/vue/vue-use/SYNC.md" "Upstream content target | SKILL.ref.md"
 	assert_contains "$target_dir/skills/vue/vue-use/SYNC.md" "\`SKILL.ref.md\` is overwritten on each sync"

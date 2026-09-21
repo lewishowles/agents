@@ -21,10 +21,7 @@ Every script opens with `#` purpose comment after shebang. For build scripts, in
 #!/usr/bin/env bash
 # Generates all dist/ output from source files.
 #
-# Build order:
-#   1. SKILL.md files (build-skill-mds.py)
-#   2. Hook scripts copied to dist/claude/hooks/
-#   3. Agent instruction files assembled from src/rules/
+# Keep the script's steps in the order required by its consumers.
 ```
 
 ```python
@@ -51,10 +48,10 @@ backup_path() {
 ```
 
 ```python
-# Read skill.json and return the fields needed for index generation.
+# Read a skill's SKILL.md and return the fields needed for index generation.
 #
 # @param  {Path}  skill_dir
-#     The skill directory containing skill.json.
+#     The skill directory containing SKILL.md.
 def load_manifest(skill_dir: Path) -> dict:
 	…
 ```
@@ -108,8 +105,8 @@ is_valid() {
 When bash embeds Python/awk inline, add comment explaining what it does and why inline if needed.
 
 ```bash
-# Strips YAML frontmatter and writes the body to the output file.
-strip_frontmatter "$temp_file" "$skill_dir/SKILL.body.md"
+# Checks that the downloaded skill has the front matter every skill needs.
+check_skill_front_matter "$temp_file"
 ```
 
 If logic is complex, wrap heredoc in named function so call site stays readable.

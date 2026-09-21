@@ -12,7 +12,7 @@ Single source for shared rules and skills. `scripts/sync-external-skills.sh` ref
 
 ## Current vs target state
 
-**Current:** `skills/`, `src/` (`src/rules/`, `src/hooks/`, `src/adapters/`, `src/fragments/`), `dist/claude/`, `dist/codex/`, `scripts/`, `templates/`, and `docs/`. `src/skills/`, `dist/skills/`, and `scripts/build/build-skill-mds.py` are leftovers from the old skill build and are pending removal; do not author or install skills from them. Dual-target phases are complete; deferred hook ideas remain in root `PROGRESS.md`.
+**Current:** `skills/`, `src/` (`src/rules/`, `src/hooks/`, `src/adapters/`, `src/fragments/`), `dist/claude/`, `dist/codex/`, `scripts/`, `templates/`, and `docs/`. Canonical skill folders are the only skill source and are installed directly; generated output is limited to the composed agent files, hooks, settings, and documentation. Dual-target phases are complete; deferred hook ideas remain in root `PROGRESS.md`.
 
 ## Target directory structure
 
@@ -126,6 +126,8 @@ Managed external skills live under their canonical `skills/<group>/<name>/` fold
 2. Run `bash scripts/sync.sh` to refresh generated docs and the Claude/Codex outputs
 3. Check `bash scripts/validate.sh` exits 0
 4. Rerun `setup-global.sh` after adding or removing a skill to refresh its symlinks; editing an installed skill needs no rebuild or setup
+
+After pulling changes that remove or move skills, rerun `scripts/setup-global.sh --both` so installed links no longer point at removed output.
 
 ### Standing context
 
