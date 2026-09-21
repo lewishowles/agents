@@ -29,17 +29,6 @@ TEMPLATE_FILES = [
 IGNORED_FLAGS = {
 	"-h",
 	"--help",
-	"--force-capabilities",
-	"--init-capabilities",
-	"--write-capabilities",
-}
-
-# Known setup outputs/flags documented in prose rather than fenced examples.
-IGNORED_DRIFT = {
-	(
-		"setup_flag_not_in_docs",
-		"--force-workspace",
-	),  # documented in prose, not fenced block
 }
 
 RE_CODE_FENCE = re.compile(r"```([a-zA-Z0-9_-]*)\n(.*?)```", re.DOTALL)
@@ -50,7 +39,7 @@ RE_FUNCTION = re.compile(
 RE_PROJECT_PATH = re.compile(r'"\$PROJECT_DIR/([^"]+)"')
 RE_INLINE_CODE = re.compile(r"(?<!`)`([^`\n]+)`(?!`)")
 RE_LOCAL_PATH = re.compile(
-	r"(?<![\w/.-])(?:WORKSPACE\.md|AGENT_CAPABILITIES\.md|AGENTS\.md|\.agent/[^\s`'\"),]+|\.claude/[^\s`'\"),]+)"
+	r"(?<![\w/.-])(?:AGENTS\.md|\.agent/[^\s`'\"),]+|\.claude/[^\s`'\"),]+)"
 )
 # The tool file name at the start of each "name|..." entry in the shared-tool list.
 RE_SHARED_AGENT_TOOL = re.compile(r'^\s*"([^"|]+)\|', re.MULTILINE)
@@ -93,11 +82,6 @@ def function_bodies(text: str) -> dict[str, str]:
 
 def project_paths_from_text(text: str) -> set[str]:
 	paths = {normalise_path(match.group(1)) for match in RE_PROJECT_PATH.finditer(text)}
-	paths.discard("AGENT_CAPABILITIES.md")
-
-	if 'local target="$PROJECT_DIR/WORKSPACE.md"' in text:
-		paths.add("WORKSPACE.md")
-
 	return paths
 
 
@@ -140,9 +124,6 @@ def parse_setup() -> SetupFacts:
 		"--claude": expand_function_paths("setup_claude", bodies),
 		"--codex": expand_function_paths("setup_codex", bodies),
 		"--both": expand_function_paths("setup_both", bodies),
-		"--init-workspace": {"WORKSPACE.md"},
-		"--write-workspace": {"WORKSPACE.md"},
-		"--force-workspace": {"WORKSPACE.md"},
 	}
 
 	paths = set()
@@ -257,9 +238,6 @@ def add_missing_issues(
 	message_template: str,
 ) -> None:
 	for item in sorted(missing_items):
-		if (kind, item) in IGNORED_DRIFT:
-			continue
-
 		issues.append(
 			Issue(
 				kind=kind,

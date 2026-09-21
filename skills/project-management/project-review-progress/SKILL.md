@@ -26,12 +26,11 @@ Don't invent requirements or recommend complexity for its own sake. Mark ideas d
 Read in order, stopping when you have enough context:
 
 1. `<project-root>/AGENTS.md`
-2. `<project-root>/WORKSPACE.md`, when present
-3. `.agent/scripts/project-diagnostics.py --list`, when present
-4. `PROGRESS.md`
-5. Related specs, docs, source, or generated-file facts only when referenced or needed for evidence
+2. `agent-run list --json`
+3. `PROGRESS.md`
+4. Related specs, docs, source, or generated-file facts only when referenced or needed for evidence
 
-Skip `WORKSPACE.md` if missing. Use `AGENTS.md`, package scripts, nearby docs as needed.
+If agent-run has no registrations, use `AGENTS.md`, package scripts, and ordinary docs as needed.
 
 For structural questions, use a code index when available to find definitions and callers before deciding; otherwise use a scoped search. For the full lookup workflow, see `code-lookup`. Use targeted reads; avoid generated, vendored, cached, build, dependency, coverage, or binary output.
 

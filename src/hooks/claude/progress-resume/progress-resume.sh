@@ -29,13 +29,7 @@ if command -v progress &>/dev/null; then
 fi
 
 if [[ -z "$ctx" ]]; then
-	if [[ -f "$PWD/WORKSPACE.md" ]]; then
-		ctx="Project progress is unavailable. Inspect WORKSPACE.md first, then AGENTS.md and nearby project docs, before continuing."
-	elif [[ -f "$PWD/AGENT_CAPABILITIES.md" ]]; then
-		ctx="Project progress is unavailable and WORKSPACE.md is absent. Inspect AGENT_CAPABILITIES.md first, then AGENTS.md and nearby project docs, before continuing."
-	else
-		ctx="Project progress is unavailable and WORKSPACE.md is absent. Inspect AGENTS.md, package scripts, and nearby project docs before continuing."
-	fi
+	ctx="Project progress is unavailable. Inspect AGENTS.md, package scripts, ordinary docs, and agent-run list --json before continuing."
 fi
 
 jq -n --arg ctx "$ctx" \

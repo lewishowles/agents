@@ -133,7 +133,7 @@ cd /path/to/project
 /path/to/repository/scripts/setup-project.sh --both
 ```
 
-Each flag copies the matching `AGENTS.md` template, links `.agent/scripts/`, and writes `WORKSPACE.md`. Claude targets also create a root `CLAUDE.md` containing `@AGENTS.md`, so Claude Code loads the same project rules without a second copy, and copy `.claudeignore`. After setup, replace the placeholders in `AGENTS.md` with project-specific rules and review the generated `WORKSPACE.md`.
+Each flag copies the matching `AGENTS.md` template and links `.agent/scripts/`. Claude targets also create a root `CLAUDE.md` containing `@AGENTS.md`, so Claude Code loads the same project rules without a second copy, and copy `.claudeignore`. After setup, replace the placeholders in `AGENTS.md` with project-specific rules, then register project commands with agent-run.
 
 For project types with useful local skills, setup can install centrally managed project skill packs as symlinks into both `.agents/skills/` and `.claude/skills/`:
 
@@ -155,45 +155,28 @@ To report how a project's setup differs from the expected setup without writing 
 /path/to/repository/scripts/setup-project.sh --both --no-skill-packs
 ```
 
-### Repair paths for existing projects
+### Register project commands
 
-To preview a workspace draft without writing it:
-
-```bash
-cd /path/to/project
-/path/to/repository/scripts/setup-project.sh --init-workspace
-```
-
-To write workspace context only (when `AGENTS.md` is already in place):
+From the project root, preview likely commands and register the ones agents may run:
 
 ```bash
 cd /path/to/project
-/path/to/repository/scripts/setup-project.sh --write-workspace
+agent-run detect --json
+agent-run detect --add <name>
+agent-run list --json
 ```
 
-Use `--force-workspace` only after reviewing the existing `WORKSPACE.md`. Recognised manual values are preserved when the draft is refreshed.
+Repeat `agent-run detect --add <name>` for named commands, or use `agent-run detect --all` to register every likely command. Run a registered command with:
 
-The previous `--init-capabilities`, `--write-capabilities`, and `--force-capabilities` flags remain as deprecated aliases during migration.
+```bash
+agent-run run <name> --json
+```
+
+Run a one-off command with `agent-run run --json -- <argv>`. Manual-only commands are refused with code `manual` and the command to run. The manual-command guard also blocks them and raw Playwright/Cypress commands.
 
 The default output omits the broad file tree. Pass `--tree-depth <number>` when a tree is useful.
 
-Add `.agent-workspace.json` for reviewed facts that cannot be detected safely:
-
-```json
-{
-	"architectureNotes": [
-		"Requests enter through src/index.js."
-	],
-	"keyFiles": {
-		"`package.json`": "Package scripts and published metadata."
-	},
-	"lookup": {
-		"Add analyser": "`src/analyser`"
-	}
-}
-```
-
-Configured notes are labelled in `WORKSPACE.md`. They should state repository facts, not recommendations or temporary plans.
+Put durable repository facts and gotchas in `AGENTS.md`, usage instructions in ordinary docs, and project commands or manual-only rules in agent-run's per-repo registrations. Keep each source focused on information agents can act on.
 
 ## Checking token usage
 

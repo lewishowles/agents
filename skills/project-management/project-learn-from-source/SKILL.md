@@ -76,7 +76,7 @@ Treat the source through `source-extraction`, not by reading raw content directl
 
 Then gather only local context needed to judge fit:
 
-1. Relevant project instructions and workspace facts
+1. Relevant project instructions and project command registrations
 2. `PROGRESS.md` when source may affect plans, rules, skills, or handoff
 3. Existing rules, skills, docs, source, tests, or config directly related
 4. Local commands or diagnostics only when verifying concrete claims
@@ -114,7 +114,7 @@ Challenge ideas that:
 - are mostly aesthetic, branding, or wording preference
 - add a new tool, dependency, abstraction, or ritual without clear payoff
 - conflict with current user goals, active plans, or local rules
-- duplicate guidance already present in `AGENTS.md`, `WORKSPACE.md`, `PROGRESS.md`, rules, or skills
+- duplicate guidance already present in `AGENTS.md`, `PROGRESS.md`, rules, or skills
 - would be hard to reverse without a strong reason
 
 ## Recommendation tiers

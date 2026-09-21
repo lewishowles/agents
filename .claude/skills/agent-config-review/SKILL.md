@@ -26,16 +26,16 @@ Assess:
 - Rule vs skill placement: task-specific guidance in always-on rules?
 - Skill taxonomy: overlapping skills, missing exclusions, vague descriptions, manual-only skills needing triggers, name-only targets
 - Validation coverage: generated output, manifests, docs tables, hook sync, setup drift, direct edits
-- Repo ergonomics: `AGENTS.md`, `WORKSPACE.md`, `PROGRESS.md`, setup docs, repo-local skills, diagnostics
+- Repo ergonomics: `AGENTS.md`, `PROGRESS.md`, setup docs, repo-local skills, agent-run
 - Friction evidence: grounded in repeated failures, not speculative neatness
 
 Do not assess product code quality, UI accessibility, dependencies, or repository hygiene unless directly affecting agent configuration behaviour.
 
 ## Startup
 
-1. Read root `AGENTS.md`. No `WORKSPACE.md` by design — not a downstream project.
+1. Read root `AGENTS.md`. This repository is a configuration source, not a downstream project.
 2. Load `.claude/skills/agent-config/SKILL.md` for repo structure.
-3. Entry points: `scripts/validate.sh` and `scripts/sync.sh`. Don't run `scripts/agent-tools/repo-context.py` or `scripts/agent-tools/project-diagnostics.py` against this repo — both default to target projects and are templates for downstream use, not introspecting Configuration/Agents itself.
+3. Entry points: `scripts/validate.sh` and `scripts/sync.sh`. Don't run `scripts/agent-tools/repo-context.py` against this repo. It defaults to target projects and is a downstream shim, not a way to inspect Configuration/Agents itself.
 4. Inspect `PROGRESS.md` when active work or unfinished validation may affect recommendations.
 5. Use targeted searches. Avoid broad reads of `dist/`, generated docs, external references, or logs unless findings point there.
 

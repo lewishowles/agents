@@ -90,8 +90,7 @@ repo/.agents/skills/agent-config → repo/.claude/skills/agent-config (repo-loca
 - Regenerating `CLAUDE.md`/`AGENTS.md` from source → `scripts/sync.sh`
 - A shared or managed skill → `skills/<group>/<name>/SKILL.md` plus any support files
 - This repo's own maintenance skill → `.claude/skills/agent-config/SKILL.md`
-- Project scaffolding templates (`AGENTS.md`, `WORKSPACE.md` starting points) → `templates/`
-- `WORKSPACE.md` generation logic → `scripts/init-workspace.py`
+- Project scaffolding templates (`AGENTS.md` starting points) → `templates/`
 - Project setup / symlink wiring → `scripts/setup-project.sh`, `scripts/setup-global.sh`
 - Transcript and usage analysis → `scripts/audit/`; generated reports stay under `.agent/audits/`
 

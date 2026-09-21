@@ -64,4 +64,4 @@ Use the release for planning facts shared by every task in it, such as its purpo
 
 ## Tolerance
 
-The CLI database is authoritative for project state. Missing or uninitialised project bindings are reported as explicit errors, so agents can fall back to `WORKSPACE.md`, `AGENTS.md`, package scripts, and nearby docs without guessing. `PROGRESS.md` may be absent because its freeform backlog prose is outside the CLI data model.
+The CLI database is authoritative for project state. Missing or uninitialised project bindings are reported as explicit errors, so agents can fall back to `AGENTS.md`, package scripts, ordinary docs, and agent-run registrations without guessing. `PROGRESS.md` may be absent because its freeform backlog prose is outside the CLI data model.

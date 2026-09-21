@@ -11,7 +11,7 @@ Resume from the `progress` CLI records, with optional root-level `PROGRESS.md` f
 
 The `progress` CLI stores the current project, release, task, chunk, discovery, decision, and handoff records. Run `progress next --json` at startup to identify the active task and chunk. Use `progress context get --json` when the current handoff needs more detail.
 
-`PROGRESS.md`, when present, is optional root-level freeform backlog prose. Do not use it as a fallback for task, chunk, queue, release, discovery, decision, or handoff state. If the `progress` project binding is missing or uninitialised, report the explicit error, inspect `AGENTS.md`, `WORKSPACE.md`, package scripts, and nearby docs for safe local context, and ask the user to initialise or install `progress` before writing progress records. Use the full task and chunk contract returned by `progress next --json`.
+`PROGRESS.md`, when present, is optional root-level freeform backlog prose. Do not use it as a fallback for task, chunk, queue, release, discovery, decision, or handoff state. If the `progress` project binding is missing or uninitialised, report the explicit error, inspect `AGENTS.md`, package scripts, ordinary docs, and `agent-run list --json` for safe local context, and ask the user to initialise or install `progress` before writing progress records. Use the full task and chunk contract returned by `progress next --json`.
 
 ## Command syntax
 
@@ -32,15 +32,13 @@ progress context get --json
 
 **`progress next` selects the current item; it does not validate its scope.** Before resumed or delegated implementation begins, compare the active chunk with its incomplete siblings and stop if it overlaps or subsumes later work.
 
-## Workspace file
+## Project facts
 
-Read `<project-root>/WORKSPACE.md` during startup when present. Treat it as factual source for commands, generated files, diagnostics, progress locations, expensive checks, and forbidden operations.
+Read `<project-root>/AGENTS.md`, ordinary docs, and `agent-run list --json` during startup. Treat AGENTS.md as the source for durable project facts and gotchas, ordinary docs as the source for usage, and agent-run as the source for project commands and manual-only rules.
 
-Do not generate a missing workspace file during resume unless the user asks for repo setup. If missing, inspect `AGENTS.md`, package scripts, and nearby docs.
+If agent-run has no registrations, inspect package scripts and use `agent-run detect --json` to preview likely commands before registering them.
 
-If project guidance conflicts with `WORKSPACE.md`, surface the conflict and trust the workspace file for command safety and generated-file facts. Keep progress state in the CLI records.
-
-When `<project-root>/.agent/scripts/project-diagnostics.py` exists, use `--list` for check discovery and `--check <name>` for verification. Use `--all` only when asked for broad verification.
+Keep progress state in the CLI records. Use `agent-run run <name> --json` for registered checks and `agent-run run --json -- <argv>` for a one-off command.
 
 ## HCOM orchestration
 
@@ -72,7 +70,7 @@ Read only enough to orient. Stale sessions (5+ min idle) restart from scratch.
 - Read linked feature specs only when active; skip unrelated specs
 - Skip completed tasks and old records unless the current task depends on their history
 - Run `git status --short` before editing to avoid overwriting work the user has not handled. Do not put its result in `PROGRESS.md`, or use it to infer task completion. Branch creation or switching is not part of task setup unless the user requests it.
-- Read `WORKSPACE.md` if present before running local commands
+- Read `AGENTS.md`, ordinary docs, and agent-run registrations before running local commands
 - Surface any open question recorded on a chunk before starting that chunk, and ask it rather than quietly adopting its recommended default
 - Verify incomplete tasks and chunks still fit the current scope
 

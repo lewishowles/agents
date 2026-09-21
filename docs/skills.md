@@ -27,7 +27,7 @@ Skills are focused instruction sets for a specific kind of work. Each canonical 
 | `insights-review` | Use this skill when reviewing a supplied rendered insights report and consolidating independent proposal packets for minimal changes to src/rules/**/*.md or skills/**. |
 | `library-release` | Use this skill when preparing to release a supported @lewishowles library package. |
 | `library-update` | Use this skill to check supported @lewishowles project dependencies for newer releases, review release notes, and identify updates or APIs to adopt. |
-| `project-audit` | Use this skill when auditing a project for setup drift, stale generated output, missing diagnostics, command-safety gaps, or agent-readiness issues. Covers WORKSPACE.md, .agent/scripts tooling, PROGRESS.md handoff health, validation commands, and generated/source boundaries. |
+| `project-audit` | Use this skill when auditing a project for setup drift, stale generated output, missing diagnostics, command-safety gaps, or agent-readiness issues. Covers AGENTS.md, agent-run registrations, .agent/scripts tooling, PROGRESS.md handoff health, validation commands, and generated/source boundaries. |
 | `project-backport-review` | Use this skill when comparing a client/consumer project against the boilerplate template it started from, to find backport candidates and then improve boilerplate itself for the next project. |
 | `project-continue` | Use this skill to resume work from the progress CLI's task, chunk, and handoff records, verify completed work, and pick up where the last session left off. |
 | `project-learn-from-source` | Use this skill to assess an external artefact at the user's requested level and identify verified lessons for the current repo. |
@@ -105,7 +105,7 @@ To re-enable a skill suppressed by a parent settings file, set it to `"on"` in t
 }
 ```
 
-Project setup does not create a local `.claude/settings.json` by default. Prefer project instructions and `WORKSPACE.md` for repo-specific guidance.
+Project setup does not create a local `.claude/settings.json` by default. Prefer `AGENTS.md` and ordinary docs for repo-specific guidance, and agent-run for project command registrations.
 
 ## Add a new skill
 

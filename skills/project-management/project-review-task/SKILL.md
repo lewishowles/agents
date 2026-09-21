@@ -28,7 +28,7 @@ If the supplied ID or name does not resolve, or the lookup is ambiguous, stop an
 
 ## Review method
 
-1. Read the resolved task record and current repository guidance. Check `AGENTS.md`, `WORKSPACE.md` when present, `PROGRESS.md` when relevant, and only the source, metadata, docs, or scripts needed to test the task's claims.
+1. Read the resolved task record and current repository guidance. Check `AGENTS.md`, `agent-run list --json`, and `PROGRESS.md` when relevant, then read only the source, metadata, docs, or scripts needed to test the task's claims.
 2. Record the task ID and `updated_at` value. Re-check the task with `progress task get <task-id> --json` before the verdict; if the record or its `updated_at` value changed during review, stop with a stale-review result.
 3. Compare task claims with current repository evidence. Verify named files, commands, generated boundaries, dependencies, existing patterns, and permission or cross-repository limits instead of accepting them from the task alone.
 4. Assess the quality rubric below. Mark an item as a finding only when the evidence supports a concrete planning change.

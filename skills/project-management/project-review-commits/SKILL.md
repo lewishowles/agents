@@ -16,7 +16,7 @@ Assess whether the commit range is:
 - coherent as a sequence of commits
 - safe to ship or build on
 - covered by appropriate tests or verification
-- aligned with project instructions, workspace facts, generated-file boundaries, changelogs, docs, and existing patterns
+- aligned with project instructions, project command registrations, generated-file boundaries, changelogs, docs, and existing patterns
 
 Look for bugs, regressions, incomplete follow-ups, misleading commit messages, missing generated output, stale docs, weak tests, security concerns, accessibility or UX regressions, performance risks, and commits that should be split, squashed, reordered, or followed by a fix.
 
@@ -25,14 +25,13 @@ Look for bugs, regressions, incomplete follow-ups, misleading commit messages, m
 Read in order:
 
 1. `<project-root>/AGENTS.md`
-2. `<project-root>/WORKSPACE.md`, when present
-3. `.agent/scripts/project-diagnostics.py --list`, when present
-4. `PROGRESS.md` — recent completed work, risks, release notes, handoff
-5. `git status --short`
-6. Requested Git range, or last tag to `HEAD`
-7. Commit messages, changed files, targeted diffs
+2. `agent-run list --json`
+3. `PROGRESS.md` — recent completed work, risks, release notes, handoff
+4. `git status --short`
+5. Requested Git range, or last tag to `HEAD`
+6. Commit messages, changed files, targeted diffs
 
-Skip `WORKSPACE.md` if missing. Use `AGENTS.md`, package scripts, nearby docs as needed.
+If agent-run has no registrations, use `AGENTS.md`, package scripts, and ordinary docs as needed.
 
 Gather routine orientation in one bounded call where possible. A supplied review packet may provide paths, prior results, exact commands, and unresolved risks; independently verify load-bearing claims instead of rediscovering unchanged facts.
 
@@ -71,7 +70,7 @@ If a relevant skill is unavailable, state that once and continue with the closes
 1. Identify the intended goal from the user request, branch name, `PROGRESS.md`, release notes, commit messages, and changed files.
 2. List the reviewed range and commits oldest to newest. Do not stage or commit.
 3. List the load-bearing review claims and the cheapest evidence that could settle each one.
-4. When a safe, focused diagnostic or repro is already known, run it early and use its result to direct later reads. If command discovery is needed, inspect only enough context to identify it. Use `.agent/scripts/project-diagnostics.py --check <name>` when available.
+4. When a safe, focused check or repro is already known, run it early and use its result to direct later reads. If command discovery is needed, inspect only enough context to identify it. Use `agent-run run <name> --json` for registered checks.
 5. Inspect each commit enough to understand its behaviour, risk, and relationship to surrounding commits, prioritising paths connected to failed, blocked, or uncovered claims.
 6. Compare implementation with the stated goal, expected commits, docs expectations, generated output, risks, and verification guidance.
 7. Check whether each commit is internally coherent and whether the series tells a truthful story.

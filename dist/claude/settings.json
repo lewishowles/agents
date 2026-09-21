@@ -23,8 +23,6 @@
       "PowerShell($env:HCOM_* = *)",
       "Bash(progress chunk get:*)",
       "Bash(progress chunk list:*)",
-      "Bash(python3 .agent/scripts/project-diagnostics.py:*)",
-      "Bash(.agent/scripts/project-diagnostics.py:*)",
       "Bash(zsh -n:*)"
     ]
   },

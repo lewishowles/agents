@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 # Scaffolds agent configuration files into a project directory.
-# Copies templates for the chosen agent runtime; skips AGENTS.md and
-# WORKSPACE.md if they already exist, prompts before replacing a divergent
-# shared tool copy or an outdated .claudeignore. Use --status to report
-# drift without modifying files.
+# Copies templates for the chosen agent runtime, prompts before replacing a
+# divergent shared tool copy or an outdated .claudeignore, and uses --status
+# to report drift without modifying files.
 
 set -euo pipefail
 
@@ -28,10 +27,6 @@ usage() {
 	printf '  %-22s %s\n' '--claude' 'Create Claude project files'
 	printf '  %-22s %s\n' '--codex' 'Create Codex project files'
 	printf '  %-22s %s\n\n' '--both' 'Create shared Claude + Codex project files'
-	printf 'Workspace:\n'
-	printf '  %-22s %s\n' '--init-workspace' 'Preview WORKSPACE.md for the current project'
-	printf '  %-22s %s\n' '--write-workspace' 'Write WORKSPACE.md when it is missing'
-	printf '  %-22s %s\n\n' '--force-workspace' 'Refresh WORKSPACE.md after review'
 	printf 'Project skill packs:\n'
 	printf '  %-22s %s\n' '--with-skill-pack <name>' 'Install a centrally managed local skill pack'
 	printf '  %-22s %s\n' '--no-skill-packs' 'Skip project skill pack detection and installation'
@@ -41,7 +36,7 @@ usage() {
 	printf '\n'
 	printf 'Examples:\n'
 	printf '  cd /path/to/project\n'
-	printf '  %s --init-workspace\n\n' "$script_name"
+	printf '  %s --both\n\n' "$script_name"
 }
 
 setup_claude() {
@@ -54,9 +49,6 @@ setup_claude() {
 
 	copy_shared_agent_tools
 
-	cli_group_begin "Workspace"
-	write_workspace_file
-	cli_group_end
 	copy_claude_support_files
 	install_project_skill_packs
 }
@@ -70,9 +62,6 @@ setup_codex() {
 
 	copy_shared_agent_tools
 
-	cli_group_begin "Workspace"
-	write_workspace_file
-	cli_group_end
 	install_project_skill_packs
 }
 
@@ -86,9 +75,6 @@ setup_both() {
 
 	copy_shared_agent_tools
 
-	cli_group_begin "Workspace"
-	write_workspace_file
-	cli_group_end
 	copy_claude_support_files
 	install_project_skill_packs
 }
@@ -112,12 +98,6 @@ while [ "$#" -gt 0 ]; do
 		--claude)             target="claude" ;;
 		--codex)              target="codex" ;;
 		--both)               target="both" ;;
-		--init-workspace)     target="init-workspace" ;;
-		--write-workspace)    target="write-workspace" ;;
-		--force-workspace)    target="force-workspace" ;;
-		--init-capabilities)  target="init-workspace" ;;
-		--write-capabilities) target="write-workspace" ;;
-		--force-capabilities) target="force-workspace" ;;
 		--status)             target="status" ;;
 		--check-project)      target="status" ;;
 		--with-skill-pack)
@@ -157,9 +137,6 @@ case "$target" in
 	claude)             setup_claude ;;
 	codex)              setup_codex ;;
 	both)               setup_both ;;
-	init-workspace)  init_workspace preview; exit ;;
-	write-workspace) init_workspace write ;;
-	force-workspace) init_workspace force ;;
 	status)         check_status; exit ;;
 esac
 

@@ -3,6 +3,7 @@ name: project-plan-task
 description: >
   Use this skill when introducing work into an existing progress CLI plan or splitting a planned task into chunks. Covers placement, releases, tasks, chunks, dependencies, and handoff context.
 ---
+
 # Project plan task
 
 Add new work to an existing project plan managed by the `progress` CLI. Decide where the work belongs before creating its records, and keep each task reviewable as one coherent outcome.
@@ -24,25 +25,19 @@ The CLI has these top-level nouns:
 
 When the available operation or syntax is unclear, run `progress commands` once before using command-specific help. Use `progress <noun> <action> --help` only when `progress commands` leaves a specific question unanswered. Use JSON output where the command provides it. Do not open `PROGRESS.md` as a substitute for the task, queue, release, or handoff records.
 
-If `progress` is not installed, or the command reports an uninitialised project, inspect `WORKSPACE.md`, `AGENTS.md`, package scripts, and nearby project docs to understand the repository. Do not create a markdown plan or guess a project identity as a fallback. Ask the user to initialise or install `progress` before writing plan records.
+If `progress` is not installed, or the command reports an uninitialised project, inspect `AGENTS.md`, package scripts, ordinary docs, and `agent-run list --json` to understand the repository. Do not create a markdown plan or guess a project identity as a fallback. Ask the user to initialise or install `progress` before writing plan records.
 
 Initialise a project only when its identity is confirmed, using the exact project command signature from `progress commands`.
 
 Do not write the progress database directly or use a second task store.
 
-## Workspace file
+## Project facts
 
-Use `<project-root>/WORKSPACE.md` when present to choose verification commands, generated outputs, expensive checks, forbidden operations, and repository context.
+Use `<project-root>/AGENTS.md`, ordinary docs, and `agent-run list --json` to choose verification commands, generated outputs, expensive checks, forbidden operations, and repository context.
 
-When `<project-root>/.agent/scripts/project-diagnostics.py` exists, prefer `--check <name>` in verification instructions over raw package scripts. Use `--list` for names; use `--all` only when the section needs broad verification and the user agrees.
+Use `agent-run detect --json` to preview likely commands and record their names in the plan. Register a missing command during implementation or verification with `agent-run detect --add <name>` (repeatable) or `agent-run detect --all`, then report what you registered. Do not register commands during planning or review. Use `agent-run run <name> --json` in verification instructions and `agent-run run --json -- <argv>` for one-off commands. Manual-only commands stay with the human.
 
-Do not generate a missing workspace file. If it is missing, inspect `AGENTS.md`, package scripts, and nearby docs. Mention this command if workspace context would materially improve the plan:
-
-```sh
-agents:workspace --write
-```
-
-Run it only when the user asks and it exists in the current shell.
+Do not generate project guidance during planning. If command registrations are missing, inspect package scripts and use `agent-run detect --json` to name them in the plan.
 
 ## Workflow
 

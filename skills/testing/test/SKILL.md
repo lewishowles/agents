@@ -19,7 +19,7 @@ description: >
 
 More tests at bottom: fast, isolated, cheap. Fewer at top: slow, realistic, expensive.
 
-Use diagnostics script: `.agent/scripts/project-diagnostics.py --list` to choose verification. Prefer `--check <name>` for the narrowest layer; reserve `--all` for user-approved broad checks.
+Use `agent-run list --json` to choose verification. Prefer `agent-run run <name> --json` for the narrowest registered check; during verification, preview and register a missing command with `agent-run detect --json` and `agent-run detect --add <name>` (or `--all`), then report what you registered. Do not register commands during planning or review. Keep manual-only commands with the human.
 
 ## What to test at each layer
 

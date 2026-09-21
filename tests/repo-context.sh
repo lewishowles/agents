@@ -23,38 +23,9 @@ create_project() {
 	mkdir -p "$target_dir/.agent/scripts" "$target_dir/src" "$target_dir/dist" "$target_dir/.boilersuit"
 	printf '# Rules\n' > "$target_dir/AGENTS.md"
 	printf '# Progress\n' > "$target_dir/PROGRESS.md"
-	printf '#!/usr/bin/env python3\n' > "$target_dir/.agent/scripts/project-diagnostics.py"
-	chmod +x "$target_dir/.agent/scripts/project-diagnostics.py"
-
-	cat > "$target_dir/WORKSPACE.md" <<'EOF'
-# Workspace
-
-## Repo summary
-
-- Primary stack: JavaScript library
-- Package manager: Bun (detected from `bun.lockb`)
-- Script runner: `bun run <script>`
-- Runtime requirements: Node >=20; Bun
-- Progress files: `PROGRESS.md`
-- Agent rules: `AGENTS.md`
-
-## Generated or build output
-
-- `dist`
-
-## Important paths
-
-- Main source directories: `src`
-
-## Generators
-
-| Name | Command | Notes |
-| --- | --- | --- |
-| Boilersuit | `.boilersuit` | Local generators. |
-EOF
 }
 
-test_markdown_uses_workspace_and_git_counts() {
+test_markdown_uses_git_counts() {
 	local target_dir="$TEST_ROOT/markdown"
 	local output="$TEST_ROOT/markdown.md"
 	create_project "$target_dir"
@@ -69,11 +40,7 @@ test_markdown_uses_workspace_and_git_counts() {
 
 	run_context "$target_dir" > "$output"
 
-	assert_contains "$output" "Source: WORKSPACE.md"
-	assert_contains "$output" 'Workspace: `WORKSPACE.md`'
-	assert_contains "$output" "Primary stack: JavaScript library"
 	assert_contains "$output" 'Source dirs: `src`'
-	assert_contains "$output" 'Diagnostics: `.agent/scripts/project-diagnostics.py --list`'
 	assert_contains "$output" "Git: main; ahead 0, behind 0; 1 modified"
 	assert_contains "$output" "untracked"
 	assert_contains "$output" '`dist`'
@@ -92,14 +59,12 @@ import json
 import sys
 
 data = json.loads(open(sys.argv[1]).read())
-assert data["summary"]["primary_stack"] == "JavaScript library"
 assert data["summary"]["source_dirs"] == "`src`"
-assert data["diagnostics"] == ".agent/scripts/project-diagnostics.py --list"
 assert data["generated_paths"] == ["dist"]
 PY
 }
 
-test_missing_workspace_labels_inferred_source() {
+test_missing_project_guidance_labels_inferred_source() {
 	local target_dir="$TEST_ROOT/inferred"
 	local output="$TEST_ROOT/inferred.md"
 	mkdir -p "$target_dir/dist"
@@ -112,21 +77,8 @@ test_missing_workspace_labels_inferred_source() {
 	assert_contains "$output" '`dist`'
 }
 
-test_legacy_manifest_is_used_as_fallback() {
-	local target_dir="$TEST_ROOT/legacy"
-	local output="$TEST_ROOT/legacy.md"
-	create_project "$target_dir"
-	mv "$target_dir/WORKSPACE.md" "$target_dir/AGENT_CAPABILITIES.md"
-
-	run_context "$target_dir" > "$output"
-
-	assert_contains "$output" "Source: AGENT_CAPABILITIES.md"
-	assert_contains "$output" 'Workspace: `AGENT_CAPABILITIES.md`'
-}
-
-test_markdown_uses_workspace_and_git_counts
+test_markdown_uses_git_counts
 test_json_output_is_machine_readable
-test_missing_workspace_labels_inferred_source
-test_legacy_manifest_is_used_as_fallback
+test_missing_project_guidance_labels_inferred_source
 
 printf '✓ repo-context tests passed\n'

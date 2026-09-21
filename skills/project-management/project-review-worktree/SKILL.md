@@ -13,7 +13,7 @@ Look for regressions, missing work, weak tests, documentation gaps, and quality 
 
 ## Startup
 
-Read `AGENTS.md`, `WORKSPACE.md`, diagnostics, `PROGRESS.md`, `git status --short`, and relevant changed files. If no workspace file exists, use `AGENTS.md`, package scripts, and nearby docs.
+Read `AGENTS.md`, `agent-run list --json`, `PROGRESS.md`, `git status --short`, and relevant changed files. If agent-run has no registrations, use `AGENTS.md`, package scripts, and ordinary docs.
 
 Gather routine orientation in one bounded call where possible. A supplied review packet may provide paths, prior results, exact commands, and unresolved risks; independently verify load-bearing claims instead of rediscovering unchanged facts.
 
@@ -27,7 +27,7 @@ Apply these core review checks directly: verify the claimed behaviour, edge and 
 
 1. Identify the task from the request, handoff, and changed files. List them with `git status --short`; do not stage or commit.
 2. List the load-bearing review claims and the cheapest evidence that could settle each one.
-3. When a safe, focused diagnostic or repro is already known, run it early and use its result to direct later reads. Run known non-mutating format and lint checks before manually reporting formatting findings. If command discovery is needed, inspect only enough context to identify it. Use `.agent/scripts/project-diagnostics.py --check <name>` when available.
+3. When a safe, focused check or repro is already known, run it early and use its result to direct later reads. Run known non-mutating format and lint checks before manually reporting formatting findings. If command discovery is needed, inspect only enough context to identify it. Use `agent-run run <name> --json` for registered checks.
 4. Inspect changed files in context and find current lines, prioritising paths connected to failed, blocked, or uncovered claims. Component tests must mount the component under test, not substitute markup.
 5. From the task-scoped diff, inventory every added or changed `const`/`let` and named function or class, including changed initializers and bodies. Check each against the core style checks above; missing prose is a finding. Exclude unrelated user work.
 6. Compare implementation and documentation with the plan, risks, verification, and generated-source boundary. Reference documentation must match code; roadmaps may describe future work.

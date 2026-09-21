@@ -3,7 +3,6 @@
 
 # Shared tool links installed into every configured project's .agent/scripts/ directory.
 SHARED_AGENT_TOOLS=(
-	"project-diagnostics.py|$REPO_DIR/scripts/agent-tools/project-diagnostics.py"
 	"change-impact.py|$REPO_DIR/scripts/agent-tools/change-impact.py"
 	"repo-context.py|$REPO_DIR/scripts/agent-tools/repo-context.py"
 	"generated-file-guard.py|$REPO_DIR/scripts/agent-tools/generated-file-guard.py"
@@ -276,50 +275,6 @@ ensure_friction() {
 	cli_group_status success "friction" "installed globally"
 }
 
-# Prints the review warning for generated workspace files.
-print_workspace_review_note() {
-	cli_group_status warning "Review generated command safety, generated paths, and forbidden operations before relying on it."
-}
-
-# Writes inferred workspace context when it does not already exist.
-write_workspace_file() {
-	local target="$PROJECT_DIR/WORKSPACE.md"
-	local legacy="$PROJECT_DIR/AGENT_CAPABILITIES.md"
-
-	if [ -e "$target" ] || [ -L "$target" ]; then
-		cli_group_status muted "WORKSPACE.md" "already exists"
-		return
-	fi
-
-	"$REPO_DIR/scripts/init-workspace.py" --project-dir "$PROJECT_DIR" --write >/dev/null
-	if [ -e "$legacy" ] || [ -L "$legacy" ]; then
-		cli_group_status success "created WORKSPACE.md" "legacy AGENT_CAPABILITIES.md remains for review"
-	else
-		cli_group_status success "created" "WORKSPACE.md"
-	fi
-	print_workspace_review_note
-}
-
-# Previews or writes inferred workspace context for the current project.
-#
-# @param  {string}  mode
-#     preview, write, or force.
-init_workspace() {
-	local mode="$1"
-	local args=("--project-dir" "$PROJECT_DIR")
-
-	case "$mode" in
-		preview) ;;
-		write) args+=("--write") ;;
-		force) args+=("--write" "--force") ;;
-	esac
-
-	"$REPO_DIR/scripts/init-workspace.py" "${args[@]}"
-	if [ "$mode" != "preview" ]; then
-		print_workspace_review_note
-	fi
-}
-
 # Lists centrally managed project skill packs available for local project installs.
 list_project_skill_packs() {
 	local packs_dir="$REPO_DIR/project-skill-packs"
@@ -431,11 +386,10 @@ install_project_skill_packs() {
 
 # Reports project setup state without modifying any files. Detects the
 # configured mode from AGENTS.md content, then checks AGENTS.md template
-# match, WORKSPACE.md presence, .agent/scripts symlink targets, Claude
+# match, .agent/scripts symlink targets, Claude
 # support files (claude/both only), and unexpected runtime directories.
 check_status() {
 	local agents_md="$PROJECT_DIR/AGENTS.md"
-	local workspace_md="$PROJECT_DIR/WORKSPACE.md"
 	local detected_mode=""
 	local entry
 	local source_validation_status=0
@@ -475,15 +429,6 @@ check_status() {
 		cli_group_status muted "AGENTS.md" "matches template"
 	else
 		cli_group_status warning "AGENTS.md" "differs from template (may be customised)"
-	fi
-	cli_group_end
-
-	# WORKSPACE.md presence.
-	cli_group_begin "Workspace"
-	if [ -e "$workspace_md" ] || [ -L "$workspace_md" ]; then
-		cli_group_status muted "WORKSPACE.md" "exists"
-	else
-		cli_group_status warning "WORKSPACE.md" "missing"
 	fi
 	cli_group_end
 

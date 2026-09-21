@@ -11,25 +11,24 @@ Start a new project or feature. Create the initial plan as `progress` CLI releas
 
 The `progress` CLI stores project state in SQLite. Use release, task, chunk, discovery, decision, and context records for plan, status, queue, roadmap, and handoff state.
 
-## Workspace file
+## Project facts
 
-Check `<project-root>/WORKSPACE.md` before planning. Factual source for commands, generated files, diagnostics, progress locations, expensive checks, forbidden operations.
+Check `<project-root>/AGENTS.md`, ordinary docs, and `agent-run list --json` before planning. Use AGENTS.md for durable project facts and gotchas, ordinary docs for usage, and agent-run for commands and manual-only rules.
 
-When `.agent/scripts/project-diagnostics.py` exists, prefer it. Plans use `--list` for discovery and `--check <name>` for verification; `--all` for user-approved broad checks only.
+Use `agent-run detect --json` to preview likely commands and record their names in the plan. Register a missing command during implementation or verification with `agent-run detect --add <name>` (repeatable) or `agent-run detect --all`, then report what you registered. Do not register commands during planning or review. Use `agent-run run <name> --json` for verification and `agent-run run --json -- <argv>` for one-off commands. Manual-only commands stay with the human.
 
-If missing and a workspace generator exists, run it:
+### Migrate legacy project guidance
 
-```sh
-agents:workspace --write
-```
+For a repo that still has `WORKSPACE.md`, `AGENT_CAPABILITIES.md`, or a `.agent/scripts/project-diagnostics.py` link, move its facts before deleting anything:
 
-Confirm `agents:workspace` exists in current shell before running from project root. After generation, tell user to review it before relying on command safety, generated paths, or forbidden operations.
-
-If no generator exists, don't create manually. Inspect `AGENTS.md`, package scripts, nearby docs. Mention `WORKSPACE.md` would improve future sessions.
+1. Read the legacy file. Move durable gotchas and forbidden operations to `AGENTS.md` and usage notes to ordinary docs. Skip anything the repo's own files already say.
+2. Register commands with `agent-run detect --json`, then `agent-run detect --add <name>` (repeatable) or `agent-run detect --all`. For each command the legacy file said a person must run, mark it with `agent-run edit <name> --manual` (or register it with `agent-run add <name> --manual -- <argv>` if detect did not find it), then confirm `manual: true` in `agent-run list --json`.
+3. Replace any `project-diagnostics.py` instructions in `AGENTS.md` or docs with the matching agent-run commands.
+4. Trash `WORKSPACE.md`, `AGENT_CAPABILITIES.md`, and the `.agent/scripts/project-diagnostics.py` link.
 
 ## Workflow
 
-1. **Explore** — read repo, identify patterns, tech, relevant files; check project state with `progress next --json` and inspect `AGENTS.md`, `WORKSPACE.md`, `CONTEXT.md`, `README.md`, and optional `PROGRESS.md`. Use the returned task and chunk records as the full contract.
+1. **Explore** — read repo, identify patterns, tech, relevant files; check project state with `progress next --json` and inspect `AGENTS.md`, `agent-run list --json`, `CONTEXT.md`, `README.md`, and optional `PROGRESS.md`. Use the returned task and chunk records as the full contract.
 2. **Ask** — identify all known decision-blocking ambiguities, constraints, tradeoffs, and alternatives, then ask them together. Do not cap this initial set. Ask further questions only when an answer reveals a material new unknown.
    - For ambiguous or consequential work, group questions by dependency. In each round, ask every question whose prerequisites are settled, give a recommended default, then reassess after the reply. Do not ask downstream questions that assume an answer still open.
 3. **Discuss** — if multiple approaches exist, present them; don't pick silently

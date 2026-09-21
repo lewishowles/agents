@@ -25,12 +25,11 @@ Keep `project-review-worktree` for a normal uncommitted-work review and `project
 Read, in order:
 
 1. `<project-root>/AGENTS.md`
-2. `<project-root>/WORKSPACE.md`, when present
-3. `.agent/scripts/project-diagnostics.py --list`, when present
-4. `PROGRESS.md`, when present, for recent context
-5. `git status --short`
+2. `agent-run list --json`
+3. `PROGRESS.md`, when present, for recent context
+4. `git status --short`
 
-Use the project diagnostics wrapper for checks it exposes. Keep browser checks human-run. Confirm that `.agent/review-patches/` is ignored before asking Scout to write artefacts.
+Use agent-run for registered checks it exposes. Keep browser checks human-run. Confirm that `.agent/review-patches/` is ignored before asking Scout to write artefacts.
 
 ## Boundaries and staged work
 

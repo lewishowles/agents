@@ -15,7 +15,7 @@ description: >
 - Test and group names are capitalised, human-readable, and self-contained; method/computed names may stay exact. Name the behaviour in plain active voice ("shows an error when the field is empty"), not a passive or clever restatement of the mechanism.
 - Group tests by collection: "Initialisation", "Computed", "Methods".
 - Keep interaction, layout-sensitive state, browser APIs, focus movement, keyboard, live-region timing, and render-contract assertions (whether a component renders in a given visual/DOM state) in component tests. Vitest can inspect props directly, but that doesn't verify what actually rendered. Do not add a "Render contracts" group to unit tests.
-- Use diagnostics script: `.agent/scripts/project-diagnostics.py --list` to discover checks, `--check <name>` for the relevant one. For fixes, narrow with `--test-file <path>` or `--test-glob '<pattern>'`. Ask the user for full suites or `--all`.
+- Use `agent-run list --json` to inspect registered checks and `agent-run run <name> --json` for the relevant one. Preview and register a missing command during verification with `agent-run detect --json` and `agent-run detect --add <name>` (or `--all`), then report what you registered. Do not register commands during planning or review. For a registration with the `file-list` capability, prefer `agent-run run <name> --file <path>` or `agent-run run <name> --glob '<pattern>'`; otherwise use the one-off `agent-run run --json -- <argv>`. Ask the user for full suites or manual-only commands.
 
 ### Choosing what to mock
 
