@@ -135,6 +135,8 @@ Project setup does not create a local `.claude/settings.json` by default. Prefer
 
 5. Run `bash scripts/validate.sh` to check generated output and markers before you install the skill.
 
+The skill-manifest check also rejects front-matter keys outside the Agent Skills standard list and the allowed `disable-model-invocation` runtime extension.
+
 After `scripts/setup-global.sh`, shared skills are available to Claude via `~/.claude/skills/` and to Codex via `~/.agents/skills/`.
 
 ## Add an external skill
