@@ -33,7 +33,7 @@ Read in order, stopping when you have enough context:
 
 Skip `WORKSPACE.md` if missing. Use `AGENTS.md`, package scripts, nearby docs as needed.
 
-Apply the `code-lookup` routing skill for structural questions. Use targeted reads; avoid generated, vendored, cached, build, dependency, coverage, or binary output.
+For structural questions, use a code index when available to find definitions and callers before deciding; otherwise use a scoped search. For the full lookup workflow, see `code-lookup`. Use targeted reads; avoid generated, vendored, cached, build, dependency, coverage, or binary output.
 
 ## Review method
 

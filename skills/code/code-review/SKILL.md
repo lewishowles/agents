@@ -1,11 +1,23 @@
 ---
 name: code-review
 description: >
-  Use this skill when reviewing code — a PR, a diff, an individual file, or existing code at a named path — or when receiving review feedback. Applies your conventions (accessibility, code-style, error-handling, frontend-security, web-performance) as a checklist, and covers how to give and receive feedback.
+  Use this skill when reviewing code — a PR, a diff, an individual file, or existing code at a named path — or when receiving review feedback. Checks accessibility, code style, error handling, frontend security, and web performance, and covers how to give and receive feedback.
 ---
 # Code review
 
 Reviews improve code collaboratively. Feedback is specific, actionable, grounded in code. Reviewers should understand what changed, why, and how it's maintained. If difficult, treat as maintainability issue.
+
+## Core checks
+
+Check each of these areas in every review:
+
+- **Accessibility**: keyboard access works, labels and roles are correct, focus is visible, colour is not the only cue, and colour contrast meets the applicable WCAG threshold
+- **Code style**: use clear names and control flow, write comments about purpose and contracts, keep changes surgical, and avoid speculative abstractions
+- **Error handling**: validate critical inputs and response shape, provide useful fallbacks for recoverable failures, and let impossible failures surface
+- **Frontend security**: encode untrusted output, sanitise raw HTML, validate URLs and redirects, and keep tokens and secrets out of client code, URLs, logs, and errors
+- **Web performance**: measure production behaviour, prevent layout shifts, keep interactions and reactive work bounded, and avoid unnecessary renders and oversized assets
+
+For the full checklists, see `accessibility`, `code-style`, `error-handling`, `frontend-security`, and `web-performance`.
 
 ## Giving a review
 
@@ -71,7 +83,7 @@ Reviews improve code collaboratively. Feedback is specific, actionable, grounded
 
 **Code style**
 
-- Matches `code-style`: naming, comments, no speculative abstractions?
+- Matches the core code style checks above: naming, comments, no speculative abstractions?
 - Surgical: only needed changes?
 - Organisation: each function/visitor owns one concern, no boolean flags swapping the algorithm, no switchboard helpers or logic duplicated across sibling files, clear control flow over clever tricks?
 

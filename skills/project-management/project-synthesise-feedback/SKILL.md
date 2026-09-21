@@ -28,7 +28,7 @@ Read user feedback first. Gather only context needed to judge it:
 
 If feedback can be judged from provided text, skip repo inspection. Say what needs checking if evidence is missing; don't guess.
 
-Apply the `code-lookup` routing skill for structural questions. Use targeted reads; avoid generated, vendored, cached, build, dependency, coverage, or binary output.
+For structural questions, use a code index when available to find definitions and callers before deciding; otherwise use a scoped search. For the full lookup workflow, see `code-lookup`. Use targeted reads; avoid generated, vendored, cached, build, dependency, coverage, or binary output.
 
 ## Review method
 

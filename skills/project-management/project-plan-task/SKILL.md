@@ -88,7 +88,7 @@ Capture these facts in the task record, its chunks, or a linked spec:
 - **Validation owner**: which repo's diagnostics prove the change, including any downstream checks required before release
 - **Handoff references**: PR links, task or session IDs, diagnostic log paths, and repo-specific risks
 
-For broad dependency questions, start with local evidence and apply the `code-lookup` routing skill before choosing Serena, codebase-memory, or targeted search. If the affected repo set is still unclear, record a decision request and ask before expanding the working set.
+For broad dependency questions, start with local evidence, pick one lookup tool for the question (a code index such as Serena for symbols and callers, a scoped text search for literal strings), and stop once the affected files are known. For the routing table, see `code-lookup`. If the affected repo set is still unclear, record a decision request and ask before expanding the working set.
 
 ## Placement principles
 

@@ -83,7 +83,7 @@ Then gather only local context needed to judge fit:
 
 If high-level context suffices, skip implementation files. If evidence is missing, say what needs checking rather than guessing.
 
-Apply the `code-lookup` routing skill for structural questions. Use targeted reads; avoid generated, vendored, cached, build, dependency, coverage, or binary output.
+For structural questions, use a code index when available to find definitions and callers before deciding; otherwise use a scoped search. For the full lookup workflow, see `code-lookup`. Use targeted reads; avoid generated, vendored, cached, build, dependency, coverage, or binary output.
 
 ## Review method
 

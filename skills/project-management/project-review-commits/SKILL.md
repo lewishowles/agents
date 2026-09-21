@@ -36,7 +36,7 @@ Skip `WORKSPACE.md` if missing. Use `AGENTS.md`, package scripts, nearby docs as
 
 Gather routine orientation in one bounded call where possible. A supplied review packet may provide paths, prior results, exact commands, and unresolved risks; independently verify load-bearing claims instead of rediscovering unchanged facts.
 
-Apply the `code-lookup` routing skill for structural questions. Use targeted reads; avoid generated, vendored, cached, build, dependency, coverage, or binary output.
+For structural questions, use a code index when available to find definitions and callers before deciding; otherwise use a scoped search. For the full lookup workflow, see `code-lookup`. Use targeted reads; avoid generated, vendored, cached, build, dependency, coverage, or binary output.
 
 ## Range selection
 
@@ -50,7 +50,9 @@ Before reviewing, check `git status --short`. If uncommitted files exist, state 
 
 ## Skill routing
 
-Always apply `code-review` standards. Load additional skills only when the touched files or diff contents make them relevant:
+Apply these core review checks: verify behaviour and edge or error states, trace callers and blast radius, check tests and documentation, and consider security, accessibility, and performance where relevant. Report concrete evidence with severity. For the full review standards, see `code-review`.
+
+Load additional skills only when the touched files or diff contents make them relevant:
 
 - `frontend-security` for user input, auth, tokens, secrets, sanitisation, CSP, redirects, or external data
 - `accessibility` or `accessibility-audit` for UI, HTML, components, forms, keyboard interaction, colour, ARIA, or interface copy

@@ -56,7 +56,7 @@ For prop JSDoc, metadata, and user-facing docs, describe what the prop accepts a
 - Keep slot props minimal. After release, keep them stable because they are part of the public API.
 - Do not use a slot when a simple string prop is enough.
 
-Require explicit `<template #name>` for named slots, as covered by Vue skill.
+Require explicit `<template #name>` for named slots. For broader Vue conventions, see `vue`.
 
 ## Emits
 

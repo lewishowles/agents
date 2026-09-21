@@ -17,11 +17,11 @@ Read `AGENTS.md`, `WORKSPACE.md`, diagnostics, `PROGRESS.md`, `git status --shor
 
 Gather routine orientation in one bounded call where possible. A supplied review packet may provide paths, prior results, exact commands, and unresolved risks; independently verify load-bearing claims instead of rediscovering unchanged facts.
 
-Use `code-lookup` for structural questions. Use targeted reads; avoid generated, vendored, cached, build, dependency, coverage, and binary output.
+For structural questions, use a code index when available to find definitions and callers before deciding; otherwise use a scoped search. For the full lookup workflow, see `code-lookup`. Use targeted reads; avoid generated, vendored, cached, build, dependency, coverage, and binary output.
 
 ## Skill routing
 
-Load and apply `code-review`, `code-style`, and relevant language or framework skills. When the changes include comments, documentation, test or `describe` names, descriptions, metadata, or other prose, also load `writing` and read a few relevant pairs from its plain-English corpus before the craftsmanship pass. When changes affect a visible interface, also load `frontend-design` and `accessibility`; use `accessibility-audit` only when the request calls for an accessibility audit. Do not list an unloaded or unchecked skill as applied.
+Apply these core review checks directly: verify the claimed behaviour, edge and error states, callers, tests, documentation, and scope; keep names, comments, and control flow clear; give every added or changed declaration a short comment or docstring stating its role or caller contract, not a restatement of its name; and avoid speculative abstractions or unrelated edits. For the full review and style checklists, see `code-review` and `code-style`. When the changes include comments, documentation, test or `describe` names, descriptions, metadata, or other prose, also load `writing` and read a few relevant pairs from its plain-English corpus before the craftsmanship pass. When changes affect a visible interface, also load `frontend-design` and `accessibility`; use `accessibility-audit` only when the request calls for an accessibility audit. Do not list an unloaded or unchecked skill as applied.
 
 ## Review method
 
@@ -29,7 +29,7 @@ Load and apply `code-review`, `code-style`, and relevant language or framework s
 2. List the load-bearing review claims and the cheapest evidence that could settle each one.
 3. When a safe, focused diagnostic or repro is already known, run it early and use its result to direct later reads. Run known non-mutating format and lint checks before manually reporting formatting findings. If command discovery is needed, inspect only enough context to identify it. Use `.agent/scripts/project-diagnostics.py --check <name>` when available.
 4. Inspect changed files in context and find current lines, prioritising paths connected to failed, blocked, or uncovered claims. Component tests must mount the component under test, not substitute markup.
-5. From the task-scoped diff, inventory every added or changed `const`/`let` and named function or class, including changed initializers and bodies. Check each against `code-style`; missing prose is a finding. Exclude unrelated user work.
+5. From the task-scoped diff, inventory every added or changed `const`/`let` and named function or class, including changed initializers and bodies. Check each against the core style checks above; missing prose is a finding. Exclude unrelated user work.
 6. Compare implementation and documentation with the plan, risks, verification, and generated-source boundary. Reference documentation must match code; roadmaps may describe future work.
 7. Re-check PROGRESS.md's deferred or forward-looking notes (e.g. "optional hardening", "if a third caller ever needs this") against this diff. If the stated trigger condition is now met, treat it as a finding, not a resolved deferral.
 8. Run any remaining cheap, justified checks raised by source inspection.

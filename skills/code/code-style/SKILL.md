@@ -97,6 +97,6 @@ Before writing new logic for a problem a sibling module already solves (prop det
 - Plain-language voice; no unexplained jargon or "etc". Purpose over cleverness
 - Avoid inflated phrasing like "positioning context" or "caller-provided X"; don't invent a term for a concept the codebase doesn't already name (e.g. "wide panel"): reuse existing naming or ask
 - A comment records a fact for the next maintainer; it does not narrate to an audience. Read each new comment and docstring aloud: if it opens by announcing the point, restates the signature or name, or ends on a flourish, cut it
-- Before presenting, run new comments and markdown docs against the "AI prose tells" checklist in the writing skill (announcement phrases, formulaic contrast, vague significance, false agency, punch-line endings) — code comments are not exempt from sounding AI-generated
+- Before presenting, check new comments and Markdown for announcement openings, formulaic contrasts, vague significance, false agency, and punch-line endings. For the full prose checklist, see `writing`.
 - Prefer the codebase's concrete verb or noun over abstract process terms such as "classification" or "invocation" when a plain description of the behaviour is available
 - This also covers swapping an existing name for a more formal-sounding synonym, not just novel terms: if the code calls `useStorage`, describe it as storing/stored, not "persist"/"persistence"/"reactive". Match the API's own verb.

@@ -1,11 +1,15 @@
 ---
 name: writing-copy
 description: >
-  Use this skill when writing or reviewing UI microcopy: labels, errors, empty states, tooltips, CTAs, form help, confirmations. See writing for voice and accessibility for screen-reader phrasing.
+  Use this skill when writing or reviewing UI microcopy: labels, errors, empty states, tooltips, CTAs, form help, and confirmations. Keep the voice consistent and make controls and messages clear without visual context.
 ---
 # UI copy
 
 Microcopy = short interface text guiding action. Bar: clear in one read.
+
+## Accessible phrasing
+
+Write each control and message so its meaning survives without visual context: use specific accessible names, make inline errors work with the field label, and do not rely on colour or placeholder text alone. For the full voice and accessibility checklists, see `writing` and `accessibility`.
 
 ## Before writing
 

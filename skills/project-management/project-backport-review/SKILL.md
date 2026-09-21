@@ -27,7 +27,7 @@ Do not use this skill for:
 1. Confirm both repo paths/roots are available as working directories (or ask for the missing one).
 2. Read `AGENTS.md`/`WORKSPACE.md` for both repos if present, to understand each project's intended shape and any documented deviations from boilerplate.
 3. Check whether boilerplate exposes Boilersuit generators (`.boilersuit/generators/`). If a candidate improvement is something a generator should produce rather than a static file, flag it for `boilersuit-generator-authoring`, not a plain file edit.
-4. Use `code-lookup` for structural discovery in either repo; scope reads to config, scripts, component/composable patterns, CI, and docs — skip generated output, lockfiles, and vendored/build directories in both repos.
+4. For structural questions, use a code index when available to find definitions and callers before deciding; otherwise use a scoped search. For the full lookup workflow, see `code-lookup`. Scope reads to config, scripts, component/composable patterns, CI, and docs — skip generated output, lockfiles, and vendored/build directories in both repos.
 
 ## Review method
 

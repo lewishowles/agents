@@ -22,7 +22,7 @@ Use this mode to find browser failures before there is a confirmed bug.
 2. **Inspect the existing setup:** check diagnostics, browser-test configuration, fixtures, and seeded accounts. Use the established harness. Do not add or migrate browser tooling unless the user asks.
 3. **Plan focused cases:** derive unhappy paths from the interface and code. Consider invalid or boundary input, rapid or repeated actions, navigation and reloads, authentication and permission changes, network failure, concurrent state, viewport changes, keyboard use, and assistive technology where relevant.
 4. **Collect browser evidence:** give the user the narrowest exact command to run. Ask for the failing flow or test, visible outcome, relevant console, network, or server error, and resulting data state. Do not claim a finding without user-provided browser evidence.
-5. **Triage before fixing:** reproduce from a clean state, distinguish a bug from intended behaviour or an environment problem, and judge severity by its consequence. Once a bug is confirmed, use the `debugging` skill for root-cause analysis, a failing regression test, and the smallest fix.
+5. **Triage before fixing:** reproduce from a clean state, distinguish a bug from intended behaviour or an environment problem, and judge severity by its consequence. Once a bug is confirmed, identify its root cause, add a failing regression test, and make the smallest fix. For the full debugging workflow, see `debugging`.
 6. **Report coverage:** name confirmed bugs, unresolved anomalies, paths checked without a finding, untested surfaces, and the browser-suite status. A no-bugs result applies only to the checked scope.
 
 ## Which tool to use
