@@ -99,6 +99,10 @@
           },
           {
             "type": "command",
+            "command": "bash -c 'bash \"$HOME/.claude/hooks/guard-manual-commands.sh\"'"
+          },
+          {
+            "type": "command",
             "command": "bash -c 'bash \"$HOME/.claude/hooks/guard-no-pager.sh\"'"
           },
           {

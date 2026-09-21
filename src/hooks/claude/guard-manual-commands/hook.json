@@ -1,0 +1,13 @@
+{
+	"name": "guard-manual-commands",
+	"description": "Blocks Playwright, Cypress, and registered agent-run commands marked manual-only so people run them in a terminal.",
+	"runtime": "claude",
+	"events": [
+		{
+			"event": "PreToolUse",
+			"matcher": "Bash"
+		}
+	],
+	"dependencies": ["jq"],
+	"failureMode": "silent"
+}
