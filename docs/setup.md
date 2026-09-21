@@ -141,10 +141,18 @@ For project types with useful local skills, setup can install centrally managed 
 /path/to/repository/scripts/setup-project.sh --both --with-skill-pack macos
 ```
 
-macOS/Swift projects are detected from Xcode projects, Swift packages with Swift sources, or project instructions mentioning Swift or macOS. Interactive setup offers the macOS pack when detected. Use `--no-skill-packs` to skip detection, or list available packs with:
+macOS/Swift projects are detected from Xcode projects, Swift packages with Swift sources, or project instructions mentioning Swift or macOS. Interactive setup offers the macOS pack when detected. List the available packs with:
 
 ```bash
 /path/to/repository/scripts/setup-project.sh --list-skill-packs
+```
+
+To report how a project's setup differs from the expected setup without writing any files, use `--status` (`--check-project` does the same thing). To set up a project without detecting skill packs, add `--no-skill-packs`:
+
+```bash
+/path/to/repository/scripts/setup-project.sh --status
+/path/to/repository/scripts/setup-project.sh --check-project
+/path/to/repository/scripts/setup-project.sh --both --no-skill-packs
 ```
 
 ### Repair paths for existing projects

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-# Warn when project setup docs/templates drift from setup-project.sh behaviour.
-# Always exits 0 — setup drift is advisory, not a hard validation failure.
+# Check that project setup docs and templates match setup-project.sh behaviour.
+# Exit with a failure when any setup drift remains.
 
 from __future__ import annotations
 
@@ -40,34 +40,6 @@ IGNORED_DRIFT = {
 		"setup_flag_not_in_docs",
 		"--force-workspace",
 	),  # documented in prose, not fenced block
-	(
-		"setup_path_not_documented",
-		".agent/scripts",
-	),  # documented in prose as linked shared tools
-	(
-		"setup_path_not_documented",
-		".agent/scripts/change-impact.py",
-	),  # covered by .agent/scripts prose
-	(
-		"setup_path_not_documented",
-		".agent/scripts/generated-file-guard.py",
-	),  # covered by .agent/scripts prose
-	(
-		"setup_path_not_documented",
-		".agent/scripts/markdown-claims.py",
-	),  # covered by .agent/scripts prose
-	(
-		"setup_path_not_documented",
-		".agent/scripts/repo-context.py",
-	),  # covered by .agent/scripts prose
-	(
-		"setup_path_not_documented",
-		".claude",
-	),  # documented in prose through Claude support files
-	(
-		"setup_path_not_documented",
-		".claude/.claudeignore",
-	),  # documented in prose, not fenced block
 }
 
 RE_CODE_FENCE = re.compile(r"```([a-zA-Z0-9_-]*)\n(.*?)```", re.DOTALL)
@@ -80,6 +52,8 @@ RE_INLINE_CODE = re.compile(r"(?<!`)`([^`\n]+)`(?!`)")
 RE_LOCAL_PATH = re.compile(
 	r"(?<![\w/.-])(?:WORKSPACE\.md|AGENT_CAPABILITIES\.md|AGENTS\.md|\.agent/[^\s`'\"),]+|\.claude/[^\s`'\"),]+)"
 )
+# The tool file name at the start of each "name|..." entry in the shared-tool list.
+RE_SHARED_AGENT_TOOL = re.compile(r'^\s*"([^"|]+)\|', re.MULTILINE)
 
 
 @dataclass
@@ -175,6 +149,15 @@ def parse_setup() -> SetupFacts:
 	for flag_paths in paths_by_flag.values():
 		paths.update(flag_paths)
 
+	# Setup links every tool in the shared-tool list into .agent/scripts/, so
+	# templates may name any of them.
+	shared_tools = re.search(r"SHARED_AGENT_TOOLS=\(\n(.*?)\n\)", text, re.DOTALL)
+	if shared_tools:
+		paths.update(
+			f".agent/scripts/{name}"
+			for name in RE_SHARED_AGENT_TOOL.findall(shared_tools.group(1))
+		)
+
 	return SetupFacts(
 		flags=extract_flags(setup_text),
 		paths=paths,
@@ -219,7 +202,12 @@ def parse_docs() -> tuple[set[str], set[str], list[tuple[str, set[str], set[str]
 	block_facts = []
 
 	for index, block in enumerate(blocks, start=1):
-		block_flags = extract_flags(block)
+		# Only read flags from setup-project.sh commands. Other commands in the
+		# guide, such as the token usage report, have their own options.
+		setup_invocations = "\n".join(
+			line for line in block.splitlines() if "setup-project.sh" in line
+		)
+		block_flags = extract_flags(setup_invocations)
 		block_paths = set()
 
 		for line in block.splitlines():
@@ -290,7 +278,6 @@ def find_issues(
 	template_paths: set[str],
 ) -> list[Issue]:
 	issues = []
-	reference_paths = doc_paths | template_paths
 
 	add_missing_issues(
 		issues,
@@ -320,14 +307,6 @@ def find_issues(
 		template_paths - setup.paths,
 		"templates reference {item}, but setup-project.sh does not produce it",
 	)
-	add_missing_issues(
-		issues,
-		"setup_path_not_documented",
-		"scripts/setup-project.sh",
-		setup.paths - reference_paths,
-		"setup-project.sh produces {item}, but docs/templates do not mention it",
-	)
-
 	for source, flags, paths in doc_blocks:
 		for flag in sorted(flags & setup.paths_by_flag.keys()):
 			missing = paths - setup.paths_by_flag[flag]
@@ -349,7 +328,7 @@ def print_issues(issues: list[Issue]) -> None:
 
 	if issues:
 		print(
-			f"\n  {len(issues)} setup drift warning(s) — review docs/templates against setup-project.sh"
+			f"\n  {len(issues)} setup drift issue(s) — review docs/templates against setup-project.sh"
 		)
 
 
@@ -376,6 +355,8 @@ def main() -> None:
 		)
 	else:
 		print_issues(issues)
+
+	raise SystemExit(1 if issues else 0)
 
 
 if __name__ == "__main__":
