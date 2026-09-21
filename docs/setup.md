@@ -15,7 +15,7 @@ ln -s /path/to/repository/dist/claude/.mcp.json ~/.claude/.mcp.json
 Create `~/.claude/skills/`, `~/.claude/hooks/`, and `~/.claude/commands/`, then link each item individually:
 
 ```bash
-ln -s /path/to/repository/skills/vue ~/.claude/skills/vue
+ln -s /path/to/repository/skills/vue/vue ~/.claude/skills/vue
 ln -s /path/to/repository/dist/claude/commands/new-command.md ~/.claude/commands/new-command.md
 ```
 
@@ -109,12 +109,12 @@ codebase-memory-mcp cli list_projects '{}'
 Create `~/.agents/skills/`, then link each skill folder:
 
 ```bash
-ln -s /path/to/repository/src/skills/vue ~/.agents/skills/vue
+ln -s /path/to/repository/skills/vue/vue ~/.agents/skills/vue
 ```
 
 This keeps Codex skill discovery under `~/.agents` while `~/.codex` holds app config and hooks.
 
-Repository refresh is optional during global setup. Pass `--refresh` to sync external skills, regenerate repository output, and validate it before linking. If external skill sync fails because the network is unavailable, the existing local `src/skills/<name>` copy is kept; pass `--refresh --skip-external` to bypass the sync step intentionally.
+Repository refresh is optional during global setup. Pass `--refresh` to sync external skills, regenerate repository output, and validate it before linking. If external skill sync fails because the network is unavailable, the existing local `skills/<group>/<name>` copy is kept; pass `--refresh --skip-external` to bypass the sync step intentionally.
 
 ## Project setup
 

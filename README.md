@@ -24,7 +24,7 @@ This creates the project's `AGENTS.md` and other per-project config. Run it from
 
 - [Setup](docs/setup.md): manual wiring, troubleshooting, and token usage reports
 - [Skills](docs/skills.md): available skills and trigger behaviour
-- [Commands](docs/commands.md): built-in and skill commands
+- [Commands](docs/commands.md): built-in and custom commands
 - [Hooks](docs/hooks.md): Claude and Codex hook behaviour
 
 ## Shell aliases
