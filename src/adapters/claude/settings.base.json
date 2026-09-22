@@ -72,5 +72,6 @@
 	"agentPushNotifEnabled": true,
 	"contextCompactionThreshold": 80,
 	"modelCaching": true,
-	"promptCaching": true
+	"promptCaching": true,
+	"promptSuggestionEnabled": false
 }
