@@ -47,10 +47,6 @@ test_claude_setup() {
 	assert_file "$target_dir/AGENTS.md"
 	assert_file "$target_dir/CLAUDE.md"
 	assert_contains "$target_dir/CLAUDE.md" "@AGENTS.md"
-	assert_link "$target_dir/.agent/scripts/repo-context.py"
-	assert_link "$target_dir/.agent/scripts/change-impact.py"
-	assert_link "$target_dir/.agent/scripts/generated-file-guard.py"
-	assert_link "$target_dir/.agent/scripts/markdown-claims.py"
 	assert_dir "$target_dir/.claude"
 	assert_file "$target_dir/.claude/.claudeignore"
 	assert_not_exists "$target_dir/.claude/templates"
@@ -65,10 +61,6 @@ test_codex_setup() {
 
 	assert_file "$target_dir/AGENTS.md"
 	assert_not_exists "$target_dir/CLAUDE.md"
-	assert_link "$target_dir/.agent/scripts/repo-context.py"
-	assert_link "$target_dir/.agent/scripts/change-impact.py"
-	assert_link "$target_dir/.agent/scripts/generated-file-guard.py"
-	assert_link "$target_dir/.agent/scripts/markdown-claims.py"
 	assert_not_exists "$target_dir/.agents"
 	assert_contains "$target_dir/AGENTS.md" "Codex"
 }
@@ -82,10 +74,6 @@ test_both_setup() {
 	assert_file "$target_dir/AGENTS.md"
 	assert_file "$target_dir/CLAUDE.md"
 	assert_contains "$target_dir/CLAUDE.md" "@AGENTS.md"
-	assert_link "$target_dir/.agent/scripts/repo-context.py"
-	assert_link "$target_dir/.agent/scripts/change-impact.py"
-	assert_link "$target_dir/.agent/scripts/generated-file-guard.py"
-	assert_link "$target_dir/.agent/scripts/markdown-claims.py"
 	assert_file "$target_dir/.claude/.claudeignore"
 	assert_not_exists "$target_dir/.claude/templates"
 	assert_not_exists "$target_dir/.agents"
@@ -105,8 +93,8 @@ test_existing_files_are_skipped() {
 	assert_equals "$(cat "$target_dir/AGENTS.md")" "custom rules"
 	assert_equals "$(cat "$target_dir/CLAUDE.md")" "custom Claude rules"
 	assert_file "$target_dir/.claude/.claudeignore"
-	assert_contains "$output" "Shared agent tools"
-	assert_contains "$output" "7 unchanged"
+	assert_contains "$output" "Global tools"
+	assert_contains "$output" "2 unchanged"
 	assert_contains "$output" "Claude support files"
 	assert_contains "$output" "2 unchanged"
 }
@@ -207,7 +195,6 @@ test_status_reports_configured_project() {
 	assert_contains "$output" "Detected mode"
 	assert_contains "$output" "both"
 	assert_contains "$output" "Project rules"
-	assert_contains "$output" "Shared agent tools"
 }
 
 test_status_reports_drifted_project() {
@@ -216,41 +203,11 @@ test_status_reports_drifted_project() {
 	mkdir -p "$target_dir/src"
 
 	run_setup "$target_dir" --both
-	rm "$target_dir/.agent/scripts/repo-context.py"
+	mv "$target_dir/.claude/.claudeignore" "$target_dir/.claude/.claudeignore.removed"
 
 	run_setup_output "$target_dir" --status > "$output" 2>&1
 
-	assert_contains "$output" "repo-context.py"
-}
-
-test_shared_agent_tool_source_contract() {
-	local target_dir="$TEST_ROOT/source-contract"
-	local source_dir="$target_dir/scripts/agent-tools"
-	local setup_library="$REPO_DIR/scripts/lib/project-setup.sh"
-	local output="$TEST_ROOT/source-contract.out"
-
-	mkdir -p "$target_dir/scripts"
-	cp -R "$REPO_DIR/scripts/agent-tools" "$target_dir/scripts/"
-
-	if (
-		REPO_DIR="$target_dir"
-		source "$setup_library"
-		SHARED_AGENT_TOOLS+=("missing-tool.sh|$REPO_DIR/scripts/agent-tools/missing-tool.sh")
-		assert_shared_agent_tools
-	) > "$output" 2>&1; then
-		fail "Expected a missing declared source to fail validation"
-	fi
-	assert_contains "$output" "missing-tool.sh"
-
-	touch "$source_dir/unlisted-tool.sh"
-	if (
-		REPO_DIR="$target_dir"
-		source "$setup_library"
-		assert_shared_agent_tools
-	) > "$output" 2>&1; then
-		fail "Expected an undeclared source to fail validation"
-	fi
-	assert_contains "$output" "unlisted-tool.sh"
+	assert_contains "$output" ".claude/.claudeignore"
 }
 
 test_ensure_friction_installs_only_when_missing() {
@@ -300,7 +257,6 @@ test_no_skill_packs_suppresses_detection
 test_status_reports_clean_project
 test_status_reports_configured_project
 test_status_reports_drifted_project
-test_shared_agent_tool_source_contract
 test_ensure_friction_installs_only_when_missing
 
 printf '✓ setup-project tests passed\n'

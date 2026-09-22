@@ -12,7 +12,6 @@ import argparse
 import datetime
 import json
 import subprocess
-import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -38,18 +37,18 @@ class Issue:
 	kind: str
 
 
-# Runs markdown-claims.py and returns its findings as Issue objects.
+# Runs the markdown claims check and returns its findings as Issue objects.
 def run_claims_check() -> list[Issue]:
 	result = subprocess.run(
 		[
-			sys.executable,
-			str(REPO_ROOT / "scripts" / "agent-tools" / "markdown-claims.py"),
+			"project-checks-markdown-claims",
 			"--mode",
 			"all",
 			"--json",
 		],
 		capture_output=True,
 		text=True,
+		check=True,
 	)
 	try:
 		data = json.loads(result.stdout)

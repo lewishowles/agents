@@ -1,55 +1,6 @@
 #!/usr/bin/env bash
 # Shared helpers for project setup commands.
 
-# Shared tool links installed into every configured project's .agent/scripts/ directory.
-SHARED_AGENT_TOOLS=(
-	"change-impact.py|$REPO_DIR/scripts/agent-tools/change-impact.py"
-	"repo-context.py|$REPO_DIR/scripts/agent-tools/repo-context.py"
-	"generated-file-guard.py|$REPO_DIR/scripts/agent-tools/generated-file-guard.py"
-	"markdown-claims.py|$REPO_DIR/scripts/agent-tools/markdown-claims.py"
-)
-
-# Asserts that the shared tool declaration exactly covers the source directory.
-assert_shared_agent_tools() {
-	local tools_dir="$REPO_DIR/scripts/agent-tools"
-	local entry
-	local source
-	local declared_source
-	local declared
-	local validation_failed=0
-
-	for entry in "${SHARED_AGENT_TOOLS[@]}"; do
-		source="${entry##*|}"
-
-		if [[ "$source" != "$tools_dir/"* ]] || [[ ! -f "$source" ]]; then
-			printf 'Shared agent tool source must be a file under scripts/agent-tools/: %s\n' "$source" >&2
-			validation_failed=1
-		fi
-	done
-
-	for source in "$tools_dir"/.[!.]* "$tools_dir"/*; do
-		if [[ ! -f "$source" ]]; then
-			continue
-		fi
-
-		declared=0
-		for entry in "${SHARED_AGENT_TOOLS[@]}"; do
-			declared_source="${entry##*|}"
-			if [[ "$declared_source" == "$source" ]]; then
-				declared=1
-				break
-			fi
-		done
-
-		if [[ "$declared" -eq 0 ]]; then
-			printf 'Shared agent tool source is not declared by SHARED_AGENT_TOOLS: %s\n' "$source" >&2
-			validation_failed=1
-		fi
-	done
-
-	return "$validation_failed"
-}
-
 # Copies a template to target only if target does not already exist.
 #
 # @param  {string}  source
@@ -180,32 +131,16 @@ copy_claude_support_files() {
 	cli_group_end
 }
 
-# Links shared project-local agent tooling into the target project. Symlinks keep every
-# project tracking the central source, so improvements and fixes propagate without re-copying.
-copy_shared_agent_tools() {
-	local entry
-
-	if ! assert_shared_agent_tools; then
-		cli_status failed "Shared agent tools" "source declarations do not match scripts/agent-tools/"
-		return 1
-	fi
-
-	cli_group_begin "Shared agent tools"
+# Ensures global project-checks and friction commands are available before setup continues.
+ensure_global_tools() {
+	cli_group_begin "Global tools"
 	ensure_project_checks
 	ensure_friction
-	ensure_dir "$PROJECT_DIR/.agent/scripts" ".agent/scripts/"
-
-	for entry in "${SHARED_AGENT_TOOLS[@]}"; do
-		local name="${entry%%|*}"
-		local source="${entry##*|}"
-
-		link_file "$source" "$PROJECT_DIR/.agent/scripts/$name" ".agent/scripts/$name"
-	done
 	cli_group_end
 }
 
-# Ensures all project-checks entry points are available globally before linking
-# their project-local shims.
+# Ensures all project-checks entry points are available globally before setup
+# continues.
 ensure_project_checks() {
 	local command_name
 	local missing_commands=()
@@ -386,13 +321,10 @@ install_project_skill_packs() {
 
 # Reports project setup state without modifying any files. Detects the
 # configured mode from AGENTS.md content, then checks AGENTS.md template
-# match, .agent/scripts symlink targets, Claude
-# support files (claude/both only), and unexpected runtime directories.
+# match, Claude support files (claude/both only), and unexpected runtime directories.
 check_status() {
 	local agents_md="$PROJECT_DIR/AGENTS.md"
 	local detected_mode=""
-	local entry
-	local source_validation_status=0
 
 	# Detect mode from AGENTS.md body text.
 	if [ -f "$agents_md" ]; then
@@ -432,37 +364,6 @@ check_status() {
 	fi
 	cli_group_end
 
-	# Shared agent tools — each should be a symlink to the central source.
-	cli_group_begin "Shared agent tools"
-	if ! assert_shared_agent_tools; then
-		cli_group_status failed "source declarations" "do not match scripts/agent-tools/"
-		source_validation_status=1
-	fi
-
-	local scripts_dir="$PROJECT_DIR/.agent/scripts"
-	if [ ! -d "$scripts_dir" ]; then
-		cli_group_status warning ".agent/scripts/" "missing"
-	else
-		for entry in "${SHARED_AGENT_TOOLS[@]}"; do
-			local name="${entry%%|*}"
-			local source="${entry##*|}"
-			local target="$scripts_dir/$name"
-
-			if [ ! -e "$target" ] && [ ! -L "$target" ]; then
-				cli_group_status failed "$name" "missing"
-			elif [ -L "$target" ]; then
-				if [ "$(readlink "$target")" = "$source" ]; then
-					cli_group_status muted "$name" "linked correctly"
-				else
-					cli_group_status warning "$name" "symlink points elsewhere"
-				fi
-			else
-				cli_group_status warning "$name" "local copy, not symlinked"
-			fi
-		done
-	fi
-	cli_group_end
-
 	# Claude support files (claude/both only).
 	if [ "$detected_mode" = "claude" ] || [ "$detected_mode" = "both" ]; then
 		cli_group_begin "Claude support files"
@@ -491,5 +392,5 @@ check_status() {
 	local _json
 	_json='{"next":'"$(cli_style_json_string "Repair setup drift")"',"reason":'"$(cli_style_json_string "")"',"commands":'"$(cli_style_json_string_array "setup-project.sh --$detected_mode" "setup-project.sh --write-workspace" "setup-project.sh --force-workspace")"',"alternatives":'"$(cli_style_json_string_array)"'}'
 	cli_style_render_json next-step-block "$_json"
-	return "$source_validation_status"
+	return 0
 }

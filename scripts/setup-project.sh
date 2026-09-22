@@ -47,7 +47,7 @@ setup_claude() {
 	copy_file "$REPO_DIR/templates/claude/CLAUDE.md.template" "$PROJECT_DIR/CLAUDE.md" "CLAUDE.md"
 	cli_group_end
 
-	copy_shared_agent_tools
+	ensure_global_tools
 
 	copy_claude_support_files
 	install_project_skill_packs
@@ -60,7 +60,7 @@ setup_codex() {
 	copy_file "$REPO_DIR/templates/codex/AGENTS.md.template" "$PROJECT_DIR/AGENTS.md" "AGENTS.md"
 	cli_group_end
 
-	copy_shared_agent_tools
+	ensure_global_tools
 
 	install_project_skill_packs
 }
@@ -73,7 +73,7 @@ setup_both() {
 	copy_file "$REPO_DIR/templates/claude/CLAUDE.md.template" "$PROJECT_DIR/CLAUDE.md" "CLAUDE.md"
 	cli_group_end
 
-	copy_shared_agent_tools
+	ensure_global_tools
 
 	copy_claude_support_files
 	install_project_skill_packs

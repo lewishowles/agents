@@ -68,7 +68,7 @@ Configuration/Agents/
 
 Root holds human-facing contracts that tools auto-discover and the user reads each session (`AGENTS.md`, `PROGRESS.md`, `README.md`); `.agent/` holds agent-operated internals. Keep new files on the correct side of that line.
 
-Durable scripts live under tracked `scripts/`, never under `.agent/`. The project-setup library owns one shared-tool list that links the selected tools into each repository's `.agent/scripts/`; that directory is a projection, not a source location.
+Durable scripts live under tracked `scripts/`, never under `.agent/`. Project setup checks that the global `project-checks` and `friction` commands are installed; it links nothing into `.agent/`.
 
 ## Symlink topology (after `setup-global.sh --both`)
 

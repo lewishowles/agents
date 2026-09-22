@@ -41,10 +41,6 @@ RE_INLINE_CODE = re.compile(r"(?<!`)`([^`\n]+)`(?!`)")
 RE_LOCAL_PATH = re.compile(
 	r"(?<![\w/.-])(?:AGENTS\.md|\.agent/[^\s`'\"),]+|\.claude/[^\s`'\"),]+)"
 )
-# The tool file name at the start of each "name|..." entry in the shared-tool list.
-RE_SHARED_AGENT_TOOL = re.compile(r'^\s*"([^"|]+)\|', re.MULTILINE)
-
-
 @dataclass
 class Issue:
 	kind: str
@@ -129,15 +125,6 @@ def parse_setup() -> SetupFacts:
 	paths = set()
 	for flag_paths in paths_by_flag.values():
 		paths.update(flag_paths)
-
-	# Setup links every tool in the shared-tool list into .agent/scripts/, so
-	# templates may name any of them.
-	shared_tools = re.search(r"SHARED_AGENT_TOOLS=\(\n(.*?)\n\)", text, re.DOTALL)
-	if shared_tools:
-		paths.update(
-			f".agent/scripts/{name}"
-			for name in RE_SHARED_AGENT_TOOL.findall(shared_tools.group(1))
-		)
 
 	return SetupFacts(
 		flags=extract_flags(setup_text),

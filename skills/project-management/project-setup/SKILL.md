@@ -24,7 +24,7 @@ For a repo that still has `WORKSPACE.md`, `AGENT_CAPABILITIES.md`, or a `.agent/
 1. Read the legacy file. Move durable gotchas and forbidden operations to `AGENTS.md` and usage notes to ordinary docs. Skip anything the repo's own files already say.
 2. Register commands with `agent-run detect --json`, then `agent-run detect --add <name>` (repeatable) or `agent-run detect --all`. For each command the legacy file said a person must run, mark it with `agent-run edit <name> --manual` (or register it with `agent-run add <name> --manual -- <argv>` if detect did not find it), then confirm `manual: true` in `agent-run list --json`.
 3. Replace any `project-diagnostics.py` instructions in `AGENTS.md` or docs with the matching agent-run commands.
-4. Trash `WORKSPACE.md`, `AGENT_CAPABILITIES.md`, and the `.agent/scripts/project-diagnostics.py` link.
+4. Trash `WORKSPACE.md`, `AGENT_CAPABILITIES.md`, the `.agent/scripts/project-diagnostics.py` link, and any old `.agent/scripts/repo-context.py`, `.agent/scripts/change-impact.py`, `.agent/scripts/generated-file-guard.py`, or `.agent/scripts/markdown-claims.py` links.
 
 ## Workflow
 

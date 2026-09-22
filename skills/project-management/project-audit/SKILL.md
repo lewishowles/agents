@@ -1,7 +1,7 @@
 ---
 name: project-audit
 description: >
-  Use this skill when auditing a project for setup drift, stale generated output, missing diagnostics, command-safety gaps, or agent-readiness issues. Covers AGENTS.md, agent-run registrations, .agent/scripts tooling, PROGRESS.md handoff health, validation commands, and generated/source boundaries.
+  Use this skill when auditing a project for setup drift, stale generated output, missing diagnostics, command-safety gaps, or agent-readiness issues. Covers AGENTS.md, agent-run registrations, global project-checks and friction commands, PROGRESS.md handoff health, validation commands, and generated/source boundaries.
 ---
 # Project audit
 
@@ -13,7 +13,7 @@ Audit:
 
 - project instruction health (`AGENTS.md`)
 - project command registrations (`agent-run`)
-- project-local agent tools under `.agent/scripts/`
+- globally installed `project-checks` and `friction` commands
 - diagnostics discoverability and command safety
 - generated/source boundaries
 - `PROGRESS.md` handoff quality when multi-session work is active
@@ -27,8 +27,8 @@ Read in order, stopping when you have enough context:
 
 1. `<project-root>/AGENTS.md`
 2. `agent-run list --json`
-3. `<project-root>/.agent/scripts/repo-context.py` output, if present
-4. `<project-root>/.agent/scripts/generated-file-guard.py` output, if present
+3. `project-checks-repo-context` output
+4. `project-checks-generated-file-guard` output
 5. `PROGRESS.md` handoff, when active work or session continuity is part of the audit
 
 If agent-run has no registrations, inspect `AGENTS.md`, package scripts, and ordinary docs, then use `agent-run detect --json` to preview likely commands.
@@ -39,8 +39,8 @@ When these scripts exist, prefer them over manual inference:
 
 ```sh
 agent-run list --json
-.agent/scripts/repo-context.py
-.agent/scripts/generated-file-guard.py
+project-checks-repo-context
+project-checks-generated-file-guard
 ```
 
 Use `agent-run run <name> --json` for a registered check. Use `agent-run run --json -- <argv>` only for a one-off check, and keep manual-only commands with the human.
