@@ -209,12 +209,21 @@ test_config_replacement_creates_timestamped_backup() {
 
 	assert_timestamped_backup "$home_dir"
 	assert_contains "$home_dir/.codex/config.toml" 'approval_policy = "never"'
+	assert_contains "$home_dir/.codex/config.toml" 'default_permissions = "project-edit"'
 	assert_contains "$home_dir/.codex/config.toml" '[mcp_servers.codebase-memory-mcp]'
 	assert_contains "$home_dir/.codex/config.toml" '[mcp_servers.serena]'
 	assert_equals "$(grep -c '^default_tools_approval_mode = \"approve\"$' "$home_dir/.codex/config.toml")" "2"
 	assert_contains "$home_dir/.codex/config.toml" '[features]'
 	assert_contains "$home_dir/.codex/config.toml" 'hooks = true'
-	assert_contains "$home_dir/.codex/config.toml" 'writable_roots = ["'"$home_dir"'/Dev/Configuration/Agents", "'"$home_dir"'/Dev/Configuration/zsh", "'"$home_dir"'/Dev/Repositories/Packages/dev-tools", "'"$home_dir"'/.Trash", "'"$home_dir"'/.cache", "'"$home_dir"'/.agents", "/tmp", "/private/tmp"]'
+	assert_contains "$home_dir/.codex/config.toml" '[permissions.project-edit]'
+	assert_contains "$home_dir/.codex/config.toml" 'extends = ":workspace"'
+	assert_contains "$home_dir/.codex/config.toml" '[permissions.project-edit.workspace_roots]'
+	assert_contains "$home_dir/.codex/config.toml" '"'"$home_dir"'/Dev/Configuration/Agents" = true'
+	assert_contains "$home_dir/.codex/config.toml" '[permissions.project-edit.filesystem.":workspace_roots"]'
+	assert_contains "$home_dir/.codex/config.toml" '".git/config" = "write"'
+	assert_contains "$home_dir/.codex/config.toml" '".git/config.lock" = "write"'
+	assert_not_contains "$home_dir/.codex/config.toml" 'sandbox_mode'
+	assert_not_contains "$home_dir/.codex/config.toml" '[sandbox_workspace_write]'
 	assert_not_contains "$home_dir/.codex/config.toml" '[[hooks.'
 	assert_link "$home_dir/.codex/hooks.json"
 	assert_link "$home_dir/.codex/hooks/tool-call-checkpoint.sh"
@@ -236,18 +245,20 @@ test_hook_file_is_replaced_with_managed_link() {
 	assert_not_contains "$home_dir/.codex/config.toml" '[[hooks.'
 }
 
-test_workspace_network_access_is_enabled() {
-	local home_dir="$TEST_ROOT/workspace-network"
+test_permission_profile_preserves_workspace_roots() {
+	local home_dir="$TEST_ROOT/permission-profile"
 
 	create_existing_config "$home_dir"
 	printf '\n[sandbox_workspace_write]\nnetwork_access = false\nexclude_slash_tmp = true\nwritable_roots = ["/tmp/keep"]\n' >> "$home_dir/.codex/config.toml"
+	printf '\n[permissions.project-edit.workspace_roots]\n"/tmp/already-added" = true\n' >> "$home_dir/.codex/config.toml"
 	run_setup "$home_dir" > /dev/null
 
-	assert_contains "$home_dir/.codex/config.toml" '[sandbox_workspace_write]'
-	assert_contains "$home_dir/.codex/config.toml" 'network_access = true'
-	assert_not_contains "$home_dir/.codex/config.toml" 'network_access = false'
-	assert_contains "$home_dir/.codex/config.toml" 'exclude_slash_tmp = true'
-	assert_contains "$home_dir/.codex/config.toml" 'writable_roots = ["/tmp/keep", "'"$home_dir"'/Dev/Configuration/Agents", "'"$home_dir"'/Dev/Configuration/zsh", "'"$home_dir"'/Dev/Repositories/Packages/dev-tools", "'"$home_dir"'/.Trash", "'"$home_dir"'/.cache", "'"$home_dir"'/.agents", "/tmp", "/private/tmp"]'
+	assert_contains "$home_dir/.codex/config.toml" '[permissions.project-edit.network]'
+	assert_contains "$home_dir/.codex/config.toml" 'enabled = true'
+	assert_contains "$home_dir/.codex/config.toml" '"/tmp/keep" = true'
+	assert_contains "$home_dir/.codex/config.toml" '"/tmp/already-added" = true'
+	assert_not_contains "$home_dir/.codex/config.toml" 'sandbox_mode'
+	assert_not_contains "$home_dir/.codex/config.toml" '[sandbox_workspace_write]'
 }
 
 test_skills_are_installed_and_editable() {
@@ -409,7 +420,7 @@ test_default_setup_skips_repository_refresh
 test_refresh_runs_repository_sync
 test_config_replacement_creates_timestamped_backup
 test_hook_file_is_replaced_with_managed_link
-test_workspace_network_access_is_enabled
+test_permission_profile_preserves_workspace_roots
 test_skills_are_installed_and_editable
 test_exclusions_persist_and_report
 test_new_skill_installs_after_exclusion

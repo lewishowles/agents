@@ -438,15 +438,15 @@ ensure_codex_tui_settings() {
 #     Temporary file that receives the updated configuration.
 ensure_codex_defaults() {
 	local source="$1" destination="$2"
-	local approval_policy sandbox_mode
+	local approval_policy default_permissions
 
 	approval_policy=$(codex_config_value "root" "approval_policy")
-	sandbox_mode=$(codex_config_value "root" "sandbox_mode")
+	default_permissions=$(codex_config_value "root" "default_permissions")
 
-	awk -v approval_policy="$approval_policy" -v sandbox_mode="$sandbox_mode" '
+	awk -v approval_policy="$approval_policy" -v default_permissions="$default_permissions" '
 		function print_defaults() {
 			print "approval_policy = " approval_policy
-			print "sandbox_mode = " sandbox_mode
+			print "default_permissions = " default_permissions
 		}
 		BEGIN {
 			in_root = 1
@@ -461,7 +461,7 @@ ensure_codex_defaults() {
 			print
 			next
 		}
-		in_root && /^(approval_policy|sandbox_mode)[[:space:]]*=/ { next }
+		in_root && /^(approval_policy|default_permissions|sandbox_mode)[[:space:]]*=/ { next }
 		{ print }
 		END {
 			if (!defaults_written) {
@@ -471,77 +471,71 @@ ensure_codex_defaults() {
 	' "$source" > "$destination"
 }
 
-# Ensures the workspace-write sandbox has the managed settings while preserving
-# user-owned settings and writable roots.
+# Collects the managed and existing workspace roots without duplicates.
+# Legacy sandbox roots are included so setup migrates them into the profile.
 #
 # @param  {string}  config
-#     Codex configuration file to update.
-ensure_codex_workspace_settings() {
-	local config="$1"
-	local network_access writable_roots temp
-	local -a writable_root_list=()
-	local rest item
+#     Existing Codex config whose workspace roots should be preserved.
+# @param  {string}  destination
+#     File that receives quoted TOML paths, one per line.
+collect_codex_workspace_roots() {
+	local config="$1" destination="$2"
 
-	network_access=$(codex_config_value "sandbox_workspace_write" "network_access")
-	writable_roots=$(codex_config_value "sandbox_workspace_write" "writable_roots")
-	writable_roots=${writable_roots//\{\{HOME\}\}/$HOME}
-
-	rest="$writable_roots"
-	while [[ "$rest" == *'"'*'"'* ]]; do
-		rest=${rest#*\"}
-		item=${rest%%\"*}
-		writable_root_list+=("$item")
-		rest=${rest#*\"}
-	done
-
-	temp=$(mktemp)
-	awk -v network_access="$network_access" -v writable_roots="$writable_roots" -v roots_list="$(printf '%s|' "${writable_root_list[@]}")" '
-		function finish_workspace_write() {
-			if (in_workspace_write && !writable_roots_found) {
-				print "writable_roots = " writable_roots
+	{
+		sed "s|{{HOME}}|$HOME|g" "$REPO_DIR/src/adapters/codex/config.base.toml"
+		printf '\n'
+		cat "$config"
+	} | awk '
+		/^\[/ { section = $0 }
+		section == "[permissions.project-edit.workspace_roots]" && /^[[:space:]]*"[^"]+"[[:space:]]*=[[:space:]]*true/ {
+			root = $0
+			sub(/^[[:space:]]*/, "", root)
+			sub(/"[[:space:]]*=.*$/, "\"", root)
+			if (!seen[root]++) {
+				print root
 			}
 		}
-		BEGIN {
-			in_workspace_write = 0
-			workspace_write_found = 0
-			writable_roots_found = 0
-		}
-		/^\[sandbox_workspace_write\]$/ {
-			finish_workspace_write()
-			print
-			print "network_access = " network_access
-			in_workspace_write = 1
-			workspace_write_found = 1
-			next
-		}
-		/^\[/ {
-			finish_workspace_write()
-			in_workspace_write = 0
-		}
-		in_workspace_write && /^network_access[[:space:]]*=/ { next }
-		in_workspace_write && /^writable_roots[[:space:]]*=/ {
-			writable_roots_found = 1
-			n = split(roots_list, roots, "|")
-			for (i = 1; i <= n; i++) {
-				root = roots[i]
-				if (root != "" && index($0, "\"" root "\"") == 0) {
-					sub(/\][[:space:]]*$/, ", \"" root "\"]")
+		section == "[sandbox_workspace_write]" && /^writable_roots[[:space:]]*=/ {
+			line = $0
+			while (match(line, /"[^"]+"/)) {
+				root = substr(line, RSTART, RLENGTH)
+				if (!seen[root]++) {
+					print root
 				}
-			}
-			print
-			next
-		}
-		{ print }
-		END {
-			finish_workspace_write()
-			if (!workspace_write_found) {
-				print ""
-				print "[sandbox_workspace_write]"
-				print "network_access = " network_access
-				print "writable_roots = " writable_roots
+				line = substr(line, RSTART + RLENGTH)
 			}
 		}
+	' > "$destination"
+}
+
+# Replaces the managed permission profile and removes incompatible sandbox settings.
+#
+# @param  {string}  config
+#     Codex config file to update.
+ensure_codex_permission_settings() {
+	local config="$1"
+	local roots_temp temp
+
+	roots_temp=$(mktemp)
+	temp=$(mktemp)
+	collect_codex_workspace_roots "$config" "$roots_temp"
+
+	awk '
+		/^\[sandbox_workspace_write\]$/ || /^\[permissions\.project-edit(\.|\])/{ skip = 1; next }
+		/^\[/ { skip = 0 }
+		!skip { print }
 	' "$config" > "$temp"
+
+	printf '\n' >> "$temp"
+	codex_config_section "permissions.project-edit" >> "$temp"
+	printf '\n[permissions.project-edit.workspace_roots]\n' >> "$temp"
+	awk '{ print $0 " = true" }' "$roots_temp" >> "$temp"
+	printf '\n' >> "$temp"
+	codex_config_section 'permissions.project-edit.filesystem.":workspace_roots"' >> "$temp"
+	printf '\n' >> "$temp"
+	codex_config_section "permissions.project-edit.network" >> "$temp"
+
+	trash "$roots_temp"
 	mv "$temp" "$config"
 }
 
@@ -591,7 +585,7 @@ ensure_codex_config() {
 		printf '\n' >> "$temp"
 		codex_config_section "$section" >> "$temp"
 	done
-	ensure_codex_workspace_settings "$temp"
+	ensure_codex_permission_settings "$temp"
 	ensure_codex_tui_settings "$temp"
 
 	local hooks_temp

@@ -1,13 +1,33 @@
 approval_policy = "never"
-sandbox_mode = "workspace-write"
+default_permissions = "project-edit"
+
+[permissions.project-edit]
+# Keep Codex's standard workspace safeguards unless a narrower rule overrides them.
+extends = ":workspace"
+
+[permissions.project-edit.workspace_roots]
+# Give the shared configuration repositories the same access as the active workspace.
+"{{HOME}}/Dev/Configuration/Agents" = true
+"{{HOME}}/Dev/Configuration/zsh" = true
+"{{HOME}}/Dev/Repositories/Packages/dev-tools" = true
+"{{HOME}}/.Trash" = true
+"{{HOME}}/.cache" = true
+"{{HOME}}/.agents" = true
+"/tmp" = true
+"/private/tmp" = true
+
+[permissions.project-edit.filesystem.":workspace_roots"]
+# Let Git-backed setup tools store their repository ID without opening the rest of .git.
+".git/config" = "write"
+".git/config.lock" = "write"
+
+[permissions.project-edit.network]
+# Match the previous workspace sandbox's network access.
+enabled = true
 
 [features]
 hooks = true
 default_mode_request_user_input = true
-
-[sandbox_workspace_write]
-network_access = true
-writable_roots = ["{{HOME}}/Dev/Configuration/Agents", "{{HOME}}/Dev/Configuration/zsh", "{{HOME}}/Dev/Repositories/Packages/dev-tools", "{{HOME}}/.Trash", "{{HOME}}/.cache", "{{HOME}}/.agents", "/tmp", "/private/tmp"]
 
 [tui]
 status_line = ["run-state", "project-name", "used-tokens", "context-used", "five-hour-limit", "weekly-limit", "model-with-reasoning"]
