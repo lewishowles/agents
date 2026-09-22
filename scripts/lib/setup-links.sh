@@ -147,19 +147,28 @@ link_path() {
 }
 
 # Links each skill folder under skills/<group>/ into the given target
-# directory, named after the folder. Returns 1 without creating any links when
-# two groups hold a skill with the same name, because one link would replace
-# the other. The array length checks keep macOS bash 3.2 from treating an
-# empty array as unset under `set -u`.
+# directory, named after the folder. Excluded skill names are passed after the
+# target directory. Returns 1 without creating any links when two groups hold a
+# skill with the same name, because one link would replace the other. The array
+# length checks keep macOS bash 3.2 from treating an empty array as unset under
+# `set -u`.
 #
 # @param  {string}  target_dir
 #     The directory to install skill symlinks into.
+# @param  {string}  ...
+#     Skill names that must not be linked.
 link_skills() {
 	local target_dir="$1"  # Directory to install skill symlinks into.
+	shift
+	local -a excluded_skills=("$@")  # Skill names that must not be linked.
 	local skill  # Canonical skill directory currently being checked or linked.
 	local slug  # Skill name taken from the canonical directory basename.
 	local other  # Previously collected skill directory used for duplicate checks.
 	local other_slug  # Skill name taken from the previously collected directory.
+	local excluded  # Whether the current skill is excluded from this setup run.
+	local excluded_skill  # Excluded skill name currently being checked.
+	local skill_link  # Installed skill path currently being checked or removed.
+	local current  # Link text currently being compared with the canonical path.
 	local skill_paths=()  # Canonical skill directories that passed duplicate checks.
 
 	for skill in "$REPO_DIR"/skills/*/*; do
@@ -184,6 +193,30 @@ link_skills() {
 	if [ "${#skill_paths[@]}" -gt 0 ]; then
 		for skill in "${skill_paths[@]}"; do
 			slug=$(basename "$skill")
+			excluded=0
+			if [ "${#excluded_skills[@]}" -gt 0 ]; then
+				for excluded_skill in "${excluded_skills[@]}"; do
+					if [ "$excluded_skill" = "$slug" ]; then
+						excluded=1
+						break
+					fi
+				done
+			fi
+
+			if [ "$excluded" = "1" ]; then
+				skill_link="$target_dir/$slug"
+				if [ -L "$skill_link" ]; then
+					current=$(readlink "$skill_link")
+					# The link text is compared as link_path wrote it, so a link to the same
+					# checkout through another path form is left alone.
+					if [ "$current" = "$skill" ]; then
+						trash "$skill_link"
+						cli_group_status warning "removed excluded skill" "skills/$slug"
+					fi
+				fi
+				continue
+			fi
+
 			link_path "$skill" "$target_dir/$slug" "skills/$slug"
 		done
 	fi

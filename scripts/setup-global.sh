@@ -10,7 +10,239 @@ REPO_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 source "$REPO_DIR/scripts/lib/setup-links.sh"
 
 usage() {
-	printf 'Usage: %s [--claude|--codex|--both] [--claude-dir <path>] [--codex-dir <path>] [--refresh] [--skip-external]\n' "$(basename "$0")"
+	printf 'Usage: %s [--claude|--codex|--both] [--claude-dir <path>] [--codex-dir <path>] [--exclude <skill>[,<skill>...]] [--include <skill>[,<skill>...]] [--include-all] [--refresh] [--skip-external]\n' "$(basename "$0")"
+}
+
+# Parses a comma-separated skill list into the pending setup operations.
+#
+# @param  {string}  operation
+#     Operation to apply to each listed skill.
+# @param  {string}  value
+#     Comma-separated skill names supplied on the command line.
+parse_skill_list() {
+	local operation="$1"  # Pending operation to apply to each skill name.
+	local value="$2"  # Comma-separated skill names from the command line.
+	local skill_name  # Skill name currently being parsed.
+	local -a names=()  # Skill names parsed from the option value.
+
+	IFS=',' read -r -a names <<< "$value"
+	if [ "${#names[@]}" -eq 0 ]; then
+		printf 'Expected at least one skill name for --%s.\n' "$operation" >&2
+		return 1
+	fi
+
+	for skill_name in "${names[@]}"; do
+		skill_name="${skill_name#"${skill_name%%[![:space:]]*}"}"
+		skill_name="${skill_name%"${skill_name##*[![:space:]]}"}"
+		if [ -z "$skill_name" ]; then
+			printf 'Expected at least one skill name for --%s.\n' "$operation" >&2
+			return 1
+		fi
+
+		skill_operation_types+=("$operation")
+		skill_operation_names+=("$skill_name")
+	done
+}
+
+# Returns 0 when a canonical skill folder has the requested name.
+#
+# @param  {string}  requested_name
+#     Skill name to find in the canonical skills directory.
+canonical_skill_exists() {
+	local requested_name="$1"  # Skill name supplied by the user.
+	local skill  # Canonical skill directory currently being checked.
+
+	for skill in "$REPO_DIR"/skills/*/*; do
+		[ -d "$skill" ] || continue
+		if [ "$(basename "$skill")" = "$requested_name" ]; then
+			return 0
+		fi
+	done
+
+	return 1
+}
+
+# Rejects unknown exclusions and includes unless an include clears a saved name.
+#
+# @return  {integer}
+#     0 when every requested skill name is known, or 1 otherwise.
+validate_skill_operations() {
+	local index  # Index of the pending skill operation being validated.
+	local skill_name  # Requested skill name currently being validated.
+	local operation  # Pending operation for the requested skill name.
+
+	if [ "${#skill_operation_types[@]}" -eq 0 ]; then
+		return 0
+	fi
+
+	for index in "${!skill_operation_types[@]}"; do
+		operation="${skill_operation_types[$index]}"
+		if [ "$operation" = "include-all" ]; then
+			continue
+		fi
+
+		skill_name="${skill_operation_names[$index]}"
+		if ! canonical_skill_exists "$skill_name" && {
+			[ "$operation" != "include" ] || ! excluded_skill_exists "$skill_name"
+		}; then
+			printf 'Unknown skill: %s\n' "$skill_name" >&2
+			return 1
+		fi
+	done
+}
+
+# Reads persisted skill exclusions without creating the exclusions file.
+load_skill_exclusions() {
+	local skill_name  # Persisted skill name currently being read.
+
+	[ -f "$skill_exclusions_file" ] || return 0
+
+	while IFS= read -r skill_name; do
+		[ -n "$skill_name" ] || continue
+		if ! excluded_skill_exists "$skill_name"; then
+			excluded_skills+=("$skill_name")
+		fi
+	done < "$skill_exclusions_file"
+}
+
+# Returns 0 when the current exclusion list contains a skill name.
+#
+# @param  {string}  skill_name
+#     Skill name to find in the current exclusion list.
+excluded_skill_exists() {
+	local skill_name="$1"  # Skill name to find in the exclusion list.
+	local excluded_skill  # Excluded skill name currently being checked.
+
+	if [ "${#excluded_skills[@]}" -gt 0 ]; then
+		for excluded_skill in "${excluded_skills[@]}"; do
+			if [ "$excluded_skill" = "$skill_name" ]; then
+				return 0
+			fi
+		done
+	fi
+
+	return 1
+}
+
+# Adds a skill name to the current exclusion list once.
+#
+# @param  {string}  skill_name
+#     Skill name to exclude from future setup runs.
+add_excluded_skill() {
+	local skill_name="$1"  # Skill name to add to the exclusion list.
+
+	if ! excluded_skill_exists "$skill_name"; then
+		excluded_skills+=("$skill_name")
+	fi
+}
+
+# Removes a skill name from the current exclusion list.
+#
+# @param  {string}  skill_name
+#     Skill name to include in future setup runs.
+remove_excluded_skill() {
+	local skill_name="$1"  # Skill name to remove from the exclusion list.
+	local excluded_skill  # Existing exclusion currently being retained.
+	local -a remaining_skills=()  # Exclusions that do not match the requested name.
+
+	if [ "${#excluded_skills[@]}" -gt 0 ]; then
+		for excluded_skill in "${excluded_skills[@]}"; do
+			if [ "$excluded_skill" != "$skill_name" ]; then
+				remaining_skills+=("$excluded_skill")
+			fi
+		done
+	fi
+
+	if [ "${#remaining_skills[@]}" -gt 0 ]; then
+		excluded_skills=("${remaining_skills[@]}")
+	else
+		excluded_skills=()
+	fi
+}
+
+# Applies the validated skill operations in their command-line order.
+apply_skill_operations() {
+	local index  # Index of the pending operation being applied.
+	local operation  # Operation name for the current pending operation.
+	local skill_name  # Skill name for the current pending operation.
+
+	if [ "${#skill_operation_types[@]}" -eq 0 ]; then
+		return 0
+	fi
+
+	for index in "${!skill_operation_types[@]}"; do
+		operation="${skill_operation_types[$index]}"
+		skill_name="${skill_operation_names[$index]}"
+		case "$operation" in
+			exclude) add_excluded_skill "$skill_name" ;;
+			include) remove_excluded_skill "$skill_name" ;;
+			include-all) excluded_skills=() ;;
+		esac
+	done
+}
+
+# Writes the current exclusions, removing the file when no exclusions remain.
+save_skill_exclusions() {
+	local skill_name  # Excluded skill name currently being written.
+	local temp  # Temporary file used for an atomic replacement.
+
+	if [ "${#excluded_skills[@]}" -eq 0 ]; then
+		if [ -e "$skill_exclusions_file" ] || [ -L "$skill_exclusions_file" ]; then
+			trash "$skill_exclusions_file"
+		fi
+		return 0
+	fi
+
+	mkdir -p "$HOME/.agents"
+	temp=$(mktemp)
+	for skill_name in "${excluded_skills[@]}"; do
+		printf '%s\n' "$skill_name" >> "$temp"
+	done
+	mv "$temp" "$skill_exclusions_file"
+}
+
+# Joins the current exclusions into one comma-separated list for output.
+format_excluded_skills() {
+	local formatted=''  # Comma-separated exclusion names for terminal output.
+	local skill_name  # Excluded skill name currently being formatted.
+
+	for skill_name in "${excluded_skills[@]}"; do
+		if [ -n "$formatted" ]; then
+			formatted="$formatted, $skill_name"
+		else
+			formatted="$skill_name"
+		fi
+	done
+
+	printf '%s' "$formatted"
+}
+
+# Tells the user which skills this run skips and where that list is saved,
+# so a missing skill is explained rather than looking like a broken install.
+report_excluded_skills() {
+	local formatted  # Comma-separated exclusion names for terminal output.
+
+	if [ "${#excluded_skills[@]}" -eq 0 ]; then
+		return 0
+	fi
+
+	formatted=$(format_excluded_skills)
+	printf 'Excluded: %s (from ~/.agents/skill-exclusions; run with --include-all to restore)\n' "$formatted"
+}
+
+# Links canonical skills while passing the current exclusion list safely on
+# macOS Bash 3.2, where expanding an empty array under `set -u` fails.
+#
+# @param  {string}  target_dir
+#     Directory to install skill symlinks into.
+link_configured_skills() {
+	local target_dir="$1"  # Directory to install skill symlinks into.
+
+	if [ "${#excluded_skills[@]}" -gt 0 ]; then
+		link_skills "$target_dir" "${excluded_skills[@]}"
+	else
+		link_skills "$target_dir"
+	fi
 }
 
 setup_claude() {
@@ -36,7 +268,7 @@ setup_claude() {
 
 	cli_group_begin "Claude skills"
 	prune_stale_repo_links "$CLAUDE_DIR/skills" "$REPO_DIR" "skills"
-	link_skills "$CLAUDE_DIR/skills"
+	link_configured_skills "$CLAUDE_DIR/skills"
 	cli_group_end
 
 	cli_group_begin "Claude hooks"
@@ -109,7 +341,7 @@ setup_codex() {
 	cli_group_begin "Codex skills"
 	prune_stale_repo_links "$HOME/.agents/skills" "$REPO_DIR" "skills"
 	prune_stale_repo_links "$CODEX_DIR/skills" "$REPO_DIR" "legacy skills" "1"
-	link_skills "$HOME/.agents/skills"
+	link_configured_skills "$HOME/.agents/skills"
 	cli_group_end
 }
 
@@ -426,6 +658,11 @@ prompt_target() {
 target=""
 refresh=false
 sync_external=true
+skill_options_requested=false  # Whether command-line skill options were supplied.
+skill_exclusions_file="$HOME/.agents/skill-exclusions"  # File that stores excluded skill names.
+excluded_skills=()  # Skill names excluded from the selected setup targets.
+skill_operation_types=()  # Pending include or exclude operations in command-line order.
+skill_operation_names=()  # Skill names associated with the pending operations.
 CLAUDE_DIR="$HOME/.claude"  # Overridable so a second account can install alongside the default one.
 CODEX_DIR="$HOME/.codex"    # Overridable so a second account can install alongside the default one.
 
@@ -436,6 +673,27 @@ while [ $# -gt 0 ]; do
 		--both)          target="both" ;;
 		--claude-dir)    CLAUDE_DIR="$2"; shift ;;
 		--codex-dir)     CODEX_DIR="$2"; shift ;;
+		--exclude)
+			if [ "$#" -lt 2 ] || ! parse_skill_list "exclude" "$2"; then
+				usage >&2
+				exit 1
+			fi
+			skill_options_requested=true
+			shift
+			;;
+		--include)
+			if [ "$#" -lt 2 ] || ! parse_skill_list "include" "$2"; then
+				usage >&2
+				exit 1
+			fi
+			skill_options_requested=true
+			shift
+			;;
+		--include-all)
+			skill_operation_types+=("include-all")
+			skill_operation_names+=("")
+			skill_options_requested=true
+			;;
 		--refresh)       refresh=true ;;
 		--skip-external) sync_external=false ;;
 		--help)          usage; exit 0 ;;
@@ -444,8 +702,24 @@ while [ $# -gt 0 ]; do
 	shift
 done
 
+load_skill_exclusions
+if ! validate_skill_operations; then
+	exit 1
+fi
+
+if [ "$skill_options_requested" = true ]; then
+	apply_skill_operations
+	save_skill_exclusions
+fi
+
+report_excluded_skills
+
 if [ -z "$target" ]; then
-	target=$(prompt_target)
+	if [ "$skill_options_requested" = true ]; then
+		target="both"
+	else
+		target=$(prompt_target)
+	fi
 fi
 
 bash "$REPO_DIR/scripts/install-cli-style.sh"
