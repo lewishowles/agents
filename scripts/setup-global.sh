@@ -10,7 +10,7 @@ REPO_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 source "$REPO_DIR/scripts/lib/setup-links.sh"
 
 usage() {
-	printf 'Usage: %s [--claude|--codex|--both] [--claude-dir <path>] [--codex-dir <path>] [--exclude <skill>[,<skill>...]] [--include <skill>[,<skill>...]] [--include-all] [--refresh] [--skip-external]\n' "$(basename "$0")"
+	printf 'Usage: %s [--claude|--codex|--both] [--claude-dir <path>] [--codex-dir <path>] [--exclude <skill>[,<skill>...]] [--include <skill>[,<skill>...]] [--include-all] [--status] [--refresh] [--skip-external]\n' "$(basename "$0")"
 }
 
 # Parses a comma-separated skill list into the pending setup operations.
@@ -228,6 +228,71 @@ report_excluded_skills() {
 
 	formatted=$(format_excluded_skills)
 	printf 'Excluded: %s (from ~/.agents/skill-exclusions; run with --include-all to restore)\n' "$formatted"
+}
+
+# Reports every canonical skill's state for the requested agent targets.
+#
+# @param  {string}  target
+#     The selected Claude, Codex, or both agent targets.
+report_skill_status() {
+	local target="$1"  # Agent target selection being reported.
+	local -a status_agents=()  # Agent roots selected for the read-only report.
+	local status_agent  # Current agent root being reported.
+	local status_label  # Agent name displayed in the report heading.
+	local status_skills_dir  # Agent skill link directory being reported.
+	local skill_paths=()  # Canonical skill directories included in this report.
+	local status_skill  # Canonical skill directory currently being reported.
+	local status_name  # Canonical skill name being reported.
+	local status_link  # Agent skill path being classified.
+
+	case "$target" in
+		claude) status_agents=("claude") ;;
+		codex) status_agents=("codex") ;;
+		both) status_agents=("claude" "codex") ;;
+	esac
+
+	for status_agent in "${status_agents[@]}"; do
+		case "$status_agent" in
+			claude)
+				status_label="Claude"
+				status_skills_dir="$CLAUDE_DIR/skills"
+				;;
+			codex)
+				status_label="Codex"
+				status_skills_dir="$HOME/.agents/skills"
+				;;
+		esac
+
+		cli_section "$status_label skills ($(display_path "$status_skills_dir"))"
+		if ! collect_canonical_skills; then
+			return 1
+		fi
+
+		if [ "${#skill_paths[@]}" -gt 0 ]; then
+			for status_skill in "${skill_paths[@]}"; do
+				status_name=$(basename "$status_skill")
+				status_link="$status_skills_dir/$status_name"
+
+				if { [ -e "$status_link" ] || [ -L "$status_link" ]; } && ! is_repo_owned_link "$status_skill" "$status_link"; then
+					if excluded_skill_exists "$status_name"; then
+						cli_status warning "conflicting $status_name" "run: trash $(display_path "$status_link")"
+					else
+						cli_status warning "conflicting $status_name" "run: scripts/setup-global.sh --$status_agent --include $status_name"
+					fi
+				elif excluded_skill_exists "$status_name"; then
+					if is_repo_owned_link "$status_skill" "$status_link"; then
+						cli_status skipped "excluded $status_name" "link still present; run: scripts/setup-global.sh --$status_agent --exclude $status_name"
+					else
+						cli_status skipped "excluded $status_name" "saved in ~/.agents/skill-exclusions"
+					fi
+				elif is_repo_owned_link "$status_skill" "$status_link"; then
+					cli_status success "installed $status_name" "skills/$status_name"
+				else
+					cli_status warning "missing $status_name" "run: scripts/setup-global.sh --$status_agent --include $status_name"
+				fi
+			done
+		fi
+	done
 }
 
 # Links canonical skills while passing the current exclusion list safely on
@@ -653,6 +718,7 @@ target=""
 refresh=false
 sync_external=true
 skill_options_requested=false  # Whether command-line skill options were supplied.
+status_requested=false  # Whether to report skill link states without changing skill links.
 skill_exclusions_file="$HOME/.agents/skill-exclusions"  # File that stores excluded skill names.
 excluded_skills=()  # Skill names excluded from the selected setup targets.
 skill_operation_types=()  # Pending include or exclude operations in command-line order.
@@ -688,6 +754,7 @@ while [ $# -gt 0 ]; do
 			skill_operation_names+=("")
 			skill_options_requested=true
 			;;
+		--status)        status_requested=true ;;
 		--refresh)       refresh=true ;;
 		--skip-external) sync_external=false ;;
 		--help)          usage; exit 0 ;;
@@ -695,6 +762,12 @@ while [ $# -gt 0 ]; do
 	esac
 	shift
 done
+
+if [ "$status_requested" = true ] && [ "$skill_options_requested" = true ]; then
+	printf '%s\n' '--status cannot be combined with --exclude, --include, or --include-all.' >&2
+	usage >&2
+	exit 1
+fi
 
 load_skill_exclusions
 if ! validate_skill_operations; then
@@ -709,7 +782,7 @@ fi
 report_excluded_skills
 
 if [ -z "$target" ]; then
-	if [ "$skill_options_requested" = true ]; then
+	if [ "$skill_options_requested" = true ] || [ "$status_requested" = true ]; then
 		target="both"
 	else
 		target=$(prompt_target)
@@ -718,6 +791,11 @@ fi
 
 bash "$REPO_DIR/scripts/install-cli-style.sh"
 source "$REPO_DIR/scripts/lib/cli-style-output.sh"
+
+if [ "$status_requested" = true ]; then
+	report_skill_status "$target"
+	exit 0
+fi
 
 if [ "$refresh" = true ]; then
 	if [ "$sync_external" = true ]; then

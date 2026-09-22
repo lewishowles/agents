@@ -109,6 +109,58 @@ prune_stale_repo_links() {
 	done
 }
 
+# Returns 0 only when the target is a symlink whose link text is the expected
+# canonical source path. Comparing link text preserves a link to the same
+# checkout through another path form instead of replacing it.
+#
+# @param  {string}  source
+#     The canonical path that the target must name.
+# @param  {string}  target
+#     The installed skill path being checked.
+is_repo_owned_link() {
+	local source="$1"  # Canonical path that a managed link must name.
+	local target="$2"  # Installed link path being checked.
+	local current  # Link text currently stored at the installed path.
+
+	if [ ! -L "$target" ]; then
+		return 1
+	fi
+
+	current=$(readlink "$target")
+	[ "$current" = "$source" ]
+}
+
+# Collects each canonical skill directory and rejects duplicate folder names.
+# The caller must declare a local skill_paths array before calling this helper.
+collect_canonical_skills() {
+	local skill  # Canonical skill directory currently being collected.
+	local slug  # Skill name taken from the canonical directory basename.
+	local other  # Previously collected skill directory used for duplicate checks.
+	local other_slug  # Skill name taken from the previously collected directory.
+
+	skill_paths=()
+	for skill in "$REPO_DIR"/skills/*/*; do
+		if [ ! -d "$skill" ]; then
+			continue
+		fi
+
+		slug=$(basename "$skill")
+		if [ "${#skill_paths[@]}" -gt 0 ]; then
+			for other in "${skill_paths[@]}"; do
+				other_slug=$(basename "$other")
+				if [ "$other_slug" = "$slug" ]; then
+					cli_group_status failed "duplicate skill name" "$slug: $(display_path "$other") and $(display_path "$skill")"
+					return 1
+				fi
+			done
+		fi
+
+		skill_paths+=("$skill")
+	done
+
+	return 0
+}
+
 # Creates a symlink from source to target, backing up any conflicting path.
 #
 # @param  {string}  source
@@ -122,15 +174,10 @@ link_path() {
 	local target="$2"
 	local label="$3"
 
-	if [ -L "$target" ]; then
-		local current
-		current=$(readlink "$target")
-
-		if [ "$current" = "$source" ]; then
-			cli_group_status muted "$label" "already linked"
-			return
-		fi
-
+	if is_repo_owned_link "$source" "$target"; then
+		cli_group_status muted "$label" "already linked"
+		return
+	elif [ -L "$target" ]; then
 		local backup
 		backup=$(backup_path "$target")
 		ln -s "$source" "$target"
@@ -163,32 +210,14 @@ link_skills() {
 	local -a excluded_skills=("$@")  # Skill names that must not be linked.
 	local skill  # Canonical skill directory currently being checked or linked.
 	local slug  # Skill name taken from the canonical directory basename.
-	local other  # Previously collected skill directory used for duplicate checks.
-	local other_slug  # Skill name taken from the previously collected directory.
 	local excluded  # Whether the current skill is excluded from this setup run.
 	local excluded_skill  # Excluded skill name currently being checked.
 	local skill_link  # Installed skill path currently being checked or removed.
-	local current  # Link text currently being compared with the canonical path.
 	local skill_paths=()  # Canonical skill directories that passed duplicate checks.
 
-	for skill in "$REPO_DIR"/skills/*/*; do
-		if [ ! -d "$skill" ]; then
-			continue
-		fi
-
-		slug=$(basename "$skill")
-		if [ "${#skill_paths[@]}" -gt 0 ]; then
-			for other in "${skill_paths[@]}"; do
-				other_slug=$(basename "$other")
-				if [ "$other_slug" = "$slug" ]; then
-					cli_group_status failed "duplicate skill name" "$slug: $(display_path "$other") and $(display_path "$skill")"
-					return 1
-				fi
-			done
-		fi
-
-		skill_paths+=("$skill")
-	done
+	if ! collect_canonical_skills; then
+		return 1
+	fi
 
 	if [ "${#skill_paths[@]}" -gt 0 ]; then
 		for skill in "${skill_paths[@]}"; do
@@ -205,14 +234,9 @@ link_skills() {
 
 			if [ "$excluded" = "1" ]; then
 				skill_link="$target_dir/$slug"
-				if [ -L "$skill_link" ]; then
-					current=$(readlink "$skill_link")
-					# The link text is compared as link_path wrote it, so a link to the same
-					# checkout through another path form is left alone.
-					if [ "$current" = "$skill" ]; then
-						trash "$skill_link"
-						cli_group_status warning "removed excluded skill" "skills/$slug"
-					fi
+				if is_repo_owned_link "$skill" "$skill_link"; then
+					trash "$skill_link"
+					cli_group_status warning "removed excluded skill" "skills/$slug"
 				fi
 				continue
 			fi

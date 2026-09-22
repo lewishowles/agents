@@ -390,6 +390,125 @@ test_unmanaged_included_skill_is_backed_up() {
 	assert_contains "$output" 'backup at ~/.agents/backups/skills/accessibility.bak.'
 }
 
+test_status_reports_an_installed_skill() {
+	local home_dir="$TEST_ROOT/status-installed"  # Isolated home directory for the status report.
+	local output="$TEST_ROOT/status-installed.txt"  # Output from the installed-skill report.
+
+	mkdir -p "$home_dir/.claude/skills"
+	ln -s "$REPO_DIR/skills/accessibility/accessibility" "$home_dir/.claude/skills/accessibility"
+
+	run_setup_target "$home_dir" "--claude" --status > "$output"
+
+	assert_contains "$output" 'installed accessibility'
+}
+
+test_status_reports_a_missing_skill() {
+	local home_dir="$TEST_ROOT/status-missing"  # Isolated home directory for the status report.
+	local output="$TEST_ROOT/status-missing.txt"  # Output from the missing-skill report.
+
+	run_setup_target "$home_dir" "--claude" --status > "$output"
+
+	assert_contains "$output" 'missing bash'
+}
+
+test_status_reports_an_excluded_skill() {
+	local home_dir="$TEST_ROOT/status-excluded"  # Isolated home directory for the status report.
+	local output="$TEST_ROOT/status-excluded.txt"  # Output from the excluded-skill report.
+
+	mkdir -p "$home_dir/.agents"
+	printf 'accessibility-audit\n' > "$home_dir/.agents/skill-exclusions"
+
+	run_setup_target "$home_dir" "--claude" --status > "$output"
+
+	assert_contains "$output" 'excluded accessibility-audit'
+}
+
+test_status_reports_an_excluded_skill_with_a_lingering_link() {
+	local home_dir="$TEST_ROOT/status-lingering-link"  # Isolated home directory for the status report.
+	local output="$TEST_ROOT/status-lingering-link.txt"  # Output from the lingering-link report.
+	local lingering_link="$home_dir/.claude/skills/writing"  # Excluded repo-owned link that the report must not remove.
+
+	mkdir -p "$home_dir/.agents" "$(dirname "$lingering_link")"
+	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
+	ln -s "$REPO_DIR/skills/writing/writing" "$lingering_link"
+
+	run_setup_target "$home_dir" "--claude" --status > "$output"
+
+	assert_contains "$output" 'excluded writing'
+	assert_contains "$output" 'link still present; run: scripts/setup-global.sh --claude --exclude writing'
+	assert_equals "$(readlink "$lingering_link")" "$REPO_DIR/skills/writing/writing"
+}
+
+test_status_reports_conflicting_included_content() {
+	local home_dir="$TEST_ROOT/status-included-conflict"  # Isolated home directory for the status report.
+	local output="$TEST_ROOT/status-included-conflict.txt"  # Output from the included-conflict report.
+	local conflict_file="$home_dir/.claude/skills/code-style/keep.txt"  # Unmanaged included content that must remain conflicting.
+
+	mkdir -p "$(dirname "$conflict_file")"
+	printf 'keep this content\n' > "$conflict_file"
+
+	run_setup_target "$home_dir" "--claude" --status > "$output"
+
+	assert_contains "$output" 'conflicting code-style'
+	assert_contains "$output" 'run: scripts/setup-global.sh --claude --include code-style'
+	assert_equals "$(cat "$conflict_file")" 'keep this content'
+}
+
+test_status_reports_conflicting_excluded_content() {
+	local home_dir="$TEST_ROOT/status-excluded-conflict"  # Isolated home directory for the status report.
+	local output="$TEST_ROOT/status-excluded-conflict.txt"  # Output from the excluded-conflict report.
+	local conflict_file="$home_dir/.claude/skills/code-style/keep.txt"  # Unmanaged excluded content that must remain conflicting.
+
+	mkdir -p "$home_dir/.agents" "$(dirname "$conflict_file")"
+	printf 'code-style\n' > "$home_dir/.agents/skill-exclusions"
+	printf 'keep this content\n' > "$conflict_file"
+
+	run_setup_target "$home_dir" "--claude" --status > "$output"
+
+	assert_contains "$output" 'conflicting code-style'
+	assert_contains "$output" 'run: trash ~/.claude/skills/code-style'
+	assert_equals "$(cat "$conflict_file")" 'keep this content'
+}
+
+test_status_does_not_change_files() {
+	local home_dir="$TEST_ROOT/status-read-only"  # Isolated home directory for the status report.
+	local output="$TEST_ROOT/status-read-only.txt"  # Output from the read-only status report.
+	local installed_link="$home_dir/.claude/skills/accessibility"  # Repo-owned link that must remain installed.
+	local excluded_skill="$home_dir/.agents/skills/code-style/keep.txt"  # Unmanaged excluded content that must remain conflicting.
+
+	mkdir -p "$home_dir/.agents/skills" "$home_dir/.claude/skills" "$(dirname "$excluded_skill")"
+	printf 'code-style\n' > "$home_dir/.agents/skill-exclusions"
+	printf 'keep this content\n' > "$excluded_skill"
+	ln -s "$REPO_DIR/skills/accessibility/accessibility" "$installed_link"
+
+	run_setup_target "$home_dir" "" --status > "$output"
+
+	assert_contains "$output" 'Claude skills'
+	assert_contains "$output" 'Codex skills'
+	assert_equals "$(readlink "$installed_link")" "$REPO_DIR/skills/accessibility/accessibility"
+	assert_equals "$(cat "$excluded_skill")" 'keep this content'
+	assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'code-style'
+	assert_not_exists "$home_dir/.codex"
+}
+
+test_status_rejects_skill_options_without_changes() {
+	local home_dir="$TEST_ROOT/status-with-skill-options"  # Isolated home directory for the rejected status run.
+	local output="$TEST_ROOT/status-with-skill-options.txt"  # Output from the rejected status run.
+
+	mkdir -p "$home_dir/.agents"
+	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
+	if run_setup_target "$home_dir" "--claude" --status --exclude accessibility > "$output" 2>&1; then
+		fail 'Expected --status with --exclude to be rejected'
+	fi
+
+	assert_contains "$output" '--status cannot be combined with --exclude, --include, or --include-all.'
+	assert_contains "$output" 'Usage:'
+	assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'writing'
+	assert_not_exists "$home_dir/.claude"
+	assert_not_exists "$home_dir/.codex"
+	assert_not_exists "$home_dir/setup-global-calls.log"
+}
+
 test_skip_backup_environment_does_not_bypass_backup() {
 	local home_dir="$TEST_ROOT/skip-backup-environment"
 
@@ -429,6 +548,14 @@ test_unknown_skill_fails_without_changes
 test_removed_skill_can_be_included
 test_unmanaged_excluded_directory_survives
 test_unmanaged_included_skill_is_backed_up
+test_status_reports_an_installed_skill
+test_status_reports_a_missing_skill
+test_status_reports_an_excluded_skill
+test_status_reports_an_excluded_skill_with_a_lingering_link
+test_status_reports_conflicting_included_content
+test_status_reports_conflicting_excluded_content
+test_status_does_not_change_files
+test_status_rejects_skill_options_without_changes
 test_skip_backup_environment_does_not_bypass_backup
 test_failed_backup_preserves_existing_config
 
