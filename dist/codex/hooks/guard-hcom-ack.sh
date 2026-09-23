@@ -41,7 +41,7 @@ fi
 [[ "$is_acknowledgement" == true ]] || exit 0
 
 if [[ "$runtime" == "codex" ]]; then
-	printf 'guard-hcom-ack: blocked: HCOM team roles do not send acknowledgement messages. Wait silently for actionable work or send a terminal result, blocker, decision, or correction.\n' >&2
+	printf 'guard-hcom-ack: blocked: HCOM team roles do not send acknowledgement messages. Nothing in this command ran. Re-run any other work it contained without the acknowledgement, finish the task, and send your terminal result, blocker, decision, or correction. If there was no task, wait silently.\n' >&2
 	exit 2
 fi
 
