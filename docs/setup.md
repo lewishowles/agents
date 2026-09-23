@@ -114,6 +114,24 @@ ln -s /path/to/repository/skills/vue/vue ~/.agents/skills/vue
 
 This keeps Codex skill discovery under `~/.agents` while `~/.codex` holds app config and hooks.
 
+## Choose which skills to install
+
+Global setup installs every skill into Claude and Codex by default. Each skill has its own symlink, so edits to the skill in this repository take effect without rebuilding. To leave skills out or add them back, pass comma-separated names to `--exclude` or `--include`:
+
+```bash
+scripts/setup-global.sh --exclude accessibility,swift
+scripts/setup-global.sh --include accessibility
+scripts/setup-global.sh --include-all
+```
+
+These options apply to both agents unless you pass `--claude` or `--codex`. Excluded names are saved in `~/.agents/skill-exclusions`, which both agents share. The file lists only exclusions, so new skills added to this repository are installed on later setup runs. `--include-all` clears the exclusions and restores the full set.
+
+Run `scripts/setup-global.sh --status` to see whether each skill is installed, excluded, missing, or conflicting in each agent's skill directory. An excluded skill can also show `link still present`. Status prints a command to fix each missing or conflicting skill and each leftover link and makes no changes.
+
+Run `scripts/setup-global.sh --select` to choose skills in a terminal. The picker uses `fzf --multi` if `fzf` is installed, or a numbered list otherwise. Cancelling leaves the selection unchanged. The picker requires a terminal; use `--exclude` and `--include` in scripts.
+
+If a file or folder that setup did not create already sits where an included skill's link belongs, setup moves it to a timestamped `.bak` backup under `~/.claude/backups/skills/` or `~/.agents/backups/skills/` and prints `backup at <path>`. Content at an excluded skill's name is left untouched.
+
 Repository refresh is optional during global setup. Pass `--refresh` to sync external skills, regenerate repository output, and validate it before linking. If external skill sync fails because the network is unavailable, the existing local `skills/<group>/<name>` copy is kept; pass `--refresh --skip-external` to bypass the sync step intentionally.
 
 ## Project setup
