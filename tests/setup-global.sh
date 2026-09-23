@@ -87,6 +87,64 @@ EOF
 	chmod +x "$bin_dir/bash" "$bin_dir/cli-style" "$bin_dir/cp" "$bin_dir/mv" "$bin_dir/git" "$bin_dir/friction" "$bin_dir/cli-style-adapter.sh"
 }
 
+# Creates an fzf stand-in that records the arguments and skill list it
+# receives, then prints a chosen set of skills.
+#
+# @param  {string}  bin_dir
+#     Directory that receives the test-only fzf command.
+create_fzf_stub() {
+	local bin_dir="$1"  # Directory that receives the test-only fzf command.
+
+	mkdir -p "$bin_dir"
+
+	cat > "$bin_dir/fzf" <<'EOF'
+#!/bin/sh
+printf '%s\n' "$@" > "$SETUP_GLOBAL_FZF_ARGUMENTS"
+cat > "$SETUP_GLOBAL_FZF_INPUT"
+printf '%s\n' "${SETUP_GLOBAL_FZF_SELECTION:-}"
+exit "${SETUP_GLOBAL_FZF_STATUS:-0}"
+EOF
+
+	chmod +x "$bin_dir/fzf"
+}
+
+# Checks that fzf opens with every skill ticked except the saved exclusion.
+#
+# @param  {string}  arguments_path
+#     File containing the fzf command arguments.
+# @param  {string}  input_path
+#     File containing the ordered canonical skill names passed to fzf.
+# @param  {string}  excluded_skill
+#     Saved exclusion that fzf must leave unticked.
+assert_fzf_start_selection() {
+	local arguments_path="$1"  # File containing the fzf command arguments.
+	local input_path="$2"  # File containing the ordered canonical skill names passed to fzf.
+	local excluded_skill="$3"  # Saved exclusion that fzf must leave unticked.
+	local fzf_bind  # Start action sequence received by the fzf stand-in.
+	local remaining_actions  # Start actions that have not yet matched an input skill.
+	local expected_action  # Action expected for the current canonical skill.
+	local actual_action  # Action generated for the current canonical skill.
+	local skill_name  # Canonical skill currently being matched to a start action.
+
+	fzf_bind=$(grep '^load:' "$arguments_path")
+	remaining_actions="${fzf_bind#load:}"
+
+	while IFS= read -r skill_name; do
+		if [ "$skill_name" = "$excluded_skill" ]; then
+			expected_action='down'
+		else
+			expected_action='toggle+down'
+		fi
+
+		actual_action="${remaining_actions:0:${#expected_action}}"
+		assert_equals "$actual_action" "$expected_action"
+		remaining_actions="${remaining_actions#"$actual_action"}"
+		remaining_actions="${remaining_actions#+}"
+	done < "$input_path"
+
+	assert_equals "$remaining_actions" 'first'
+}
+
 # Creates a Codex configuration that setup-global must replace.
 #
 # @param  {string}  home_dir
@@ -123,13 +181,19 @@ run_setup_target() {
 	local target="$2"  # Setup target option, or empty for automatic targeting.
 	local bin_dir="$TEST_ROOT/bin"  # Directory containing test-only command stubs.
 	local fail_backup_move="${SETUP_GLOBAL_TEST_FAIL_BACKUP_MOVE:-0}"  # Whether backup moves should fail.
+	local setup_path="${SETUP_GLOBAL_TEST_PATH:-$bin_dir:$PATH}"  # Command path used by the setup process.
+	local -a setup_command=("bash" "$REPO_DIR/scripts/setup-global.sh")  # Setup command, optionally wrapped in a terminal.
 	shift 2
 
 	mkdir -p "$home_dir"
 
+	if [ "${SETUP_GLOBAL_TEST_TERMINAL:-false}" = true ]; then
+		setup_command=("script" "-q" "/dev/null" "perl" "-e" "alarm 20; exec @ARGV" "bash" "$REPO_DIR/scripts/setup-global.sh")
+	fi
+
 	# An empty target expands to nothing so setup-global picks the target itself.
 	HOME="$home_dir" \
-	PATH="$bin_dir:$PATH" \
+	PATH="$setup_path" \
 	CLI_STYLE_BIN="$bin_dir/cli-style" \
 	SETUP_GLOBAL_INSTALLER="$REPO_DIR/scripts/install-cli-style.sh" \
 	SETUP_GLOBAL_SYNC="$REPO_DIR/scripts/sync.sh" \
@@ -137,7 +201,7 @@ run_setup_target() {
 	SETUP_GLOBAL_CALL_LOG="$home_dir/setup-global-calls.log" \
 	SETUP_GLOBAL_TEST_ADAPTER="$bin_dir/cli-style-adapter.sh" \
 	SETUP_GLOBAL_TEST_FAIL_BACKUP_MOVE="$fail_backup_move" \
-	bash "$REPO_DIR/scripts/setup-global.sh" ${target:+"$target"} --skip-external "$@"
+	"${setup_command[@]}" ${target:+"$target"} --skip-external "$@"
 }
 
 # Creates a temporary canonical skill that the EXIT trap removes.
@@ -501,12 +565,205 @@ test_status_rejects_skill_options_without_changes() {
 		fail 'Expected --status with --exclude to be rejected'
 	fi
 
-	assert_contains "$output" '--status cannot be combined with --exclude, --include, or --include-all.'
+	assert_contains "$output" '--status cannot be combined with --select, --exclude, --include, or --include-all.'
 	assert_contains "$output" 'Usage:'
 	assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'writing'
 	assert_not_exists "$home_dir/.claude"
 	assert_not_exists "$home_dir/.codex"
 	assert_not_exists "$home_dir/setup-global-calls.log"
+}
+
+# Ensures the numbered selector defaults to both agents and saves its changes.
+test_select_fallback_updates_skill_exclusions() {
+	local home_dir="$TEST_ROOT/select-fallback"  # Isolated home directory for the numbered selection run.
+	local output="$TEST_ROOT/select-fallback.txt"  # Output from the numbered selection run.
+	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"  # Command path without fzf.
+
+	perl -e 'select undef, undef, undef, 0.1; print "1 2\n"' | SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
+
+	assert_contains "$output" '[x] 1. accessibility'
+	assert_contains "$output" '[x] 2. accessibility-audit'
+	assert_contains "$home_dir/.agents/skill-exclusions" 'accessibility'
+	assert_contains "$home_dir/.agents/skill-exclusions" 'accessibility-audit'
+	assert_not_exists "$home_dir/.agents/skills/accessibility"
+	assert_not_exists "$home_dir/.claude/skills/accessibility"
+	assert_dir_link "$home_dir/.agents/skills/bash"
+	assert_dir_link "$home_dir/.claude/skills/bash"
+}
+
+# Ensures an empty numbered selection keeps every skill without failing on macOS Bash.
+test_select_fallback_empty_selection_includes_every_skill() {
+	local home_dir="$TEST_ROOT/select-fallback-empty"  # Isolated home directory for an empty numbered selection.
+	local output="$TEST_ROOT/select-fallback-empty.txt"  # Output from the empty numbered selection run.
+	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"  # Command path without fzf.
+
+	perl -e 'select undef, undef, undef, 0.1; print "\n"' | SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
+
+	assert_not_exists "$home_dir/.agents/skill-exclusions"
+	assert_dir_link "$home_dir/.agents/skills/accessibility"
+	assert_dir_link "$home_dir/.claude/skills/accessibility"
+}
+
+# Ensures cancelling the numbered selector preserves the saved exclusions.
+test_select_fallback_cancel_preserves_existing_state() {
+	local home_dir="$TEST_ROOT/select-fallback-cancel"  # Isolated home directory for the cancelled numbered selection.
+	local output="$TEST_ROOT/select-fallback-cancel.txt"  # Output from the cancelled numbered selection.
+	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"  # Command path without fzf.
+
+	mkdir -p "$home_dir/.agents"
+	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
+	perl -e 'select undef, undef, undef, 0.1; print "q\n"' | SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
+
+	assert_contains "$output" 'Skill selection cancelled. Nothing changed.'
+	assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'writing'
+	assert_not_exists "$home_dir/.claude"
+	assert_not_exists "$home_dir/.codex"
+}
+
+# Ensures fzf is started with --multi and its chosen skills are saved.
+test_select_fzf_updates_skill_exclusions() {
+	local home_dir="$TEST_ROOT/select-fzf"  # Isolated home directory for the fzf selection run.
+	local output="$TEST_ROOT/select-fzf.txt"  # Output from the fzf selection run.
+	local fzf_dir="$TEST_ROOT/fzf-bin"  # Directory containing the fzf stand-in.
+	local fzf_arguments="$home_dir/fzf-arguments.txt"  # Arguments received by the fzf stand-in.
+	local fzf_input="$home_dir/fzf-input.txt"  # Skills displayed to the fzf stand-in.
+
+	create_fzf_stub "$fzf_dir"
+	mkdir -p "$home_dir/.agents"
+	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
+	perl -e 'select undef, undef, undef, 0.1; print "\n"' | SETUP_GLOBAL_FZF_ARGUMENTS="$fzf_arguments" SETUP_GLOBAL_FZF_INPUT="$fzf_input" SETUP_GLOBAL_FZF_SELECTION='accessibility' SETUP_GLOBAL_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_GLOBAL_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
+
+	assert_contains "$fzf_arguments" '--multi'
+	assert_contains "$fzf_arguments" '--layout=reverse'
+	assert_contains "$fzf_arguments" '--header'
+	assert_contains "$fzf_arguments" 'Tab toggles a skill, Enter confirms, Esc cancels. Ticked skills are installed.'
+	assert_contains "$fzf_arguments" '--bind'
+	assert_contains "$fzf_input" 'accessibility'
+	assert_contains "$fzf_input" 'writing'
+	assert_fzf_start_selection "$fzf_arguments" "$fzf_input" 'writing'
+	assert_dir_link "$home_dir/.agents/skills/accessibility"
+	assert_dir_link "$home_dir/.claude/skills/accessibility"
+	assert_not_exists "$home_dir/.agents/skills/writing"
+	assert_contains "$home_dir/.agents/skill-exclusions" 'writing'
+}
+
+# Ensures an empty fzf selection excludes every skill without failing on macOS Bash.
+test_select_fzf_excludes_every_skill() {
+	local home_dir="$TEST_ROOT/select-fzf-empty"  # Isolated home directory for an empty fzf selection.
+	local output="$TEST_ROOT/select-fzf-empty.txt"  # Output from the empty fzf selection run.
+	local fzf_dir="$TEST_ROOT/fzf-empty-bin"  # Directory containing the fzf stand-in.
+	local fzf_arguments="$home_dir/fzf-arguments.txt"  # Arguments received by the fzf stand-in.
+	local fzf_input="$home_dir/fzf-input.txt"  # Skills displayed to the fzf stand-in.
+
+	create_fzf_stub "$fzf_dir"
+	perl -e 'select undef, undef, undef, 0.1; print "\n"' | SETUP_GLOBAL_FZF_ARGUMENTS="$fzf_arguments" SETUP_GLOBAL_FZF_INPUT="$fzf_input" SETUP_GLOBAL_FZF_SELECTION='' SETUP_GLOBAL_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_GLOBAL_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
+
+	assert_contains "$fzf_arguments" '--multi'
+	assert_contains "$home_dir/.agents/skill-exclusions" 'accessibility'
+	assert_contains "$home_dir/.agents/skill-exclusions" 'writing'
+	assert_not_exists "$home_dir/.agents/skills/accessibility"
+	assert_not_exists "$home_dir/.claude/skills/accessibility"
+}
+
+# Ensures fzf cancellation leaves the saved exclusions and links untouched.
+test_select_fzf_cancel_preserves_existing_state() {
+	local home_dir="$TEST_ROOT/select-fzf-cancel"  # Isolated home directory for the cancelled fzf selection.
+	local output="$TEST_ROOT/select-fzf-cancel.txt"  # Output from the cancelled fzf selection.
+	local fzf_dir="$TEST_ROOT/fzf-cancel-bin"  # Directory containing the fzf stand-in.
+	local fzf_arguments="$home_dir/fzf-arguments.txt"  # Arguments received by the fzf stand-in.
+	local fzf_input="$home_dir/fzf-input.txt"  # Skills displayed to the fzf stand-in.
+
+	create_fzf_stub "$fzf_dir"
+	mkdir -p "$home_dir/.agents"
+	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
+	perl -e 'select undef, undef, undef, 0.1; print "\n"' | SETUP_GLOBAL_FZF_ARGUMENTS="$fzf_arguments" SETUP_GLOBAL_FZF_INPUT="$fzf_input" SETUP_GLOBAL_FZF_STATUS=1 SETUP_GLOBAL_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_GLOBAL_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
+
+	assert_contains "$output" 'Skill selection cancelled. Nothing changed.'
+	assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'writing'
+	assert_not_exists "$home_dir/.claude"
+	assert_not_exists "$home_dir/.codex"
+}
+
+# Ensures end-of-input cancels the numbered selector without changing state.
+test_select_fallback_end_of_input_preserves_existing_state() {
+	local home_dir="$TEST_ROOT/select-fallback-end-of-input"  # Isolated home directory for the ended numbered selection.
+	local output="$TEST_ROOT/select-fallback-end-of-input.txt"  # Output from the ended numbered selection.
+	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"  # Command path without fzf.
+
+	mkdir -p "$home_dir/.agents"
+	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
+	perl -e 'select undef, undef, undef, 0.1' | SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
+
+	assert_contains "$output" 'Skill selection cancelled. Nothing changed.'
+	assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'writing'
+	assert_not_exists "$home_dir/.claude"
+	assert_not_exists "$home_dir/.codex"
+}
+
+# Ensures an invalid skill number fails without changing saved exclusions or links.
+test_select_fallback_invalid_number_preserves_existing_state() {
+	local home_dir="$TEST_ROOT/select-fallback-invalid"  # Isolated home directory for invalid numbered input.
+	local output="$TEST_ROOT/select-fallback-invalid.txt"  # Output from the rejected numbered selection.
+	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"  # Command path without fzf.
+
+	run_setup_target "$home_dir" "" --exclude writing > /dev/null
+	if perl -e 'select undef, undef, undef, 0.1; print "9999\n"' | SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output" 2>&1; then
+		fail 'Expected an invalid skill number to fail'
+	fi
+
+	assert_contains "$output" 'Invalid skill number: 9999'
+	assert_not_contains "$output" 'Skill selection cancelled. Nothing changed.'
+	assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'writing'
+	assert_dir_link "$home_dir/.agents/skills/accessibility"
+	assert_dir_link "$home_dir/.claude/skills/accessibility"
+	assert_not_exists "$home_dir/.agents/skills/writing"
+	assert_not_exists "$home_dir/.claude/skills/writing"
+}
+
+# Ensures --select rejects other skill options without changing saved exclusions or links.
+test_select_rejects_other_skill_options_without_changes() {
+	local home_dir="$TEST_ROOT/select-with-skill-options"  # Isolated home directory for rejected option combinations.
+	local output="$TEST_ROOT/select-with-skill-options.txt"  # Output from each rejected setup run.
+	local option  # Skill option currently combined with --select.
+	local -a option_args=()  # Arguments for the current skill option.
+
+	run_setup_target "$home_dir" "" --exclude writing > /dev/null
+	for option in --exclude --include --include-all; do
+		case "$option" in
+			--exclude) option_args=(--exclude accessibility) ;;
+			--include) option_args=(--include writing) ;;
+			--include-all) option_args=(--include-all) ;;
+		esac
+
+		if run_setup_target "$home_dir" "" --select "${option_args[@]}" > "$output" 2>&1; then
+			fail "Expected --select with $option to be rejected"
+		fi
+
+		assert_contains "$output" '--select cannot be combined with --exclude, --include, or --include-all.'
+		assert_contains "$output" 'Usage:'
+		assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'writing'
+		assert_dir_link "$home_dir/.agents/skills/accessibility"
+		assert_dir_link "$home_dir/.claude/skills/accessibility"
+		assert_not_exists "$home_dir/.agents/skills/writing"
+		assert_not_exists "$home_dir/.claude/skills/writing"
+	done
+}
+
+# Ensures --select fails safely when standard input is not a terminal.
+test_select_rejects_non_terminal_input() {
+	local home_dir="$TEST_ROOT/select-non-terminal"  # Isolated home directory for the rejected selection run.
+	local output="$TEST_ROOT/select-non-terminal.txt"  # Output from the rejected selection run.
+
+	mkdir -p "$home_dir/.agents"
+	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
+	if run_setup_target "$home_dir" "" --select < /dev/null > "$output" 2>&1; then
+		fail 'Expected --select without a terminal to be rejected'
+	fi
+
+	assert_contains "$output" '--select requires a terminal. Use --exclude or --include when standard input is not a terminal.'
+	assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'writing'
+	assert_not_exists "$home_dir/.claude"
+	assert_not_exists "$home_dir/.codex"
 }
 
 test_skip_backup_environment_does_not_bypass_backup() {
@@ -556,6 +813,16 @@ test_status_reports_conflicting_included_content
 test_status_reports_conflicting_excluded_content
 test_status_does_not_change_files
 test_status_rejects_skill_options_without_changes
+test_select_fallback_updates_skill_exclusions
+test_select_fallback_empty_selection_includes_every_skill
+test_select_fallback_cancel_preserves_existing_state
+test_select_fzf_updates_skill_exclusions
+test_select_fzf_excludes_every_skill
+test_select_fzf_cancel_preserves_existing_state
+test_select_fallback_end_of_input_preserves_existing_state
+test_select_fallback_invalid_number_preserves_existing_state
+test_select_rejects_other_skill_options_without_changes
+test_select_rejects_non_terminal_input
 test_skip_backup_environment_does_not_bypass_backup
 test_failed_backup_preserves_existing_config
 

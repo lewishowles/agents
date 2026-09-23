@@ -10,7 +10,7 @@ REPO_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 source "$REPO_DIR/scripts/lib/setup-links.sh"
 
 usage() {
-	printf 'Usage: %s [--claude|--codex|--both] [--claude-dir <path>] [--codex-dir <path>] [--exclude <skill>[,<skill>...]] [--include <skill>[,<skill>...]] [--include-all] [--status] [--refresh] [--skip-external]\n' "$(basename "$0")"
+	printf 'Usage: %s [--claude|--codex|--both] [--claude-dir <path>] [--codex-dir <path>] [--select] [--exclude <skill>[,<skill>...]] [--include <skill>[,<skill>...]] [--include-all] [--status] [--refresh] [--skip-external]\n' "$(basename "$0")"
 }
 
 # Parses a comma-separated skill list into the pending setup operations.
@@ -199,6 +199,139 @@ save_skill_exclusions() {
 		printf '%s\n' "$skill_name" >> "$temp"
 	done
 	mv "$temp" "$skill_exclusions_file"
+}
+
+# Replaces exclusions with every canonical skill omitted from the selection.
+# The caller must have already collected skill_paths.
+#
+# @param  {string}  ...
+#     Canonical skill names selected for installation.
+set_exclusions_from_selected_skills() {
+	local selected_skill  # Selected canonical skill currently being checked.
+	local skill_path  # Canonical skill directory currently being checked.
+	local skill_name  # Canonical skill name currently being checked.
+	local selected=false  # Whether the canonical skill remains selected.
+
+	excluded_skills=()
+	for skill_path in "${skill_paths[@]}"; do
+		skill_name=$(basename "$skill_path")
+		selected=false
+		for selected_skill in "$@"; do
+			if [ "$selected_skill" = "$skill_name" ]; then
+				selected=true
+				break
+			fi
+		done
+
+		if [ "$selected" = false ]; then
+			excluded_skills+=("$skill_name")
+		fi
+	done
+}
+
+# Selects included skills with fzf and updates the exclusions from its output.
+#
+# @return  {integer}
+#     0 when fzf returns a selection, or 1 when the selection is cancelled.
+select_skills_with_fzf() {
+	# fzf has no option to preselect rows, so on load this walks down the list
+	# once, ticking each included skill, then returns to the top.
+	local fzf_bind='load:'
+	local fzf_header='Tab toggles a skill, Enter confirms, Esc cancels. Ticked skills are installed.'  # Instructions displayed above the skill list.
+	local selected_output  # Newline-separated skill names returned by fzf.
+	local skill_path  # Canonical skill directory currently being prepared for fzf.
+	local skill_name  # Canonical skill name currently being prepared for fzf.
+	local -a selected_skills=()  # Canonical skill names retained by fzf.
+
+	for skill_path in "${skill_paths[@]}"; do
+		skill_name=$(basename "$skill_path")
+		if ! excluded_skill_exists "$skill_name"; then
+			fzf_bind="${fzf_bind}toggle+"
+		fi
+		fzf_bind="${fzf_bind}down+"
+	done
+	fzf_bind="${fzf_bind}first"
+
+	if ! selected_output=$(printf '%s\n' "${skill_paths[@]##*/}" | fzf --layout=reverse --multi --header "$fzf_header" --bind "$fzf_bind"); then
+		return 1
+	fi
+
+	while IFS= read -r skill_name; do
+		[ -n "$skill_name" ] || continue
+		selected_skills+=("$skill_name")
+	done <<< "$selected_output"
+
+	# macOS Bash 3.2 treats an empty array expansion as unset under set -u.
+	if [ "${#selected_skills[@]}" -gt 0 ]; then
+		set_exclusions_from_selected_skills "${selected_skills[@]}"
+	else
+		set_exclusions_from_selected_skills
+	fi
+}
+
+# Selects included skills from a numbered terminal list and updates exclusions.
+#
+# @return  {integer}
+#     0 when numbers are accepted, 1 when cancelled, or 2 for an invalid number.
+select_skills_with_numbered_list() {
+	local selection  # Numbered fallback response entered in the terminal.
+	local index  # Current canonical skill position in the selection list.
+	local excluded_index  # Numbered fallback entry currently being validated.
+	local keep_skill=false  # Whether the current canonical skill remains selected.
+	local skill_name  # Current canonical skill name displayed in the selection list.
+	local -a excluded_indexes=()  # Numbered fallback entries that the user leaves out.
+	local -a selected_skills=()  # Canonical skill names retained by the numbered list.
+
+	for index in "${!skill_paths[@]}"; do
+		skill_name=$(basename "${skill_paths[$index]}")
+		if excluded_skill_exists "$skill_name"; then
+			printf '[ ] %s. %s\n' "$((index + 1))" "$skill_name"
+		else
+			printf '[x] %s. %s\n' "$((index + 1))" "$skill_name"
+		fi
+	done
+
+	printf 'Enter the numbers to leave out, separated by spaces (or q to cancel): '
+	if ! read -r selection; then
+		return 1
+	fi
+
+	if [ "$selection" = 'q' ]; then
+		return 1
+	fi
+
+	read -r -a excluded_indexes <<< "$selection"
+	if [ "${#excluded_indexes[@]}" -gt 0 ]; then
+		for excluded_index in "${excluded_indexes[@]}"; do
+			if ! [[ "$excluded_index" =~ ^[1-9][0-9]*$ ]] || [ "$excluded_index" -gt "${#skill_paths[@]}" ]; then
+				printf 'Invalid skill number: %s\n' "$excluded_index" >&2
+				return 2
+			fi
+		done
+	fi
+
+	for index in "${!skill_paths[@]}"; do
+		keep_skill=true
+		if [ "${#excluded_indexes[@]}" -gt 0 ]; then
+			for excluded_index in "${excluded_indexes[@]}"; do
+				if [ "$excluded_index" -eq "$((index + 1))" ]; then
+					keep_skill=false
+					break
+				fi
+			done
+		fi
+
+		if [ "$keep_skill" = true ]; then
+			selected_skills+=("$(basename "${skill_paths[$index]}")")
+		fi
+	done
+
+	# macOS Bash 3.2 treats an empty array expansion as unset under set -u.
+	if [ "${#selected_skills[@]}" -gt 0 ]; then
+		set_exclusions_from_selected_skills "${selected_skills[@]}"
+	else
+		set_exclusions_from_selected_skills
+	fi
 }
 
 # Joins the current exclusions into one comma-separated list for output.
@@ -718,11 +851,13 @@ target=""
 refresh=false
 sync_external=true
 skill_options_requested=false  # Whether command-line skill options were supplied.
+select_requested=false  # Whether the terminal skill selection flow was requested.
 status_requested=false  # Whether to report skill link states without changing skill links.
 skill_exclusions_file="$HOME/.agents/skill-exclusions"  # File that stores excluded skill names.
 excluded_skills=()  # Skill names excluded from the selected setup targets.
 skill_operation_types=()  # Pending include or exclude operations in command-line order.
 skill_operation_names=()  # Skill names associated with the pending operations.
+skill_paths=()  # Canonical skill directories available for interactive selection.
 CLAUDE_DIR="$HOME/.claude"  # Overridable so a second account can install alongside the default one.
 CODEX_DIR="$HOME/.codex"    # Overridable so a second account can install alongside the default one.
 
@@ -733,6 +868,10 @@ while [ $# -gt 0 ]; do
 		--both)          target="both" ;;
 		--claude-dir)    CLAUDE_DIR="$2"; shift ;;
 		--codex-dir)     CODEX_DIR="$2"; shift ;;
+		--select)
+			select_requested=true
+			skill_options_requested=true
+			;;
 		--exclude)
 			if [ "$#" -lt 2 ] || ! parse_skill_list "exclude" "$2"; then
 				usage >&2
@@ -764,8 +903,19 @@ while [ $# -gt 0 ]; do
 done
 
 if [ "$status_requested" = true ] && [ "$skill_options_requested" = true ]; then
-	printf '%s\n' '--status cannot be combined with --exclude, --include, or --include-all.' >&2
+	printf '%s\n' '--status cannot be combined with --select, --exclude, --include, or --include-all.' >&2
 	usage >&2
+	exit 1
+fi
+
+if [ "$select_requested" = true ] && [ "${#skill_operation_types[@]}" -gt 0 ]; then
+	printf '%s\n' '--select cannot be combined with --exclude, --include, or --include-all.' >&2
+	usage >&2
+	exit 1
+fi
+
+if [ "$select_requested" = true ] && ! [ -t 0 ]; then
+	printf '%s\n' '--select requires a terminal. Use --exclude or --include when standard input is not a terminal.' >&2
 	exit 1
 fi
 
@@ -774,7 +924,30 @@ if ! validate_skill_operations; then
 	exit 1
 fi
 
-if [ "$skill_options_requested" = true ]; then
+if [ "$select_requested" = true ]; then
+	if ! collect_canonical_skills; then
+		exit 1
+	fi
+
+	if command -v fzf >/dev/null 2>&1; then
+		if ! select_skills_with_fzf; then
+			printf '%s\n' 'Skill selection cancelled. Nothing changed.'
+			exit 0
+		fi
+	else
+		selection_status=0  # Result of the numbered selector: 0 accepted, 1 cancelled, 2 invalid.
+		select_skills_with_numbered_list || selection_status=$?
+
+		if [ "$selection_status" -eq 1 ]; then
+			printf '%s\n' 'Skill selection cancelled. Nothing changed.'
+			exit 0
+		elif [ "$selection_status" -ne 0 ]; then
+			exit 1
+		fi
+	fi
+
+	save_skill_exclusions
+elif [ "$skill_options_requested" = true ]; then
 	apply_skill_operations
 	save_skill_exclusions
 fi
