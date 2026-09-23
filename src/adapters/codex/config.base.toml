@@ -13,6 +13,8 @@ extends = ":workspace"
 "{{HOME}}/.Trash" = true
 "{{HOME}}/.cache" = true
 "{{HOME}}/.agents" = true
+# HCOM keeps its shared message database here, and every hcom command needs write access to it.
+"{{HOME}}/.hcom" = true
 "/tmp" = true
 "/private/tmp" = true
 
