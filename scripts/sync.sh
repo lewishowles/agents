@@ -4,9 +4,10 @@
 # Build order:
 #   1. Docs tables generated from canonical skill and hook files (build-docs.py)
 #   2. dist/claude/hooks/ (copied from src/hooks/claude/ source)
-#   3. dist/claude/CLAUDE.md and dist/codex/AGENTS.md (assembled from src/rules/)
-#   4. dist/claude/settings.json (build-settings.py)
-#   5. Validation (validate.sh)
+#   3. dist/claude/rules/code-style.md (from the skill trigger patterns)
+#   4. dist/claude/CLAUDE.md and dist/codex/AGENTS.md (assembled from src/rules/)
+#   5. dist/claude/settings.json (build-settings.py)
+#   6. Validation (validate.sh)
 
 set -euo pipefail
 
@@ -60,6 +61,8 @@ cli_section "Generated outputs" "Build dist files and manifests"
 
 python3 "$REPO_DIR/scripts/build/build-docs.py" >/dev/null
 copy_hooks
+mkdir -p "$REPO_DIR/dist/claude/rules"
+print_code_style_rule > "$REPO_DIR/dist/claude/rules/code-style.md"
 write_target "$CLAUDE_TARGET" "${CLAUDE_PARTS[@]}"
 write_target "$CODEX_TARGET" "${CODEX_PARTS[@]}"
 python3 "$REPO_DIR/scripts/build/build-settings.py" >/dev/null

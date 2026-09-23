@@ -450,6 +450,7 @@ setup_claude() {
 	ensure_container_dir "$CLAUDE_DIR" "$(display_path "$CLAUDE_DIR")"
 	ensure_container_dir "$CLAUDE_DIR/skills" "skills"
 	ensure_container_dir "$CLAUDE_DIR/hooks" "hooks"
+	ensure_container_dir "$CLAUDE_DIR/rules" "rules"
 	ensure_container_dir "$CLAUDE_DIR/commands" "commands"
 	cli_group_end
 
@@ -475,6 +476,15 @@ setup_claude() {
 	for hook in "$REPO_DIR"/dist/claude/hooks/*; do
 		[ -f "$hook" ] || continue
 		link_path "$hook" "$CLAUDE_DIR/hooks/$(basename "$hook")" "hooks/$(basename "$hook")"
+	done
+	cli_group_end
+
+	cli_group_begin "Claude rules"
+	prune_stale_repo_links "$CLAUDE_DIR/rules" "$REPO_DIR/dist/claude/rules" "rules"
+	local rule  # Generated rule file to link into the Claude config folder.
+	for rule in "$REPO_DIR"/dist/claude/rules/*.md; do
+		[ -f "$rule" ] || continue
+		link_path "$rule" "$CLAUDE_DIR/rules/$(basename "$rule")" "rules/$(basename "$rule")"
 	done
 	cli_group_end
 

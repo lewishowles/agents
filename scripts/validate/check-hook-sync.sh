@@ -4,6 +4,7 @@
 set -euo pipefail
 
 source "$(cd "$(dirname "$0")/.." && pwd)/lib/validation-helpers.sh"
+source "$REPO_DIR/scripts/lib/dist-targets.sh"
 
 validate_require_jq
 
@@ -43,5 +44,13 @@ while IFS= read -r -d '' shared_file; do
 		fi
 	done
 done < <(find "$REPO_DIR/src/hooks/shared" -maxdepth 1 -type f \( -name '*.sh' -o -name '*.md' \) -print0 | sort -z)
+
+rule="$REPO_DIR/dist/claude/rules/code-style.md"  # Generated code-style rule that must match the current patterns.
+
+if [ ! -f "$rule" ]; then
+	validate_fail "dist/claude/rules/code-style.md missing (run scripts/sync.sh)"
+elif ! diff -q <(print_code_style_rule) "$rule" >/dev/null 2>&1; then
+	validate_fail "dist/claude/rules/code-style.md out of sync with source (run scripts/sync.sh)"
+fi
 
 validate_finish
