@@ -136,7 +136,7 @@ Repository refresh is optional during global setup. Pass `--refresh` to sync ext
 
 ## Project setup
 
-Run `setup-project.sh` from the project root, passing the agent flag that matches the project:
+Global skills work without project setup. Run this optional command when a project needs its own instructions (`AGENTS.md`, `CLAUDE.md`, and `.claudeignore` where applicable), skill-pack links, or the global `project-checks` and `friction` tools. From the project root, pass the agent flag that matches the project:
 
 ```bash
 cd /path/to/project
@@ -151,7 +151,7 @@ cd /path/to/project
 /path/to/repository/scripts/setup-project.sh --both
 ```
 
-Each flag copies the matching `AGENTS.md` template and checks that the global `project-checks` and `friction` commands are installed. It links nothing into `.agent/`. Claude targets also create a root `CLAUDE.md` containing `@AGENTS.md`, so Claude Code loads the same project rules without a second copy, and copy `.claudeignore`. After setup, replace the placeholders in `AGENTS.md` with project-specific rules, then register project commands with agent-run.
+Before changing anything, setup lists each project file and global tool. It creates missing files, skips existing `AGENTS.md` and `CLAUDE.md`, and asks before overwriting a differing `.claudeignore`. It lists existing and proposed skill-pack links, and whether each global tool is installed or will be installed. Detected macOS skill packs are offered before installation. Existing skill-pack and overwrite prompts follow that plan. Each agent flag uses the matching `AGENTS.md` template. Setup links nothing into `.agent/`. Claude targets also create a root `CLAUDE.md` containing `@AGENTS.md`, so Claude Code loads the same project rules without a second copy, and copy `.claudeignore`. After setup, replace the placeholders in `AGENTS.md` with project-specific rules, then register project commands with agent-run.
 
 For project types with useful local skills, setup can install centrally managed project skill packs as symlinks into both `.agents/skills/` and `.claude/skills/`:
 

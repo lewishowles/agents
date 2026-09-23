@@ -16,6 +16,8 @@ source "$REPO_DIR/scripts/lib/setup-links.sh"
 source "$REPO_DIR/scripts/lib/project-setup.sh"
 
 declare -a REQUESTED_SKILL_PACKS=()
+# The skill packs this run will link or offer, filled by select_project_skill_packs.
+declare -a PROJECT_SKILL_PACK_CANDIDATES=()
 SKILL_PACK_MODE="auto"
 
 usage() {
@@ -79,6 +81,38 @@ setup_both() {
 	install_project_skill_packs
 }
 
+# Lists all files, skill links, and global tools before setup changes anything.
+#
+# @param  {string}  mode
+#     Agent runtime selected for this project.
+plan_setup() {
+	local mode="$1"
+	local pack
+	# Show every planned row. The output helpers hide success and muted rows by
+	# default, which would drop "will create" and "already exists" from the plan.
+	local CLI_STYLE_VERBOSE=1
+
+	cli_section "Project setup plan"
+	cli_group_begin "Project files"
+	plan_copy_file "$PROJECT_DIR/AGENTS.md" "AGENTS.md"
+	if [ "$mode" != codex ]; then
+		plan_copy_file "$PROJECT_DIR/CLAUDE.md" "CLAUDE.md"
+		plan_file "$REPO_DIR/templates/claude/.claudeignore" "$PROJECT_DIR/.claude/.claudeignore" ".claude/.claudeignore"
+	fi
+	cli_group_end
+
+	select_project_skill_packs
+	if [ "${#PROJECT_SKILL_PACK_CANDIDATES[@]}" -gt 0 ]; then
+		cli_group_begin "Project skill packs"
+		for pack in "${PROJECT_SKILL_PACK_CANDIDATES[@]}"; do
+			plan_project_skill_pack "$pack"
+		done
+		cli_group_end
+	fi
+
+	plan_global_tools
+}
+
 prompt_target() {
 	printf 'Which agent(s)? [1] Claude  [2] Codex  [3] Both: '
 	read -r choice
@@ -134,10 +168,14 @@ if [ -z "$target" ]; then
 fi
 
 case "$target" in
-	claude)             setup_claude ;;
-	codex)              setup_codex ;;
-	both)               setup_both ;;
 	status)         check_status; exit ;;
+	claude|codex|both) plan_setup "$target" ;;
+esac
+
+case "$target" in
+	claude) setup_claude ;;
+	codex) setup_codex ;;
+	both) setup_both ;;
 esac
 
 printf '\n'

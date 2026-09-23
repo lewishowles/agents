@@ -16,7 +16,7 @@ Claude uses skill-trigger hooks to automatically load the right skill for what y
 
 ## Set up a project
 
-This creates the project's `AGENTS.md` and other per-project config. Run it from the project root:
+Global skills work without project setup. This optional step adds project instructions (`AGENTS.md`, `CLAUDE.md`, and `.claudeignore` where applicable), optional skill-pack links, and the global `project-checks` and `friction` tools. It lists what it will add before changing anything. Run it from the project root:
 
 ```bash
 /path/to/repository/scripts/setup-project.sh --both

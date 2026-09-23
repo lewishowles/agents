@@ -80,6 +80,154 @@ test_both_setup() {
 	assert_contains "$target_dir/AGENTS.md" "Claude Code and Codex"
 }
 
+# Checks that each setup mode lists its files before creating them.
+test_plan_lists_missing_files() {
+	local mode target_dir output
+	for mode in claude codex both; do
+		target_dir="$TEST_ROOT/plan-$mode"
+		output="$TEST_ROOT/plan-$mode.out"
+		mkdir -p "$target_dir"
+
+		run_setup_output "$target_dir" "--$mode" > "$output"
+
+		assert_contains "$output" "Project setup plan"
+		assert_contains "$output" "AGENTS.md"
+		assert_contains "$output" "will create"
+		assert_contains "$output" "Global tools"
+		if [ "$mode" = codex ]; then
+			assert_not_contains "$output" ".claude/.claudeignore"
+		else
+			assert_contains "$output" "CLAUDE.md"
+			assert_contains "$output" ".claude/.claudeignore"
+		fi
+	done
+}
+
+# Confirms that the printed plan precedes the first project file write.
+test_plan_precedes_project_files() {
+	local target_dir="$TEST_ROOT/plan-before-write"
+	local output="$TEST_ROOT/plan-before-write.out"
+	local plan_line created_line
+	mkdir -p "$target_dir"
+
+	(
+		cd "$target_dir"
+		CLI_STYLE_VERBOSE=1 "$REPO_DIR/scripts/setup-project.sh" --codex > "$output" </dev/null
+	)
+
+	plan_line=$(grep -n -m1 'will create' "$output")
+	created_line=$(grep -n -m1 'created' "$output")
+	plan_line=${plan_line%%:*}
+	created_line=${created_line%%:*}
+	[ "$plan_line" -lt "$created_line" ] || fail "Expected the setup plan before the first created file"
+}
+
+# Confirms that setup preserves existing project instructions without asking.
+test_plan_skips_existing_project_instructions() {
+	local target_dir="$TEST_ROOT/plan-existing"
+	local output="$TEST_ROOT/plan-existing.out"
+	mkdir -p "$target_dir"
+	printf 'custom rules\n' > "$target_dir/AGENTS.md"
+	printf 'custom Claude rules\n' > "$target_dir/CLAUDE.md"
+
+	run_setup_output "$target_dir" --both > "$output"
+
+	assert_contains "$output" "already exists (skip)"
+	assert_not_contains "$output" "Overwrite with the default?"
+	assert_equals "$(cat "$target_dir/AGENTS.md")" "custom rules"
+	assert_equals "$(cat "$target_dir/CLAUDE.md")" "custom Claude rules"
+}
+
+# Checks the plan and overwrite choices for the managed Claude ignore file.
+test_plan_reports_claudeignore_states() {
+	local target_dir="$TEST_ROOT/plan-ignore"
+	local output="$TEST_ROOT/plan-ignore.out"
+	mkdir -p "$target_dir/.claude"
+	cp "$REPO_DIR/templates/claude/.claudeignore" "$target_dir/.claude/.claudeignore"
+
+	run_setup_output "$target_dir" --claude > "$output"
+	assert_contains "$output" "already up to date (skip)"
+	assert_not_contains "$output" "Overwrite with the default?"
+
+	printf 'custom ignore\n' > "$target_dir/.claude/.claudeignore"
+	(
+		cd "$target_dir"
+		printf 'n\n' | "$REPO_DIR/scripts/setup-project.sh" --claude > "$output"
+	)
+	assert_contains "$output" "differs (will ask before overwriting)"
+	assert_contains "$output" "Overwrite with the default?"
+	assert_equals "$(cat "$target_dir/.claude/.claudeignore")" "custom ignore"
+
+	(
+		cd "$target_dir"
+		printf 'y\n' | "$REPO_DIR/scripts/setup-project.sh" --claude > "$output"
+	)
+	assert_contains "$output" "differs (will ask before overwriting)"
+	cmp -s "$REPO_DIR/templates/claude/.claudeignore" "$target_dir/.claude/.claudeignore" || fail "Expected Claude ignore template after overwrite"
+}
+
+# Checks that explicit skill packs appear in the plan as links.
+test_plan_lists_skill_links() {
+	local target_dir="$TEST_ROOT/plan-skills"
+	local output="$TEST_ROOT/plan-skills.out"
+	mkdir -p "$target_dir"
+
+	run_setup_output "$target_dir" --both --with-skill-pack macos > "$output"
+
+	assert_contains "$output" ".agents/skills/swift"
+	assert_contains "$output" ".claude/skills/swift"
+	assert_contains "$output" "link to add"
+
+	run_setup_output "$target_dir" --both --with-skill-pack macos > "$output"
+	assert_contains "$output" "already linked"
+}
+
+# Checks that detected skills are offered before their confirmation prompt.
+test_plan_offers_detected_skill_links() {
+	local target_dir="$TEST_ROOT/plan-detected-skills"
+	local output="$TEST_ROOT/plan-detected-skills.out"
+	mkdir -p "$target_dir/Sources/App"
+	printf '// swift package\n' > "$target_dir/Package.swift"
+	printf 'struct App {}\n' > "$target_dir/Sources/App/App.swift"
+
+	(
+		cd "$target_dir"
+		printf 'n\n' | "$REPO_DIR/scripts/setup-project.sh" --both > "$output"
+	)
+
+	assert_contains "$output" ".agents/skills/swift"
+	assert_contains "$output" "offered (you will be asked)"
+	assert_contains "$output" "Detected a macOS/Swift project. Install local macOS skills?"
+	assert_not_exists "$target_dir/.agents"
+}
+
+# Checks the installed and missing labels for both global tools.
+test_plan_reports_global_tool_states() {
+	local output="$TEST_ROOT/plan-tools.out"
+	(
+		source "$REPO_DIR/scripts/lib/project-setup.sh"
+		cli_group_begin() { :; }
+		cli_group_end() { :; }
+		cli_group_status() { printf '%s: %s\n' "$2" "$3"; }
+		PATH=""
+		plan_global_tools
+	) > "$output"
+	assert_contains "$output" "project-checks: missing (will install)"
+	assert_contains "$output" "friction: missing (will install)"
+
+	(
+		source "$REPO_DIR/scripts/lib/project-setup.sh"
+		cli_group_begin() { :; }
+		cli_group_end() { :; }
+		cli_group_status() { printf '%s: %s\n' "$2" "$3"; }
+		project_checks_installed() { return 0; }
+		friction() { :; }
+		plan_global_tools
+	) > "$output"
+	assert_contains "$output" "project-checks: already installed"
+	assert_contains "$output" "friction: already installed"
+}
+
 test_existing_files_are_skipped() {
 	local target_dir="$TEST_ROOT/existing"
 	local output="$TEST_ROOT/existing-second.out"
@@ -122,6 +270,7 @@ test_list_skill_packs_reports_macos() {
 	"$REPO_DIR/scripts/setup-project.sh" --list-skill-packs > "$output"
 
 	assert_contains "$output" "macos"
+	assert_not_contains "$output" "Project setup plan"
 }
 
 test_explicit_skill_pack_installs_local_links() {
@@ -182,6 +331,7 @@ test_status_reports_clean_project() {
 
 	assert_contains "$output" "No setup detected"
 	assert_not_contains "$output" "Done."
+	assert_not_contains "$output" "Project setup plan"
 }
 
 test_status_reports_configured_project() {
@@ -247,6 +397,13 @@ test_ensure_friction_installs_only_when_missing() {
 test_claude_setup
 test_codex_setup
 test_both_setup
+test_plan_lists_missing_files
+test_plan_precedes_project_files
+test_plan_skips_existing_project_instructions
+test_plan_reports_claudeignore_states
+test_plan_lists_skill_links
+test_plan_offers_detected_skill_links
+test_plan_reports_global_tool_states
 test_existing_files_are_skipped
 test_help_lists_commands
 test_list_skill_packs_reports_macos
