@@ -1,3 +1,0 @@
-code-style
-test-e2e
-typescript

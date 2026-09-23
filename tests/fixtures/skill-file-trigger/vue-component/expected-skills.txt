@@ -1,3 +1,0 @@
-code-style
-vue
-vue-project-stack

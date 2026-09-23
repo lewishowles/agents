@@ -503,9 +503,6 @@ def skills(paths):
 
 	print(f"sessions editing 3 or more JS/Vue/TS files: {sessions}")
 	print(f"  with code-style present: {with_code_style}")
-	print("\nNote: the skill-file-trigger hook injects code-style on every matching")
-	print("write, but PreToolUse additionalContext is not persisted in the")
-	print("transcript, so this undercounts. See 'Not findings' in the report.")
 
 
 def main():

@@ -12,7 +12,7 @@ scripts/setup-global.sh --both
 
 Setup links every skill into Claude and Codex by default, one symlink per skill. Edits to a linked skill take effect without rebuilding. Use `--exclude` to leave skills out, `--include` to add them back, `--include-all` to restore the full set, `--status` to check the links, or `--select` to choose interactively. See [choosing skills](docs/setup.md#choose-which-skills-to-install) for examples.
 
-Claude uses skill-trigger hooks to automatically load the right skill for what you're doing, and those hooks need `jq` to run. Install it with `brew install jq` before running the command if you use Claude.
+Several of Claude's hooks need `jq` to run. Install it with `brew install jq` before running the command if you use Claude.
 
 ## Set up a project
 

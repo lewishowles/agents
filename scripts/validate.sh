@@ -72,7 +72,6 @@ run_check "manual-command guard" bash "$REPO_DIR/tests/manual-command-guard.sh"
 run_check "tool-call checkpoint"  bash "$REPO_DIR/tests/tool-call-checkpoint.sh"
 run_check "commit-message guard"  bash "$REPO_DIR/tests/commit-message-guard.sh"
 run_check "search boundaries"     bash "$REPO_DIR/tests/search-boundaries.sh"
-run_check "skill triggers"        bash "$REPO_DIR/tests/skill-triggers.sh"
 run_check "project setup"         bash "$REPO_DIR/tests/setup-project.sh"
 run_check "friction logging"      bash "$REPO_DIR/tests/friction-logging.sh"
 run_check "dead path refs"        project-checks-markdown-claims --mode paths

@@ -1,4 +1,0 @@
-code-style
-vue
-vue-project-stack
-vue-router

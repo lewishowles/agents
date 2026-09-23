@@ -1,2 +1,0 @@
-swift
-test-e2e

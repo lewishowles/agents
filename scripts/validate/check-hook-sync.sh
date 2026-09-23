@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
-# Checks dist hook copies against their hook source scripts.
+# Checks that the dist hook copies and the Claude code-style rule match their sources.
 
 set -euo pipefail
 
 source "$(cd "$(dirname "$0")/.." && pwd)/lib/validation-helpers.sh"
-source "$REPO_DIR/scripts/lib/dist-targets.sh"
 
 validate_require_jq
 
@@ -45,11 +44,12 @@ while IFS= read -r -d '' shared_file; do
 	done
 done < <(find "$REPO_DIR/src/hooks/shared" -maxdepth 1 -type f \( -name '*.sh' -o -name '*.md' \) -print0 | sort -z)
 
-rule="$REPO_DIR/dist/claude/rules/code-style.md"  # Generated code-style rule that must match the current patterns.
+rule="$REPO_DIR/dist/claude/rules/code-style.md"  # The installed copy that sync.sh writes.
+rule_source="$REPO_DIR/src/adapters/claude/rules/code-style.md"  # The hand-written rule that sync.sh copies.
 
 if [ ! -f "$rule" ]; then
 	validate_fail "dist/claude/rules/code-style.md missing (run scripts/sync.sh)"
-elif ! diff -q <(print_code_style_rule) "$rule" >/dev/null 2>&1; then
+elif ! diff -q "$rule_source" "$rule" >/dev/null 2>&1; then
 	validate_fail "dist/claude/rules/code-style.md out of sync with source (run scripts/sync.sh)"
 fi
 

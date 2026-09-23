@@ -1,4 +1,0 @@
-code-style
-swift
-vue
-writing-readme

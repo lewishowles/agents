@@ -136,10 +136,6 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'bash \"$HOME/.claude/hooks/skill-file-trigger.sh\"'"
-          },
-          {
-            "type": "command",
             "command": "bash -c 'bash \"$HOME/.claude/hooks/test-skeleton-reminder.sh\"'"
           }
         ]
