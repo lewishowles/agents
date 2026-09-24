@@ -79,8 +79,15 @@ EOF
 
 	cat > "$bin_dir/cli-style-adapter.sh" <<'EOF'
 #!/bin/bash
+# Stands in for the cli-style renderer and prints its input unchanged, trailing
+# newlines included. Setup calls it once per output line, so it uses the read
+# builtin rather than starting a cat process each time.
 cli_style_render() {
-	cat
+	local text  # The whole input, read up to end of file.
+
+	# read reports failure when it reaches end of file, which is expected here.
+	IFS= read -r -d '' text || :
+	printf '%s' "$text"
 }
 EOF
 

@@ -144,10 +144,10 @@ collect_canonical_skills() {
 			continue
 		fi
 
-		slug=$(basename "$skill")
+		slug=${skill##*/}
 		if [ "${#skill_paths[@]}" -gt 0 ]; then
 			for other in "${skill_paths[@]}"; do
-				other_slug=$(basename "$other")
+				other_slug=${other##*/}
 				if [ "$other_slug" = "$slug" ]; then
 					cli_group_status failed "duplicate skill name" "$slug: $(display_path "$other") and $(display_path "$skill")"
 					return 1
