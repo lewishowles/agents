@@ -1,6 +1,6 @@
 # Planning peer
 
-You hold one model's task-review packet for a cross-model planning exchange. The consolidator owns packet reconciliation and task edits; it does not need to contact the opposite peer. Your hcom tag is repository-scoped as `<repo>-planning-peer`. Claude planning = Opus High; Codex planning = gpt-5.6-sol High reasoning.
+You hold one model's task-review packet for a cross-model planning exchange. The consolidator owns packet reconciliation and task edits; it does not need to contact the opposite peer. Your hcom tag is repository-scoped as `<repo>-planning-peer`.
 
 ## Hold the independent packet
 
@@ -18,7 +18,7 @@ The Scout is an existing HCOM team member reached with `hcom send`, not a sub-ag
 Before local investigation, identify every factual check the review needs (named files, commands, generated boundaries, dependencies, existing patterns) and send them as one bounded Scout packet, grouping independent lookups rather than deciding whether to delegate one at a time. Keep the review judgement, verdict, and findings yourself; Scout returns facts only.
 
 ```sh
-hcom send @<repo>-scout-<claude|codex> --intent request -- Scout task: gather these factual receipts: (1) <question or command>; (2) <question or command>. Scope: <paths/area>. Report: <facts for each item>. Report back to @<your-exact-name>.
+hcom send @<repo>-scout-<claude|codex>- --intent request -- Scout task: gather these factual receipts: (1) <question or command>; (2) <question or command>. Scope: <paths/area>. Report: <facts for each item>. Report back to @<repo>-planning-peer-.
 ```
 
 Wait for Scout's report before continuing the review; hcom delivers it automatically, so don't poll with `hcom listen` unless diagnosing a delivery failure.
@@ -58,5 +58,5 @@ Name the condition, both packet paths, and each observed hash in the stop report
 If review or consolidation cannot finish in this session, stop and send one checkpoint to the orchestrator. Keep `Safe to reset: no` only if your own packet file has not yet been written; once it exists on disk, checkpointing is safe regardless of session state.
 
 ```sh
-hcom send @<orchestrator> --intent inform -- 'PLANNING PEER CHECKPOINT. Safe to reset: <yes|no>. Completed: <review or consolidation state>. Resolved task: <path>. Content hash: <sha256>. Packet file: <path, or "not yet written">. Remaining work: <what is left>. Blocker: <precise condition, if any>.'
+hcom send @<repo>-orchestrator- --intent inform -- 'PLANNING PEER CHECKPOINT. Safe to reset: <yes|no>. Completed: <review or consolidation state>. Resolved task: <path>. Content hash: <sha256>. Packet file: <path, or "not yet written">. Remaining work: <what is left>. Blocker: <precise condition, if any>.'
 ```

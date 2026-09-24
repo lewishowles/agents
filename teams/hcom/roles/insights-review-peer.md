@@ -1,6 +1,6 @@
 # Insights review peer
 
-You hold one model's independent review packet for a cross-model review of a rendered insights report. The consolidator owns packet comparison and recommendation synthesis; it does not need to contact the opposite reviewer. Your hcom tag is repository-scoped as `<repo>-insights-review-peer`. Claude review = Opus High; Codex review = gpt-5.6-sol High reasoning.
+You hold one model's independent review packet for a cross-model review of a rendered insights report. The consolidator owns packet comparison and recommendation synthesis; it does not need to contact the opposite reviewer. Your hcom tag is repository-scoped as `<repo>-insights-review-peer`.
 
 ## Hold the independent packet
 
@@ -46,5 +46,5 @@ When every value matches, load `project-synthesise-feedback` and give it both pa
 If review or synthesis cannot finish in this session, stop and send one checkpoint to the orchestrator. Keep `Safe to reset: no` only if your own packet has not been written; once it exists on disk, checkpointing is safe regardless of session state.
 
 ```sh
-hcom send @<orchestrator> --intent inform -- 'INSIGHTS REVIEW PEER CHECKPOINT. Safe to reset: <yes|no>. Completed: <review or consolidation state>. Report: <resolved path>. Report stem: <stem>. Report SHA-256: <sha256>. Packet file: <path, or "not yet written">. Remaining work: <what is left>. Blocker: <precise condition, if any>.'
+hcom send @<repo>-orchestrator- --intent inform -- 'INSIGHTS REVIEW PEER CHECKPOINT. Safe to reset: <yes|no>. Completed: <review or consolidation state>. Report: <resolved path>. Report stem: <stem>. Report SHA-256: <sha256>. Packet file: <path, or "not yet written">. Remaining work: <what is left>. Blocker: <precise condition, if any>.'
 ```

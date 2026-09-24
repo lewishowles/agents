@@ -54,8 +54,8 @@ Minimise token cost by default; treat context as a limited shared budget.
 - For file relocations, use `mv` or `cp` via Bash. Never read a file's content just to write it at a different path — that's three tool calls instead of one.
 - Do not re-run or re-print expensive commands unless something changed that can affect their result and local execution is justified by token cost.
 - Treat an itemised remaining-work list in a continuation or replacement packet as established evidence. Direct the next action without repeating discovery or verification unless relevant state changed.
-- Do not output placeholder status text between tool calls ("Still active", "Continuing…"). Notification-only wake-ups such as `<hcom>` do not require a status reply. Wait silently until there is something genuinely new to report: completion, a finding, a direction change, or a blocker. If identical wake-ups recur without a state change, treat them as a possible delivery failure, check `hcom status --logs` when HCOM inspection is authorised, and report the concrete error once rather than narrating each retry.
-- In an HCOM team, do not send acknowledgement or "will do" messages; `guard-hcom-ack` drops them on Claude and blocks them on Codex. Wait silently for actionable work, or send a terminal result, blocker, decision, or correction. Address a teammate with `--reply-to <id>` and `--thread` rather than an `@name` recalled from earlier in the session; the CVCV name suffix changes between sessions, and a stale mention fails the whole send with `Error: @mentions`.
+- A notification-only wake-up such as `<hcom>` needs no status reply; answer when there is a result, a finding, a change of direction or a blocker. If identical wake-ups recur without a state change, treat them as a possible delivery failure, check `hcom status --logs` when HCOM inspection is authorised, and report the concrete error once rather than narrating each retry.
+- In an HCOM team, do not send acknowledgement or "will do" messages; `guard-hcom-ack` drops them on Claude and blocks them on Codex. Wait silently for actionable work, or send a terminal result, blocker, decision, or correction. Address teammates by repository and optional team role prefix, such as `@<repo>-scout-` or `@<repo>-<team>-scout-`, which survives name changes. Keep `--reply-to <id>` and `--thread` for the conversation.
 - Write large deliverables (roadmaps, specs, reports) directly to the target file and summarise briefly in chat; never print the full document as a response.
 - Prefer structurally correct, formatter-friendly code over hand-polished indentation. Preserve indentation where it affects syntax or meaning, but do not spend effort aligning, beautifying, or manually wrapping whitespace that the project formatter will rewrite.
 
@@ -123,7 +123,7 @@ A confident conclusion is not authorisation to implement. If the last user messa
 
 ### Ad-hoc verification safety
 
-An improvised shell check that hangs or leaves a stray process behind can outlive the session. One such loop kept running for eight days at full CPU after the surrounding verification exited.
+An improvised shell check that hangs or leaves a stray process behind can outlive the session and keep using CPU.
 
 - Never use an unbounded busy loop (`while :`, `while true`, `for (( ; ; ))`, `until false`) to simulate waiting, blocking, or a hung process. Use `sleep`, a blocking `read`, or `timeout` with a short limit.
 - Any ad-hoc check that can block, poll, wait, or hang needs a short explicit upper bound.
