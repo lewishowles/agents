@@ -3,6 +3,7 @@ name: library-release
 description: >
   Use this skill when preparing to release a supported @lewishowles library package.
 ---
+
 # Library release
 
 Conservative release guardrails for `@lewishowles/components`, `@lewishowles/helpers`, `@lewishowles/testing`, `@lewishowles/cli-style`, `@lewishowles/lint-config`, and `@lewishowles/pkg-checks`. Inspect current repo process first; require explicit approval for irreversible steps.
@@ -39,6 +40,8 @@ Choose version bump from observable consumer impact:
 | Major | Removed or renamed APIs, changed defaults, incompatible behaviour, or migration-required styling changes |
 
 When unsure between bumps, name uncertainty and ask before editing version files.
+
+Breaking changes can wait in an unscheduled `next-major` progress release until the user decides to cut a major. Before choosing the bump, find its id with `progress release get next-major --json`, list the tasks from `progress task list --json` whose `release_id` matches and whose status is not done, and show them to the user. If the user chooses a major, those tasks belong in it. Otherwise they stay queued. Deprecations shipped in a minor release go under "Deprecated" in the notes.
 
 ## Step 3 — prepare notes
 
