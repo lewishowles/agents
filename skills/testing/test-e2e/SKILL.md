@@ -57,7 +57,7 @@ For Cypress/Playwright examples, setup config, e2e structure, and interaction pa
 
 ## Selectors
 
-- Prefer `data-test="component.element"` over CSS selectors: stable, intent-clear, namespace-safe.
+- Use `data-test="component.element"` instead of CSS selectors: stable, intent-clear, namespace-safe.
 - Group similar types with `:is()` and single negations rather than repeating `:not()`:
   - ✓ `:is(button, input, select, textarea):not([disabled]), a[href], [tabindex]:not([tabindex='-1'])`
   - ✗ `:is(button:not([disabled]), input:not([disabled]), select:not([disabled])...)`

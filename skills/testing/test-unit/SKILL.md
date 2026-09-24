@@ -37,6 +37,20 @@ Mock external systems such as network clients, SDKs, clocks, and storage. Mock a
 - Configure Pinia explicitly in tests. Use `@pinia/testing` when component tests need stores without real action side effects
 - Test lifecycle-dependent composables through a small helper component when they rely on mount/unmount hooks
 
+### Finding elements
+
+Find template elements through `data-test` attributes. If an element has none, add one to its template in the same change. Do not find elements by filtering on visible text, class names, or tag structure.
+
+```js
+// Avoid
+const adjustButton = editButtons.filter((button) => button.text().includes("Adjust"));
+
+// Use
+const adjustButton = wrapper.find('[data-test="component.adjust"]');
+```
+
+You can assert the text of an element after finding it through `data-test`. Check for absence the same way: `expect(wrapper.find('[data-test="component.adjust"]').exists()).toBe(false)`.
+
 ### Vitest API and composable mocks
 
 Use this when mocking API composables, SDK clients, or query-layer dependencies.

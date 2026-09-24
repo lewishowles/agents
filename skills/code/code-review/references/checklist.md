@@ -43,3 +43,4 @@ Paste into a PR description or use as a review gate. For severity levels and giv
 
 - [ ] New behaviour has tests
 - [ ] Existing tests still pass
+- [ ] Tests find template elements through `data-test`, not by filtering on visible text or classes
