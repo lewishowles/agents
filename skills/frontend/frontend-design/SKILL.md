@@ -1,7 +1,7 @@
 ---
 name: frontend-design
 description: >
-  Use this skill before public-facing UI where visual quality or brand distinctiveness matters. Covers typography, colour, motion, and composition. Distinct from accessibility and web-performance.
+  Use this skill before public-facing UI where visual quality or brand distinctiveness matters. Covers typography, colour, surfaces, icons, motion, and composition. Distinct from accessibility and web-performance.
 ---
 # Frontend design
 
@@ -32,6 +32,9 @@ Choose type that reflects tone, not type that avoids controversy.
 - Limit to two typefaces: one for display/headings, one for body. Use weight and size before a third face
 - Line height: 1.4–1.6 for body, 1.1–1.2 for large display headings
 - Measure (line length): 60–75 characters for body, unconstrained for short display
+- Use `text-wrap: balance` for short headings that break across lines, and `text-wrap: pretty` for short body text where a lone final word looks awkward. Leave long passages to normal wrapping
+- Use `font-variant-numeric: tabular-nums` for changing figures such as timers and counters so digit widths do not shift the layout
+- On macOS, consider `-webkit-font-smoothing: antialiased` at the root when the chosen typeface renders too heavy; then confirm that thin weights and small sizes stay legible
 
 ## Colour
 
@@ -43,14 +46,63 @@ Colour should carry meaning, not just decoration.
 - For a greenfield palette, question purple-blue or teal-green gradients unless the product gives them a clear reason
 - If using a gradient, ensure clear directional rationale (light source, brand direction)
 
+## Surfaces
+
+- Use a border when an edge explains structure, such as a divider, table boundary, or input outline. Use a shadow when a card, button, or floating panel needs to read as raised
+- For a subtle raised surface in light mode, layer a transparent one-pixel ring, a close shadow, and a wider faint shadow. In dark mode, a single low-opacity ring usually reads more clearly than stacked dark shadows. Use the project's surface colours and opacity tokens, redefined per theme, and its own dark-theme switch; the media queries below stand in for whichever class, attribute, or query the project uses:
+
+```css
+.raised-surface {
+  box-shadow:
+    0 0 0 1px var(--surface-ring),
+    0 1px 3px var(--surface-near-shadow),
+    0 4px 10px var(--surface-far-shadow);
+}
+
+@media (prefers-color-scheme: dark) {
+  .raised-surface {
+    box-shadow: 0 0 0 1px var(--surface-ring);
+  }
+}
+```
+
+- For closely nested rounded surfaces, set the outer radius to the inner radius plus the padding between them. When the gap is large enough that they read as separate surfaces, choose each radius independently
+- Give non-interactive images a low-opacity, one-pixel inset outline to separate their edges from the background. Use pure black in light mode and pure white in dark mode, with opacity supplied by the design tokens; keep this separate from any keyboard focus outline
+
+```css
+.image-frame {
+  outline: 1px solid rgb(0 0 0 / var(--image-outline-opacity));
+  outline-offset: -1px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .image-frame {
+    outline-color: rgb(255 255 255 / var(--image-outline-opacity));
+  }
+}
+```
+
+- Check icon-and-text buttons and uneven glyphs by eye at their rendered size. Correct an asymmetric icon's SVG path or view box first; if the whole button still looks off, move a little logical inline padding from the icon side to the text side so the total width, and the hit area, stay the same
+
+## Iconography
+
+- Match an icon's stroke weight to the weight of adjacent text, and check both together at the final rendered size
+- Use one SVG with `currentColor` for colour changes across hover, selected, and disabled states. Let the control's existing colour tokens set each state instead of maintaining separate recoloured assets
+
 ## Motion and animation
 
 Motion should reinforce meaning, not demonstrate capability.
 
 - Define motion vocabulary before animating: what enters, leaves, transitions?
 - Prefer `transform` and `opacity`; avoid layout properties (`width`, `height`, `padding`, `top`/`left`)
-- Duration: micro-interactions 100–150ms; component transitions 200–350ms; page-level 400–500ms
+- Use the project's motion tokens for durations, and keep small responses quicker than component and page entrances. Without tokens, start from 100–150ms for micro-interactions, 200–350ms for component transitions, and 400–500ms for page-level changes
 - Easing: ease-out for entrance (fast start, gentle stop); ease-in for exit; ease-in-out for reversible
+- Use CSS transitions for interactive states so a hover, toggle, or open panel can reverse from its current position. Reserve keyframes for a sequence that runs once
+- Make exits quieter than entrances, with less movement and a shorter duration; skip an exit when it conveys no useful change
+- Stagger the entrance of a few meaningful groups only when their order establishes hierarchy, such as an initial hero or success state. Repeated controls and routine state changes should respond together
+- If a press uses scale for feedback, keep it at `scale(0.95)` or larger and let a transition restore it on release
+- Give frequent interactions, such as hovers and typing, instant or very small feedback rather than a custom animation
+- Keep a visible static cue for every state that uses motion, such as a checkmark, a changed label, or a visible border, so the state remains understandable without animation
 - Always provide `prefers-reduced-motion` fallbacks: remove or replace animations, don't just slow them
 
 ## Layout and composition
@@ -90,3 +142,5 @@ Before handing off to implementation, confirm:
 _Adapted from the Anthropic Claude Code frontend-design skill (MIT). Reworded and extended._
 
 The visual-owner precedence adapts ideas from Benjamin Stelzer's `scoville-ui-anti-ai-slop` skill, MIT licensed.
+
+The surface, type, icon, and motion rules draw on Jakub Krehel's `make-interfaces-feel-better` skill, MIT licensed.
