@@ -102,7 +102,7 @@ Lead with what the commit achieves and why it matters; mention implementation de
 
 Use a Conventional Commit subject (`type(scope): description`) naming the behavioural outcome with a plain verb for what happened — fix, add, remove, rename — not an abstract or softer synonym such as resolve, address, correct, or streamline. Prefer "track dirty state across record loads" over "extract mapFormData"; prefer "fix the broken import" over "resolve the import issue".
 
-Use concrete nouns and verbs from the changed behaviour. Avoid compressed umbrella wording such as "preserve evidence and provenance" when the commit can name the records or actions involved. Do not lift vocabulary straight from the code or task file (`facets`, `bounded`, `render`, `invocation`); name the behaviour in words a newcomer to the repo would use. This is a first-pass requirement, not a cleanup the user should have to ask for.
+Use concrete nouns and verbs from the changed behaviour. Avoid compressed umbrella wording such as "preserve evidence and provenance" when the commit can name the records or actions involved. Do not lift vocabulary straight from the code or task record (`facets`, `bounded`, `render`, `invocation`); name the behaviour in words a newcomer to the repo would use. This is a first-pass requirement, not a cleanup the user should have to ask for.
 
 Add a body whenever the subject alone would leave a reviewer guessing.
 

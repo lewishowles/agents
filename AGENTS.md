@@ -140,6 +140,6 @@ Verification for any change in this repo:
 
 Gotchas:
 
-- `.agent/` is ignored by the global gitignore (`~/.config/git/ignore`), so task files, specs, audits and logs are all untracked. `PROGRESS.md` at the root is the only tracked planning record.
+- `.agent/` is ignored by the global gitignore (`~/.config/git/ignore`), so review packets, specs, audits and logs are all untracked. The root `PROGRESS.md` is also ignored (by this repo's `.gitignore`) and only holds optional freeform backlog notes; task and chunk state lives in the `progress` database.
 - Editing `src/rules/global-rules.md` grows a file loaded on every turn in every project.
 - `scripts/audit/token_usage_report.py` supports two invocation styles: direct script execution (`python3 scripts/audit/token_usage_report.py`) and package import (`from scripts.audit import token_usage_report`, used by `tests/usage-driver-ledger.sh`). Sibling modules (`metrics.py`, `redundancy.py`, and `token_usage_types.py`, `tool_call_attribution.py`, `token_usage_parsing.py`, `token_usage_rendering.py`) must be imported with plain absolute imports after the file's `sys.path.insert(0, str(AUDIT_DIRECTORY))` shim, never relative imports (`from . import ...`) because direct execution runs the report module as `__main__`.
