@@ -37,7 +37,7 @@ For a repo that still has `WORKSPACE.md`, `AGENT_CAPABILITIES.md`, or a `.agent/
 
 ## Subagent delegation (optional)
 
-After plan approval, consider delegating implementation tasks to subagents when:
+After plan approval, consider delegating implementation tasks to subagents, following the `delegation` skill, when:
 
 - The plan has 3+ independent tasks that don't share files
 - Tasks are well-specified with clear acceptance criteria

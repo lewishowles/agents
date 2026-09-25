@@ -11,7 +11,6 @@ CODEX_TARGET="$REPO_DIR/dist/codex/AGENTS.md"
 CLAUDE_PARTS=(
 	"$REPO_DIR/src/fragments/claude/header.md"
 	"$REPO_DIR/src/rules/global-rules.md"
-	"$REPO_DIR/src/fragments/claude/subagent-delegation.md"
 	"$REPO_DIR/src/rules/identity.md"
 	"$REPO_DIR/src/rules/skills-policy.md"
 	"$REPO_DIR/src/rules/file-discovery.md"

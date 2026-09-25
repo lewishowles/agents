@@ -32,7 +32,7 @@ Configuration/Agents/
 │   │   ├── claude/<name>/    # hook source: hook.json + <name>.sh
 │   │   └── git/              # this repo's own git hooks (core.hooksPath)
 │   └── fragments/             # per-tool preamble fragments assembled by sync.sh
-│       ├── claude/            # header.md, subagent-delegation.md
+│       ├── claude/            # header.md
 │       └── codex/              # header.md
 ├── dist/                   # generated target output — never author directly
 │   ├── claude/

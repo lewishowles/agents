@@ -17,7 +17,7 @@ mkdir -p "$TMP_DIR/src/rules" "$TMP_DIR/src/adapters/codex" "$TMP_DIR/scripts/li
 	"$TMP_DIR/src/fragments/claude" "$TMP_DIR/src/fragments/codex" "$TMP_DIR/dist/claude" "$TMP_DIR/dist/codex"
 
 cp "$REAL_REPO_DIR/src/rules/"*.md "$TMP_DIR/src/rules/"
-cp "$REAL_REPO_DIR/src/fragments/claude/header.md" "$REAL_REPO_DIR/src/fragments/claude/subagent-delegation.md" "$TMP_DIR/src/fragments/claude/"
+cp "$REAL_REPO_DIR/src/fragments/claude/"*.md "$TMP_DIR/src/fragments/claude/"
 cp "$REAL_REPO_DIR/src/fragments/codex/"*.md "$TMP_DIR/src/fragments/codex/"
 cp "$REAL_REPO_DIR/src/adapters/codex/hooks.json" "$TMP_DIR/src/adapters/codex/"
 cp "$REAL_REPO_DIR/scripts/lib/dist-targets.sh" "$TMP_DIR/scripts/lib/"
