@@ -551,6 +551,76 @@ setup_codex() {
 	prune_stale_repo_links "$CODEX_DIR/skills" "$REPO_DIR" "legacy skills" "1"
 	link_configured_skills "$HOME/.agents/skills"
 	cli_group_end
+
+	setup_hcom_codex_folders
+}
+
+# Adds the folders sandboxed Codex agents need to the --add-dir list that HCOM
+# passes to every Codex agent it starts, which HCOM stores in ~/.hcom/config.toml.
+# Only folders that exist on this machine are added, and entries the user added are
+# kept as written. Agents that are already running keep the list they started with.
+setup_hcom_codex_folders() {
+	# Folders outside the agent's own project that it writes to: this repository,
+	# agent-run logs and progress records, the Trash, and SwiftPM's cache and settings.
+	local -a required_folders=("$REPO_DIR" "$HOME/.agents" "$HOME/.Trash" "$HOME/Library/Caches/org.swift.swiftpm" "$HOME/Library/org.swift.swiftpm")
+	local -a existing_args=()  # Current HCOM arguments split into option and value tokens.
+	local codex_args  # Current HCOM argument string; missing folders are appended so the user's own options and spacing stay as written.
+	local folder  # Required folder currently being checked.
+	local argument_index  # Token position in the existing argument list.
+	local existing_folder  # Path following an existing --add-dir option.
+	local folder_present  # Whether HCOM already grants the current folder.
+	local changed=0  # Whether any folder was added.
+
+	if ! command -v hcom >/dev/null 2>&1; then
+		cli_status skipped "HCOM" "not installed"
+		return
+	fi
+
+	# A failing hcom command is reported rather than stopping the rest of setup.
+	if ! codex_args=$(hcom config codex_args); then
+		cli_status warning "HCOM" "could not read Codex arguments; run: hcom config codex_args"
+		return
+	fi
+
+	read -r -a existing_args <<< "$codex_args"
+
+	for folder in "${required_folders[@]}"; do
+		if [ ! -d "$folder" ]; then
+			continue
+		fi
+
+		folder_present=0
+
+		for argument_index in "${!existing_args[@]}"; do
+			if [ "${existing_args[$argument_index]}" != "--add-dir" ]; then
+				continue
+			fi
+
+			existing_folder="${existing_args[$((argument_index + 1))]:-}"
+			existing_folder="${existing_folder/#\~\//$HOME/}"
+			if [ "$existing_folder" = "$folder" ]; then
+				folder_present=1
+				break
+			fi
+		done
+
+		if [ "$folder_present" -eq 0 ]; then
+			codex_args="${codex_args:+$codex_args }--add-dir $folder"
+			changed=1
+		fi
+	done
+
+	if [ "$changed" -eq 0 ]; then
+		cli_status muted "HCOM" "Codex folders already configured"
+		return
+	fi
+
+	if ! hcom config codex_args "$codex_args"; then
+		cli_status warning "HCOM" "could not update Codex arguments; check hcom config codex_args --info, then rerun setup"
+		return
+	fi
+
+	cli_status success "HCOM" "Codex folders updated; relaunch from a fresh terminal"
 }
 
 # Prints one repository-managed Codex configuration value.

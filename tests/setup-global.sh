@@ -77,6 +77,31 @@ EOF
 exit 0
 EOF
 
+	cat > "$bin_dir/hcom" <<'EOF'
+#!/bin/sh
+if [ "$1" != "config" ] || [ "$2" != "codex_args" ]; then
+	exit 1
+fi
+
+if [ "$#" -eq 2 ]; then
+	if [ -f "$HOME/hcom-fail-read" ]; then
+		exit 1
+	fi
+
+	if [ -f "$HOME/hcom-codex-args" ]; then
+		cat "$HOME/hcom-codex-args"
+	fi
+	exit 0
+fi
+
+if [ -f "$HOME/hcom-fail-write" ]; then
+	exit 1
+fi
+
+printf '%s\n' "$3" > "$HOME/hcom-codex-args"
+printf 'write\n' >> "$HOME/hcom-writes"
+EOF
+
 	cat > "$bin_dir/cli-style-adapter.sh" <<'EOF'
 #!/bin/bash
 # Stands in for the cli-style renderer and prints its input unchanged, trailing
@@ -91,7 +116,7 @@ cli_style_render() {
 }
 EOF
 
-	chmod +x "$bin_dir/bash" "$bin_dir/cli-style" "$bin_dir/cp" "$bin_dir/mv" "$bin_dir/git" "$bin_dir/friction" "$bin_dir/cli-style-adapter.sh"
+	chmod +x "$bin_dir/bash" "$bin_dir/cli-style" "$bin_dir/cp" "$bin_dir/mv" "$bin_dir/git" "$bin_dir/friction" "$bin_dir/hcom" "$bin_dir/cli-style-adapter.sh"
 }
 
 # Creates an fzf stand-in that records the arguments and skill list it
@@ -795,6 +820,101 @@ test_failed_backup_preserves_existing_config() {
 	assert_equals "$(cat "$home_dir/.codex/config.toml")" 'custom_setting = "keep"'
 }
 
+# Checks that setup keeps the user's HCOM options, adds the required folders that
+# exist and are not listed yet, and changes nothing on a second run.
+test_hcom_adds_missing_codex_folders() {
+	local home_dir="$TEST_ROOT/hcom-folders"  # Isolated home with every required folder present.
+	local output="$TEST_ROOT/hcom-folders.txt"  # Setup status output.
+	local existing_args="--model codex  --add-dir ~/Dev/Configuration/zsh   --add-dir $REPO_DIR"  # User options and an existing required folder, with uneven spacing that setup must keep.
+	local expected_args  # Original arguments followed by the missing required folders.
+
+	mkdir -p "$home_dir/.Trash" "$home_dir/Library/Caches/org.swift.swiftpm" "$home_dir/Library/org.swift.swiftpm"
+	printf '%s\n' "$existing_args" > "$home_dir/hcom-codex-args"
+	run_setup "$home_dir" > "$output"
+
+	expected_args="$existing_args --add-dir $home_dir/.agents --add-dir $home_dir/.Trash --add-dir $home_dir/Library/Caches/org.swift.swiftpm --add-dir $home_dir/Library/org.swift.swiftpm"
+	assert_equals "$(cat "$home_dir/hcom-codex-args")" "$expected_args"
+	assert_equals "$(cat "$home_dir/hcom-writes")" 'write'
+	assert_contains "$output" 'relaunch from a fresh terminal'
+
+	run_setup "$home_dir" > "$output"
+
+	assert_equals "$(cat "$home_dir/hcom-codex-args")" "$expected_args"
+	assert_equals "$(cat "$home_dir/hcom-writes")" 'write'
+	assert_not_contains "$output" 'relaunch from a fresh terminal'
+}
+
+# Checks that a tilde path counts as an existing home folder grant.
+test_hcom_recognises_tilde_folder() {
+	local home_dir="$TEST_ROOT/hcom-tilde"  # Isolated home with an existing tilde-form grant.
+	local existing_args='--add-dir ~/.Trash'  # HCOM argument using a literal tilde.
+
+	mkdir -p "$home_dir/.Trash"
+	printf '%s\n' "$existing_args" > "$home_dir/hcom-codex-args"
+	run_setup "$home_dir" > /dev/null
+
+	assert_equals "$(cat "$home_dir/hcom-codex-args")" "$existing_args --add-dir $REPO_DIR --add-dir $home_dir/.agents"
+}
+
+# Checks that setup does not add folders absent from the current home.
+test_hcom_skips_missing_folders() {
+	local home_dir="$TEST_ROOT/hcom-missing"  # Isolated home without the Trash or SwiftPM folders.
+
+	run_setup "$home_dir" > /dev/null
+
+	assert_equals "$(cat "$home_dir/hcom-codex-args")" "--add-dir $REPO_DIR --add-dir $home_dir/.agents"
+}
+
+# Checks that Codex setup reports a missing HCOM command without changing its settings.
+test_hcom_absence_skips_codex_folders() {
+	local home_dir="$TEST_ROOT/hcom-absent"  # Isolated home for a setup run without HCOM.
+	local bin_dir="$TEST_ROOT/no-hcom-bin"  # Test commands excluding the HCOM stand-in.
+	local output="$TEST_ROOT/hcom-absent.txt"  # Setup status output.
+	local command_path  # Stub linked into the HCOM-free command directory.
+
+	mkdir -p "$bin_dir"
+	for command_path in "$TEST_ROOT/bin/"*; do
+		if [ "$(basename "$command_path")" = hcom ]; then
+			continue
+		fi
+
+		ln -s "$command_path" "$bin_dir/$(basename "$command_path")"
+	done
+
+	SETUP_GLOBAL_TEST_PATH="$bin_dir:/usr/bin:/bin" run_setup "$home_dir" > "$output"
+
+	assert_contains "$output" '"label": "HCOM", "detail": "not installed"'
+	assert_not_exists "$home_dir/hcom-codex-args"
+}
+
+# Checks that an HCOM read failure is reported while the rest of setup finishes.
+test_hcom_read_failure_does_not_stop_setup() {
+	local home_dir="$TEST_ROOT/hcom-read-failure"  # Isolated home with a failing HCOM read.
+	local output="$TEST_ROOT/hcom-read-failure.txt"  # Setup output containing the warning and completion row.
+
+	mkdir -p "$home_dir"
+	: > "$home_dir/hcom-fail-read"
+	run_setup "$home_dir" > "$output"
+
+	assert_contains "$output" 'could not read Codex arguments'
+	assert_contains "$output" '"label": "Done."'
+	assert_not_exists "$home_dir/hcom-writes"
+}
+
+# Checks that an HCOM write failure is reported while the rest of setup finishes.
+test_hcom_write_failure_does_not_stop_setup() {
+	local home_dir="$TEST_ROOT/hcom-write-failure"  # Isolated home with a failing HCOM write.
+	local output="$TEST_ROOT/hcom-write-failure.txt"  # Setup output containing the warning and completion row.
+
+	mkdir -p "$home_dir"
+	: > "$home_dir/hcom-fail-write"
+	run_setup "$home_dir" > "$output"
+
+	assert_contains "$output" 'could not update Codex arguments'
+	assert_contains "$output" '"label": "Done."'
+	assert_not_exists "$home_dir/hcom-codex-args"
+}
+
 create_command_stubs "$TEST_ROOT/bin"
 
 test_help_hides_backup_bypass
@@ -832,5 +952,11 @@ test_select_rejects_other_skill_options_without_changes
 test_select_rejects_non_terminal_input
 test_skip_backup_environment_does_not_bypass_backup
 test_failed_backup_preserves_existing_config
+test_hcom_adds_missing_codex_folders
+test_hcom_recognises_tilde_folder
+test_hcom_skips_missing_folders
+test_hcom_absence_skips_codex_folders
+test_hcom_read_failure_does_not_stop_setup
+test_hcom_write_failure_does_not_stop_setup
 
 printf '✓ setup-global backup tests passed\n'

@@ -114,6 +114,8 @@ ln -s /path/to/repository/skills/vue/vue ~/.agents/skills/vue
 
 This keeps Codex skill discovery under `~/.agents` while `~/.codex` holds app config and hooks.
 
+When `hcom` is installed, `scripts/setup-global.sh --codex` (or `--both`) also adds folders to the list HCOM passes to the Codex agents it starts (`hcom config codex_args`). Those agents can then write to this repository, `~/.agents`, `~/.Trash`, and the SwiftPM cache and settings folders (`~/Library/Caches/org.swift.swiftpm` and `~/Library/org.swift.swiftpm`) from inside the sandbox. Setup only adds folders that exist on this machine, and it keeps any folders you added yourself. Running agents keep the list they started with, so relaunch them from a fresh terminal after the list changes.
+
 ## Choose which skills to install
 
 Global setup installs every skill into Claude and Codex by default. Each skill has its own symlink, so edits to the skill in this repository take effect without rebuilding. To leave skills out or add them back, pass comma-separated names to `--exclude` or `--include`:
