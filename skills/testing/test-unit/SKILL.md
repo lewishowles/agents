@@ -3,6 +3,7 @@ name: test-unit
 description: >
   Use this skill for unit tests, including Vitest, @testing-library/vue, composable tests, or XCTest; also applies to *.test.js, tests, specs, or coverage. For E2E, see test-e2e.
 ---
+
 # Unit testing
 
 ## General
@@ -15,7 +16,7 @@ description: >
 - Test and group names are capitalised, human-readable, and self-contained; method/computed names may stay exact. Name the behaviour in plain active voice ("shows an error when the field is empty"), not a passive or clever restatement of the mechanism.
 - Group tests by collection: "Initialisation", "Computed", "Methods".
 - Keep interaction, layout-sensitive state, browser APIs, focus movement, keyboard, live-region timing, and render-contract assertions (whether a component renders in a given visual/DOM state) in component tests. Vitest can inspect props directly, but that doesn't verify what actually rendered. Do not add a "Render contracts" group to unit tests.
-- Use `agent-run list --json` to inspect registered checks and `agent-run run <name> --json` for the relevant one. Preview and register a missing command during verification with `agent-run detect --json` and `agent-run detect --add <name>` (or `--all`), then report what you registered. Do not register commands during planning or review. For a registration with the `file-list` capability, prefer `agent-run run <name> --file <path>` or `agent-run run <name> --glob '<pattern>'`; otherwise use the one-off `agent-run run --json -- <argv>`. Ask the user for full suites or manual-only commands.
+- Use `agent-run list --json` to inspect registered checks and `agent-run run <name> --json` for the relevant one. Preview and register a missing command during verification with `agent-run detect --json` and `agent-run detect --add <name>` (or `--all`), then report what you registered. `detect --add` registers every command without file targets, so when the test runner accepts file paths (Vitest, Jest, `vp test`), follow it with `agent-run edit <name> --capability file-list`. Do not register commands during planning or review. For a registration with the `file-list` capability, prefer `agent-run run <name> --file <path>` or `agent-run run <name> --glob '<pattern>'`; otherwise use the one-off `agent-run run --json -- <argv>` with the test paths. A test registration without `file-list` runs the whole suite, so do not use it to check a few tests. Ask the user for full suites or manual-only commands.
 
 ### Choosing what to mock
 
