@@ -1,17 +1,19 @@
 ---
 name: project-continue
 description: >
-  Use this skill to resume work from the progress CLI's task, chunk, and handoff records, verify completed work, and pick up where the last session left off.
+  Use this skill when starting or resuming tracked work, completing a progress chunk or task, closing or handing off a session, or reaching a tool-call checkpoint during tracked work. Covers progress task, chunk, decision, discovery, and handoff records.
 ---
 # Project continue
 
-Resume from the `progress` CLI records, with optional root-level `PROGRESS.md` freeform prose when present.
+Start, resume, complete, and hand off work using the `progress` CLI records, with optional root-level `PROGRESS.md` freeform prose when present.
 
 ## Progress records
 
 The `progress` CLI stores the current project, release, task, chunk, discovery, decision, and handoff records. Run `progress next --json` at startup to identify the active task and chunk. Use `progress context get --json` when the current handoff needs more detail.
 
-`PROGRESS.md`, when present, is optional root-level freeform backlog prose. Do not use it as a fallback for task, chunk, queue, release, discovery, decision, or handoff state. If the `progress` project binding is missing or uninitialised, report the explicit error, inspect `AGENTS.md`, package scripts, ordinary docs, and `agent-run list --json` for safe local context, and ask the user to initialise or install `progress` before writing progress records. Use the full task and chunk contract returned by `progress next --json`.
+Represent each implementation unit as a chunk. Do not infer completion from Git state.
+
+`PROGRESS.md`, when present, is optional root-level freeform backlog prose. Do not use it as a fallback for task, chunk, queue, roadmap, archive, release, discovery, decision, or handoff state. If the `progress` project binding is missing or uninitialised, report the explicit error, inspect `AGENTS.md`, package scripts, ordinary docs, and `agent-run list --json` for safe local context, and ask the user to initialise or install `progress` before writing progress records. Use the full task and chunk contract returned by `progress next --json`.
 
 ## Command syntax
 
@@ -121,12 +123,16 @@ Make one Edit/Write call covering every section below, not a separate call per b
 - If that was the last chunk and no pending or active chunks remain, complete the task with `progress task complete <task-id>` and clear the stored handoff. A completed task has no next step for `progress context` to hold; `progress next` is the correct source once nothing is active. Update release and queue state through `progress release` and `progress task move` as needed. Do not archive completion in `PROGRESS.md`.
 - A whole task finished in one pass with no separate chunks follows the same rule: complete the task and clear the handoff as you present the work.
 - If the user comes back with changes, make them in the same session as part of getting that chunk right; do not open a new chunk for routine corrections. Reopen the task only for a genuine change of structure, which is rare.
-- When you do refresh the handoff mid-task: set `previous_step` to the last state change and a concise verification outcome; set `next_step` to the first concrete follow-up action; put unresolved facts and constraints in `standing_context`; put any interruption or in-flight command and its known state in `stop_marker`.
+- When you do refresh the handoff mid-task: set `previous_step` to the last state change; set `next_step` to the first concrete follow-up action; put unrecoverable task constraints in `standing_context`, pending checks rather than past results in `verify_with`, and any interruption or in-flight command and its known state in `stop_marker`.
 - Update release status and queue order through `progress release` and `progress task move` when a release's last task lands as done
 - If nothing remains for the current goal, clear the handoff rather than leaving stale TODOs in it
 - Compact now if the project keeps root-level `PROGRESS.md` prose and it has grown significantly; current context makes it cheaper
 
-Before settling the handoff, distil what was learned: add verified facts with `progress discovery add (--release <release_id> | --task <task_id>) "<note>"`, choices with `progress decision add (--release <release_id> | --task <task_id>) "<note>"`. Give each note exactly one owner: the release when every task in it shares the fact, otherwise the task. Record failed approaches in the task record or linked spec only when they will help future work. Add only what isn't already captured.
+Before settling the handoff, distil what was learned: add verified facts with `progress discovery add (--release <release_id> | --task <task_id>) "<note>"`, choices with `progress decision add (--release <release_id> | --task <task_id>) "<note>"`. Give each note exactly one owner: the release when every task in it shares the fact, otherwise the task. Record failed approaches in the task record or linked spec only when they will help future work. Add only what isn't already captured. If the work produced a verified, durable fact that applies to most future sessions and changes the agent's default action, propose the smallest `AGENTS.md` entry with the fact, scope, required action, and evidence; promote it after approval. Keep feature-specific, temporary, or unproven findings in the task record, a spec, or focused documentation instead.
+
+The progress decision and discovery records are not a permanent log. Remove an entry when it is promoted to `AGENTS.md` or becomes moot because it is superseded, already visible in shipped code, docs, or metadata, or resolved by a decision recorded elsewhere. Sweep these records during compaction, not only when the task that produced an entry closes; a growing, unpruned list means the sweep was skipped, not that the project has many active decisions.
+
+When an HCOM Orchestrator closes mid-task, use `progress context set` only if a fresh session needs facts that `progress next --json`, the active task and chunk records, the recorded discoveries and decisions, and the worktree cannot supply. Otherwise clear the handoff. Supply all six fields when setting it: `--current-goal`, `--previous-step`, `--next-step`, `--standing-context`, `--verify-with`, and `--stop-marker`; omitted fields are cleared. Keep each field to restart-critical facts. Omit implementation, changed-path, and passed-check inventories; repeated task contracts; recoverability or reset advice; and all current-team details, including agent names, roles, models, assignments, status, and availability. Do not imply that `progress context set` retrieves the fields. At a tool-call checkpoint, the Orchestrator keeps its human response to at most two sentences, apart from a required suggested commit message: state the result or blocker, point to `progress context get --json`, and name the immediate next action.
 
 After settling the handoff, do not print or paraphrase its fields. Outside a tool-call checkpoint, present:
 
