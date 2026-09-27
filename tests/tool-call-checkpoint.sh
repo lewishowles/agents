@@ -164,6 +164,10 @@ assert_silent "Edit" "3"
 assert_silent "Bash" "4"
 fill_to_limit 20
 assert_advisory "Write"
+jq -r '.hookSpecificOutput.additionalContext' "$TEST_ROOT/advisory.json" > "$TEST_ROOT/advisory-context.txt"
+assert_contains "$TEST_ROOT/advisory-context.txt" 'After sending either report with `--intent inform`, stop making tool calls and end your turn: inform means the recipient will not reply.'
+assert_contains "$TEST_ROOT/advisory-context.txt" 'After a complete report, wait for a new packet. After an incomplete checkpoint, wait for the human decision, sent either directly by the human or in a new packet from your sender.'
+assert_not_contains "$TEST_ROOT/advisory-context.txt" 'Outside HCOM'
 assert_silent "Write" "20"
 assert_silent "Read" "20"
 
