@@ -1,7 +1,7 @@
 ---
 name: project-plan-task
 description: >
-  Use this skill when introducing work into an existing progress CLI plan or splitting a planned task into chunks. Covers placement, releases, tasks, chunks, dependencies, and handoff context.
+  Use this skill when introducing work into an existing progress CLI plan, splitting a planned task into chunks, or planning how work splits into commits. Covers placement, releases, tasks, chunks, dependencies, and handoff context.
 ---
 
 # Project plan task
@@ -110,6 +110,8 @@ Use three substantive files as a soft ceiling for one task, judged by review eff
 
 An ordered task may use intermediate chunks that are not a complete feature when each is internally consistent, has focused verification, and is not presented or released as complete. Keep the task active until all required chunks are complete.
 
+Plan commits for human comprehension. Technical coherence and shippability do not by themselves make a commit reviewable. Default each commit to one primary review question, its focused tests, and directly required supporting changes. Split whenever a reviewer could reasonably understand, accept, or reject part independently, including when several behaviour slices live in one file.
+
 For a multi-commit task, make each independently reviewable commit a chunk. Complete each chunk record when its implementation and verification are done and you present it, and complete the task after the final chunk. Do not infer completion from Git state.
 
 ### Planning-quality gate
@@ -125,6 +127,8 @@ For larger spikes or ambiguous features, create or reference a per-feature spec 
 Put planning content that release records can hold in `progress release add` or `progress release edit` and in discoveries and decisions attached with `--release`, not a separate spec file; keep the spec for design detail the records cannot hold. A spec explains why now, the problem, goals, non-goals, approach, entry point and files to inspect, API or schema changes, decisions and open questions, acceptance criteria, risks, and verification. Read or update it only when working on that feature. Full outline lives in the `project-setup` skill's feature-spec section.
 
 ## Task records and chunks
+
+Name chunks and planned commits by their behavioural outcome. Do not prefix names with sequence numbers such as `Commit 8`, `Chunk 3`, or `5a` unless the user explicitly requests numbered grouping.
 
 Use one `task` record for the work and its stable contract: identity, overview, purpose, contract, split rationale, model tier when needed, files and linked specs, acceptance criteria, verification, risks, release, and position.
 

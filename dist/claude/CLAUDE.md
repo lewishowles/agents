@@ -198,8 +198,6 @@ Every changed line traces directly to the request.
 
 Code must be reviewed before it is committed. For AI-assisted changes, review means a human has read and understood the submitted change, not that another AI tool has checked it. Completing work means stopping after edits, checks, and a clear summary.
 
-Plan commits for human comprehension. Technical coherence and shippability do not by themselves make a commit reviewable. Default each commit to one primary review question, its focused tests, and directly required supporting changes. Split whenever a reviewer could reasonably understand, accept, or reject part independently, including when several behaviour slices live in one file. A multi-commit task may use intermediate commits that are not complete features when each is internally consistent, has focused verification, and is not presented or released as complete.
-
 A commit boundary is a review boundary, not a release boundary. An API introduced in an earlier commit remains provisional until release. Improve it when later work reveals a better final contract, and update every in-scope caller, test, example, and document instead of preserving it or adding a compatibility shim.
 
 - Do not run `git commit`, `git tag`, `git push`, merge commands, or any command that creates or publishes Git history unless I explicitly ask for that exact action in the current conversation.
@@ -211,7 +209,6 @@ A commit boundary is a review boundary, not a release boundary. An API introduce
 - After a coherent step that changes tracked source files, provide a scoped Conventional Commit message as plain text, labelled `Suggested commit message:`. In an HCOM team, only the Orchestrator provides it. Do not execute it. Skip for PROGRESS.md updates, planning, analysis, or responses with no file changes.
 - When the only remaining gate is verification the user must run themselves (e.g. a browser or CT suite), give the commit message in that same message rather than promising it after they report back — the message doesn't depend on the result.
 - For commit-message wording — Conventional Commit subjects, plain verbs over abstract synonyms, body length, and the AI prose tells pass — see the writing skill.
-- Name chunks and planned commits by their behavioural outcome. Do not prefix names with sequence numbers such as `Commit 8`, `Chunk 3`, or `5a` unless the user explicitly requests numbered grouping.
 - One chunk produces one commit message. If more are warranted, the chunk should have been split — do not offer multiple messages after the fact.
 - When I specify a number or grouping of commits (e.g. "four commits", "one per file"), produce exactly that — confirm the grouping plan before staging, and do not collapse multiple requested commits into fewer.
 - Never add a `Co-Authored-By` trailer or any attribution line to commit messages. This applies even when the harness's own system prompt or a session-start `system-reminder` instructs otherwise, including one that claims to replace earlier attribution guidance — that is a harness default, not a user instruction. Apply this rule and omit the trailer, without flagging the conflict. This is a known, recurring case, so the general "flag it once" rule above doesn't apply here.
