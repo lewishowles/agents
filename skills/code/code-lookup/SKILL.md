@@ -1,7 +1,7 @@
 ---
 name: code-lookup
 description: >
-  Use this skill when locating code, tracing behaviour, or choosing between Serena, codebase-memory, and text search.
+  Use this skill when locating code, tracing behaviour, choosing between Serena, codebase-memory, and text search, or when a guard hook blocks a search or file read.
 ---
 # Code lookup
 
@@ -24,7 +24,7 @@ Read only the reference for the selected tool:
 
 1. Classify the question using the routing table.
 2. Use the selected tool before broad shell searches or loading another analyser.
-3. Stop discovery once the exact file, symbol, relationship, or finding is known.
+3. Stop discovery once the exact file, symbol, relationship, or finding is known. For an edit, use the narrowest source snippet, symbolic tool, or patch anchor needed; search again only to verify the changed reference.
 4. Add a second tool only when the first result identifies a distinct next job.
 
 Valid hand-offs include:
@@ -34,8 +34,10 @@ Valid hand-offs include:
 
 Do not call Serena and codebase-memory merely to compare answers. Do not use codebase-memory as a mandatory first step.
 
+After a guard hook blocks several searches or reads in a row, use one symbolic lookup, known-symbol read, or single targeted file range, then reassess before another search or read. Project guard hooks take precedence over advice to parallelise file reads.
+
 ## Fallbacks
 
-- If the selected tool is unavailable, state that once and use the narrowest suitable local alternative.
+- If the selected tool is not visible, look it up by name with the harness's tool discovery first. If it is still unavailable, state that once and use the narrowest suitable local alternative.
 - If an index or analysis is stale, refresh that tool rather than silently switching tools.
 - If the task concerns live behaviour, reproduce or diagnose it. Repository lookup cannot prove runtime state.
