@@ -27,7 +27,7 @@ Hooks are shell scripts that Claude Code runs automatically at specific points i
 | `serena-cleanup` | Cleans up Serena hook session data when the Claude Code session ends. | SessionEnd | `silent`; requires serena-hooks |
 | `serena-remind` | Nudges the agent to use Serena's symbolic tools instead of overrelying on read_file and grep. | PreToolUse | `silent`; requires serena-hooks |
 | `test-skeleton-reminder` | Suggests matching tests when implementation files change. | PreToolUse (`Write\|Edit`) | `silent`; requires jq |
-| `tool-call-checkpoint` | Adds one advisory checkpoint when a Claude session reaches its tool-call limit (20 by default, 40 for HCOM Scouts and Implementers) and a context checkpoint before compaction. | PreToolUse, PreCompact, SessionStart (`clear`) | `silent`; requires jq |
+| `tool-call-checkpoint` | Adds one advisory checkpoint when an HCOM team session reaches its tool-call limit (20 by default, 40 for HCOM Scouts and Implementers), and a context checkpoint before compaction in every session. | PreToolUse, PreCompact, SessionStart (`clear`) | `silent`; requires jq |
 | `tool-failure-log` | Records failed Claude tool calls for recurring friction analysis. | PostToolUseFailure | `silent` |
 <!-- END GENERATED: registered-hooks -->
 

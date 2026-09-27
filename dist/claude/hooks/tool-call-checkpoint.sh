@@ -7,6 +7,10 @@
 # returns a context checkpoint without changing the counter. A clear-session
 # start resets the same session's counter without touching project or HCOM state.
 #
+# Only HCOM team sessions, which have HCOM_TAG set, are counted, and the
+# planning and insights review workflows skip the count. The pre-compaction
+# checkpoint runs in every session.
+#
 # Every tool call counts, including reads, because the limit bounds context
 # growth. The limit is 20 by default and 40 for HCOM Scouts and Implementers,
 # recognised from the role suffix in HCOM_TAG. Setting AGENT_TOOL_CALL_LIMIT
@@ -14,7 +18,7 @@
 
 set -euo pipefail
 
-readonly DEFAULT_TOOL_CALL_LIMIT=20  # Calls before the advisory for any session without a role-specific limit.
+readonly DEFAULT_TOOL_CALL_LIMIT=20  # Calls before the advisory for any HCOM team session without a role-specific limit.
 readonly WORKER_TOOL_CALL_LIMIT=40  # Calls before the advisory for HCOM Scouts and Implementers, whose startup reads need room before the first review point.
 readonly COMPACTION_CONTEXT="CONTEXT CHECKPOINT: This session is about to compact. Before continuing, hand off or record the current scope, changed paths, verification, blockers and next decision. Do not expand scope or reset peers."
 # Resolve managed hook symlinks so the companion remains beside the generated script.
@@ -89,8 +93,14 @@ if [[ "$event_name" == "PreCompact" ]]; then
 	exit 0
 fi
 
-# Planning peers finish their review packet without the mid-review call stop.
-if [[ "$event_name" == "PreToolUse" && "${HCOM_PLANNING_WORKFLOW:-}" == "1" ]]; then
+# The checkpoint advice is written for HCOM team roles, so sessions without a
+# team tag skip the tool-call count. PreCompact is handled above and still runs.
+if [[ -z "${HCOM_TAG:-}" ]]; then
+	exit 0
+fi
+
+# Planning and insights review peers finish their packet without the mid-review call stop.
+if [[ "$event_name" == "PreToolUse" && ( "${HCOM_PLANNING_WORKFLOW:-}" == "1" || "${HCOM_INSIGHTS_REVIEW_WORKFLOW:-}" == "1" ) ]]; then
 	exit 0
 fi
 

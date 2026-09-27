@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
-# Covers the shared tool-call checkpoint counter: every tool call counts, the
-# advisory fires once when the limit is reached, nothing fires after it, HCOM
-# Scouts and Implementers get the larger worker limit from HCOM_TAG, and
-# AGENT_TOOL_CALL_LIMIT overrides every other limit for a session.
+# Covers the shared tool-call checkpoint. Only sessions with an HCOM team tag
+# count tool calls, and the planning and insights review workflows skip the
+# count. For counted sessions, every tool call counts, the advisory fires once
+# when the limit is reached, and nothing fires after it. HCOM Scouts and
+# Implementers get the larger worker limit from HCOM_TAG, and
+# AGENT_TOOL_CALL_LIMIT overrides every other limit for a session. PreCompact
+# returns the same handoff context with or without a team tag.
 
 set -euo pipefail
 
@@ -19,7 +22,9 @@ SESSION=""  # Session ID for the current scenario; set by start_session.
 STATE_FILE=""  # Counter file the hook writes under TMPDIR for the current session.
 LIMIT_OVERRIDE=""  # Value passed as AGENT_TOOL_CALL_LIMIT; empty leaves it unset.
 AGENT_NAME=""  # Value passed as HCOM_NAME; empty leaves it unset.
-AGENT_TAG=""  # Value passed as HCOM_TAG; empty leaves it unset.
+AGENT_TAG=""  # Value passed as HCOM_TAG; __UNSET__ removes it.
+PLANNING_WORKFLOW=""  # Value passed as HCOM_PLANNING_WORKFLOW.
+INSIGHTS_REVIEW_WORKFLOW=""  # Value passed as HCOM_INSIGHTS_REVIEW_WORKFLOW.
 
 # Starts a fresh counter scenario with its own session ID and limit override.
 #
@@ -30,18 +35,22 @@ AGENT_TAG=""  # Value passed as HCOM_TAG; empty leaves it unset.
 # @param  {string}  agent_name
 #     HCOM_NAME value for the scenario; empty leaves it unset.
 # @param  {string}  agent_tag
-#     HCOM_TAG value for the scenario; empty leaves it unset.
+#     HCOM_TAG value for the scenario. It defaults to a reviewer tag so the
+#     hook counts calls; pass an empty string for an empty tag, or __UNSET__
+#     to remove the variable.
 start_session() {
 	local name="$1"
 	local limit_override="$2"
 	local agent_name="${3:-}"
-	local agent_tag="${4:-}"
+	local agent_tag="${4-Agents-reviewer}"
 
 	SESSION="checkpoint-test-$name-$$"
 	STATE_FILE="$TEST_ROOT/agent-tool-call-checkpoints/claude-$SESSION"
 	LIMIT_OVERRIDE="$limit_override"
 	AGENT_NAME="$agent_name"
 	AGENT_TAG="$agent_tag"
+	PLANNING_WORKFLOW=""
+	INSIGHTS_REVIEW_WORKFLOW=""
 }
 
 # Runs the hook with one PreToolUse payload and captures its standard output.
@@ -53,10 +62,15 @@ start_session() {
 run_hook() {
 	local tool_name="$1"
 	local output_file="$2"
+	local -a hook_env=(env -u HCOM_TAG TMPDIR="$TEST_ROOT" AGENT_TOOL_CALL_LIMIT="$LIMIT_OVERRIDE" HCOM_NAME="$AGENT_NAME" HCOM_PLANNING_WORKFLOW="$PLANNING_WORKFLOW" HCOM_INSIGHTS_REVIEW_WORKFLOW="$INSIGHTS_REVIEW_WORKFLOW")  # The env command that runs the hook with this scenario's variables; HCOM_TAG is removed unless the scenario sets it.
+
+	if [[ "$AGENT_TAG" != "__UNSET__" ]]; then
+		hook_env+=("HCOM_TAG=$AGENT_TAG")
+	fi
 
 	jq -n --arg session "$SESSION" --arg tool "$tool_name" \
 		'{hook_event_name: "PreToolUse", session_id: $session, tool_name: $tool, tool_input: {}}' \
-		| TMPDIR="$TEST_ROOT" AGENT_TOOL_CALL_LIMIT="$LIMIT_OVERRIDE" HCOM_NAME="$AGENT_NAME" HCOM_TAG="$AGENT_TAG" bash "$HOOK" claude > "$output_file"
+		| "${hook_env[@]}" bash "$HOOK" claude > "$output_file"
 }
 
 # Asserts the hook produced no output and left the counter at the expected value.
@@ -105,6 +119,42 @@ fill_to_limit() {
 		assert_silent "Write" "$count"
 	done
 }
+
+# Untagged sessions stay silent even after the configured threshold.
+start_session "tag-unset" "2" "" "__UNSET__"
+assert_silent "Read" "missing"
+assert_silent "Edit" "missing"
+assert_silent "Write" "missing"
+
+start_session "tag-empty" "2" "" ""
+assert_silent "Read" "missing"
+assert_silent "Edit" "missing"
+assert_silent "Write" "missing"
+
+# Both review workflows skip counting for tagged peers.
+start_session "planning" "2" "maki" "Agents-reviewer"
+PLANNING_WORKFLOW="1"
+assert_silent "Read" "missing"
+assert_silent "Edit" "missing"
+assert_silent "Write" "missing"
+
+start_session "insights-review" "2" "maki" "Agents-reviewer"
+INSIGHTS_REVIEW_WORKFLOW="1"
+assert_silent "Read" "missing"
+assert_silent "Edit" "missing"
+assert_silent "Write" "missing"
+
+# PreCompact returns the same context checkpoint with and without HCOM_TAG for both runtimes.
+for runtime in claude codex; do
+	jq -n '{hook_event_name: "PreCompact"}' | env -u HCOM_TAG bash "$HOOK" "$runtime" > "$TEST_ROOT/precompact-untagged.json"
+	jq -n '{hook_event_name: "PreCompact"}' | HCOM_TAG="Agents-reviewer" bash "$HOOK" "$runtime" > "$TEST_ROOT/precompact-tagged.json"
+	assert_equals "$(cat "$TEST_ROOT/precompact-untagged.json")" "$(cat "$TEST_ROOT/precompact-tagged.json")"
+	if [[ "$runtime" == "claude" ]]; then
+		assert_equals "$(jq -r '(.hookSpecificOutput.additionalContext // "") | startswith("CONTEXT CHECKPOINT")' "$TEST_ROOT/precompact-untagged.json")" "true"
+	else
+		assert_equals "$(jq -r '(.systemMessage // "") | startswith("CONTEXT CHECKPOINT")' "$TEST_ROOT/precompact-untagged.json")" "true"
+	fi
+done
 
 # Default limit: reads and edits both count, the 20th call fires, then the counter freezes.
 start_session "default" ""
