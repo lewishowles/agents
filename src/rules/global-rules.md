@@ -18,12 +18,7 @@ A missing `AGENTS.md` or `PROGRESS.md` never blocks read-only inspection, analys
 
 When local context, package metadata, README usage docs, or a loaded skill identifies a CLI for discovery, examples, validation, or generation, prefer that interface before searching source files. Skip the CLI check when the correct pattern is already clear from current context.
 
-When the task needs evidence from a web page or package repository, use the matching dev-tools package:
-
-- `page-to-markdown` fetches or reads HTML, converts it to clean Markdown, and reports confidence. Prefer it before summarising raw or noisy browser text; low-confidence or app-shell output may need a rendered-page follow-up.
-- `web-audit` renders pages, runs axe and custom ARIA checks, and produces HTML reports. Use it when an accessibility review needs rendered-page evidence, alongside the accessibility or accessibility-audit skill.
-- `pkg-checks` validates `package.json` and export correctness in JavaScript package repositories. It is consumed there as an npm devDependency.
-- `project-checks` is installed globally with `uv tool install`. Use `project-checks-change-impact` for change-impact checks, `project-checks-generated-file-guard` for generated-file boundaries, `project-checks-markdown-claims` for Markdown claims, and `project-checks-repo-context` for compact repository context.
+When reading a web page, prefer `page-to-markdown` over raw or noisy browser text.
 
 Task and handoff records are complete agent-facing contracts. Read the active task and chunk records from the `progress` CLI before implementation, even when the user has not seen them. Do not ask the user to reproduce their contents. Before editing, provide a concise overview derived from the records, the current repository state, and the current request: the confirmed contract, intended files, verification, and unresolved decisions.
 

@@ -62,7 +62,7 @@ Minimum verification to look for:
 
 - Typecheck or build command
 - Unit test command if present
-- Package or export validation if present
+- Package or export validation if present: when the package has `@lewishowles/pkg-checks` as a devDependency, run the package scripts that call it (for example `check:exports`)
 - Generated docs or build output freshness if the package publishes generated assets
 
 If useful check is missing, mention gap rather than inventing release blocker.

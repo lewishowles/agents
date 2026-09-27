@@ -35,6 +35,8 @@ If agent-run has no registrations, inspect `AGENTS.md`, package scripts, and ord
 
 ## Tooling checks
 
+`project-checks` is installed globally with `uv tool install`.
+
 When these scripts exist, prefer them over manual inference:
 
 ```sh

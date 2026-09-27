@@ -78,7 +78,7 @@ Choose the acquisition path from the URL before reading the source:
 
 - For `github.com`, `raw.githubusercontent.com`, or `gist.github.com` file or blob URLs that point to one file, fetch the raw file content directly: rewrite a `github.com/.../blob/...` URL to its `raw.githubusercontent.com` equivalent, rewrite a `gist.github.com` URL to its `gist.githubusercontent.com/.../raw/...` equivalent, or use `gh api -H "Accept: application/vnd.github.raw" repos/:owner/:repo/contents/:path` (plain `gh api` without that header returns base64-encoded JSON, not the file content). Do not render the HTML page.
 - For a GitHub repository root or a URL that needs multi-file exploration, use `gh repo clone --depth 1` (or `git archive`) in a scratch directory. Read only the targeted files with normal Read or `rg` tools. Do not render GitHub pages.
-- For every other URL, first check `command -v page-to-markdown`. When available, use `page-to-markdown` to convert the page to compact Markdown before reading it. When unavailable, use WebFetch, condense the result manually, and say in the report that `page-to-markdown` was unavailable.
+- For every other URL, first check `command -v page-to-markdown`. When available, use `page-to-markdown` to convert the page to compact Markdown before reading it. It reports confidence; low-confidence or app-shell output may need a rendered-page follow-up. When unavailable, use WebFetch, condense the result manually, and say in the report that `page-to-markdown` was unavailable.
 
 ## Handing this to another agent
 

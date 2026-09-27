@@ -25,7 +25,7 @@ Apply these core review checks directly: verify the claimed behaviour, edge and 
 
 ## Review method
 
-1. Identify the task from the request, handoff, and changed files. List them with `git status --short`; do not stage or commit.
+1. Identify the task from the request, handoff, and changed files. List them with `git status --short`; do not stage or commit. Run `project-checks-change-impact` to summarise which areas the uncommitted changes touch.
 2. List the load-bearing review claims and the cheapest evidence that could settle each one.
 3. When a safe, focused check or repro is already known, run it early and use its result to direct later reads. Run known non-mutating format and lint checks before manually reporting formatting findings. If command discovery is needed, inspect only enough context to identify it. Use `agent-run run <name> --json` for registered checks.
 4. Inspect changed files in context and find current lines, prioritising paths connected to failed, blocked, or uncovered claims. Component tests must mount the component under test, not substitute markup.

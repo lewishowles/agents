@@ -30,6 +30,7 @@ README job: help someone who just landed — what it is, why it exists, how to u
 
 ## Before publishing
 
+- Run `project-checks-markdown-claims` to check that file paths named in the README still exist.
 - Can a new reader run setup from a clean machine using only this?
 - Platform assumptions stated explicitly?
 - Cut anything that doesn't help the average reader
