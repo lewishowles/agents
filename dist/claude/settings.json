@@ -11,6 +11,7 @@
     "command": "bash \"$HOME/.claude/statusline.sh\""
   },
   "permissions": {
+    "defaultMode": "auto",
     "additionalDirectories": [
       "~/.Trash",
       "~/Dev/Configuration/Agents"
@@ -307,5 +308,9 @@
   "contextCompactionThreshold": 80,
   "modelCaching": true,
   "promptCaching": true,
-  "promptSuggestionEnabled": false
+  "promptSuggestionEnabled": false,
+  "editorMode": "normal",
+  "awaySummaryEnabled": false,
+  "workflowKeywordTriggerEnabled": false,
+  "fileCheckpointingEnabled": true
 }
