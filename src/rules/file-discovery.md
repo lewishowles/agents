@@ -3,7 +3,7 @@
 Minimise token cost while discovering files; answer the narrow question with the smallest output.
 
 - Prefer `rg` and `rg --files`, scoped to the smallest likely directory (`rg --files src`, not a repo-wide scan). Plain `rg` already honours `.gitignore` and skips `node_modules`, `dist`, and caches, which is what you want by default.
-- When you specifically need files that `.gitignore` hides, add `--no-ignore` (or `include_gitignored: true` for the Glob/Grep tools) and keep the path scoped to a named directory. A broad `rg --no-ignore`, `grep -r`, or `find` targeting `.`, `~`, `/`, or a protected directory is blocked by `guard-search-boundaries`; scope the path or use the Grep/Glob tools instead.
+- When you specifically need files that `.gitignore` hides, add `--no-ignore` and keep the path scoped to a named directory. A broad `rg --no-ignore`, `grep -r`, or `find` targeting `.`, `~`, `/`, or a protected directory is blocked by `guard-search-boundaries`; use `rg` through the shell, scoped to a named directory, instead.
 - Do not inspect generated, vendored, cached, build, dependency, or large binary directories unless explicitly asked: `node_modules`, `dist`, `build`, `.git`, coverage, caches, generated plugin bundles, lockfile-heavy generated output, local secrets.
 - Do not use broad `find`, `ls -R`, or unscoped glob searches. If `find` is unavoidable, scope it to named directories and group `-o` expressions with parentheses.
 - If a task packet, handoff, or the user's message already names the exact target file(s), symbol, or finding, skip indexing and search entirely and read the named location directly. Only search when the target is genuinely unknown or the handoff is incomplete.
