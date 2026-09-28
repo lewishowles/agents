@@ -202,6 +202,14 @@ run_setup() {
 
 # Runs setup-global with a selected target or without an explicit target.
 #
+# When SETUP_GLOBAL_TEST_TERMINAL is true, setup runs in a terminal driven by
+# expect. If SETUP_GLOBAL_TEST_TERMINAL_INPUT is set, its value is typed exactly
+# as given once the numbered picker asks its question, so a test includes its
+# own carriage return or Ctrl-D. Without it, nothing is typed. Either way the
+# run waits for setup to exit and returns setup's exit status. The run fails if
+# the question does not appear within 20 seconds, if setup does not exit within
+# 20 seconds after that, or if setup is killed by a signal.
+#
 # @param  {string}  home_dir
 #     Isolated home directory for the setup run.
 # @param  {string}  target
@@ -214,26 +222,51 @@ run_setup_target() {
 	local bin_dir="$TEST_ROOT/bin"  # Directory containing test-only command stubs.
 	local fail_backup_move="${SETUP_GLOBAL_TEST_FAIL_BACKUP_MOVE:-0}"  # Whether backup moves should fail.
 	local setup_path="${SETUP_GLOBAL_TEST_PATH:-$bin_dir:$PATH}"  # Command path used by the setup process.
-	local -a setup_command=("bash" "$REPO_DIR/scripts/setup-global.sh")  # Setup command, optionally wrapped in a terminal.
 	shift 2
 
 	mkdir -p "$home_dir"
 
-	if [ "${SETUP_GLOBAL_TEST_TERMINAL:-false}" = true ]; then
-		setup_command=("script" "-q" "/dev/null" "perl" "-e" "alarm 20; exec @ARGV" "bash" "$REPO_DIR/scripts/setup-global.sh")
-	fi
+	(
+		export HOME="$home_dir"
+		export PATH="$setup_path"
+		export CLI_STYLE_BIN="$bin_dir/cli-style"
+		export SETUP_GLOBAL_INSTALLER="$REPO_DIR/scripts/install-cli-style.sh"
+		export SETUP_GLOBAL_SYNC="$REPO_DIR/scripts/sync.sh"
+		export SETUP_GLOBAL_VALIDATE="$REPO_DIR/scripts/validate.sh"
+		export SETUP_GLOBAL_CALL_LOG="$home_dir/setup-global-calls.log"
+		export SETUP_GLOBAL_TEST_ADAPTER="$bin_dir/cli-style-adapter.sh"
+		export SETUP_GLOBAL_TEST_FAIL_BACKUP_MOVE="$fail_backup_move"
 
-	# An empty target expands to nothing so setup-global picks the target itself.
-	HOME="$home_dir" \
-	PATH="$setup_path" \
-	CLI_STYLE_BIN="$bin_dir/cli-style" \
-	SETUP_GLOBAL_INSTALLER="$REPO_DIR/scripts/install-cli-style.sh" \
-	SETUP_GLOBAL_SYNC="$REPO_DIR/scripts/sync.sh" \
-	SETUP_GLOBAL_VALIDATE="$REPO_DIR/scripts/validate.sh" \
-	SETUP_GLOBAL_CALL_LOG="$home_dir/setup-global-calls.log" \
-	SETUP_GLOBAL_TEST_ADAPTER="$bin_dir/cli-style-adapter.sh" \
-	SETUP_GLOBAL_TEST_FAIL_BACKUP_MOVE="$fail_backup_move" \
-	"${setup_command[@]}" ${target:+"$target"} --skip-external "$@"
+		# An empty target expands to nothing so setup-global picks the target itself.
+		if [ "${SETUP_GLOBAL_TEST_TERMINAL:-false}" = true ]; then
+			# The expect script is read from standard input because expect 5.45
+			# does not set argv for a script passed with -c.
+			/usr/bin/expect -f - bash "$REPO_DIR/scripts/setup-global.sh" ${target:+"$target"} --skip-external "$@" <<'EXPECT'
+set timeout 20
+spawn {*}$argv
+if {[info exists env(SETUP_GLOBAL_TEST_TERMINAL_INPUT)]} {
+	expect {
+		-exact "Enter the numbers to leave out, separated by spaces (or q to cancel): " {}
+		timeout { puts stderr "Picker prompt did not appear within 20 seconds"; exit 1 }
+		eof { puts stderr "Picker prompt did not appear before setup exited"; exit 1 }
+	}
+	send -- $env(SETUP_GLOBAL_TEST_TERMINAL_INPUT)
+}
+expect {
+	eof {}
+	timeout { puts stderr "Setup did not exit within 20 seconds"; exit 1 }
+}
+set status [wait]
+if {[lindex $status 4] eq "CHILDKILLED"} {
+	puts stderr "Setup was killed by [lindex $status 5]"
+	exit 1
+}
+exit [lindex $status 3]
+EXPECT
+		else
+			bash "$REPO_DIR/scripts/setup-global.sh" ${target:+"$target"} --skip-external "$@"
+		fi
+	)
 }
 
 # Creates a temporary canonical skill that the EXIT trap removes.
@@ -622,7 +655,7 @@ test_select_fallback_updates_skill_exclusions() {
 	local output="$TEST_ROOT/select-fallback.txt"  # Output from the numbered selection run.
 	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"  # Command path without fzf.
 
-	perl -e 'select undef, undef, undef, 0.1; print "1 2\n"' | SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
+	SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true SETUP_GLOBAL_TEST_TERMINAL_INPUT=$'1 2\r' run_setup_target "$home_dir" "" --select > "$output"
 
 	assert_contains "$output" '[x] 1. accessibility'
 	assert_contains "$output" '[x] 2. accessibility-audit'
@@ -640,7 +673,7 @@ test_select_fallback_empty_selection_includes_every_skill() {
 	local output="$TEST_ROOT/select-fallback-empty.txt"  # Output from the empty numbered selection run.
 	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"  # Command path without fzf.
 
-	perl -e 'select undef, undef, undef, 0.1; print "\n"' | SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
+	SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true SETUP_GLOBAL_TEST_TERMINAL_INPUT=$'\r' run_setup_target "$home_dir" "" --select > "$output"
 
 	assert_not_exists "$home_dir/.agents/skill-exclusions"
 	assert_dir_link "$home_dir/.agents/skills/accessibility"
@@ -655,7 +688,7 @@ test_select_fallback_cancel_preserves_existing_state() {
 
 	mkdir -p "$home_dir/.agents"
 	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
-	perl -e 'select undef, undef, undef, 0.1; print "q\n"' | SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
+	SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true SETUP_GLOBAL_TEST_TERMINAL_INPUT=$'q\r' run_setup_target "$home_dir" "" --select > "$output"
 
 	assert_contains "$output" 'Skill selection cancelled. Nothing changed.'
 	assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'writing'
@@ -674,7 +707,7 @@ test_select_fzf_updates_skill_exclusions() {
 	create_fzf_stub "$fzf_dir"
 	mkdir -p "$home_dir/.agents"
 	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
-	perl -e 'select undef, undef, undef, 0.1; print "\n"' | SETUP_GLOBAL_FZF_ARGUMENTS="$fzf_arguments" SETUP_GLOBAL_FZF_INPUT="$fzf_input" SETUP_GLOBAL_FZF_SELECTION='accessibility' SETUP_GLOBAL_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_GLOBAL_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
+	SETUP_GLOBAL_FZF_ARGUMENTS="$fzf_arguments" SETUP_GLOBAL_FZF_INPUT="$fzf_input" SETUP_GLOBAL_FZF_SELECTION='accessibility' SETUP_GLOBAL_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_GLOBAL_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
 
 	assert_contains "$fzf_arguments" '--multi'
 	assert_contains "$fzf_arguments" '--layout=reverse'
@@ -699,7 +732,7 @@ test_select_fzf_excludes_every_skill() {
 	local fzf_input="$home_dir/fzf-input.txt"  # Skills displayed to the fzf stand-in.
 
 	create_fzf_stub "$fzf_dir"
-	perl -e 'select undef, undef, undef, 0.1; print "\n"' | SETUP_GLOBAL_FZF_ARGUMENTS="$fzf_arguments" SETUP_GLOBAL_FZF_INPUT="$fzf_input" SETUP_GLOBAL_FZF_SELECTION='' SETUP_GLOBAL_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_GLOBAL_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
+	SETUP_GLOBAL_FZF_ARGUMENTS="$fzf_arguments" SETUP_GLOBAL_FZF_INPUT="$fzf_input" SETUP_GLOBAL_FZF_SELECTION='' SETUP_GLOBAL_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_GLOBAL_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
 
 	assert_contains "$fzf_arguments" '--multi'
 	assert_contains "$home_dir/.agents/skill-exclusions" 'accessibility'
@@ -719,7 +752,7 @@ test_select_fzf_cancel_preserves_existing_state() {
 	create_fzf_stub "$fzf_dir"
 	mkdir -p "$home_dir/.agents"
 	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
-	perl -e 'select undef, undef, undef, 0.1; print "\n"' | SETUP_GLOBAL_FZF_ARGUMENTS="$fzf_arguments" SETUP_GLOBAL_FZF_INPUT="$fzf_input" SETUP_GLOBAL_FZF_STATUS=1 SETUP_GLOBAL_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_GLOBAL_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
+	SETUP_GLOBAL_FZF_ARGUMENTS="$fzf_arguments" SETUP_GLOBAL_FZF_INPUT="$fzf_input" SETUP_GLOBAL_FZF_STATUS=1 SETUP_GLOBAL_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_GLOBAL_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
 
 	assert_contains "$output" 'Skill selection cancelled. Nothing changed.'
 	assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'writing'
@@ -735,7 +768,7 @@ test_select_fallback_end_of_input_preserves_existing_state() {
 
 	mkdir -p "$home_dir/.agents"
 	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
-	perl -e 'select undef, undef, undef, 0.1' | SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
+	SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true SETUP_GLOBAL_TEST_TERMINAL_INPUT=$'\004' run_setup_target "$home_dir" "" --select > "$output"
 
 	assert_contains "$output" 'Skill selection cancelled. Nothing changed.'
 	assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'writing'
@@ -750,7 +783,7 @@ test_select_fallback_invalid_number_preserves_existing_state() {
 	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"  # Command path without fzf.
 
 	run_setup_target "$home_dir" "" --exclude writing > /dev/null
-	if perl -e 'select undef, undef, undef, 0.1; print "9999\n"' | SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output" 2>&1; then
+	if SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true SETUP_GLOBAL_TEST_TERMINAL_INPUT=$'9999\r' run_setup_target "$home_dir" "" --select > "$output" 2>&1; then
 		fail 'Expected an invalid skill number to fail'
 	fi
 
