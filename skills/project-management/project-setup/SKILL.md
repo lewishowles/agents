@@ -72,11 +72,11 @@ Enables autonomous multi-hour execution while keeping the main agent as architec
 - A task record owns a coherent feature or outcome and may contain several ordered chunks. Each chunk has one reviewable outcome, coherent files, and focused verification. Create a separate task only for independently schedulable feature work, decisions, dependencies, or release boundaries, not merely because the feature needs multiple chunks.
 - Apply the `project-plan-task` task-boundary gate before creating a standalone task.
 - For a multi-chunk task, create one progress chunk per reviewable outcome; work only on the first incomplete chunk unless the user asks for all.
-- Apply the `project-plan-task` review-size gate to every chunk: one primary review question and a soft ceiling of three substantive files.
+- Apply the `project-plan-task` review-size gate to every chunk: one primary review question, recorded as the chunk's `--review-question`, and a soft ceiling of three substantive files.
 - Multiple small sections over one large one; each independently reviewable
 - "Files likely to change" reduces re-exploration in future sessions
 - Record every known section as a chunk. Later chunks may stay concise until work starts, but their boundaries and order belong in `progress` as soon as they are known
-- Record why the task is split the way it is in `--split-rationale`; a single-chunk task must explain why the substantive-concern inventory found only one reviewable concern
+- Record why the task is split the way it is in `--split-rationale`: reasons only, with no chunk count or chunk list. A single-chunk task names each concern it considered splitting off and where that concern lives, or says that nothing else was considered
 - Store session handoff in the progress CLI context record with `progress context set`; start with `progress next --json` and stop after the returned task and chunk unless deeper context is genuinely needed.
 
 ### Planning-quality gate
