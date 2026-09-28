@@ -3,6 +3,7 @@ name: code-style
 description: >
   Use this skill on every code change — even small snippets. Covers language-aware formatting, naming, documentation, organisation, and reuse. This is the baseline style guide for all code.
 ---
+
 # Code style
 
 **Baseline for all code, all projects, all languages.** Language skills (`/vue`, `/swift`, `/typescript`) extend this.
@@ -92,6 +93,7 @@ Before writing new logic for a problem a sibling module already solves (prop det
 - Check each docstring's claim against the function body it describes. Restating the name, or asserting behaviour the code doesn't have, both fail the same as no docstring
 - For fixes, state the rule the code follows, not the avoided mechanism. Use "why" only as a guardrail (e.g. declared after `initialise()` so seeding does not emit)
 - Block comments: purpose and external constraints; skip internal trivia
+- Write every CSS comment as a block, even a one-line one: `/**` on its own line, `*` before each line of text, and ` */` on its own line. Never start the text on the opening line or close on the last text line.
 - Document caller contract: return value, mutation, observable edge cases. Omit internal mechanics
 - Lead with one line, present tense, no boilerplate. Put options in `@note`; keep `@example` short. Match surrounding tone
 - Plain-language voice; no unexplained jargon or "etc". Purpose over cleverness
