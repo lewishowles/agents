@@ -3,35 +3,34 @@ name: swift
 description: >
   Use this skill when writing or editing any Swift code — macOS apps, command-line tools, scripts, system tools. Covers comment style, naming, spacing, concurrency, error handling, process management, and environment setup. For SwiftUI-specific patterns, use the swift-ui skill.
 ---
+
 # Swift code style
 
 ## Comments
 
-Swift comments use strict two-tier system.
+Swift comments use a strict two-tier system.
 
-**Types and functions** — always use `/** */` block form, even one sentence. Never one-line `/** Description. */` or `//`.
+**Declarations** (types, functions, properties, enum cases): use `///` documentation comments, one `///` per line, even for a single sentence. Xcode's Quick Help reads them, and swift-format's `UseTripleSlashForDocumentationComments` rule rewrites `/** */` to `///`. Never use `/** */` or `//` on a declaration.
 
 ```swift
-/**
- * Description here.
- */
+/// Description here.
 struct Foo { ... }
 
-/**
- * Does the thing.
- */
-func doSomething() { ... }
+/// Does the thing.
+///
+/// - Parameter name: The name of the new session.
+func doSomething(name: String) { ... }
+
+/// The ID of the currently selected project.
+var selectedProjectID: UUID?
 ```
 
-**Properties and inline logic** — `//` only. Multi-line `//` blocks fine. Never `/** */` on property or inside function body.
+**Inline logic** inside a function body: use `//` only. Multi-line `//` blocks are fine. Never use `///` inside a body.
 
 ```swift
-// ID of the currently selected project.
-var selectedProjectID: UUID?
-
 // Capture value-type snapshots before entering the Task. Inside the Task,
 // accessing @MainActor-isolated properties after an `await` crossing is
-// a Swift 6 error — captured Sendable values avoid the actor hop entirely.
+// a Swift 6 error, and captured Sendable values avoid the actor hop.
 let projects = projects
 ```
 
