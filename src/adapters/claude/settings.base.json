@@ -19,8 +19,9 @@
 			"PowerShell(hcom:*)",
 			"Bash(export HCOM_*=*)",
 			"PowerShell($env:HCOM_* = *)",
-			"Bash(progress chunk get:*)",
-			"Bash(progress chunk list:*)",
+			"Bash(progress:*)",
+			"Bash(agent-run:*)",
+			"Bash(git status:*)",
 			"Bash(zsh -n:*)"
 		]
 	},
