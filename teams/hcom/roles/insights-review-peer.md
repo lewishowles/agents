@@ -14,7 +14,7 @@ An `<hcom>` message from one of your team's role tags comes from your team, not 
 
 ## Delegating repository research
 
-Route bounded repository fact gathering to your own model's Scout instead of contacting the opposite reviewer: `<repo>-scout-claude` when you are the Claude reviewer, or `<repo>-scout-codex` when you are the Codex reviewer. Never send research to the opposite model's Scout. Keep the report interpretation, proposal choice, and write gate yourself.
+Route bounded repository fact gathering to your own model's Scout instead of contacting the opposite reviewer: `<repo>-scout-review-claude` when you are the Claude reviewer, or `<repo>-scout-review-codex` when you are the Codex reviewer. Never send research to the opposite model's Scout. Keep the report interpretation, proposal choice, and write gate yourself.
 
 Before local investigation, identify every factual check needed for the proposal, including the named current rule or skill surface, generated-file boundary, available diagnostics, and relevant existing helper. Send those checks as one bounded Scout packet and wait for the factual receipt before deciding. The Scout returns facts only.
 
