@@ -22,10 +22,6 @@ Hooks are shell scripts that Claude Code runs automatically at specific points i
 | `image-for-agent-read` | Reroutes local image reads through image-for-agent using the fixed ui preset. | PreToolUse (`Read`) | `silent`; requires jq, image-for-agent |
 | `plan-verify` | Warns when an exited plan is missing a validation section. | PostToolUse (`ExitPlanMode`) | `silent` |
 | `progress-resume` | Injects project progress context when the prompt asks to resume work. | UserPromptSubmit | `silent` |
-| `serena-activate` | Prompts the agent to activate the project with Serena and read its instructions at session start. | SessionStart | `silent`; requires serena-hooks |
-| `serena-auto-approve` | Auto-approves Serena tool calls in permissive permission modes (acceptEdits or auto). | PreToolUse (`mcp__serena__*`) | `silent`; requires serena-hooks |
-| `serena-cleanup` | Cleans up Serena hook session data when the Claude Code session ends. | SessionEnd | `silent`; requires serena-hooks |
-| `serena-remind` | Nudges the agent to use Serena's symbolic tools instead of overrelying on read_file and grep. | PreToolUse | `silent`; requires serena-hooks |
 | `test-skeleton-reminder` | Suggests matching tests when implementation files change. | PreToolUse (`Write\|Edit`) | `silent`; requires jq |
 | `tool-call-checkpoint` | Adds one advisory checkpoint when an HCOM team session reaches its tool-call limit (20 by default, 40 for HCOM Scouts and Implementers), and a context checkpoint before compaction in every session. | PreToolUse, PreCompact, SessionStart (`clear`) | `silent`; requires jq |
 | `tool-failure-log` | Records failed Claude tool calls for recurring friction analysis. | PostToolUseFailure | `silent` |
@@ -95,30 +91,6 @@ After every Write or Edit, checks the file extension (`.js`, `.mjs`, `.vue`, `.c
 This check is defined directly in `settings.json`. Before every Read call, it checks the path for `.env` and exits with code 2 when it matches. Claude Code treats that exit code as a block, preventing secrets files from entering the context.
 
 **No dependencies:** an inline `jq` and shell pipeline runs in any environment.
-
-### serena-activate
-
-At Claude session startup, resume, clear, and compact, prompts the agent to activate the current project with Serena and read its initial instructions. This prepares the language server for symbolic operations.
-
-**Requires:** `serena-hooks`; silently skips if not on PATH.
-
-### serena-remind
-
-Before every tool use, tracks consecutive `grep` and `read_file` calls. After several non-Serena code-discovery calls, it nudges the agent towards Serena's symbolic tools instead.
-
-**Requires:** `serena-hooks`; silently skips if not on PATH.
-
-### serena-auto-approve
-
-Before Serena MCP tool calls (`mcp__serena__*`), auto-approves Serena's destructive tools when Claude Code uses `acceptEdits` or `auto` permission mode. In the default mode, Serena tools still ask for approval.
-
-**Requires:** `serena-hooks`; silently skips if not on PATH.
-
-### serena-cleanup
-
-When the Claude Code session ends, removes the session data used by `serena-remind` and `serena-activate`. If the data is already gone, it exits silently.
-
-**Requires:** `serena-hooks`; silently skips if not on PATH.
 
 Log friction manually with `friction add "<category>" "<detail>"`. `tool-failure-log` records failed Claude tool calls automatically; use `friction summary` to group recurring entries.
 

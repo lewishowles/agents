@@ -18,4 +18,4 @@ Use codebase-memory for questions that need a persistent, language-agnostic grap
 6. Use `query_graph` for relationships that simpler tools cannot express.
 7. Use `detect_changes` when the question concerns the structural impact of local changes.
 
-Do not use the graph for literal strings, configuration, documentation, generated assets, or a single exact symbol that Serena can answer directly. Graph results are analysis, not semantic edits. Hand a concrete symbol to Serena when a reference-aware change is required.
+Do not use the graph for literal strings, configuration, documentation, generated assets, or a single known symbol that a scoped `rg -w` can find directly. Graph results are analysis, not edits. The index can lag behind files changed in this session, so confirm the exact lines with a scoped text search before patching them.

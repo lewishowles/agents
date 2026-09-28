@@ -46,7 +46,7 @@ Do not generate project guidance during planning. If command registrations are m
 2. **Risk triage** (opt-in): identify high-risk files before planning:
    - **Git churn**: `git log --oneline --since="1 month ago" -- <path> | wc -l` means recent change count; high churn can indicate a defect-prone area.
    - **Complexity**: measure large files or high function counts with a targeted symbol or file check.
-   - **Fan-in**: use Serena for an exact symbol or codebase-memory for a broad multi-hop impact question.
+   - **Fan-in**: use a scoped `rg -w` for a known symbol or codebase-memory for a broad multi-hop impact question.
    - Flag files high on two or more signals in `--risks`.
    - Skip this step for routine, single-file, or familiar work.
 3. **Locate**: use the `project`, `task`, and `release` records to identify the current task and the new task's position. Fetch only the selected task record when needed.
@@ -83,7 +83,7 @@ Capture these facts in the task record, its chunks, or a linked spec:
 - **Validation owner**: which repo's diagnostics prove the change, including any downstream checks required before release
 - **Handoff references**: PR links, task or session IDs, diagnostic log paths, and repo-specific risks
 
-For broad dependency questions, start with local evidence, pick one lookup tool for the question (a code index such as Serena for symbols and callers, a scoped text search for literal strings), and stop once the affected files are known. For the routing table, see `code-lookup`. If the affected repo set is still unclear, record a decision request and ask before expanding the working set.
+For broad dependency questions, start with local evidence, pick one lookup tool for the question (a code index such as codebase-memory for callers and dependencies, a scoped text search for known symbols and literal strings), and stop once the affected files are known. For the routing table, see `code-lookup`. If the affected repo set is still unclear, record a decision request and ask before expanding the working set.
 
 ## Placement principles
 

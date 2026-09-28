@@ -72,10 +72,6 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'bash \"$HOME/.claude/hooks/serena-remind.sh\"'"
-          },
-          {
-            "type": "command",
             "command": "bash \"$HOME/.claude/hooks/tool-call-checkpoint.sh\" claude"
           }
         ]
@@ -137,15 +133,6 @@
           {
             "type": "command",
             "command": "bash -c 'bash \"$HOME/.claude/hooks/test-skeleton-reminder.sh\"'"
-          }
-        ]
-      },
-      {
-        "matcher": "mcp__serena__*",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "serena-hooks auto-approve --client=claude-code"
           }
         ]
       }
@@ -231,10 +218,6 @@
           {
             "type": "command",
             "command": "cmd=${HCOM:-hcom}; command -v \"${cmd%% *}\" >/dev/null 2>&1 && exec $cmd sessionend || exit 0"
-          },
-          {
-            "type": "command",
-            "command": "serena-hooks cleanup --client=claude-code"
           }
         ]
       }
@@ -245,10 +228,6 @@
           {
             "type": "command",
             "command": "cmd=${HCOM:-hcom}; command -v \"${cmd%% *}\" >/dev/null 2>&1 && exec $cmd sessionstart || exit 0"
-          },
-          {
-            "type": "command",
-            "command": "serena-hooks activate --client=claude-code"
           }
         ]
       },

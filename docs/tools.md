@@ -2,32 +2,20 @@
 
 These are per-project runtime dependencies that users install — not skills, not plugins, and not managed by this repo. Agents don't load them automatically; users install them in projects where the additional capability is worth the setup cost.
 
-Last reviewed: 2026-07-17.
+Last reviewed: 2026-09-28.
 
-## Serena MCP
+## Removed: Serena MCP
 
-LSP-backed MCP server providing atomic semantic refactoring operations: cross-file renames, moves, reference lookups, and symbol-level edits. Works at the language server level, so it understands types, scopes, and imports.
+Serena was removed on 2026-09-28. Each Codex agent started its own copy, and each copy started Vue and TypeScript language servers that held roughly 1 to 1.5 GB of memory. With several hcom teams running, that filled an 8 GB machine and pushed it into heavy swapping.
 
-**What it adds beyond this repo's skills:**
+The transcripts didn't justify the cost. Across 939 Codex sessions from 10 to 28 September:
 
-- Atomic cross-file refactors (rename a function and update all references in one operation)
-- Symbol-level operations (move a class between files, extract a method)
-- Reference-aware edits that respect language semantics
+- Scouts used Serena in 33 of 504 sessions, and implementers in 55 of 382
+- Most calls were `find_symbol` and `get_symbols_overview`, which a scoped `rg -w` or codebase-memory also answer
+- The features only a language server provides were almost unused: 2 reference lookups, no renames, and 38 diagnostics calls
+- Starting Serena up (`initial_instructions` and `activate_project`) took more calls than all the real use put together
 
-**When to use it:**
-
-- Large refactors spanning many files where manual find-and-replace is error-prone
-- When you need to rename a widely-used symbol and update all call sites correctly
-- Exact definitions, references, diagnostics, and reference-aware source changes
-
-**How it complements codebase-memory:** Serena is the default for exact language-server relationships and semantic edits. Use codebase-memory first only for broader multi-hop, cross-service, cross-repository, or language-agnostic graph questions.
-
-**Installation:** MCP server, requires a language server for the target language. This repo manages the server registration and lifecycle hooks for both Claude Code and Codex:
-
-- **Claude Code:** server registered in `dist/claude/.mcp.json`; hooks for activate, remind, auto-approve, and cleanup live in `src/hooks/claude/serena-activate/`, `src/hooks/claude/serena-remind/`, `src/hooks/claude/serena-auto-approve/`, and `src/hooks/claude/serena-cleanup/`
-- **Codex:** server and hook feature managed in `~/.codex/config.toml` via `ensure_codex_config`; hooks linked from `dist/codex/hooks.json`
-
-Run `scripts/setup-global.sh --both` after cloning or pulling changes to Serena hook configuration.
+Claude sessions over the same period made no Serena calls.
 
 ## MDN MCP
 
@@ -56,7 +44,7 @@ Syntax-aware search, lint, and rewrite tooling for code patterns. It matches AST
 - Mechanical rewrites and codemod previews where semantic refactoring is not needed
 - Project-specific lint rules for recurring AST patterns
 
-**Overlap with Serena:** both understand code structure, but at different levels. Serena uses the language server for semantic operations such as reference-aware renames and symbol edits. ast-grep uses syntax patterns for search, lint, and rewrite tasks; it does not replace semantic refactoring.
+**Overlap with codebase-memory:** both understand code structure, but for different jobs. codebase-memory answers graph questions such as callers and impact. ast-grep uses syntax patterns for search, lint, and rewrite tasks; it does not track references across files the way a language server does.
 
 **When it's worth adding:**
 
@@ -67,7 +55,7 @@ Syntax-aware search, lint, and rewrite tooling for code patterns. It matches AST
 **When it's not worth adding:**
 
 - `rg` is enough for text, docs, config, or simple literal search
-- Serena can perform the semantic edit safely, such as renaming a widely-used symbol
+- A rename is covered by a scoped `rg -w` search followed by the project's typecheck
 - The pattern is one-off and cheaper to inspect manually
 
 **Installation:** Standalone CLI or MCP server. Treat it as a per-project runtime dependency; do not add it to global rules unless the target project has installed and documented it.
@@ -103,21 +91,21 @@ Code intelligence tool that combines graph traversal with git history analysis f
 
 **Installation:** Standalone tool. See the repowise documentation for setup details.
 
-## Comparison: Serena vs codebase-memory vs ast-grep vs repowise
+## Comparison: codebase-memory vs ast-grep vs repowise
 
-|                           | Serena                            | codebase-memory                   | ast-grep                          | repowise                                  |
-| ------------------------- | --------------------------------- | --------------------------------- | --------------------------------- | ----------------------------------------- |
-| **Primary job**           | Exact semantic lookup and editing | Broad graph traversal and impact  | Syntax-shaped search and rewrites | Git-informed health and defect prediction |
-| **Languages**             | Language-server dependent         | Language-agnostic                 | Multi-language AST patterns       | Language-agnostic                         |
-| **Graph traversal**       | Exact symbol relationships        | Multi-hop and cross-service paths | No                                | Callers, callees, and dependencies        |
-| **Codemods and rewrites** | Semantic renames and symbol edits | No                                | Syntax-pattern rewrites           | No                                        |
-| **Project health**        | Diagnostics only                  | Structural graph signals          | Custom rules only                 | Composite scoring and temporal signals    |
-| **Literal text/config**   | No                                | No                                | Usually unnecessary               | No                                        |
+|                           | codebase-memory                   | ast-grep                          | repowise                                  |
+| ------------------------- | --------------------------------- | --------------------------------- | ----------------------------------------- |
+| **Primary job**           | Broad graph traversal and impact  | Syntax-shaped search and rewrites | Git-informed health and defect prediction |
+| **Languages**             | Language-agnostic                 | Multi-language AST patterns       | Language-agnostic                         |
+| **Graph traversal**       | Multi-hop and cross-service paths | No                                | Callers, callees, and dependencies        |
+| **Codemods and rewrites** | No                                | Syntax-pattern rewrites           | No                                        |
+| **Project health**        | Structural graph signals          | Custom rules only                 | Composite scoring and temporal signals    |
+| **Literal text/config**   | No                                | Usually unnecessary               | No                                        |
 
 **Decision guide:**
 
 - Apply **`code-lookup`** first when the correct discovery tool is unclear
-- Use **Serena** for exact symbols, references, diagnostics, and semantic edits
+- Use a scoped `rg -w` for a known symbol's definition and references, and the project's typecheck for type errors
 - Use **codebase-memory** for broad multi-hop, cross-service, cross-repository, or language-agnostic graph questions
 - Add **ast-grep** only when syntax-shaped search, custom AST lint rules, or mechanical rewrites would avoid brittle `rg` patterns
 - Add **repowise** only for large repos where git-driven defect prediction and health scoring would change prioritisation

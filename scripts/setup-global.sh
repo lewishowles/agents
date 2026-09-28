@@ -848,7 +848,8 @@ ensure_codex_config() {
 	ensure_codex_defaults "$config" "$defaults_temp"
 
 	# Strip managed MCP server sections before re-appending them,
-	# so re-running setup never creates duplicate entries.
+	# so re-running setup never creates duplicate entries. The Serena
+	# section is stripped but not re-added, because Serena is no longer used.
 	awk '
 		/^\[mcp_servers\.codebase-memory-mcp(\.|\])/{ skip = 1; next }
 		/^\[mcp_servers\.serena(\.|\])/{ skip = 1; next }
@@ -859,7 +860,7 @@ ensure_codex_config() {
 	rm "$defaults_temp"
 
 	# Re-add repository-managed MCP server configuration.
-	for section in "mcp_servers.codebase-memory-mcp" "mcp_servers.serena" "mcp_servers.mdn"; do
+	for section in "mcp_servers.codebase-memory-mcp" "mcp_servers.mdn"; do
 		printf '\n' >> "$temp"
 		codex_config_section "$section" >> "$temp"
 	done

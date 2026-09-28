@@ -297,6 +297,18 @@ test_refresh_runs_repository_sync() {
 	assert_contains "$calls" "$REPO_DIR/scripts/validate.sh"
 }
 
+# Setup removes the Serena server that older setups added to the Codex config.
+test_setup_removes_retired_serena_server() {
+	local home_dir="$TEST_ROOT/serena-removal"
+
+	mkdir -p "$home_dir/.codex"
+	printf '[mcp_servers.serena]\ncommand = "serena"\n' > "$home_dir/.codex/config.toml"
+	run_setup "$home_dir" > /dev/null
+
+	assert_not_contains "$home_dir/.codex/config.toml" '[mcp_servers.serena]'
+	assert_contains "$home_dir/.codex/config.toml" '[mcp_servers.codebase-memory-mcp]'
+}
+
 test_config_replacement_creates_timestamped_backup() {
 	local home_dir="$TEST_ROOT/backup"
 
@@ -307,8 +319,7 @@ test_config_replacement_creates_timestamped_backup() {
 	assert_contains "$home_dir/.codex/config.toml" 'approval_policy = "never"'
 	assert_contains "$home_dir/.codex/config.toml" 'default_permissions = "project-edit"'
 	assert_contains "$home_dir/.codex/config.toml" '[mcp_servers.codebase-memory-mcp]'
-	assert_contains "$home_dir/.codex/config.toml" '[mcp_servers.serena]'
-	assert_equals "$(grep -c '^default_tools_approval_mode = \"approve\"$' "$home_dir/.codex/config.toml")" "2"
+	assert_equals "$(grep -c '^default_tools_approval_mode = \"approve\"$' "$home_dir/.codex/config.toml")" "1"
 	assert_contains "$home_dir/.codex/config.toml" '[features]'
 	assert_contains "$home_dir/.codex/config.toml" 'hooks = true'
 	assert_contains "$home_dir/.codex/config.toml" '[permissions.project-edit]'
@@ -922,6 +933,7 @@ test_public_backup_bypass_is_rejected
 test_default_setup_skips_repository_refresh
 test_refresh_runs_repository_sync
 test_config_replacement_creates_timestamped_backup
+test_setup_removes_retired_serena_server
 test_hook_file_is_replaced_with_managed_link
 test_permission_profile_preserves_workspace_roots
 test_skills_are_installed_and_editable

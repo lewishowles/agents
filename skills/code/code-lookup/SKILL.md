@@ -1,7 +1,7 @@
 ---
 name: code-lookup
 description: >
-  Use this skill when locating code, tracing behaviour, choosing between Serena, codebase-memory, and text search, or when a guard hook blocks a search or file read.
+  Use this skill when locating code, tracing behaviour, choosing between codebase-memory and text search, or when a guard hook blocks a search or file read.
 ---
 # Code lookup
 
@@ -9,32 +9,30 @@ Choose one primary lookup tool for the question. The failure this prevents is ca
 
 ## Routing
 
-| Question                                                                                                   | Start with                   |
-| ---------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| Exact symbol, definition, references, diagnostics, or semantic edit                                        | Serena                       |
-| Broad architecture, multi-hop impact, cross-service, cross-repository, or language-agnostic graph question | codebase-memory              |
-| Literal string, configuration value, documentation line, generated asset, or named non-code file           | Targeted text or file lookup |
+| Question                                                                                                   | Start with                                    |
+| ---------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| Where a known symbol is defined or used, or every place a rename must touch                                | Scoped `rg -w` for the name, then read ranges |
+| Broad architecture, multi-hop impact, cross-service, cross-repository, or language-agnostic graph question | codebase-memory                               |
+| Type errors or broken references after a change                                                            | The project's typecheck or lint command       |
+| Literal string, configuration value, documentation line, generated asset, or named non-code file           | Targeted text or file lookup                  |
 
-Read only the reference for the selected tool:
-
-- Serena: [references/serena.md](references/serena.md)
-- codebase-memory: [references/codebase-memory.md](references/codebase-memory.md)
+For codebase-memory, read [references/codebase-memory.md](references/codebase-memory.md).
 
 ## Workflow
 
 1. Classify the question using the routing table.
 2. Use the selected tool before broad shell searches or loading another analyser.
-3. Stop discovery once the exact file, symbol, relationship, or finding is known. For an edit, use the narrowest source snippet, symbolic tool, or patch anchor needed; search again only to verify the changed reference.
+3. Stop discovery once the exact file, symbol, relationship, or finding is known. For an edit, use the narrowest source snippet or patch anchor needed; search again only to verify the changed reference.
 4. Add a second tool only when the first result identifies a distinct next job.
 
 Valid hand-offs include:
 
-- codebase-memory maps a broad impact surface, then Serena performs a reference-aware edit
+- codebase-memory maps a broad impact surface, then a scoped `rg -w` lists the exact lines to patch, and the project's typecheck confirms nothing was missed
 - A targeted text search identifies a config entry, then no structural tool is needed
 
-Do not call Serena and codebase-memory merely to compare answers. Do not use codebase-memory as a mandatory first step.
+Do not call codebase-memory and a text search merely to compare answers. Do not use codebase-memory as a mandatory first step.
 
-After a guard hook blocks several searches or reads in a row, use one symbolic lookup, known-symbol read, or single targeted file range, then reassess before another search or read. Project guard hooks take precedence over advice to parallelise file reads.
+After a guard hook blocks several searches or reads in a row, use one codebase-memory lookup, known-symbol read, or single targeted file range, then reassess before another search or read. Project guard hooks take precedence over advice to parallelise file reads.
 
 ## Fallbacks
 

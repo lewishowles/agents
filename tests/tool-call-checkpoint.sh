@@ -159,7 +159,7 @@ done
 # Default limit: reads and edits both count, the 20th call fires, then the counter freezes.
 start_session "default" ""
 assert_silent "Read" "1"
-assert_silent "mcp__serena__find_symbol" "2"
+assert_silent "mcp__codebase-memory-mcp__search_graph" "2"
 assert_silent "Edit" "3"
 assert_silent "Bash" "4"
 fill_to_limit 20
