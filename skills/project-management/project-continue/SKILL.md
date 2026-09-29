@@ -74,6 +74,7 @@ Read only enough to orient. Stale sessions (5+ min idle) restart from scratch.
 - Run `git status --short` before editing to avoid overwriting work the user has not handled. Do not put its result in `PROGRESS.md`, or use it to infer task completion. Branch creation or switching is not part of task setup unless the user requests it.
 - Read `AGENTS.md`, ordinary docs, and agent-run registrations before running local commands
 - Surface any open question recorded on a chunk before starting that chunk, and ask it rather than quietly adopting its recommended default
+- If the next task's title starts with `Needs planning:`, plan it through `project-plan-task` and get the user's approval before any implementation or delegation. Never hand it to an Implementer as it is
 - Verify incomplete tasks and chunks still fit the current scope
 
 ## Starting the next task
