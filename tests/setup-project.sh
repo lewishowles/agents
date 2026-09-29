@@ -382,7 +382,7 @@ test_ensure_friction_installs_only_when_missing() {
 
 		ensure_friction
 	)
-	assert_equals "$(cat "$install_log")" "tool install --from $HOME/Dev/Repositories/Packages/dev-tools/packages/friction friction"
+	assert_equals "$(cat "$install_log")" "tool install --from $HOME/Dev/Repositories/Packages/agent-tools/packages/friction friction"
 
 	(
 		source "$setup_library"

@@ -510,7 +510,7 @@ ensure_friction() {
 	fi
 
 	cli_group_status warning "friction" "installing globally"
-	if ! uv tool install --from ~/Dev/Repositories/Packages/dev-tools/packages/friction friction >/dev/null; then
+	if ! uv tool install --from ~/Dev/Repositories/Packages/agent-tools/packages/friction friction >/dev/null; then
 		cli_group_status failed "friction" "global installation failed"
 		return 1
 	fi
