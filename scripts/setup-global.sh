@@ -716,15 +716,25 @@ ensure_codex_tui_settings() {
 #     Temporary file that receives the updated configuration.
 ensure_codex_defaults() {
 	local source="$1" destination="$2"
-	local approval_policy default_permissions
+	local approval_policy default_permissions model_reasoning_effort model_verbosity model_reasoning_summary hide_agent_reasoning
 
 	approval_policy=$(codex_config_value "root" "approval_policy")
 	default_permissions=$(codex_config_value "root" "default_permissions")
+	model_reasoning_effort=$(codex_config_value "root" "model_reasoning_effort")
+	model_verbosity=$(codex_config_value "root" "model_verbosity")
+	model_reasoning_summary=$(codex_config_value "root" "model_reasoning_summary")
+	hide_agent_reasoning=$(codex_config_value "root" "hide_agent_reasoning")
 
-	awk -v approval_policy="$approval_policy" -v default_permissions="$default_permissions" '
+	awk -v approval_policy="$approval_policy" -v default_permissions="$default_permissions" \
+		-v model_reasoning_effort="$model_reasoning_effort" -v model_verbosity="$model_verbosity" \
+		-v model_reasoning_summary="$model_reasoning_summary" -v hide_agent_reasoning="$hide_agent_reasoning" '
 		function print_defaults() {
 			print "approval_policy = " approval_policy
 			print "default_permissions = " default_permissions
+			print "model_reasoning_effort = " model_reasoning_effort
+			print "model_verbosity = " model_verbosity
+			print "model_reasoning_summary = " model_reasoning_summary
+			print "hide_agent_reasoning = " hide_agent_reasoning
 		}
 		BEGIN {
 			in_root = 1
@@ -739,7 +749,7 @@ ensure_codex_defaults() {
 			print
 			next
 		}
-		in_root && /^(approval_policy|default_permissions|sandbox_mode)[[:space:]]*=/ { next }
+		in_root && /^(approval_policy|default_permissions|sandbox_mode|model_reasoning_effort|model_verbosity|model_reasoning_summary|hide_agent_reasoning)[[:space:]]*=/ { next }
 		{ print }
 		END {
 			if (!defaults_written) {
