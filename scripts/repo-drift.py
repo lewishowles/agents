@@ -37,19 +37,23 @@ class Issue:
 	kind: str
 
 
-# Runs the markdown claims check and returns its findings as Issue objects.
-def run_claims_check() -> list[Issue]:
+# Runs doc-paths over the repository and returns each missing path as an Issue.
+def run_doc_paths_check() -> list[Issue]:
 	result = subprocess.run(
 		[
-			"project-checks-markdown-claims",
-			"--mode",
-			"all",
+			"doc-paths",
+			"--project-dir",
+			str(REPO_ROOT),
 			"--json",
 		],
 		capture_output=True,
 		text=True,
-		check=True,
 	)
+
+	# doc-paths exits 1 when it finds missing paths, which is drift to report rather than a failure.
+	if result.returncode not in (0, 1):
+		result.check_returncode()
+
 	try:
 		data = json.loads(result.stdout)
 	except json.JSONDecodeError:
@@ -112,7 +116,7 @@ def main() -> None:
 	)
 	args = parser.parse_args()
 
-	issues = deduplicate(run_claims_check())
+	issues = deduplicate(run_doc_paths_check())
 	score = compute_score(issues)
 
 	if args.json:

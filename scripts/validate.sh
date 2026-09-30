@@ -74,7 +74,7 @@ run_check "commit-message guard"  bash "$REPO_DIR/tests/commit-message-guard.sh"
 run_check "search boundaries"     bash "$REPO_DIR/tests/search-boundaries.sh"
 run_check "project setup"         bash "$REPO_DIR/tests/setup-project.sh"
 run_check "friction logging"      bash "$REPO_DIR/tests/friction-logging.sh"
-run_check "dead path refs"        project-checks-markdown-claims --mode paths
+run_check "dead path refs"        doc-paths --project-dir "$REPO_DIR"
 run_check "setup drift"           python3 "$REPO_DIR/scripts/validate/check-setup-drift.py"
 run_check "staleness"             python3 "$REPO_DIR/scripts/validate/check-staleness.py"
 run_check "staleness regression"  python3 "$REPO_DIR/tests/check-staleness.py"

@@ -137,7 +137,7 @@ Skill files, reference docs, and inline code docs differ from longform:
 - Describe what a thing is and where it sits, not framework mechanics
 - Before writing docs, comments, or markdown for anything borrowed from or shared with an already-approved sibling (component, module, prop), open that sibling's existing wording first and match it. New prose for an already-solved concept is a likely regression, not a fresh writing task
 - Imperative instructions in reference/JSDoc: "Pass a getter function", not "You should pass"
-- After editing Markdown docs, run `project-checks-markdown-claims` to check that the file paths they name still exist
+- After editing Markdown docs, run `doc-paths` to check that the file paths they name still exist
 
 ## Product documentation
 
