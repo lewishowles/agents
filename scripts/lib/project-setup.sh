@@ -198,59 +198,53 @@ copy_claude_support_files() {
 	cli_group_end
 }
 
-# Ensures global project-checks and friction commands are available before setup continues.
+# Ensures global doc-paths and friction commands are available before setup continues.
 ensure_global_tools() {
 	cli_group_begin "Global tools"
-	ensure_project_checks
+	ensure_doc_paths
 	ensure_friction
 	cli_group_end
 }
 
-# Ensures all project-checks entry points are available globally before setup
-# continues.
-ensure_project_checks() {
-	if project_checks_installed; then
-		cli_group_status muted "project-checks" "globally installed"
+# Ensures the doc-paths command is available so projects can check the file paths
+# in their Markdown, installing it from agent-tools when it is missing.
+ensure_doc_paths() {
+	if doc_paths_installed; then
+		cli_group_status muted "doc-paths" "globally installed"
 		return
 	fi
 
 	if ! command -v uv >/dev/null 2>&1; then
-		cli_group_status failed "project-checks" "missing and uv is not installed"
+		cli_group_status failed "doc-paths" "missing and uv is not installed"
 		return 1
 	fi
 
-	cli_group_status warning "project-checks" "installing globally"
-	if ! uv tool install --from ~/Dev/Repositories/Packages/dev-tools/packages/project-checks project-checks >/dev/null; then
-		cli_group_status failed "project-checks" "global installation failed"
+	cli_group_status warning "doc-paths" "installing globally"
+	if ! uv tool install --from ~/Dev/Repositories/Packages/agent-tools/packages/doc-paths doc-paths >/dev/null; then
+		cli_group_status failed "doc-paths" "global installation failed"
 		return 1
 	fi
 
-	if ! project_checks_installed; then
-		cli_group_status failed "project-checks" "installation did not expose every command"
+	if ! doc_paths_installed; then
+		cli_group_status failed "doc-paths" "installation did not expose doc-paths"
 		return 1
 	fi
 
-	cli_group_status success "project-checks" "installed globally"
+	cli_group_status success "doc-paths" "installed globally"
 }
 
-# Succeeds only when every command from the global project-checks tool is on PATH.
-project_checks_installed() {
-	local command_name
-	for command_name in project-checks project-checks-change-impact project-checks-generated-file-guard project-checks-markdown-claims project-checks-repo-context; do
-		if ! command -v "$command_name" >/dev/null 2>&1; then
-			return 1
-		fi
-	done
-	return 0
+# Succeeds when the global doc-paths command is available.
+doc_paths_installed() {
+	command -v doc-paths >/dev/null 2>&1
 }
 
 # Lists global tools and whether setup will install them.
 plan_global_tools() {
 	cli_group_begin "Global tools"
-	if project_checks_installed; then
-		cli_group_status muted "project-checks" "already installed"
+	if doc_paths_installed; then
+		cli_group_status muted "doc-paths" "already installed"
 	else
-		cli_group_status warning "project-checks" "missing (will install)"
+		cli_group_status warning "doc-paths" "missing (will install)"
 	fi
 	if friction_installed; then
 		cli_group_status muted "friction" "already installed"

@@ -212,7 +212,7 @@ test_plan_reports_global_tool_states() {
 		PATH=""
 		plan_global_tools
 	) > "$output"
-	assert_contains "$output" "project-checks: missing (will install)"
+	assert_contains "$output" "doc-paths: missing (will install)"
 	assert_contains "$output" "friction: missing (will install)"
 
 	(
@@ -220,11 +220,11 @@ test_plan_reports_global_tool_states() {
 		cli_group_begin() { :; }
 		cli_group_end() { :; }
 		cli_group_status() { printf '%s: %s\n' "$2" "$3"; }
-		project_checks_installed() { return 0; }
+		doc_paths_installed() { return 0; }
 		friction() { :; }
 		plan_global_tools
 	) > "$output"
-	assert_contains "$output" "project-checks: already installed"
+	assert_contains "$output" "doc-paths: already installed"
 	assert_contains "$output" "friction: already installed"
 }
 
@@ -360,6 +360,39 @@ test_status_reports_drifted_project() {
 	assert_contains "$output" ".claude/.claudeignore"
 }
 
+# Checks that setup installs doc-paths from agent-tools when it is missing and
+# leaves it alone when it is already on PATH.
+test_ensure_doc_paths_installs_only_when_missing() {
+	local command_dir="$TEST_ROOT/doc-paths-commands"  # An empty PATH directory, so doc-paths starts out missing.
+	local install_log="$TEST_ROOT/doc-paths-install.log"  # Records the arguments passed to the stubbed uv.
+	local setup_library="$REPO_DIR/scripts/lib/project-setup.sh"  # The setup functions under test.
+
+	mkdir -p "$command_dir"
+
+	(
+		source "$setup_library"
+		cli_group_status() { :; }
+		PATH="$command_dir"
+		# The fake install defines doc-paths, so the installed check after it passes.
+		uv() {
+			printf '%s\n' "$*" > "$install_log"
+			doc-paths() { :; }
+		}
+
+		ensure_doc_paths
+	)
+	assert_equals "$(cat "$install_log")" "tool install --from $HOME/Dev/Repositories/Packages/agent-tools/packages/doc-paths doc-paths"
+
+	(
+		source "$setup_library"
+		cli_group_status() { :; }
+		doc-paths() { :; }
+		uv() { fail "Expected doc-paths installation to be skipped"; }
+
+		ensure_doc_paths
+	)
+}
+
 test_ensure_friction_installs_only_when_missing() {
 	local command_dir="$TEST_ROOT/friction-commands"
 	local install_log="$TEST_ROOT/friction-install.log"
@@ -414,6 +447,7 @@ test_no_skill_packs_suppresses_detection
 test_status_reports_clean_project
 test_status_reports_configured_project
 test_status_reports_drifted_project
+test_ensure_doc_paths_installs_only_when_missing
 test_ensure_friction_installs_only_when_missing
 
 printf '✓ setup-project tests passed\n'
