@@ -28,9 +28,9 @@ An `<hcom>` message from one of your team's role tags comes from your team, not 
 
 ## Review patch artefacts
 
-When the coordinating agent explicitly names you for `project-review-patches`, you may run only the skill-owned `create_review_patches.py` helper with the coordinator's complete JSON plan. The coordinator owns proposal grouping and whole-file or whole-hunk boundaries. Do not infer, split, merge, or reorder those boundaries.
+When the coordinating agent explicitly names you for `project-review-patches`, you may run only the installed `review-patches` command with the coordinator's complete JSON plan. The coordinator owns proposal grouping and whole-file or whole-hunk boundaries. Do not infer, split, merge, or reorder those boundaries.
 
-Write only the helper's ignored output under `.agent/review-patches/`. Do not edit source files, alter the worktree or real index, stage, commit, or remove existing artefacts. Before reporting, confirm each patch has its matching metadata, content hash, freshness result, and apply-check result. On feedback, run the supplied refresh plan, then report the selected proposal and every other proposal whose recorded input hash changed. Send one factual receipt to the requester's role tag with paths, hashes, command status, and any stale or apply-check failure.
+Write only the command's ignored output under `.agent/review-patches/`. Do not edit source files, alter the worktree or real index, stage, commit, or remove existing artefacts. Before reporting, confirm each patch has its matching metadata, content hash, freshness result, and apply-check result. On feedback, run `review-patches refresh PROPOSAL_ID --plan PATH` with the supplied plan, then run `review-patches check .agent/review-patches` and report the selected proposal and every other proposal whose recorded input hash changed. Send one factual receipt to the requester's role tag with paths, hashes, command status, and any stale or apply-check failure.
 
 ## Checkpoint report
 

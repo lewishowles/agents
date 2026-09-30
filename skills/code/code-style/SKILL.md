@@ -18,6 +18,8 @@ description: >
 - Add a blank line after a completed control-flow block before the next logical step. Keep connected clauses (`if`/`elif`/`else`, `try`/`except`/`finally`) together.
 - Keep tightly coupled statements together. Don't add blank lines mechanically between every statement.
 - Multi-line variable declarations should have a blank line before and after them
+- Treat `await` statements like declarations: put each on its own line, or group consecutive ones together, with a blank line separating them from the assertions or other steps around them
+- A statement that the formatter wraps over several lines, such as a multi-line `expect`, gets a blank line before and after it
 - Treat repetition as a design prompt, not automatic abstraction. Extract only a coherent behaviour that reduces risk and clarifies callers.
 - Prefer line parsing, structured APIs, or small helpers over complex regex. Use regex only when clearest; name complex patterns and explain match.
 - For multi-line generated strings, prefer named values and `["line one", value, "line three"].join("\n")` over dense escaped templates.

@@ -6,7 +6,7 @@ disable-model-invocation: true
 ---
 # Project review patches
 
-Review current uncommitted work as separate proposed commits. The coordinator decides the proposals and whole-file or whole-hunk boundaries. A named HCOM Scout runs the deterministic helper to write ignored patch artefacts, but does not choose groupings, edit source, stage, commit, or change the index.
+Review current uncommitted work as separate proposed commits. The coordinator decides the proposals and whole-file or whole-hunk boundaries. A named HCOM Scout runs the installed `review-patches` command to write ignored patch artefacts, but does not choose groupings, edit source, stage, commit, or change the index.
 
 ## Scope
 
@@ -40,7 +40,7 @@ The coordinating agent owns the review plan. It must:
 3. assign every changed file or hunk to exactly one proposal
 4. stop for a human decision when the index already contains staged content
 
-The helper refuses a dirty index by default. Use `--staged-policy include` only after the human explicitly decides that existing staged content belongs in this review. Do not silently mix staged content into a proposal.
+`review-patches create` refuses a dirty index by default. Use `--staged-policy include` only after the human explicitly decides that existing staged content belongs in this review. Do not silently mix staged content into a proposal.
 
 The plan is JSON with this shape:
 
@@ -59,27 +59,37 @@ The plan is JSON with this shape:
 }
 ```
 
-Omit `hunks` for a whole-file change. The helper rejects duplicate or missing units, partial-hunk boundaries, paths outside the current change set, and unsupported partial binary or mode-only changes.
+Omit `hunks` for a whole-file change. `review-patches create` rejects duplicate or missing units, partial-hunk boundaries, paths outside the current change set, and unsupported partial binary or mode-only changes.
 
 ## Scout artefacts
 
-Send one explicitly named Scout the coordinator-approved plan and the exact helper command. The Scout may run only the skill-owned helper and write its output under the ignored `.agent/review-patches/` directory. The helper writes one `<proposal-id>.patch`, one matching `<proposal-id>.json` metadata file, and a `manifest.json` index. Metadata records the selected paths and hunks, base revision, context size, input hashes, patch hash, and apply-check result.
+Send one explicitly named Scout the coordinator-approved plan and the exact `review-patches` command. The Scout may run only the installed command and write its output under the ignored `.agent/review-patches/` directory. `review-patches create` writes one `<proposal-id>.patch`, one matching `<proposal-id>.json` metadata file, and a `manifest.json` index. Metadata records the selected paths and hunks, base revision, context size, input hashes, patch hash, and apply-check result.
 
 Create the initial set with:
 
 ```sh
-python3 skills/project-management/project-review-patches/scripts/create_review_patches.py \
-	--plan .agent/review-patches/plan.json
+review-patches create --plan .agent/review-patches/plan.json
 ```
 
 Check freshness before showing a patch again:
 
 ```sh
-python3 skills/project-management/project-review-patches/scripts/create_review_patches.py \
-	--check .agent/review-patches
+review-patches check .agent/review-patches
 ```
 
-Feedback changes only the selected proposal. Update the plan, then ask the same named Scout to refresh it. Regenerate all proposals that share changed inputs before showing them again, and refuse to show or stage a stale patch.
+Feedback changes only the selected proposal. Update the plan, then ask the same named Scout to refresh it with:
+
+```sh
+review-patches refresh PROPOSAL_ID --plan .agent/review-patches/plan.json
+```
+
+A refresh rewrites only the selected proposal, so check the whole set straight afterwards:
+
+```sh
+review-patches check .agent/review-patches
+```
+
+Refresh every proposal the check reports as stale. If the feedback moves files or hunks from one proposal to another, run `review-patches create` again for the whole set, because a check can still report the other proposal as fresh. Refuse to show or stage a stale patch.
 
 ## Review and approval gates
 
@@ -91,7 +101,7 @@ After review, the human must say exactly:
 Patch X approved. Stage it.
 ```
 
-Immediately before staging, run the helper freshness check. It reports input and patch-hash drift; use Git separately if you need to check how the patch applies to the intended index. Stage only that exact fresh patch. Then show the staged files and one exact Conventional Commit message.
+Immediately before staging, run `review-patches check .agent/review-patches`. It reports input and patch-hash drift; use Git separately if you need to check how the patch applies to the intended index. Stage only that exact fresh patch. Then show the staged files and one exact Conventional Commit message.
 
 The human must separately say:
 
