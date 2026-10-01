@@ -146,16 +146,6 @@ Root `PROGRESS.md`, when present, is optional freeform backlog prose only, such 
 
 ## Local maintenance tools
 
-Use these scripts before manual inspection where they answer the question:
-
-```sh
-project-checks-repo-context
-project-checks-generated-file-guard
-project-checks --list
-```
-
-- `project-checks-repo-context` — compact startup context (rules, progress, workspace, diagnostics, generated output, Git)
-- `project-checks-generated-file-guard` — checks for direct edits to generated files and stale output
-- `project-checks --list` — discovers checks; use `--check <name>` for specific verification or `--test-file <path>` to narrow unit tests
+Before manual inspection, use `agent-run list --json` to find registered checks, `progress next --json` to find active work, and `progress context get --json` to read the handoff.
 
 Pair `agent-config` with `agent-config-review` when reviewing this system. Prioritise: generated/source drift, token cost in always-loaded rules, rule/skill boundaries, skill taxonomy, validation coverage. Use `project-audit` for other projects only.

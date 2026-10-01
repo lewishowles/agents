@@ -100,9 +100,6 @@ def classify_bash_command(command):
 
 	command = command.strip()
 
-	if "project-diagnostics" in command:
-		return "project-diagnostics"
-
 	npm_match = re.search(r"\bnpm\s+(?:run\s+)?(test|lint)\b", command)
 	if npm_match:
 		return f"npm {npm_match.group(1)}"
@@ -424,6 +421,7 @@ def verbosity(paths):
 
 
 def commands(paths):
+	"""Print the number of Bash commands, and how many ran raw npm or Vitest, bounded their output, or ran Playwright scoped to named tests or broadly."""
 	section("Command discipline", "Successful patterns")
 
 	counts = collections.Counter()
@@ -441,9 +439,7 @@ def commands(paths):
 				counts["bash total"] += 1
 				classification = classify_bash_command(command)
 
-				if classification == "project-diagnostics":
-					counts["diagnostics wrapper"] += 1
-				elif classification in ("npm test", "npm lint", "vitest"):
+				if classification in ("npm test", "npm lint", "vitest"):
 					counts["raw npm or vitest"] += 1
 
 				if re.search(r"\|\s*(tail|head)\b", command):
@@ -455,7 +451,6 @@ def commands(paths):
 
 	for key in (
 		"bash total",
-		"diagnostics wrapper",
 		"raw npm or vitest",
 		"output bounded",
 		"playwright scoped",

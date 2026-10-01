@@ -138,7 +138,7 @@ Repository refresh is optional during global setup. Pass `--refresh` to sync ext
 
 ## Project setup
 
-Global skills work without project setup. Run this optional command when a project needs its own instructions (`AGENTS.md`, `CLAUDE.md`, and `.claudeignore` where applicable), skill-pack links, or the global `project-checks` and `friction` tools. From the project root, pass the agent flag that matches the project:
+Global skills work without project setup. Run this optional command when a project needs its own instructions (`AGENTS.md`, `CLAUDE.md`, and `.claudeignore` where applicable), skill-pack links, or the global `doc-paths` and `friction` tools. From the project root, pass the agent flag that matches the project:
 
 ```bash
 cd /path/to/project

@@ -16,7 +16,7 @@ Several of Claude's hooks need `jq` to run. Install it with `brew install jq` be
 
 ## Set up a project
 
-Global skills work without project setup. This optional step adds project instructions (`AGENTS.md`, `CLAUDE.md`, and `.claudeignore` where applicable), optional skill-pack links, and the global `project-checks` and `friction` tools. It lists what it will add before changing anything. Run it from the project root:
+Global skills work without project setup. This optional step adds project instructions (`AGENTS.md`, `CLAUDE.md`, and `.claudeignore` where applicable), optional skill-pack links, and the global `doc-paths` and `friction` tools. It lists what it will add before changing anything. Run it from the project root:
 
 ```bash
 /path/to/repository/scripts/setup-project.sh --both

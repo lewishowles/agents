@@ -77,7 +77,7 @@ Use local process first:
 - Include `~/Dev/Repositories/Packages/boilerplate` when change affects future scaffolding or shared defaults
 - Use package dry-run or pack commands when supported
 - Install unpublished packages into consumer repos only after explicit user approval
-- Run consumer repo's documented diagnostics, preferring diagnostics wrapper when present
+- Run consumer repo's documented diagnostics, through its agent-run registrations when it has them
 - Record which consumers checked and which skipped, with reason
 
 Skip this step for docs-only, metadata-only, or internal patch releases unless plausible consumer impact exists. If no consumer can be checked locally, report that gap before publishing; local package tests don't prove release completeness.
