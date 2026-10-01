@@ -1,0 +1,13 @@
+{
+	"name": "guard-hcom-recipient",
+	"description": "Blocks HCOM sends without an @recipient role tag before the message body, including replies with --reply-to.",
+	"runtime": "claude",
+	"events": [
+		{
+			"event": "PreToolUse",
+			"matcher": "Bash"
+		}
+	],
+	"dependencies": ["jq", "python3"],
+	"failureMode": "silent"
+}
