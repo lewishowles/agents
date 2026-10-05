@@ -664,6 +664,74 @@ codex_config_section() {
 	'
 }
 
+# Sets every key from one repository-managed Codex section, keeping any other
+# keys already in that section. Adds the section when it is missing.
+#
+# @param  {string}  config
+#     Codex config file to update.
+# @param  {string}  section
+#     TOML section name whose managed keys should be applied.
+# @param  {string}  ...
+#     Retired key names to remove from the section.
+ensure_codex_section_settings() {
+	local config="$1" section="$2"
+	shift 2
+	local managed temp  # File of managed key lines, and the updated config.
+
+	managed=$(mktemp)
+	temp=$(mktemp)
+
+	# Keep only the key lines from the base section, without its header or comments.
+	codex_config_section "$section" | awk 'NR > 1 && /^[^#[:space:]][^=]*=/' > "$managed"
+
+	# The first input is the managed key lines, the second is the user's config.
+	# Managed and retired keys are dropped from the existing section, and the
+	# managed lines are written straight after its header.
+	awk -v header="[$section]" -v retired="$*" '
+		function key_of(line) {
+			sub(/^[[:space:]]+/, "", line)
+			sub(/[[:space:]]*=.*$/, "", line)
+			return line
+		}
+		function print_managed(  i) {
+			for (i = 1; i <= count; i++) {
+				print lines[i]
+			}
+		}
+		FNR == NR {
+			lines[++count] = $0
+			drop[key_of($0)] = 1
+			next
+		}
+		FNR == 1 {
+			retired_count = split(retired, retired_keys, " ")
+			for (i = 1; i <= retired_count; i++) {
+				drop[retired_keys[i]] = 1
+			}
+		}
+		$0 == header {
+			print
+			print_managed()
+			in_section = 1
+			found = 1
+			next
+		}
+		/^\[/ { in_section = 0 }
+		in_section && key_of($0) in drop { next }
+		{ print }
+		END {
+			if (!found) {
+				print ""
+				print header
+				print_managed()
+			}
+		}
+	' "$managed" "$config" > "$temp"
+
+	trash "$managed"
+	mv "$temp" "$config"
+}
+
 # Ensures the Codex TUI uses the managed settings while preserving unrelated
 # TUI preferences.
 #
@@ -846,7 +914,7 @@ remove_inline_codex_hooks() {
 }
 
 # Ensures $CODEX_DIR/config.toml contains the managed defaults, MCP server
-# entries, hooks feature flag, and TUI status line. Legacy inline hooks are
+# entries, feature flags, memory settings, and TUI status line. Legacy inline hooks are
 # removed so Codex uses the managed hooks.json file.
 ensure_codex_config() {
 	local config="$CODEX_DIR/config.toml"
@@ -857,6 +925,13 @@ ensure_codex_config() {
 	touch "$config"
 	ensure_codex_defaults "$config" "$defaults_temp"
 
+	# Apply every managed feature flag and memory setting. The deprecated
+	# codex_hooks flag is removed, because the managed hooks flag replaces it.
+	# This runs before the managed sections below are moved to the end, so a
+	# newly added section keeps its place on later runs.
+	ensure_codex_section_settings "$defaults_temp" "features" "codex_hooks"
+	ensure_codex_section_settings "$defaults_temp" "memories"
+
 	# Strip managed MCP server sections before re-appending them,
 	# so re-running setup never creates duplicate entries. The Serena
 	# section is stripped but not re-added, because Serena is no longer used.
@@ -864,13 +939,14 @@ ensure_codex_config() {
 		/^\[mcp_servers\.codebase-memory-mcp(\.|\])/{ skip = 1; next }
 		/^\[mcp_servers\.serena(\.|\])/{ skip = 1; next }
 		/^\[mcp_servers\.mdn(\.|\])/{ skip = 1; next }
+		/^\[mcp_servers\.sketch(\.|\])/{ skip = 1; next }
 		/^\[/{ skip = 0 }
 		!skip { print }
 	' "$defaults_temp" > "$temp"
 	rm "$defaults_temp"
 
 	# Re-add repository-managed MCP server configuration.
-	for section in "mcp_servers.codebase-memory-mcp" "mcp_servers.mdn"; do
+	for section in "mcp_servers.codebase-memory-mcp" "mcp_servers.mdn" "mcp_servers.sketch" "mcp_servers.sketch.tools.run_code"; do
 		printf '\n' >> "$temp"
 		codex_config_section "$section" >> "$temp"
 	done
@@ -881,25 +957,6 @@ ensure_codex_config() {
 	hooks_temp=$(mktemp)
 	remove_inline_codex_hooks "$temp" "$hooks_temp"
 	mv "$hooks_temp" "$temp"
-
-	local hooks_enabled
-	hooks_enabled=$(codex_config_value "features" "hooks")
-
-	# Migrate the deprecated codex_hooks key to hooks, and ensure the hooks
-	# feature flag is present in [features].
-	if grep -q '^codex_hooks' "$temp"; then
-		local temp2
-		temp2=$(mktemp)
-		sed "s/^codex_hooks = /hooks = $hooks_enabled/" "$temp" > "$temp2"
-		mv "$temp2" "$temp"
-	elif ! grep -q '^\[features\]' "$temp"; then
-		printf '\n[features]\nhooks = %s\n' "$hooks_enabled" >> "$temp"
-	elif ! grep -q '^hooks' "$temp"; then
-		local temp2
-		temp2=$(mktemp)
-		awk -v hooks_enabled="$hooks_enabled" '/^\[features\]/{print; print "hooks = " hooks_enabled; next} 1' "$temp" > "$temp2"
-		mv "$temp2" "$temp"
-	fi
 
 	if cmp -s "$config" "$temp"; then
 		rm "$temp"

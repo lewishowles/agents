@@ -1,5 +1,11 @@
 {
 	"outputStyle": "concise",
+	"model": "opus",
+	"modelSettings": {
+		"claude-opus-5-5": {
+			"effortLevel": "high"
+		}
+	},
 	"env": {
 		"CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1",
 		"CLAUDE_CODE_SUBAGENT_MODEL": "haiku",

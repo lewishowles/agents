@@ -1,6 +1,6 @@
 approval_policy = "never"
 default_permissions = "project-edit"
-model_reasoning_effort = "medium"
+model_reasoning_effort = "high"
 model_verbosity = "low"
 model_reasoning_summary = "none"
 hide_agent_reasoning = true
@@ -38,6 +38,13 @@ enabled = true
 [features]
 hooks = true
 default_mode_request_user_input = true
+js_repl = false
+memories = true
+workspace_dependencies = true
+
+[memories]
+generate_memories = true
+use_memories = true
 
 [tui]
 status_line = ["run-state", "project-name", "used-tokens", "context-used", "five-hour-limit", "weekly-limit", "model-with-reasoning"]
@@ -57,3 +64,6 @@ enabled = false
 [mcp_servers.sketch]
 url = "http://localhost:31126/mcp"
 enabled = false
+
+[mcp_servers.sketch.tools.run_code]
+approval_mode = "approve"
