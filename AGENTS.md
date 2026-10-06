@@ -94,6 +94,8 @@ repo/.agents/skills/agent-config → repo/.claude/skills/agent-config (repo-loca
 - Project setup / symlink wiring → `scripts/setup-project.sh`, `scripts/setup-global.sh`
 - Transcript and usage analysis → `scripts/audit/`; generated reports stay under `.agent/audits/`
 
+**Skill vs. rule boundary:** if guidance should apply on every turn regardless of task, it belongs in `rules/`. If it is triggered by a specific task type or file context, it belongs in `skills/`. Do not add always-on conventions to a skill, and do not put task-specific workflows in a rule. Record lasting ownership splits between two skills in those skills' own files.
+
 ## Confirmed Codex behaviour
 
 - **Global rules:** `~/.agents/AGENTS.md`
