@@ -19,6 +19,8 @@ extends = ":workspace"
 "{{HOME}}/.agents" = true
 # HCOM keeps its shared message database here, and every hcom command needs write access to it.
 "{{HOME}}/.hcom" = true
+# Bun stores downloaded packages here during `bun install`. Only the cache is listed, because ~/.bun also holds the Bun binary.
+"{{HOME}}/.bun/install/cache" = true
 # Swift and Xcode builds write package caches, package security records, and build output here.
 "{{HOME}}/Library/Caches/org.swift.swiftpm" = true
 "{{HOME}}/Library/org.swift.swiftpm" = true
