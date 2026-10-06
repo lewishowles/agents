@@ -4,10 +4,10 @@ Minimise token cost while discovering files; answer the narrow question with the
 
 - Prefer `rg` and `rg --files`, scoped to the smallest likely directory (`rg --files src`, not a repo-wide scan). Plain `rg` already honours `.gitignore` and skips `node_modules`, `dist`, and caches, which is what you want by default.
 - When you specifically need files that `.gitignore` hides, add `--no-ignore` and keep the path scoped to a named directory. A broad `rg --no-ignore`, `grep -r`, or `find` targeting `.`, `~`, `/`, or a protected directory is blocked by `guard-search-boundaries`; use `rg` through the shell, scoped to a named directory, instead.
-- Do not inspect generated, vendored, cached, build, dependency, or large binary directories unless explicitly asked: `node_modules`, `dist`, `build`, `.git`, coverage, caches, generated plugin bundles, lockfile-heavy generated output, local secrets.
+- Do not inspect generated, vendored, cached, build, dependency, or large binary content (`node_modules`, `dist`, `build`, `.git`, coverage, screenshots, generated bundles) unless asked or a reported failure points to a specific path. Read local secrets only when explicitly asked.
 - Do not use broad `find`, `ls -R`, or unscoped glob searches. If `find` is unavoidable, scope it to named directories and group `-o` expressions with parentheses.
 - If a task packet, handoff, or the user's message already names the exact target file(s), symbol, or finding, skip indexing and search entirely and read the named location directly. Only search when the target is genuinely unknown or the handoff is incomplete.
-- After making file edits, do not self-review by reading several changed files in sequence. Prefer diagnostics, formatter output, targeted symbol lookup, or a single patch-anchor read only when needed.
+- After making file edits, do not self-review with `git diff` or by reading several changed files in sequence; use `git status --short` to list touched files, and diagnostics, formatter output, a symbol lookup, or one targeted read when needed.
 - For build artefact checks, inspect the exact expected output path rather than listing whole build trees.
 - If a command unexpectedly starts dumping large output, stop using that pattern and switch to a narrower command.
 - If a user says a file exists and a search cannot find it, re-run with `--no-ignore` before concluding it is missing, then say whether gitignored files were included.
