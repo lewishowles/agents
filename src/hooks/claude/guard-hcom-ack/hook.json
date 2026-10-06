@@ -1,6 +1,6 @@
 {
 	"name": "guard-hcom-ack",
-	"description": "Suppresses acknowledgement-only HCOM messages so team roles wait silently for actionable work or terminal receipts. Rewrites the send to a no-op on Claude; blocks it on Codex.",
+	"description": "Suppresses acknowledgement-only HCOM messages so team roles wait silently for actionable work or terminal receipts. Rewrites the send to a no-op on Claude and Codex.",
 	"runtime": "claude",
 	"events": [
 		{

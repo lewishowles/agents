@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Suppresses acknowledgement-only HCOM messages from agent tool calls.
 #
-# Claude honours `hookSpecificOutput.updatedInput`, so on Claude the send is
-# rewritten to a no-op: the attempt leaves no error to react to and no reason to
-# retry. Codex does not support input rewriting, so it still gets a hard block.
+# On both Claude and Codex the send is rewritten to a no-op, so the attempt
+# leaves no error to react to and no reason to retry. Codex only accepts a
+# replaced command when the hook also allows it.
 # Pass "codex" as the first argument from the Codex hook wiring.
 
 set -euo pipefail
@@ -40,12 +40,8 @@ fi
 
 [[ "$is_acknowledgement" == true ]] || exit 0
 
-if [[ "$runtime" == "codex" ]]; then
-	printf 'guard-hcom-ack: blocked: HCOM team roles do not send acknowledgement messages. Nothing in this command ran. Re-run any other work it contained without the acknowledgement, finish the task, and send your terminal result, blocker, decision, or correction. If there was no task, wait silently.\n' >&2
-	exit 2
-fi
+no_op_command="printf 'guard-hcom-ack: acknowledgement not sent; nothing in this command ran; re-run any other work in the command without the acknowledgement\n'"  # Replacement that explains the suppressed command.
 
-no_op_command="printf 'guard-hcom-ack: acknowledgement not sent; HCOM roles wait silently\n'"  # Replacement that sends nothing and leaves no error to react to.
-
-printf '%s' "$input" | jq -c --arg command "$no_op_command" \
-	'{hookSpecificOutput: {hookEventName: "PreToolUse", updatedInput: (.tool_input | .command = $command)}}'
+printf '%s' "$input" | jq -c --arg command "$no_op_command" --arg runtime "$runtime" \
+	'{hookSpecificOutput: {hookEventName: "PreToolUse", updatedInput: (.tool_input | .command = $command)}}
+	| if $runtime == "codex" then .hookSpecificOutput.permissionDecision = "allow" else . end'

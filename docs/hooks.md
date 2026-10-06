@@ -13,7 +13,7 @@ Hooks are shell scripts that Claude Code runs automatically at specific points i
 | `auto-format` | Runs oxfmt after supported file writes when available. | PostToolUse (`Edit\|Write`) | `silent` |
 | `guard-commit-message` | Blocks an `hcom send` whose body proposes a commit message; subordinate roles leave that to the Orchestrator. | PreToolUse (`Bash`) | `silent`; requires jq |
 | `guard-destructive` | Blocks sudo, filesystem wipes, git config mutation, and rm — the unconditional-never commands in this repo's Git Safety Protocol and Communication rules. | PreToolUse (`Bash`) | `silent`; requires jq |
-| `guard-hcom-ack` | Suppresses acknowledgement-only HCOM messages so team roles wait silently for actionable work or terminal receipts. Rewrites the send to a no-op on Claude; blocks it on Codex. | PreToolUse (`Bash`) | `silent`; requires jq |
+| `guard-hcom-ack` | Suppresses acknowledgement-only HCOM messages so team roles wait silently for actionable work or terminal receipts. Rewrites the send to a no-op on Claude and Codex. | PreToolUse (`Bash`) | `silent`; requires jq |
 | `guard-hcom-recipient` | Blocks HCOM sends without an @recipient role tag before the message body, including replies with --reply-to. | PreToolUse (`Bash`) | `silent`; requires jq, python3 |
 | `guard-manual-commands` | Blocks Playwright, Cypress, and registered agent-run commands marked manual-only so people run them in a terminal. | PreToolUse (`Bash`) | `silent`; requires jq |
 | `guard-no-pager` | Blocks `git <subcommand> ... --no-pager`, which Git rejects; the flag belongs before the subcommand. | PreToolUse (`Bash`) | `silent`; requires jq |
