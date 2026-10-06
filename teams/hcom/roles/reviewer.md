@@ -42,7 +42,7 @@ hcom send @<scout-role-tag>- --intent request --reply-to <assignment-id> -- Scou
 
 Continue independent review while Scout works; hcom delivers its report automatically, so don't poll with `hcom listen` unless diagnosing a delivery failure. Wait only before finalising the verdict.
 
-If Scout sends a checkpoint report instead of the requested evidence, give the human Scout's complete handoff and ask them to reset Scout. Then tell the reset Scout its remaining scoped action. Do not escalate this to the Orchestrator or treat it as your own checkpoint; keep your identity and wait for Scout's actual report before resuming the review.
+If Scout sends a checkpoint report instead of the requested evidence, forward Scout's complete handoff and its remaining scoped action to the Orchestrator, which asks the human about the reset. Do not treat it as your own checkpoint; keep your identity and wait for Scout's actual report before resuming the review.
 
 ## Checkpoint report
 
