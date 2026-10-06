@@ -20,9 +20,9 @@ Hooks are shell scripts that Claude Code runs automatically at specific points i
 | `guard-runaway-process` | Blocks a Bash command whose only loop is an unbounded busy spin (`while :`, `while true`, `until false`, `for (( ; ; ))`) with no `sleep`, `break`, or `timeout`. This is the shape that left an orphaned shell burning CPU for eight days. | PreToolUse (`Bash`) | `silent`; requires jq |
 | `guard-search-boundaries` | Blocks broad searches that bypass ignore rules or enter generated, dependency, cache, coverage, and browser-output directories. | PreToolUse (`Bash`) | `silent`; requires jq, python3 |
 | `hcom` | Routes verified Claude lifecycle events to HCOM without managing other Claude settings. | Notification, PermissionRequest, PostToolUse, PostToolUseFailure, PreToolUse (`Bash\|Task\|Write\|Edit`), SessionEnd, SessionStart, Stop, StopFailure, SubagentStart, SubagentStop, UserPromptSubmit | `silent`; requires hcom |
-| `image-for-agent-read` | Reroutes local image reads through image-for-agent using the fixed ui preset. | PreToolUse (`Read`) | `silent`; requires jq, image-for-agent |
 | `plan-verify` | Warns when an exited plan is missing a validation section. | PostToolUse (`ExitPlanMode`) | `silent` |
 | `progress-resume` | Injects project progress context when the prompt asks to resume work. | UserPromptSubmit | `silent` |
+| `retina-shrink-read` | Gives Claude Code a halved copy of a local Retina image when it reads one. | PreToolUse (`Read`) | `silent`; requires jq, retina-shrink |
 | `test-skeleton-reminder` | Suggests matching tests when implementation files change. | PreToolUse (`Write\|Edit`) | `silent`; requires jq |
 | `tool-call-checkpoint` | Adds one advisory checkpoint when an HCOM team session reaches its tool-call limit (20 by default, 40 for HCOM Scouts and Implementers), and a context checkpoint before compaction in every session. | PreToolUse, PreCompact, SessionStart (`clear`) | `silent`; requires jq |
 | `tool-failure-log` | Records failed Claude tool calls for recurring friction analysis. | PostToolUseFailure | `silent` |

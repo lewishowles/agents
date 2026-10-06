@@ -135,7 +135,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'bash \"$HOME/.claude/hooks/image-for-agent-read.sh\"'"
+            "command": "bash -c 'bash \"$HOME/.claude/hooks/retina-shrink-read.sh\"'"
           }
         ]
       },

@@ -1,0 +1,13 @@
+{
+	"name": "retina-shrink-read",
+	"description": "Gives Claude Code a halved copy of a local Retina image when it reads one.",
+	"runtime": "claude",
+	"events": [
+		{
+			"event": "PreToolUse",
+			"matcher": "Read"
+		}
+	],
+	"dependencies": ["jq", "retina-shrink"],
+	"failureMode": "silent"
+}
