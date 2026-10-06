@@ -48,7 +48,6 @@ Minimise token cost by default; treat context as a limited shared budget.
 - Treat an itemised remaining-work list in a continuation or replacement packet as established evidence. Direct the next action without repeating discovery or verification unless relevant state changed.
 - A notification-only wake-up such as `<hcom>` needs no status reply; answer when there is a result, a finding, a change of direction or a blocker. If identical wake-ups recur without a state change, treat them as a possible delivery failure, check `hcom status --logs` when HCOM inspection is authorised, and report the concrete error once rather than narrating each retry.
 - Write large deliverables (roadmaps, specs, reports) directly to the target file and summarise briefly in chat; never print the full document as a response.
-- Prefer structurally correct, formatter-friendly code over hand-polished indentation. Preserve indentation where it affects syntax or meaning, but do not spend effort aligning, beautifying, or manually wrapping whitespace that the project formatter will rewrite.
 
 ### Effort tiering
 
@@ -87,7 +86,6 @@ A confident conclusion is not authorisation to implement. If the last user messa
 
 - State assumptions explicitly. If confidence in understanding the requirement is below 95%, list what is understood and what needs clarifying before touching any files
 - Before making a change, name what existing functionality it could affect and what evidence will confirm it is unaffected.
-- Every authored physical-direction style must either have a documented visual reason to remain physical or use its logical equivalent. Coupled overflow state and CSS require RTL browser verification before changing.
 
 - Request names both a fix and the symptom it's meant to solve? Confirm the fix actually intercepts that symptom before implementing — otherwise report the mismatch first instead of building it.
 - Multiple interpretations? Present all, don't pick silently

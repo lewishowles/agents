@@ -48,6 +48,12 @@ for line in contents.splitlines():
 	records.append(record)
 ```
 
+Prefer structurally correct, formatter-friendly code over hand-polished indentation. Preserve indentation where it affects syntax or meaning, but do not spend effort aligning, beautifying, or manually wrapping whitespace that the project formatter will rewrite.
+
+## CSS
+
+Every authored physical-direction style must either have a documented visual reason to remain physical or use its logical equivalent. Coupled overflow state and CSS require RTL browser verification before changing.
+
 ## Naming & imports
 
 - Never abbreviate event parameter names — `event` not `e`
