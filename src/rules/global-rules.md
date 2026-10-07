@@ -146,7 +146,7 @@ Every changed line traces directly to the request.
 
 ### Completing work
 
-**List follow-up edits.** After editing files in response to review feedback or another follow-up request on existing uncommitted work, list every file edited during that response. List only files changed in the latest pass, not every modified file in the working tree. This is optional for the first implementation pass of a new commit.
+**List follow-up edits.** After editing files in response to review feedback or another follow-up request on existing uncommitted work, list every file edited during that response. List only files changed in the latest pass, not every modified file in the working tree. This is optional for the first implementation pass of a new commit. Whenever you list changed files, put them in a vertical bulleted list, one file per line, never inline in a sentence.
 
 **Evidence before claims.** Never assess test or code health from static inspection alone. Before claiming a fix works or identifying a root cause, run the relevant test or repro and include the result. If it genuinely cannot be run, say so explicitly; do not assert instead. For tooling, install, or config changes, success means the running system observably picked the change up, not that the edit was written. When work is done, say what changed and what the user should verify.
 

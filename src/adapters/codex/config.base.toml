@@ -1,6 +1,6 @@
 approval_policy = "never"
 default_permissions = "project-edit"
-model_reasoning_effort = "high"
+model_reasoning_effort = "medium"
 model_verbosity = "low"
 model_reasoning_summary = "none"
 hide_agent_reasoning = true
