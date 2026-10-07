@@ -26,7 +26,7 @@ When local context, package metadata, README usage docs, or a loaded skill ident
 
 When reading a web page, prefer `page-to-markdown` over raw or noisy browser text.
 
-Task and handoff records are complete agent-facing contracts. Read the active task and chunk records from the `progress` CLI before implementation, even when the user has not seen them. Do not ask the user to reproduce their contents. Before editing, provide a concise overview derived from the records, the current repository state, and the current request: the confirmed contract, intended files, verification, and unresolved decisions.
+Task and handoff records contain the complete known contract for resuming work. They can change when repository evidence or the current request reveals a better way to meet the intended outcome. `progress` is authoritative for recorded task state and decisions, not for whether a proposed solution is best. Read the active task and chunk records from the `progress` CLI before implementation, even when the user has not seen them. Do not ask the user to reproduce their contents. Before editing, provide a concise overview derived from the records, the current repository state, and the current request: the confirmed contract, intended files, verification, and unresolved decisions.
 
 ### Token budget discipline
 
@@ -140,7 +140,7 @@ After understanding the affected flow, stop at the first option that fully satis
 5. New code: write the minimum needed for the confirmed requirement
 
 - No features beyond request, no single-use abstractions or unasked flexibility
-- Scope limits what you change without asking, not what you notice or raise. When an adjacent change would clearly serve the same purpose, name it as an option with a recommendation instead of dropping it silently.
+- Scope limits what you change without asking, not what you notice or raise. A task's list of planned steps is not an exhaustive list of useful changes. Do not reject an idea solely because the record omits it or lists other steps. When an adjacent change would clearly serve the same purpose, name it as an option with a recommendation instead of dropping it silently. If it would change a confirmed requirement or explicit exclusion, explain why and ask before changing the contract.
 - Don't improve adjacent code, comments, or formatter-owned whitespace; don't refactor what works; match existing style
 - Spot unrelated dead code? Mention it, don't delete
 - Remove unused imports, variables, functions you created; don't remove unrelated dead code unless the user points it out or asks for cleanup
