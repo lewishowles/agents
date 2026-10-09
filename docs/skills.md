@@ -28,7 +28,7 @@ Skills are focused instruction sets for a specific kind of work. Each canonical 
 | `human-friendly-cli` | Use this skill when designing, reviewing, or extending CLI commands. Covers discoverable, restrained human-first CLIs that also work well for agents. |
 | `insights-review` | Use this skill when reviewing a supplied rendered insights report and consolidating independent proposal packets for minimal changes to src/rules/**/*.md or skills/**. |
 | `library-release` | Use this skill when preparing to release a supported @lewishowles library package. |
-| `library-update` | Use this skill to check supported @lewishowles project dependencies for newer releases, review release notes, and identify updates or APIs to adopt. |
+| `library-update` | Use this skill to survey supported @lewishowles library releases in a project, or to audit one library for new APIs, fixes, and every place the project could adopt them. |
 | `project-audit` | Use this skill when auditing a project for setup drift, stale generated output, missing diagnostics, command-safety gaps, or agent-readiness issues. Covers AGENTS.md, agent-run registrations, global doc-paths and friction commands, progress handoff health, validation commands, and generated/source boundaries. |
 | `project-backport-review` | Use this skill when comparing a client/consumer project against the boilerplate template it started from, to find backport candidates and then improve boilerplate itself for the next project. |
 | `project-continue` | Use this skill when starting or resuming tracked work, completing a progress chunk or task, closing or handing off a session, or reaching a tool-call checkpoint during tracked work. Covers progress task, chunk, decision, discovery, and handoff records. |

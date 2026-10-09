@@ -1,27 +1,29 @@
 ---
 name: library-update
 description: >
-  Use this skill to check supported @lewishowles project dependencies for newer releases, review release notes, and identify updates or APIs to adopt.
+  Use this skill to survey supported @lewishowles library releases in a project, or to audit one library for new APIs, fixes, and every place the project could adopt them.
 ---
-# Library update check
+# Library update
 
-Check Lewis shared libraries for new releases, surface changes, and identify updates needed.
+Find the improvements a shared-library release offers and where the project can use them.
 
 ## Invocation
 
 ```
-/library-update              check libraries present in package.json
-/library-update components   check @lewishowles/components only
-/library-update helpers      check @lewishowles/helpers only
-/library-update testing      check @lewishowles/testing only
-/library-update cli-style    check @lewishowles/cli-style only
-/library-update lint-config  check @lewishowles/lint-config only
-/library-update pkg-checks   check @lewishowles/pkg-checks only
+/library-update              quick survey of libraries present in package.json
+/library-update components   deep audit of @lewishowles/components
+/library-update helpers      deep audit of @lewishowles/helpers
+/library-update testing      deep audit of @lewishowles/testing
+/library-update cli-style    deep audit of @lewishowles/cli-style
+/library-update lint-config  deep audit of @lewishowles/lint-config
+/library-update pkg-checks   deep audit of @lewishowles/pkg-checks
 ```
 
-## Step 1 — determine which libraries to check
+## Step 1: choose the scope
 
-If argument given, use it. Otherwise read `package.json` and check dependencies and devDependencies:
+With no argument, survey the libraries in `package.json` dependencies and devDependencies. With a library name such as `components`, run the full audit below for that library.
+
+Supported libraries:
 
 - `@lewishowles/components`
 - `@lewishowles/helpers`
@@ -30,11 +32,11 @@ If argument given, use it. Otherwise read `package.json` and check dependencies 
 - `@lewishowles/lint-config`
 - `@lewishowles/pkg-checks`
 
-If a known library is not present, check whether the project or generators contain boilerplate the library replaces. Report missing-library adoption separately from version updates. For example, a project without `@lewishowles/testing` might still need it if test setup or Boilersuit templates duplicate utilities it provides.
+If a survey finds no known libraries, say so. A survey also names, in one line each, absent libraries whose features the project appears to duplicate.
 
-If no known libraries are present and no adoption opportunity applies, stop and say so.
+In a deep run, if the named library is absent, check whether project code or generators contain work it could replace. Report adoption separately from version updates. Stop only when the library is absent and no adoption opportunity applies.
 
-## Step 2 — find the installed version
+## Step 2: compare versions
 
 For each library in scope:
 
@@ -42,8 +44,6 @@ For each library in scope:
 2. Find the exact resolved version from lockfile:
    - `bun.lock` or `bun.lockb`: search for the package entry
 3. Use resolved version (e.g. `2.2.1`) as **installed version**
-
-## Step 3 — find the latest release
 
 Use the npm registry as the source of truth for published versions:
 
@@ -58,11 +58,13 @@ npm view @lewishowles/pkg-checks version versions time --json
 
 Confirm before running npm registry commands if network access has not already been approved. Identify the latest stable published version from `version` or the `latest` dist-tag. Versions follow the format `X.Y.Z`.
 
-If installed version matches latest release, report up to date and stop.
+In a survey, use step 3's npm metadata to skim only the releases since the installed version, then check relevant project usage. Report installed versus latest, breaking changes that affect the project, and one line on adoption work from those releases. Recommend a separate single-library run for each with adoption work, and recommend a deep run to find unused current features even when a library is up to date. Keep the survey brief; the remaining steps describe a deep run.
 
-## Step 4 — fetch release notes for all versions between installed and latest
+In a deep run, an installed version equal to latest does not end the audit.
 
-Use npm package metadata and contents before GitHub. For each newer version, ascending:
+## Step 3: inspect releases and current APIs
+
+Use npm package metadata and contents before GitHub. In every deep run, compare the latest version's full API with project usage. Inspect releases between installed and latest, in ascending order, for breaking changes, bug fixes, and deprecations. When installed equals latest, check relevant fixes and deprecations in the current version:
 
 ```bash
 npm view @lewishowles/components@X.Y.Z description homepage repository readme --json
@@ -74,32 +76,19 @@ If npm metadata or package contents include release notes, changelog entries, or
 Identify:
 
 - **Breaking changes** — API removals, renamed props, changed defaults, removed exports
-- **Adoption opportunities** — helpers, components, composables, test utilities replacing boilerplate or simplifying existing code
-- **New components or composables** — things the project might benefit from where no equivalent exists
+- **New APIs** — components, props, helpers, composables, and utilities that could improve the project, even where no local equivalent exists
 - **Bug fixes** — particularly for patterns the project already uses
 - **Deprecations** — things still working but flagged for removal
 
-## Step 5 — scan the project and generators
+For `@lewishowles/components`, use `npx @lewishowles/components@<latest> list` and `npx @lewishowles/components@<latest> info <component>` to compare the latest API with project usage. The npm confirmation rule above applies. Follow the component-library skill for CLI details. For helpers, which has no consumer CLI, use the latest version's README and exports.
 
-Scan project source (`src/`) and project-owned Boilersuit generators (`.boilersuit/generators/`) when present. Generators are starting points for future files, so treat stale imports, props, helper usage, and boilerplate there as adoption work even when current project output is up to date.
+## Step 4: hunt through actual usage
 
-Focus on:
+Scan project source and project-owned Boilersuit generators when present. Also scan the locations where the named library is actually used: test files and test setup for testing, ESLint and other config files for lint-config, `package.json` scripts for pkg-checks, and scripts or CLI entry points for cli-style. Generators are starting points for future files, so include their stale usage and boilerplate.
 
-- Imports from `@lewishowles/components` or `@lewishowles/helpers`
-- Imports from `@lewishowles/testing`, `@lewishowles/cli-style`, `@lewishowles/lint-config`, or `@lewishowles/pkg-checks`
-- Component names, prop names, composable names, slot names in release notes
-- Patterns release notes flag as changed or removed
-- Local helpers, repeated boilerplate, custom test setup, CLI styling code, or templates a newer shared library replaces
+For each relevant new feature, look for places it would improve accessibility, simplify markup, remove boilerplate, or remove a workaround, even if there is no local equivalent. For each relevant bug fix, search for local workarounds it makes removable. Check imports, component names, props, slots, and changed patterns in the locations where they occur. Keep searches scoped to existing directories and files.
 
-Use `rg` scoped to `src/` and `.boilersuit/generators/`:
-
-```bash
-rg "@lewishowles/components" src/ --files-with-matches
-rg "@lewishowles/components" .boilersuit/generators/ --files-with-matches
-rg "ComponentName" src/ -l   # repeat per affected component
-```
-
-## Step 6 — compare the boilerplate baseline
+## Step 5: compare the boilerplate baseline
 
 Check `~/Dev/Repositories/Packages/boilerplate` after the current project scan. It's a baseline for future projects, not an automated oracle.
 
@@ -107,11 +96,13 @@ If the repo exists and is readable, inspect relevant package files, source templ
 
 Don't claim boilerplate is "up to date" from version checks alone. At most, say which files or patterns were checked and whether current release notes suggested any concrete changes.
 
-## Step 7 — report findings
+## Step 6: report findings
 
 Structure the output as follows:
 
 ### `@lewishowles/<library>`: vX.Y.Z → vA.B.C
+
+For an up-to-date deep run, show the same version on both sides and say that you audited unused current features.
 
 #### Must update
 
@@ -119,17 +110,17 @@ Breaking changes affecting project code. Include path and needed change.
 
 #### Adopt now
 
-New shared-library APIs replacing existing code, reducing boilerplate, or making current usage more direct. Include all affected paths and say whether adoption belongs in the same dependency-update chunk or should split because it touches many files.
+Every applicable new API, prop, component, helper, utility, migration from a used deprecated API, and removable bug-fix workaround. Include affected paths and the improvement, even when nothing local is being replaced. Say whether each item fits the dependency-update chunk or a follow-up adoption chunk.
 
-Treat `@lewishowles/helpers` simplifications as adoption work by default, even with broad mechanical edits. Defer only when adoption changes product behaviour, needs design or product judgement, or deserves separate review.
+Adopt by default for every library. Defer only when a change alters product behaviour or needs design or product judgement. State that reason for each deferred item.
 
 #### Consider later
 
-New features/components relevant to the project with no existing local equivalent to replace.
+Only deferred applicable improvements, each with its reason.
 
 #### Good to know
 
-Fixes and deprecations worth knowing, no immediate action.
+Fixes and deprecations with no project action after the workaround and usage search.
 
 #### Boilerplate baseline
 
@@ -141,4 +132,4 @@ Omit this section; only report what applies.
 
 ---
 
-If multiple libraries in scope, report separately. Keep concrete: file, import, component, specific change.
+Keep the deep report concrete: file, import, component, specific change. A survey uses the absent-library line from step 1 and the short version comparison and adoption note from step 2.
