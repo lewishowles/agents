@@ -14,7 +14,7 @@ Review planning quality, not an implementation diff, commit range, existing `PRO
 ## Modes
 
 - **Independent review** is the default. Review the task without contacting a planning peer, then write the complete packet to `.agent/reviews/<task-slug>.<model>.md` (see Output). Report a one-line verdict summary and the packet path in chat; `Safe to reset: no` only while the review is in progress, `Safe to reset: yes` once the packet file is written.
-- **Consolidation** is available once this model's own packet file exists for the task. Read both models' packet files directly from `.agent/reviews/` — no live contact with the opposite peer is needed. Follow `~/Dev/Configuration/Agents/teams/hcom/roles/planning-peer.md` for the packet-path convention and staleness checks. Do not begin a second independent review, or implement the task.
+- **Consolidation** is available once this model's own packet file exists for the task. Read both models' packet files directly from `.agent/reviews/` — no live contact with the opposite peer is needed. Follow `~/Dev/Repositories/Configuration/Agents/teams/hcom/roles/planning-peer.md` for the packet-path convention and staleness checks. Do not begin a second independent review, or implement the task.
 
 ## Resolve the task
 

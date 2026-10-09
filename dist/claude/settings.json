@@ -20,7 +20,7 @@
     "defaultMode": "auto",
     "additionalDirectories": [
       "~/.Trash",
-      "~/Dev/Configuration/Agents"
+      "~/Dev/Repositories/Configuration/Agents"
     ],
     "allow": [
       "mcp__codebase-memory-mcp__*",

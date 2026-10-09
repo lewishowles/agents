@@ -18,7 +18,7 @@
 	},
 	"permissions": {
 		"defaultMode": "auto",
-		"additionalDirectories": ["~/.Trash", "~/Dev/Configuration/Agents"],
+		"additionalDirectories": ["~/.Trash", "~/Dev/Repositories/Configuration/Agents"],
 		"allow": [
 			"mcp__codebase-memory-mcp__*",
 			"Bash(hcom:*)",

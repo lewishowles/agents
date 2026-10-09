@@ -358,7 +358,7 @@ test_config_replacement_creates_timestamped_backup() {
 	assert_contains "$home_dir/.codex/config.toml" '[permissions.project-edit]'
 	assert_contains "$home_dir/.codex/config.toml" 'extends = ":workspace"'
 	assert_contains "$home_dir/.codex/config.toml" '[permissions.project-edit.workspace_roots]'
-	assert_contains "$home_dir/.codex/config.toml" '"'"$home_dir"'/Dev/Configuration/Agents" = true'
+	assert_contains "$home_dir/.codex/config.toml" '"'"$home_dir"'/Dev/Repositories/Configuration/Agents" = true'
 	assert_contains "$home_dir/.codex/config.toml" '[permissions.project-edit.filesystem.":workspace_roots"]'
 	assert_contains "$home_dir/.codex/config.toml" '".git/config" = "write"'
 	assert_contains "$home_dir/.codex/config.toml" '".git/config.lock" = "write"'
@@ -869,7 +869,7 @@ test_failed_backup_preserves_existing_config() {
 test_hcom_adds_missing_codex_folders() {
 	local home_dir="$TEST_ROOT/hcom-folders"  # Isolated home with every required folder present.
 	local output="$TEST_ROOT/hcom-folders.txt"  # Setup status output.
-	local existing_args="--model codex  --add-dir ~/Dev/Configuration/zsh   --add-dir $REPO_DIR"  # User options and an existing required folder, with uneven spacing that setup must keep.
+	local existing_args="--model codex  --add-dir ~/Dev/Repositories/Configuration/zsh   --add-dir $REPO_DIR"  # User options and an existing required folder, with uneven spacing that setup must keep.
 	local expected_args  # Original arguments followed by the missing required folders.
 
 	mkdir -p "$home_dir/.Trash" "$home_dir/Library/Caches/org.swift.swiftpm" "$home_dir/Library/org.swift.swiftpm"

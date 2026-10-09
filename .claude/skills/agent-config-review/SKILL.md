@@ -12,7 +12,7 @@ do-not-use-when:
 
 Review this repository as a configuration system, not application code. Failure mode: treating rules, skills, hooks, validation scripts in isolation, missing context cost, duplicated guidance, unclear boundaries, validation gaps.
 
-Repo-local to `~/Dev/Configuration/Agents` — doesn't move into `skills/` tree; it reviews the system creating shared skills.
+Repo-local to `~/Dev/Repositories/Configuration/Agents` — doesn't move into `skills/` tree; it reviews the system creating shared skills.
 
 ## Contract
 
