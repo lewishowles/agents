@@ -4,7 +4,7 @@ Use the scripts for normal installs. These manual steps are here as a fallback w
 
 ## Global Claude setup
 
-Run `scripts/sync-external-skills.sh`, then `scripts/sync.sh`, then link these paths:
+Run `scripts/sync.sh`, then link these paths:
 
 ```bash
 ln -s /path/to/repository/dist/claude/CLAUDE.md ~/.claude/CLAUDE.md
@@ -25,7 +25,7 @@ This repo does not ship or manage plugins. Add a Claude Code plugin with `/plugi
 
 ## Global Codex setup
 
-Run `scripts/sync-external-skills.sh`, then `scripts/sync.sh`, then link:
+Run `scripts/sync.sh`, then link:
 
 ```bash
 ln -s /path/to/repository/dist/codex/AGENTS.md ~/.agents/AGENTS.md
@@ -134,7 +134,7 @@ Run `scripts/setup-global.sh --select` to choose skills in a terminal. The picke
 
 If a file or folder that setup did not create already sits where an included skill's link belongs, setup moves it to a timestamped `.bak` backup under `~/.claude/backups/skills/` or `~/.agents/backups/skills/` and prints `backup at <path>`. Content at an excluded skill's name is left untouched.
 
-Repository refresh is optional during global setup. Pass `--refresh` to sync external skills, regenerate repository output, and validate it before linking. If external skill sync fails because the network is unavailable, the existing local `skills/<group>/<name>` copy is kept; pass `--refresh --skip-external` to bypass the sync step intentionally.
+Repository refresh is optional during global setup. Pass `--refresh` to regenerate local repository output and validate it before linking.
 
 ## Project setup
 

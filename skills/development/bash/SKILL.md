@@ -63,7 +63,7 @@ Every function needs this documentation, including one-line functions and functi
 Every top-level and local variable needs a short purpose comment. Use a trailing `#` comment for a short declaration or a preceding `#` comment when it reads more clearly.
 
 ```bash
-MANIFEST="$REPO_DIR/external-skills.json"  # List of skills to sync, with URLs and metadata.
+LOG_FILE="$REPO_DIR/setup.log"  # Setup output for the current run.
 ```
 
 ```python

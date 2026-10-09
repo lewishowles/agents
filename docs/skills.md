@@ -141,14 +141,3 @@ The skill-manifest check also rejects front-matter keys outside the Agent Skills
 
 After `scripts/setup-global.sh`, shared skills are available to Claude via `~/.claude/skills/` and to Codex via `~/.agents/skills/`.
 See [choose which skills to install](setup.md#choose-which-skills-to-install) to leave skills out, add them back, or check what is installed.
-
-## Add an external skill
-
-Use this for official upstream skills that should stay managed externally.
-
-1. Add an entry to `external-skills.json` with `slug`, `name`, `source`, `skill_url`, optional `references_api_url`, optional `commit_api_url`, and `license`.
-2. Run `scripts/sync-external-skills.sh`.
-3. Keep the upstream skill in its canonical `skills/<group>/<name>/` folder, including its `SYNC.md` provenance file.
-4. Run `scripts/sync.sh` to regenerate docs and the Claude and Codex outputs.
-
-Do not edit synced external `SKILL.md` files directly. Change the upstream source, then run `scripts/sync-external-skills.sh`.

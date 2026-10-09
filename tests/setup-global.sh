@@ -241,7 +241,7 @@ run_setup_target() {
 		if [ "${SETUP_GLOBAL_TEST_TERMINAL:-false}" = true ]; then
 			# The expect script is read from standard input because expect 5.45
 			# does not set argv for a script passed with -c.
-			/usr/bin/expect -f - bash "$REPO_DIR/scripts/setup-global.sh" ${target:+"$target"} --skip-external "$@" <<'EXPECT'
+			/usr/bin/expect -f - bash "$REPO_DIR/scripts/setup-global.sh" ${target:+"$target"} "$@" <<'EXPECT'
 set timeout 20
 spawn {*}$argv
 if {[info exists env(SETUP_GLOBAL_TEST_TERMINAL_INPUT)]} {
@@ -264,7 +264,7 @@ if {[lindex $status 4] eq "CHILDKILLED"} {
 exit [lindex $status 3]
 EXPECT
 		else
-			bash "$REPO_DIR/scripts/setup-global.sh" ${target:+"$target"} --skip-external "$@"
+			bash "$REPO_DIR/scripts/setup-global.sh" ${target:+"$target"} "$@"
 		fi
 	)
 }
@@ -319,6 +319,8 @@ test_default_setup_skips_repository_refresh() {
 	assert_not_contains "$calls" "$REPO_DIR/scripts/validate.sh"
 }
 
+# Refresh runs the repository sync, which validates the output itself, so setup
+# does not run validation a second time.
 test_refresh_runs_repository_sync() {
 	local home_dir="$TEST_ROOT/refresh"
 	local calls="$home_dir/setup-global-calls.log"
@@ -327,7 +329,7 @@ test_refresh_runs_repository_sync() {
 	run_setup "$home_dir" --refresh > /dev/null
 
 	assert_contains "$calls" "$REPO_DIR/scripts/sync.sh"
-	assert_contains "$calls" "$REPO_DIR/scripts/validate.sh"
+	assert_not_contains "$calls" "$REPO_DIR/scripts/validate.sh"
 }
 
 # Setup removes the Serena server that older setups added to the Codex config.

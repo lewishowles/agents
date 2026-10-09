@@ -8,7 +8,7 @@ Source of truth for Claude Code + OpenAI Codex CLI global configuration. Skills,
 
 ## Purpose
 
-Single source for shared rules and skills. `scripts/sync-external-skills.sh` refreshes managed official skills; `scripts/sync.sh` composes agent-specific output files (`dist/claude/CLAUDE.md`, `dist/codex/AGENTS.md`) from content in `src/rules/`.
+Single source for shared rules and skills. `scripts/sync.sh` composes agent-specific output files (`dist/claude/CLAUDE.md`, `dist/codex/AGENTS.md`) from content in `src/rules/`.
 
 ## Current vs target state
 
@@ -48,7 +48,6 @@ Configuration/Agents/
 │   └── diagnostics/         # diagnostics logs (when present)
 ├── .claude/skills/agent-config/  # repo-local maintenance skill
 ├── .agents/skills/agent-config     # symlink to the repo-local maintenance skill
-├── external-skills.json     # managed official upstream skills
 ├── templates/
 │   ├── claude/
 │   ├── codex/
@@ -57,7 +56,6 @@ Configuration/Agents/
 │   ├── audit/               # tracked transcript and usage analysis tools
 │   ├── sync.sh               # full regeneration of target outputs and docs
 │   ├── validate.sh           # checks dist/ consistency; exits 0 on pass
-│   ├── sync-external-skills.sh
 │   ├── setup-global.sh      # --claude|--codex|--both
 │   ├── setup-project.sh     # --claude|--codex|--both
 │   ├── build/                # build-docs.py, build-settings.py
@@ -88,7 +86,7 @@ repo/.agents/skills/agent-config → repo/.claude/skills/agent-config (repo-loca
 - Claude-only preamble fragments → `src/fragments/claude/`
 - Codex-only preamble fragments → `src/fragments/codex/`
 - Regenerating `CLAUDE.md`/`AGENTS.md` from source → `scripts/sync.sh`
-- A shared or managed skill → `skills/<group>/<name>/SKILL.md` plus any support files
+- A shared skill → `skills/<group>/<name>/SKILL.md` plus any support files
 - This repo's own maintenance skill → `.claude/skills/agent-config/SKILL.md`
 - Project scaffolding templates (`AGENTS.md` starting points) → `templates/`
 - Project setup / symlink wiring → `scripts/setup-project.sh`, `scripts/setup-global.sh`
@@ -106,9 +104,7 @@ repo/.agents/skills/agent-config → repo/.claude/skills/agent-config (repo-loca
 
 ## Edit workflow
 
-Edit canonical skills in `skills/<group>/<name>/SKILL.md`; installed per-skill symlinks reflect those edits immediately. When adding or removing a skill, rerun `scripts/setup-global.sh` to refresh the selected links. After editing `src/rules/` or `src/fragments/<agent>/` content, run `scripts/sync.sh` to regenerate `dist/claude/CLAUDE.md` and `dist/codex/AGENTS.md`. Run `scripts/sync-external-skills.sh` to refresh managed official skills. Commit changes here.
-
-Skills listed in `external-skills.json` are upstream-managed: never hand-edit or paraphrase their synced content under `skills/<group>/<name>/`. Take changes upstream, then rerun `scripts/sync-external-skills.sh`.
+Edit canonical skills in `skills/<group>/<name>/SKILL.md`; installed per-skill symlinks reflect those edits immediately. When adding or removing a skill, rerun `scripts/setup-global.sh` to refresh the selected links. After editing `src/rules/` or `src/fragments/<agent>/` content, run `scripts/sync.sh` to regenerate `dist/claude/CLAUDE.md` and `dist/codex/AGENTS.md`. Commit changes here.
 
 Don't edit `~/.claude/` or `~/.agents/` directly — changes won't persist.
 
@@ -118,8 +114,6 @@ Shared global skills: `skills/<group>/<name>/` — groups such as `vue/`, `swift
 
 - `SKILL.md` — front matter with `name` and `description`, followed by the skill instructions
 - Optional support files such as `references/`, `scripts/`, or `agents/openai.yaml`
-
-Managed external skills live under their canonical `skills/<group>/<name>/` folder, are listed in `external-skills.json`, and include `SYNC.md`. Do not edit their synced `SKILL.md` files directly; change the upstream source and rerun sync.
 
 ## Adding a skill
 

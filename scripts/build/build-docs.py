@@ -52,14 +52,11 @@ def read_skill_metadata(skill_file: Path) -> dict:
 	return {"name": name, "description": " ".join(description_lines)}
 
 
-# Return every skill's name and description in display order. Most skills
-# sit in a group folder, but the external skill sync puts a skill that has
-# no group in external-skills.json directly under skills/.
+# Return the name and description of every skill under skills/<group>/,
+# sorted by name.
 def skill_metadata() -> list[dict]:
 	skills = []
-	skill_files = list(CANONICAL_SKILLS_DIR.glob("*/SKILL.md")) + list(
-		CANONICAL_SKILLS_DIR.glob("*/*/SKILL.md")
-	)
+	skill_files = CANONICAL_SKILLS_DIR.glob("*/*/SKILL.md")  # The SKILL.md file of every skill.
 	for skill_file in skill_files:
 		skills.append(read_skill_metadata(skill_file))
 	return sorted(skills, key=lambda item: item["name"])

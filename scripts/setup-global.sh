@@ -9,8 +9,9 @@ REPO_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 
 source "$REPO_DIR/scripts/lib/setup-links.sh"
 
+# Prints the options this script accepts.
 usage() {
-	printf 'Usage: %s [--claude|--codex|--both] [--claude-dir <path>] [--codex-dir <path>] [--select] [--exclude <skill>[,<skill>...]] [--include <skill>[,<skill>...]] [--include-all] [--status] [--refresh] [--skip-external]\n' "$(basename "$0")"
+	printf 'Usage: %s [--claude|--codex|--both] [--claude-dir <path>] [--codex-dir <path>] [--select] [--exclude <skill>[,<skill>...]] [--include <skill>[,<skill>...]] [--include-all] [--status] [--refresh]\n' "$(basename "$0")"
 }
 
 # Parses a comma-separated skill list into the pending setup operations.
@@ -997,7 +998,6 @@ prompt_target() {
 
 target=""
 refresh=false
-sync_external=true
 skill_options_requested=false  # Whether command-line skill options were supplied.
 select_requested=false  # Whether the terminal skill selection flow was requested.
 status_requested=false  # Whether to report skill link states without changing skill links.
@@ -1043,7 +1043,6 @@ while [ $# -gt 0 ]; do
 			;;
 		--status)        status_requested=true ;;
 		--refresh)       refresh=true ;;
-		--skip-external) sync_external=false ;;
 		--help)          usage; exit 0 ;;
 		*)               usage >&2; exit 1 ;;
 	esac
@@ -1119,14 +1118,7 @@ if [ "$status_requested" = true ]; then
 fi
 
 if [ "$refresh" = true ]; then
-	if [ "$sync_external" = true ]; then
-		if ! bash "$REPO_DIR/scripts/sync-external-skills.sh"; then
-			cli_status warning "external skill sync failed" "continuing with existing local skills"
-		fi
-	fi
-
 	bash "$REPO_DIR/scripts/sync.sh"
-	bash "$REPO_DIR/scripts/validate.sh"
 fi
 
 case "$target" in

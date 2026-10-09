@@ -60,9 +60,7 @@ Configuration/Agents/
 │   │   ├── build-docs.py            # Generates docs/ tables from canonical skill and hook files
 │   │   ├── build-settings.py        # Generates dist/claude/settings.json from settings.base.json
 │   ├── setup-global.sh          # Creates global symlinks for Claude and Codex
-│   ├── setup-project.sh         # Scaffolds AGENTS.md for a new project
-│   └── sync-external-skills.sh  # Fetches managed external skills
-├── external-skills.json         # Official upstream skills synced into skills/
+│   └── setup-project.sh         # Scaffolds AGENTS.md for a new project
 ├── templates/                   # Project AGENTS.md templates only
 └── README.md
 ```
@@ -73,7 +71,6 @@ Durable script source belongs under `scripts/`. Keep `.agent/scripts/` as a syml
 
 - `agent-config` is repo-local: keep under `.claude/skills/agent-config/`, symlink to `.agents/skills/agent-config`
 - Global skills live under `skills/<group>/<name>/` (groups: `vue/`, `swift/`, `testing/`, `writing/`, `project-management/`)
-- External skills listed in `external-skills.json`, synced into `skills/`, marked with `SYNC.md`
 - Folder name = skill slug (used in `/slug` commands and Codex discovery)
 - Codex links in `~/.codex/skills/`; Claude links in `~/.claude/skills/`
 
