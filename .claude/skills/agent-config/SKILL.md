@@ -65,7 +65,7 @@ Configuration/Agents/
 └── README.md
 ```
 
-Durable script source belongs under `scripts/`. Keep `.agent/scripts/` as a symlink projection and `.agent/audits/` as generated evidence. The project-setup library owns the single list of tools linked into downstream projects.
+Durable script source belongs under `scripts/`. Keep `.agent/audits/` as generated evidence.
 
 ## Skill conventions
 
