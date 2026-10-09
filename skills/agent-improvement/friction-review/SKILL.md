@@ -3,6 +3,7 @@ name: friction-review
 description: >
   Use this skill to turn recurring friction patterns from friction summary into specific, minimal, human-reviewed amendments to src/rules/ or skills/. Uses friction resolve after an accepted amendment, proposes a diff per pattern, and never auto-applies.
 ---
+
 # Friction review
 
 Turns recurring friction patterns into specific, minimal, human-reviewed amendments to `rules/` or `skills/`. Captured friction with no review step has no payoff, so this workflow closes that gap.
@@ -10,7 +11,7 @@ Turns recurring friction patterns into specific, minimal, human-reviewed amendme
 ## Workflow
 
 1. **Summarise active friction** — run `friction summary --json` (it reads the shared friction database, so the working directory does not matter). It returns every active friction entry except the automatic `check-fail` and `tool-error` records, grouped by `category`, `cwd`, and `detail`, with each group's `count`, ordered most frequent first. Do not inspect the database directly.
-2. **Take top recurring patterns** — entries with count ≥ 2 warrant review; a single occurrence is usually not yet a pattern. Group entries describing the same failure when their `cwd` or `detail` differs slightly. If a previously resolved pattern reappears, say so explicitly; the earlier amendment did not hold, and the proposal should account for why.
+2. **Take top recurring patterns** — manual entries are free text, so `friction summary` rarely counts two as the same. Group entries by the underlying failure across categories and `cwd`, and treat a group of 2 or more as a pattern. Split a group that covers several distinct mistakes until each one could be fixed by one small wording change. Before proposing anything, check whether guidance added since the entry was logged already prevents it; if so, propose resolving it against that change instead of amending again. If a previously resolved pattern reappears, say so explicitly; the earlier amendment did not hold, and the proposal should account for why.
 3. **Make the check-fail and tool-error passes** — every review must also run `friction summary --include-check-fails --category check-fail --json` and `friction summary --include-tool-errors --category tool-error --json` as separate queries. Treat `check-fail` rows as verification debt unless detail shows repeated agent behaviour that existing guidance would not prevent. Tool-error detail often includes a unique command or exact error, so cluster its results by error-message substring or command shape rather than relying on count alone. Treat each repeating cluster as a pattern from step 2.
 4. **Decide the fix's home** — if guidance applies every turn regardless of task, it belongs in `src/rules/global-rules.md`. If task-specific, it belongs in the relevant canonical `skills/<group>/<name>/SKILL.md`.
 5. **Propose a diff** — for each pattern, show exact before/after text change. State which file, why this warrants a rule rather than a one-off fix, and what evidence supports it.
