@@ -28,7 +28,7 @@ Read in order, stopping when you have enough context:
 1. `<project-root>/AGENTS.md`
 2. `agent-run list --json`
 3. `progress next --json` for the active task, when the project uses progress
-4. The handoff from `progress context get --json`, or from `PROGRESS.md` in a project without progress, when active work or session continuity is part of the audit
+4. The handoff from `progress context get --task <task-id> --json` for the task returned by `progress next`, or from `PROGRESS.md` in a project without progress, when active work or session continuity is part of the audit
 
 If agent-run has no registrations, inspect `AGENTS.md`, package scripts, and ordinary docs, then use `agent-run detect --json` to preview likely commands.
 
