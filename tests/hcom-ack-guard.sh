@@ -109,10 +109,26 @@ assert_swallowed "hcom send @peer --intent inform -- 'Understood, starting now.'
 assert_swallowed_codex "hcom send @peer --intent ack -- 'Acknowledged'"
 assert_swallowed_codex "hcom send @peer --intent inform -- 'Understood, starting now.'"
 
+assert_swallowed "team-send scout --intent ack --reply-to 42 < body.txt"
+assert_swallowed "team-send reviewer --intent=ack --reply-to 42 < body.txt"
+assert_swallowed "command team-send orchestrator --intent ack --reply-to 42 < body.txt"
+assert_swallowed "/usr/local/bin/team-send implementer --intent=ack --reply-to 42 < body.txt"
+assert_swallowed "printf 'done'; team-send scout --intent ack --reply-to 42 < body.txt"
+assert_swallowed "printf 'Received.' | team-send orchestrator --intent ack --reply-to 42"
+
+assert_swallowed_codex "team-send scout --intent ack --reply-to 42 < body.txt"
+assert_swallowed_codex "command /usr/local/bin/team-send reviewer --intent=ack --reply-to 42 < body.txt"
+assert_swallowed_codex "printf 'Received.' | team-send orchestrator --intent ack --reply-to 42"
+
 assert_allowed "hcom send @peer --intent request -- 'Run checks'"
 assert_allowed "hcom send @peer --intent inform -- 'Checks passed'"
 assert_allowed "hcom send @peer --intent inform -- 'Correction: formatter log is available'"
 assert_allowed "rg -n -- '--intent ack' teams/hcom"
 assert_allowed "printf '%s' 'hcom send @peer --intent ack'"
+assert_allowed "team-send scout --intent request < body.txt"
+assert_allowed "team-send reviewer --intent inform < body.txt"
+assert_allowed "team-send scout --intent inform < acknowledgement.txt"
+assert_allowed "printf 'Checks passed' | team-send orchestrator --intent inform --reply-to 42"
+assert_allowed "printf '%s' 'team-send scout --intent ack'"
 
 printf '✓ HCOM acknowledgement guard tests passed\n'
