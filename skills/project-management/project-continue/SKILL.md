@@ -67,6 +67,7 @@ On continuation, and before the active chunk is delegated for the first time, ob
 Read only enough to orient. Stale sessions (5+ min idle) restart from scratch.
 
 - Read the handoff from `progress context get --task <task-id> --json`, including `current_goal`, `previous_step`, `next_step`, `standing_context`, `verify_with`, and `stop_marker`
+- Read the whole handoff before acting, including any handoff document it links to. Leave alone any change it says not to touch, and don't count that change as part of the task.
 - Verify the active task and chunk records before starting: the CLI status is the source of truth. If the task record says `done` but accepted chunks remain incomplete, complete the chunk records and task through the CLI, then update release and queue state.
 - Check the handoff against the active records and worktree before following it. Treat current evidence as fresher. If the handoff's referenced task or chunk shows `done`/`completed` in the CLI records, the handoff is stale: silently prefer `progress next` and proceed, without asking the user to reconcile it. Surface a conflict to the user only when the handoff points at work the CLI still shows active or pending and disagrees with what `progress next` returns.
 - Read active task, chunk, discovery, decision, and risk details only when needed

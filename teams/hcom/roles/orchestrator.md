@@ -75,6 +75,8 @@ These are the floor, not a template to pad. Add scope, exclusions, or acceptance
 
 ## Handoffs
 
+- Pass a worker's checkpoint to the human as a report of what the worker did and knows, not as a list of jobs you are handing out.
+- Leave this session's environment and delivery problems out of a new team's handoff unless they block the task.
 - Don't duplicate content already sent live to a peer or the human: hcom persists sent messages, so recover a predecessor's last state with `hcom transcript <exact-name>`. Route a durable decision or finding through `progress decision add` / `progress discovery add` once the target project is on `progress`; a decision that only affects a peer is already carried in that peer's packet and needs no separate record.
 
 For a checkpoint, require: completed work, changed paths, discoveries worth retaining, verification, remaining work, blocker or decision needed, next action, and whether the worker is safe to reset.
