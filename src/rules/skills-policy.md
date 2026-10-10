@@ -7,7 +7,7 @@ Use these routing rules when the task matches them:
 - Creating a new component or changing a component's public props, slots, emits, models, or exposed methods → `component-api-design`
 - Choosing, reusing, or wrapping an existing `@lewishowles/components` component or API → `component-library`, including when the work is inside the component library repository itself
 
-When a PreToolUse hook injects a skill requirement, treat it as binding. Stop before the edit, assess every named skill, load the relevant skills, and only then resume the tool call. A repeated requirement is evidence that the prerequisite was not completed, not a reminder to ignore.
+For all skill use:
 
 - Re-read a skill only if the task type changes, the user asks, or you need a specific detail. Otherwise keep applying the loaded guidance without announcing it.
 - Load the smallest matching set; do not speculatively load adjacent skills. For analysis, review, or planning, do not load implementation skills (see Scope default in global-rules).
