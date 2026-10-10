@@ -20,9 +20,9 @@ The database is scoped to the project bound to the current Git repository. Its d
 | `chunk`     | Stores one unit of work within a task.                      | `pending`, `active`, `done`, or `skipped`; at most one is active per task.                                |
 | `discovery` | Stores a verified finding that helps future work.           | A note belonging to exactly one release or task.                                                          |
 | `decision`  | Stores a decision and, when needed, the note it supersedes. | A note belonging to exactly one release or task.                                                          |
-| `context`   | Stores the current handoff for one project.                 | One record per project, replaced by `progress context set`.                                               |
+| `context`   | Stores the handoff for one task, or for the project.        | One record per task, plus one for the project, each replaced by `progress context set`.                   |
 
-Use `progress next`, `progress context get`, and `progress ready` for bounded read surfaces. Use `progress --help`, then `progress <noun> --help`, for the exact command and flag syntax. Use `--json` when another tool or hook needs the stable agent response envelope. The active task is the project's single `in-progress` task. Its active chunk is the next unit of work. `progress next --json` returns that task and chunk; `progress ready --json` lists tasks whose dependencies allow them to start. Task position, release position, dependency edges, and lifecycle status are stored in the database, so no queue table is needed in `PROGRESS.md`.
+Use `progress next`, `progress context get`, and `progress ready` for bounded read surfaces. Use `progress --help`, then `progress <noun> --help`, for the exact command and flag syntax. Use `--json` when another tool or hook needs the stable agent response envelope. The active task is the project's default `in-progress` task, and its active chunk is the next unit of work. `progress next --json` returns that task and chunk. Another task can run alongside it after `progress task start <task-id> --secondary`; `progress next` keeps returning the default task, so pass the secondary task's ID explicitly while working on it. `progress ready --json` lists tasks whose dependencies allow them to start. Task position, release position, dependency edges, and lifecycle status are stored in the database, so no queue table is needed in `PROGRESS.md`.
 
 ## Status and completion
 
@@ -30,7 +30,7 @@ The database is the source of truth for task and chunk status. Never infer statu
 
 An agent completes a chunk or task record when its implementation and verification are done and it presents the work for review. It does not wait for a separate acceptance reply. Presenting is not committing: human review and the commit still follow.
 
-Complete each chunk as you present its finished work. When the last chunk is done and no pending or active chunks remain, complete the task and clear the stored handoff. Update release and queue state through `progress release` and `progress task move`. If the user comes back with changes, make them in the same session as part of getting that chunk right rather than opening a new chunk.
+Complete each chunk as you present its finished work. When the last chunk is done and no pending or active chunks remain, complete the task, which also clears its handoff. Update release and queue state through `progress release` and `progress task move`. If the user comes back with changes, make them in the same session as part of getting that chunk right rather than opening a new chunk.
 
 ## Clear planning language
 
@@ -54,7 +54,7 @@ If clearer wording would require making a product or architecture decision, leav
 
 ## Session handoff
 
-The CLI stores one handoff context record per project. It contains `current_goal`, `previous_step`, `next_step`, `standing_context`, `verify_with`, and `stop_marker`. Set it with `progress context set`; read it with `progress context get --json`. The session-start hook reads `progress next --json` for the current task and chunk. Clear the handoff on task completion; refresh it mid-task only with facts a fresh session cannot recover from `progress next` and the records. Do not recreate this context in `PROGRESS.md`.
+Each task has its own handoff record, and the project has one more for when no task is selected. A handoff contains `current_goal`, `previous_step`, `next_step`, `standing_context`, `verify_with`, and `stop_marker`. Set a task's handoff with `progress context set --task <task-id>` and read it with `progress context get --task <task-id> --json`. Use the same commands without `--task` only when no task is selected, for example when `progress next` returns no task. The session-start hook reads `progress next --json` for the current task and chunk. Completing a task clears its handoff automatically. Refresh a handoff mid-task only with facts a fresh session cannot recover from the task's records. Do not recreate this context in `PROGRESS.md`.
 
 ## Roadmap
 
