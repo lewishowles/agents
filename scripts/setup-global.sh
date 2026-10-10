@@ -457,6 +457,7 @@ setup_claude() {
 
 	cli_group_begin "Claude command-line tools"
 	ensure_friction
+	ensure_team_send
 	cli_group_end
 
 	cli_group_begin "Claude files"
@@ -524,6 +525,32 @@ ensure_friction() {
 	cli_group_status success "friction" "installed globally"
 }
 
+# Ensures team-send is available for HCOM team messages.
+ensure_team_send() {
+	if command -v team-send >/dev/null 2>&1; then
+		cli_group_status muted "team-send" "globally installed"
+		return
+	fi
+
+	if ! command -v uv >/dev/null 2>&1; then
+		cli_group_status failed "team-send" "missing and uv is not installed"
+		return 1
+	fi
+
+	cli_group_status warning "team-send" "installing globally"
+	if ! uv tool install --from ~/Dev/Repositories/Packages/agent-tools/packages/team-send team-send >/dev/null; then
+		cli_group_status failed "team-send" "global installation failed"
+		return 1
+	fi
+
+	if ! command -v team-send >/dev/null 2>&1; then
+		cli_group_status failed "team-send" "installation did not expose team-send"
+		return 1
+	fi
+
+	cli_group_status success "team-send" "installed globally"
+}
+
 setup_codex() {
 	cli_section "Codex global setup ($(display_path "$CODEX_DIR"))"
 
@@ -532,6 +559,10 @@ setup_codex() {
 	ensure_container_dir "$HOME/.agents/skills" "~/.agents/skills"
 	ensure_container_dir "$CODEX_DIR" "$(display_path "$CODEX_DIR")"
 	ensure_container_dir "$CODEX_DIR/hooks" "hooks"
+	cli_group_end
+
+	cli_group_begin "Codex command-line tools"
+	ensure_team_send
 	cli_group_end
 
 	cli_group_begin "Codex files"

@@ -77,6 +77,11 @@ EOF
 exit 0
 EOF
 
+	cat > "$bin_dir/team-send" <<'EOF'
+#!/bin/sh
+exit 0
+EOF
+
 	cat > "$bin_dir/hcom" <<'EOF'
 #!/bin/sh
 if [ "$1" != "config" ] || [ "$2" != "codex_args" ]; then
@@ -116,7 +121,7 @@ cli_style_render() {
 }
 EOF
 
-	chmod +x "$bin_dir/bash" "$bin_dir/cli-style" "$bin_dir/cp" "$bin_dir/mv" "$bin_dir/git" "$bin_dir/friction" "$bin_dir/hcom" "$bin_dir/cli-style-adapter.sh"
+	chmod +x "$bin_dir/bash" "$bin_dir/cli-style" "$bin_dir/cp" "$bin_dir/mv" "$bin_dir/git" "$bin_dir/friction" "$bin_dir/team-send" "$bin_dir/hcom" "$bin_dir/cli-style-adapter.sh"
 }
 
 # Creates an fzf stand-in that records the arguments and skill list it
