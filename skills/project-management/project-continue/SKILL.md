@@ -9,18 +9,18 @@ Start, resume, complete, and hand off work using the `progress` CLI records, wit
 
 ## Progress records
 
-The `progress` CLI stores the current project, release, task, chunk, discovery, decision, and handoff records. Run `progress next --json` at startup to identify the active task and chunk. Use `progress context get --task <task-id> --json` when that task's handoff needs more detail. If `progress next` returns no task, use the project-level context without `--task`.
+The `progress` CLI stores the current project, release, task, chunk, discovery, decision, and handoff records. At startup, find the selected task: the task the launch prompt names, otherwise the task `progress next --json` returns. Use `progress context get --task <task-id> --json` when the selected task's handoff needs more detail. If `progress next` returns no task, use the project-level context without `--task`.
 
 Represent each implementation unit as a chunk. Do not infer completion from Git state.
 
-`PROGRESS.md`, when present, is optional root-level freeform backlog prose. Do not use it as a fallback for task, chunk, queue, roadmap, archive, release, discovery, decision, or handoff state. If the `progress` project binding is missing or uninitialised, report the explicit error, inspect `AGENTS.md`, package scripts, ordinary docs, and `agent-run list --json` for safe local context, and ask the user to initialise or install `progress` before writing progress records. Use the full task and chunk contract returned by `progress next --json`.
+`PROGRESS.md`, when present, is optional root-level freeform backlog prose. Do not use it as a fallback for task, chunk, queue, roadmap, archive, release, discovery, decision, or handoff state. If the `progress` project binding is missing or uninitialised, report the explicit error, inspect `AGENTS.md`, package scripts, ordinary docs, and `agent-run list --json` for safe local context, and ask the user to initialise or install `progress` before writing progress records. Use the full task and chunk contract for the selected task.
 
 ## Command syntax
 
 Run `progress commands` once per session to confirm the full command list; run `progress <noun> <action> --help` only when that still leaves a flag unclear. A usage error prints the command's usage, so read that output instead of running `--help` to recover. Common commands have stable signatures:
 
 ```sh
-progress next --json                              # session start: active task + chunk
+progress next --json                              # session start when the launch prompt names no task
 progress task start <task_id>                     # id is positional
 progress task complete <task_id>                  # when no pending or active chunks remain
 progress chunk list <task-id-or-slug>
@@ -62,7 +62,7 @@ On continuation, and before the active chunk is delegated for the first time, ob
 5. **Present** — digest the active task record into the confirmed contract, current repository state, intended files, verification, and unknowns; the user should not need to look up another source. Apply the `project-plan-task` review-size gate to the active chunk. If it exceeds one primary review question or the soft ceiling of three substantive files, propose smaller chunks and wait for confirmation before implementation. Wait for confirmation before editing when the task has material API, behaviour, or interpretation decisions
 6. **Complete the chunk plan** — compare the task contract and current discussion with its chunk records. If they reveal additional known chunk boundaries, add or update every known chunk in the same pass before implementation or delegation. Check the split rationale on every pass, not only when the boundaries change: write one if the task has none, and update its reasons when they do. Give every added or narrowed chunk a review question, and split any chunk whose question joins two separate concerns. Do not defer a known chunk until dispatch
 7. **Switch tasks** — before starting other work while a task is unfinished, save any restart-critical handoff with `progress context set --task <its-id>`. Start the other task with `progress task start <task-id> --secondary`; `progress next` still returns the default task, so use the secondary task's ID explicitly while working on it
-8. **Continue** — work through the confirmed task; record verified discoveries and decisions with `progress discovery add` and `progress decision add` at handoff. Start with the active chunk returned by `progress next --json`, then use the first incomplete chunk when more remain. Change the chunk to `in-progress` before its first implementation step. When implementation and verification are done, complete the chunk record and present the work for review (changed files, verification, suggested commit message), then stop. Do not wait for the user to accept before completing the record, and do not implement the next chunk in the same pass unless the user asked for all of them
+8. **Continue** — work through the confirmed task; record verified discoveries and decisions with `progress discovery add` and `progress decision add` at handoff. Start with the selected task's active chunk, then use the first incomplete chunk when more remain. Change the chunk to `in-progress` before its first implementation step. When implementation and verification are done, complete the chunk record and present the work for review (changed files, verification, suggested commit message), then stop. Do not wait for the user to accept before completing the record, and do not implement the next chunk in the same pass unless the user asked for all of them
 9. **Wrap up** — complete the chunk record as you present it; if it was the last chunk, complete the task, which clears its handoff automatically; otherwise refresh the handoff only if a fresh session needs facts the records cannot supply
 
 ## Session startup
@@ -72,7 +72,7 @@ Read only enough to orient. Stale sessions (5+ min idle) restart from scratch.
 - Read the handoff from `progress context get --task <task-id> --json`, including `current_goal`, `previous_step`, `next_step`, `standing_context`, `verify_with`, and `stop_marker`
 - Read the whole handoff before acting, including any handoff document it links to. Leave alone any change it says not to touch, and don't count that change as part of the task.
 - Verify the active task and chunk records before starting: the CLI status is the source of truth. If the task record says `done` but accepted chunks remain incomplete, complete the chunk records and task through the CLI, then update release and queue state.
-- Check the handoff against the active records and worktree before following it. Treat current evidence as fresher. If the handoff's referenced task or chunk shows `done`/`completed` in the CLI records, the handoff is stale: silently prefer `progress next` and proceed, without asking the user to reconcile it. Surface a conflict to the user only when the handoff points at work the CLI still shows active or pending and disagrees with what `progress next` returns.
+- Check the handoff against the active records and worktree before following it. Treat current evidence as fresher. If the handoff's referenced task or chunk shows `done`/`completed` in the CLI records, the handoff is stale: silently prefer the selected task's current records and proceed, without asking the user to reconcile it. Surface a conflict to the user only when the handoff points at work the CLI still shows active or pending and disagrees with the selected task's records.
 - Read active task, chunk, discovery, decision, and risk details only when needed
 - Read linked feature specs only when active; skip unrelated specs
 - Skip completed tasks and old records unless the current task depends on their history
@@ -138,18 +138,18 @@ Before settling the handoff, distil what was learned: add verified facts with `p
 
 The progress decision and discovery records are not a permanent log. Remove an entry when it is promoted to `AGENTS.md` or becomes moot because it is superseded, already visible in shipped code, docs, or metadata, or resolved by a decision recorded elsewhere. Sweep these records during compaction, not only when the task that produced an entry closes; a growing, unpruned list means the sweep was skipped, not that the project has many active decisions.
 
-When an HCOM Orchestrator closes mid-task, use `progress context set --task <task-id>` only if a fresh session needs facts that `progress next --json`, the active task and chunk records, the recorded discoveries and decisions, and the worktree cannot supply. Otherwise clear that task's handoff with `progress context set --task <task-id>` and no fields. Supply all six fields when setting it: `--current-goal`, `--previous-step`, `--next-step`, `--standing-context`, `--verify-with`, and `--stop-marker`; omitted fields are cleared. Keep each field to restart-critical facts. Omit implementation, changed-path, and passed-check inventories; repeated task contracts; recoverability or reset advice; and all current-team details, including agent names, roles, models, assignments, status, and availability. Do not imply that `progress context set` retrieves the fields. At a tool-call checkpoint, the Orchestrator keeps its human response to at most two sentences, apart from a required suggested commit message: state the result or blocker, point to `progress context get --task <task-id> --json`, and name the immediate next action.
+When an HCOM Orchestrator closes mid-task, use `progress context set --task <task-id>` only if a fresh session needs facts that the selected task and chunk records, the recorded discoveries and decisions, and the worktree cannot supply. Otherwise clear that task's handoff with `progress context set --task <task-id>` and no fields. Supply all six fields when setting it: `--current-goal`, `--previous-step`, `--next-step`, `--standing-context`, `--verify-with`, and `--stop-marker`; omitted fields are cleared. Keep each field to restart-critical facts. Omit implementation, changed-path, and passed-check inventories; repeated task contracts; recoverability or reset advice; and all current-team details, including agent names, roles, models, assignments, status, and availability. Do not imply that `progress context set` retrieves the fields. At a tool-call checkpoint, the Orchestrator keeps its human response to at most two sentences, apart from a required suggested commit message: state the result or blocker, point to `progress context get --task <task-id> --json`, and name the immediate next action.
 
 After settling the handoff, do not print or paraphrase its fields. Outside a tool-call checkpoint, present:
 
 1. **What changed** — 1–3 sentences: what was done and what was verified, or skipped and why
 2. **Suggested commit message** — the scoped Conventional Commit message as plain text, per global-rules
 
-Then stop. Do not add a next-step section, restate the next chunk or task contract, or ask the user to confirm before continuing. The chunk record is already complete, and a fresh session resumes from `progress next`.
+Then stop. Do not add a next-step section, restate the next chunk or task contract, or ask the user to confirm before continuing. The chunk record is already complete, and a fresh session resumes from the selected task's records.
 
 ## Wrapping up
 
-- Settle the handoff: task completion clears it automatically; refresh it mid-task with `progress context set --task <task-id>` only for facts a fresh session cannot recover from `progress next` and the records
+- Settle the handoff: task completion clears it automatically; refresh it mid-task with `progress context set --task <task-id>` only for facts a fresh session cannot recover from the selected task's records
 - Complete chunks and tasks per the flow above as you present them: mark CLI chunks and tasks done, and update release and queue state. Do not recreate an archive section in `PROGRESS.md`.
 - If a dead end needs preserving, record one line in the active task record or linked spec: `Approach X failed because Y; don't retry`. Omit it when nothing failed.
 - Do not leave the progress CLI records or handoff context half-updated
