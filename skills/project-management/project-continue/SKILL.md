@@ -17,12 +17,15 @@ Represent each implementation unit as a chunk. Do not infer completion from Git 
 
 ## Command syntax
 
-Run `progress commands` once per session to confirm the full command list; run `progress <noun> <action> --help` only when that still leaves a flag unclear. Common commands have stable signatures:
+Run `progress commands` once per session to confirm the full command list; run `progress <noun> <action> --help` only when that still leaves a flag unclear. A usage error prints the command's usage, so read that output instead of running `--help` to recover. Common commands have stable signatures:
 
 ```sh
 progress next --json                              # session start: active task + chunk
 progress task start <task_id>                     # id is positional
 progress task complete <task_id>                  # when no pending or active chunks remain
+progress chunk list <task-id-or-slug>
+progress chunk get <chunk-id>
+progress chunk get <task-id-or-slug> position-N   # N is the 1-based listed position
 progress chunk start <chunk_id>
 progress chunk complete <chunk_id>
 progress discovery add (--release <release_id> | --task <task_id>) '<body>'  # body is positional, not --body
@@ -48,7 +51,7 @@ When acting as an HCOM Orchestrator, use `hcom list -v` only to identify a same-
 
 Do not inspect source, task state, Git state, peer transcripts, or CLI syntax directly to reconstruct the session. The Scout reports facts; the Orchestrator keeps the decision and human-facing handoff.
 
-On continuation, and before the active chunk is delegated for the first time, obtain `progress chunk list --task <task-id> --json`. An HCOM Orchestrator includes this check in the Scout's bounded resume request instead of running it directly. Review the active chunk and every incomplete sibling using the returned position, title, description, and status. Use `progress chunk get <chunk-id> --json` only when that metadata leaves a boundary vague or suggests an overlap. If the active chunk includes work assigned to a later incomplete sibling, stop before implementation or delegation and narrow or replace it through `project-plan-task`.
+On continuation, and before the active chunk is delegated for the first time, obtain `progress chunk list <task-id> --json`. An HCOM Orchestrator includes this check in the Scout's bounded resume request instead of running it directly. Review the active chunk and every incomplete sibling using the returned position, title, description, and status. Use `progress chunk get <chunk-id> --json` only when that metadata leaves a boundary vague or suggests an overlap. If the active chunk includes work assigned to a later incomplete sibling, stop before implementation or delegation and narrow or replace it through `project-plan-task`.
 
 ## Workflow
 
