@@ -1158,6 +1158,15 @@ case "$target" in
 	both)   setup_claude; setup_codex ;;
 esac
 
+# Link the trash wrapper once, outside the per-agent setup, because ~/.local/bin is shared by
+# both agents and the user's own shell.
+cli_section "Shared command-line tools"
+cli_group_begin "Trash wrapper"
+# mkdir -p follows a symlinked ~/.local/bin, such as one kept in dotfiles, instead of replacing it.
+mkdir -p "$HOME/.local/bin"
+link_path "$REPO_DIR/src/bin/trash" "$HOME/.local/bin/trash" "$(display_path "$HOME/.local/bin/trash")"
+cli_group_end
+
 configure_git_hooks
 
 printf '\n'

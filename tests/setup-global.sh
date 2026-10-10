@@ -392,6 +392,75 @@ test_hook_file_is_replaced_with_managed_link() {
 	assert_not_contains "$home_dir/.codex/config.toml" '[[hooks.'
 }
 
+# Checks that each setup mode installs one shared trash link and leaves it alone on a rerun.
+test_trash_wrapper_links_once_for_each_mode() {
+	local target  # Setup mode being checked in an isolated home.
+	local home_dir  # Isolated home for the current setup mode.
+	local output  # Setup output, which should report the trash wrapper once.
+	local link  # Installed trash wrapper link.
+	local backups  # Any backup made during a rerun.
+
+	for target in claude codex both; do
+		home_dir="$TEST_ROOT/trash-$target"
+		output="$TEST_ROOT/trash-$target.txt"
+		link="$home_dir/.local/bin/trash"
+
+		run_setup_target "$home_dir" "--$target" > "$output"
+
+		assert_link "$link"
+		assert_equals "$(readlink "$link")" "$REPO_DIR/src/bin/trash"
+		assert_equals "$(grep -Fc '"label": "Trash wrapper"' "$output")" '1'
+
+		run_setup_target "$home_dir" "--$target" > "$output"
+
+		assert_link "$link"
+		assert_equals "$(readlink "$link")" "$REPO_DIR/src/bin/trash"
+		assert_equals "$(grep -Fc '"label": "Trash wrapper"' "$output")" '1'
+		backups=("$home_dir/.local/bin/trash.bak."*)
+		assert_not_exists "${backups[0]}"
+	done
+}
+
+# Checks that a pre-existing trash command is preserved when setup installs the wrapper.
+test_trash_wrapper_backs_up_existing_file() {
+	local home_dir="$TEST_ROOT/trash-existing"  # Isolated home with a pre-existing trash command.
+	local link="$home_dir/.local/bin/trash"  # Target path for the shared wrapper.
+	local output="$TEST_ROOT/trash-existing.txt"  # Setup output naming the backup.
+	local backups  # Timestamped backups of the pre-existing command.
+
+	mkdir -p "$(dirname "$link")"
+	printf 'keep my trash command\n' > "$link"
+
+	run_setup_target "$home_dir" "--both" > "$output"
+
+	backups=("$home_dir/.local/bin/trash.bak."*)
+	assert_file "${backups[0]}"
+	assert_equals "$(cat "${backups[0]}")" 'keep my trash command'
+	assert_link "$link"
+	assert_equals "$(readlink "$link")" "$REPO_DIR/src/bin/trash"
+	assert_contains "$output" "backup at ~/.local/bin/$(basename "${backups[0]}")"
+}
+
+# Checks that setup adds the trash wrapper inside a symlinked ~/.local/bin, such as one managed by dotfiles, instead of replacing the folder.
+test_trash_wrapper_preserves_symlinked_bin_directory() {
+	local home_dir="$TEST_ROOT/trash-symlinked-bin"  # Isolated home with a dotfiles bin directory.
+	local bin_dir="$home_dir/dotfiles-bin"  # Existing directory that the bin symlink points to.
+	local bin_link="$home_dir/.local/bin"  # Symlink that setup must leave in place.
+	local backups  # Any backup of the bin directory made by setup.
+
+	mkdir -p "$home_dir/.local" "$bin_dir"
+	ln -s "$bin_dir" "$bin_link"
+
+	run_setup_target "$home_dir" "--both" > /dev/null
+
+	assert_dir_link "$bin_link"
+	assert_equals "$(readlink "$bin_link")" "$bin_dir"
+	backups=("$home_dir/.local/bin.bak."*)
+	assert_not_exists "${backups[0]}"
+	assert_link "$bin_dir/trash"
+	assert_equals "$(readlink "$bin_dir/trash")" "$REPO_DIR/src/bin/trash"
+}
+
 test_permission_profile_preserves_workspace_roots() {
 	local home_dir="$TEST_ROOT/permission-profile"
 
@@ -975,6 +1044,9 @@ test_refresh_runs_repository_sync
 test_config_replacement_creates_timestamped_backup
 test_setup_removes_retired_serena_server
 test_hook_file_is_replaced_with_managed_link
+test_trash_wrapper_links_once_for_each_mode
+test_trash_wrapper_backs_up_existing_file
+test_trash_wrapper_preserves_symlinked_bin_directory
 test_permission_profile_preserves_workspace_roots
 test_skills_are_installed_and_editable
 test_exclusions_persist_and_report
