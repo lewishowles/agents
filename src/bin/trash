@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+# Checks each path given to trash and refuses an empty path, the current folder,
+# any folder that contains it (including the repository root), the home folder or /.
+# macOS trash treats an empty argument as the current folder, so an unset variable
+# in a script would otherwise move the whole folder. When the current folder
+# exists, every other call goes straight to /usr/bin/trash with its options,
+# output and exit status unchanged.
+
+set -euo pipefail
+
+if ! CURRENT_DIR=$(pwd -P 2>/dev/null); then  # The current folder with symlinks resolved, compared with each argument.
+	printf 'trash: the current folder no longer exists; nothing was moved.\n' >&2
+	exit 1
+fi
+
+HOME_DIR=''  # The home folder with symlinks resolved, or empty when HOME is unset or missing.
+TRASH_BIN="${TRASH_GUARD_TEST_BIN:-/usr/bin/trash}"  # The real trash command; tests point this at a fake so nothing moves.
+
+if [[ -n "${HOME:-}" ]]; then
+	HOME_DIR=$(cd -P -- "$HOME" 2>/dev/null && pwd -P) || HOME_DIR=''
+fi
+
+# Prints why an argument was refused and exits, so nothing is moved.
+#
+# @param  {string}  argument
+#     The argument as the caller passed it.
+refuse_argument() {
+	local argument="$1"  # The refused argument, named in the message.
+
+	printf 'trash: refusing argument %q; an empty argument usually means an unset variable. Name the file or folder explicitly.\n' "$argument" >&2
+	exit 1
+}
+
+for argument in "$@"; do  # Each argument as passed, checked before anything moves.
+	case "$argument" in
+		-h|--help|-v|--verbose|-s|-stopOnError)
+			continue
+			;;
+		''|.|..)
+			refuse_argument "$argument"
+			;;
+	esac
+
+	# Resolve a relative argument from the current folder, so cd can't read '-' as
+	# the previous folder or search CDPATH. The original argument still reaches trash.
+	case "$argument" in
+		/*) check_path="$argument" ;;  # The argument as a path cd will resolve from the current folder.
+		*) check_path="./$argument" ;;
+	esac
+
+	if resolved_dir=$(cd -P -- "$check_path" 2>/dev/null && pwd -P); then  # The folder the argument names, with symlinks resolved.
+		if [[ "$resolved_dir" == '/' || "$resolved_dir" == "$CURRENT_DIR" || "$resolved_dir" == "$HOME_DIR" ]]; then
+			refuse_argument "$argument"
+		fi
+
+		# Trashing a folder that contains the current folder would take it too.
+		case "$CURRENT_DIR" in
+			"$resolved_dir"/*)
+				refuse_argument "$argument"
+				;;
+		esac
+	fi
+done
+
+exec "$TRASH_BIN" "$@"
