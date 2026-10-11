@@ -2,6 +2,7 @@ import { atom, read, update } from "claude-code";
 import type { EngineInterface, Register } from "claude-code";
 
 import { paletteFor, palettes } from "./palette";
+import { replySegments, tableLines } from "./reply";
 
 /** The number of tool calls in the current main turn, failed ones included, for the footer. */
 const toolCount = atom({ plugin: "skin", key: "toolCount" } as const, 0);
@@ -15,7 +16,7 @@ const footerCounts = atom({ plugin: "skin", key: "footerCounts" } as const, {} a
 /** The palette picked when the session started, or null until it has been picked. */
 const paletteName = atom({ plugin: "skin", key: "paletteName" } as const, null as "mocha" | "latte" | null);
 
-/** Register the skin's tool headers, boxed Bash output, and turn footer. */
+/** Register the skin's reply, tool, and footer drawing. */
 export const register: Register = on => {
 	on("session.start", async ($, event, next) => {
 		const selected = await resolvePaletteName($);
@@ -47,6 +48,78 @@ export const register: Register = on => {
 		}
 
 		return next(event);
+	});
+
+	// Draws reply tables as boxed grids and a closing Over to you quote as a card, with the reply bullet and indent Claude Code would draw.
+	// Summaries, replies without either, and tables too narrow to box keep Claude Code's drawing.
+	on("ui.render", { component: "AssistantMessage" }, async ($, event, next) => {
+		// A summary row carries a mark from Claude Code that a custom drawing would lose.
+		if (event.props.isSummary) {
+			return next(event);
+		}
+
+		// Two cells go to the bullet column. A surface that has not measured its width gets 100 columns.
+		const segments = replySegments(event.props.text, (event.viewport?.columns ?? 100) - 2);
+
+		if (segments === null) {
+			return next(event);
+		}
+
+		const { Box, Markdown, Text } = $.ui.resolve(event);
+		const palette = await activePalette($);
+		const rows = segments.map((segment, index) => {
+			let content;
+
+			if (segment.kind === "prose") {
+				content = <Markdown text={segment.text} />;
+			} else if (segment.kind === "card") {
+				content = (
+					<Box key={`card-${index}`} position="relative" borderStyle="round" borderColor={palette.accent} paddingX={1}>
+						<Box key={`card-title-${index}`} position="absolute" top={-1} left={2}><Text color={palette.accent} bold> Over to you </Text></Box>
+						<Markdown text={segment.text} />
+					</Box>
+				);
+			} else {
+				content = (
+					<Box flexDirection="column">
+						{tableLines(segment.rows, segment.widths).map((line, lineIndex) => {
+							if (line.kind === "border") {
+								return <Text key={lineIndex} color={palette.border}>{line.text}</Text>;
+							}
+
+							const cells = line.cells.map((cell, cellIndex) => {
+								const spans = cell.map((span, spanIndex) => (
+									<Text key={spanIndex} color={line.header || span.code ? palette.accent : undefined} bold={line.header || span.bold}>
+										{span.text}
+									</Text>
+								));
+								const divider = cellIndex < line.cells.length - 1 ? " │ " : " │";
+
+								return <Text key={cellIndex}>{spans}<Text color={palette.border}>{divider}</Text></Text>;
+							});
+
+							return (
+								<Text key={lineIndex}>
+									<Text color={palette.border}>│ </Text>
+									{cells}
+								</Text>
+							);
+						})}
+					</Box>
+				);
+			}
+
+			return <Box key={`segment-${index}`} flexDirection="column" marginTop={index > 0 ? 1 : 0}>{content}</Box>;
+		});
+
+		return (
+			<Box flexDirection="row">
+				<Box width={2} flexShrink={0}>
+					{event.props.isFirstOfReply && <Text>⏺ </Text>}
+				</Box>
+				<Box flexDirection="column" flexGrow={1}>{rows}</Box>
+			</Box>
+		);
 	});
 
 	// Replaces Claude Code's tool header with a `●─ Tool  summary` line whose dot shows the call's status.

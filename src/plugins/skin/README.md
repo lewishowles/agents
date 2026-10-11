@@ -1,6 +1,6 @@
 # Catppuccin skin
 
-A small Claude Code mod that colours tool headers, Bash result borders, and turn footers with Catppuccin Mocha or Latte. It leaves prompts and ordinary assistant prose to Claude Code. Tool blocks and the turn footer get a little extra space.
+A small Claude Code mod that colours tool headers, Bash result borders, and turn footers with Catppuccin Mocha or Latte. It draws Markdown tables as boxed grids and a final Over to you blockquote as a card. It leaves prompts and ordinary assistant prose to Claude Code. Tool blocks and the turn footer get a little extra space.
 
 In verbose mode and the ctrl+o transcript, tool rows inside expanded groups show the skin's header without their inline output.
 
