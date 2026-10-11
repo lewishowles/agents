@@ -1,0 +1,7 @@
+{
+	"name": "skin",
+	"version": "0.1.0",
+	"author": { "name": "Lewis Howles" },
+	"description": "A small Catppuccin skin for Claude Code tool rows and turn footers",
+	"types": "./types/index.d.ts"
+}
