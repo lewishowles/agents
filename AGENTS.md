@@ -131,7 +131,7 @@ Verification for any change in this repo:
 
 - `bash scripts/sync.sh` — regenerates all `dist/` output; run after editing anything under `src/`
 - `bash scripts/validate.sh` — must exit 0; pipes are misleading, check `$?` directly rather than a `tail`ed exit
-- `bash tests/friction-logging.sh` — covers the tool-failure hook, malformed input, a missing `friction` CLI, and the Codex HCOM PATH bootstrap
+- `bash tests/friction-logging.sh` — covers the tool-failure hook, malformed input, and a missing `friction` CLI
 - `friction doctor --json` — confirms the globally installed friction CLI can open its database
 - `friction summary` — groups recurring friction by category, cwd and detail; excludes `check-fail` rows unless you pass `--include-check-fails`
 

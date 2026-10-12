@@ -19,7 +19,6 @@ Hooks are shell scripts that Claude Code runs automatically at specific points i
 | `guard-no-pager` | Blocks `git <subcommand> ... --no-pager`, which Git rejects; the flag belongs before the subcommand. | PreToolUse (`Bash`) | `silent`; requires jq |
 | `guard-runaway-process` | Blocks a Bash command whose only loop is an unbounded busy spin (`while :`, `while true`, `until false`, `for (( ; ; ))`) with no `sleep`, `break`, or `timeout`. This is the shape that left an orphaned shell burning CPU for eight days. | PreToolUse (`Bash`) | `silent`; requires jq |
 | `guard-search-boundaries` | Blocks broad searches that bypass ignore rules or enter generated, dependency, cache, coverage, and browser-output directories. | PreToolUse (`Bash`) | `silent`; requires jq, python3 |
-| `hcom` | Routes verified Claude lifecycle events to HCOM without managing other Claude settings. | Notification, PermissionRequest, PostToolUse, PostToolUseFailure, PreToolUse (`Bash\|Task\|Write\|Edit`), SessionEnd, SessionStart, Stop, StopFailure, SubagentStart, SubagentStop, UserPromptSubmit | `silent`; requires hcom |
 | `plan-verify` | Warns when an exited plan is missing a validation section. | PostToolUse (`ExitPlanMode`) | `silent` |
 | `progress-resume` | Injects project progress context when the prompt asks to resume work. | UserPromptSubmit | `silent` |
 | `retina-shrink-read` | Gives Claude Code a halved copy of a local Retina image when it reads one. | PreToolUse (`Read`) | `silent`; requires jq, retina-shrink |
@@ -30,12 +29,7 @@ Hooks are shell scripts that Claude Code runs automatically at specific points i
 
 ## HCOM ownership
 
-HCOM wiring is managed for both Claude Code and Codex:
-
-- Claude lifecycle events use the commands declared in `src/hooks/claude/hcom/hook.json`.
-- Codex uses the HCOM commands declared in `src/adapters/codex/hooks.json` for pre-tool use, post-tool use, session start, user prompt submit, and stop.
-- Global setup links the generated Claude settings (`dist/claude/settings.json`) and the generated Codex hook file (`dist/codex/hooks.json`). It leaves unrelated local settings outside this repository alone.
-- If `hcom hooks add codex` replaces `~/.codex/hooks.json`, rerun `scripts/sync.sh` and `scripts/setup-global.sh --codex`. Setup moves the replacement to a timestamped backup and restores the managed link.
+HCOM adds its own Claude Code and Codex session hooks when it launches a session with `hcom <tool>`. `hcom hooks status` reports those hooks as per-run. For HCOM, this repository registers only its own `guard-hcom-ack` and `guard-hcom-recipient` hooks, for both tools.
 
 ### tool-failure-log
 

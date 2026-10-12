@@ -56,20 +56,7 @@ test_tool_failure_hook_is_non_blocking() {
 	) || fail "Tool-failure hook exited non-zero without friction"
 }
 
-test_codex_hcom_hooks_bootstrap_homebrew_path() {
-	local hcom_command_count
-	local bootstrapped_command_count
-	local hooks_file="$REPO_DIR/dist/codex/hooks.json"
-
-	hcom_command_count=$(jq '[.. | objects | select(.command? and (.command | contains("; hcom ")))] | length' "$hooks_file")
-	bootstrapped_command_count=$(jq '[.. | objects | select(.command? and (.command | startswith("export PATH=\"/opt/homebrew/bin:/usr/local/bin:$PATH\"; hcom ")))] | length' "$hooks_file")
-
-	[ "$hcom_command_count" -eq 5 ] || fail "Expected five HCOM Codex hooks, found $hcom_command_count"
-	[ "$bootstrapped_command_count" -eq "$hcom_command_count" ] || fail "HCOM Codex hooks do not all bootstrap Homebrew PATH"
-}
-
 test_tool_failures_are_logged
 test_tool_failure_hook_is_non_blocking
-test_codex_hcom_hooks_bootstrap_homebrew_path
 
 printf '✓ friction logging tests passed\n'

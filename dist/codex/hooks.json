@@ -22,10 +22,6 @@
 					},
 					{
 						"type": "command",
-						"command": "export PATH=\"/opt/homebrew/bin:/usr/local/bin:$PATH\"; hcom codex-pretooluse"
-					},
-					{
-						"type": "command",
 						"command": "bash \"$HOME/.codex/hooks/guard-destructive.sh\""
 					},
 					{
@@ -57,26 +53,6 @@
 				]
 			}
 		],
-		"PostToolUse": [
-			{
-				"hooks": [
-					{
-						"type": "command",
-						"command": "export PATH=\"/opt/homebrew/bin:/usr/local/bin:$PATH\"; hcom codex-posttooluse"
-					}
-				]
-			}
-		],
-		"UserPromptSubmit": [
-			{
-				"hooks": [
-					{
-						"type": "command",
-						"command": "export PATH=\"/opt/homebrew/bin:/usr/local/bin:$PATH\"; hcom codex-userpromptsubmit"
-					}
-				]
-			}
-		],
 		"SessionStart": [
 			{
 				"matcher": "startup|resume|clear|compact",
@@ -88,30 +64,11 @@
 				]
 			},
 			{
-				"matcher": "startup|resume|clear",
-				"hooks": [
-					{
-						"type": "command",
-						"command": "export PATH=\"/opt/homebrew/bin:/usr/local/bin:$PATH\"; hcom codex-sessionstart"
-					}
-				]
-			},
-			{
 				"matcher": "clear",
 				"hooks": [
 					{
 						"type": "command",
 						"command": "bash \"${CODEX_HOME:-$HOME/.codex}/hooks/tool-call-checkpoint.sh\" codex"
-					}
-				]
-			}
-		],
-		"Stop": [
-			{
-				"hooks": [
-					{
-						"type": "command",
-						"command": "export PATH=\"/opt/homebrew/bin:/usr/local/bin:$PATH\"; hcom codex-stop"
 					}
 				]
 			}
