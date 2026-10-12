@@ -929,8 +929,6 @@ ensure_codex_permission_settings() {
 	printf '\n[permissions.project-edit.workspace_roots]\n' >> "$temp"
 	awk '{ print $0 " = true" }' "$roots_temp" >> "$temp"
 	printf '\n' >> "$temp"
-	codex_config_section 'permissions.project-edit.filesystem.":workspace_roots"' >> "$temp"
-	printf '\n' >> "$temp"
 	codex_config_section "permissions.project-edit.network" >> "$temp"
 
 	trash "$roots_temp"

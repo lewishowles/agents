@@ -349,6 +349,8 @@ test_setup_removes_retired_serena_server() {
 	assert_contains "$home_dir/.codex/config.toml" '[mcp_servers.codebase-memory-mcp]'
 }
 
+# Setup backs up an existing Codex config with a timestamp before replacing it
+# with the managed settings.
 test_config_replacement_creates_timestamped_backup() {
 	local home_dir="$TEST_ROOT/backup"
 
@@ -366,9 +368,6 @@ test_config_replacement_creates_timestamped_backup() {
 	assert_contains "$home_dir/.codex/config.toml" 'extends = ":workspace"'
 	assert_contains "$home_dir/.codex/config.toml" '[permissions.project-edit.workspace_roots]'
 	assert_contains "$home_dir/.codex/config.toml" '"'"$home_dir"'/Dev/Repositories/Configuration/Agents" = true'
-	assert_contains "$home_dir/.codex/config.toml" '[permissions.project-edit.filesystem.":workspace_roots"]'
-	assert_contains "$home_dir/.codex/config.toml" '".git/config" = "write"'
-	assert_contains "$home_dir/.codex/config.toml" '".git/config.lock" = "write"'
 	assert_not_contains "$home_dir/.codex/config.toml" 'sandbox_mode'
 	assert_not_contains "$home_dir/.codex/config.toml" '[sandbox_workspace_write]'
 	assert_not_contains "$home_dir/.codex/config.toml" '[[hooks.'
@@ -520,18 +519,25 @@ test_trash_wrapper_preserves_symlinked_bin_directory() {
 	assert_equals "$(readlink "$bin_dir/trash")" "$REPO_DIR/src/bin/trash"
 }
 
-test_permission_profile_preserves_workspace_roots() {
+# Setup keeps the workspace roots a user already has when it rewrites the Codex
+# permission profile, and removes the .git/config write rule that older setups
+# added, because that rule stops Codex running any command in a linked worktree.
+test_permission_profile_keeps_roots_and_drops_git_config_rule() {
 	local home_dir="$TEST_ROOT/permission-profile"
 
 	create_existing_config "$home_dir"
 	printf '\n[sandbox_workspace_write]\nnetwork_access = false\nexclude_slash_tmp = true\nwritable_roots = ["/tmp/keep"]\n' >> "$home_dir/.codex/config.toml"
 	printf '\n[permissions.project-edit.workspace_roots]\n"/tmp/already-added" = true\n' >> "$home_dir/.codex/config.toml"
+	printf '\n[permissions.project-edit.filesystem.":workspace_roots"]\n".git/config" = "write"\n".git/config.lock" = "write"\n' >> "$home_dir/.codex/config.toml"
 	run_setup "$home_dir" > /dev/null
 
 	assert_contains "$home_dir/.codex/config.toml" '[permissions.project-edit.network]'
 	assert_contains "$home_dir/.codex/config.toml" 'enabled = true'
 	assert_contains "$home_dir/.codex/config.toml" '"/tmp/keep" = true'
 	assert_contains "$home_dir/.codex/config.toml" '"/tmp/already-added" = true'
+	assert_not_contains "$home_dir/.codex/config.toml" '[permissions.project-edit.filesystem.":workspace_roots"]'
+	assert_not_contains "$home_dir/.codex/config.toml" '".git/config" = "write"'
+	assert_not_contains "$home_dir/.codex/config.toml" '".git/config.lock" = "write"'
 	assert_not_contains "$home_dir/.codex/config.toml" 'sandbox_mode'
 	assert_not_contains "$home_dir/.codex/config.toml" '[sandbox_workspace_write]'
 }
@@ -1109,7 +1115,7 @@ test_claude_theme_replacement_uses_backups_directory
 test_trash_wrapper_links_once_for_each_mode
 test_trash_wrapper_backs_up_existing_file
 test_trash_wrapper_preserves_symlinked_bin_directory
-test_permission_profile_preserves_workspace_roots
+test_permission_profile_keeps_roots_and_drops_git_config_rule
 test_skills_are_installed_and_editable
 test_exclusions_persist_and_report
 test_new_skill_installs_after_exclusion

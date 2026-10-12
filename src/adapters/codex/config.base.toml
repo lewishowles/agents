@@ -29,11 +29,6 @@ extends = ":workspace"
 "/tmp" = true
 "/private/tmp" = true
 
-[permissions.project-edit.filesystem.":workspace_roots"]
-# Let Git-backed setup tools store their repository ID without opening the rest of .git.
-".git/config" = "write"
-".git/config.lock" = "write"
-
 [permissions.project-edit.network]
 # Match the previous workspace sandbox's network access.
 enabled = true
