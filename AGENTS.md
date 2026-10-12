@@ -75,6 +75,7 @@ Durable scripts live under tracked `scripts/`, never under `.agent/`. Project se
 ~/.claude/settings.json     → repo/dist/claude/settings.json
 ~/.claude/skills/<name>     → repo/skills/<group>/<name>   (per-skill)
 ~/.claude/hooks/<file>      → repo/dist/claude/hooks/<file>  (per-hook)
+~/.claude/themes/<file>     → repo/dist/claude/themes/<file>  (per-theme)
 ~/.agents/AGENTS.md          → repo/dist/codex/AGENTS.md
 ~/.agents/skills/<name>      → repo/skills/<group>/<name>   (per-skill)
 repo/.agents/skills/agent-config → repo/.claude/skills/agent-config (repo-local)

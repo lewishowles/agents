@@ -451,6 +451,7 @@ setup_claude() {
 	ensure_container_dir "$CLAUDE_DIR" "$(display_path "$CLAUDE_DIR")"
 	ensure_container_dir "$CLAUDE_DIR/skills" "skills"
 	ensure_container_dir "$CLAUDE_DIR/hooks" "hooks"
+	ensure_container_dir "$CLAUDE_DIR/themes" "themes"
 	ensure_container_dir "$CLAUDE_DIR/rules" "rules"
 	ensure_container_dir "$CLAUDE_DIR/commands" "commands"
 	cli_group_end
@@ -478,6 +479,15 @@ setup_claude() {
 	for hook in "$REPO_DIR"/dist/claude/hooks/*; do
 		[ -f "$hook" ] || continue
 		link_path "$hook" "$CLAUDE_DIR/hooks/$(basename "$hook")" "hooks/$(basename "$hook")"
+	done
+	cli_group_end
+
+	cli_group_begin "Claude themes"
+	prune_stale_repo_links "$CLAUDE_DIR/themes" "$REPO_DIR/dist/claude/themes" "themes"
+	local theme  # Generated theme file to link into the Claude config folder.
+	for theme in "$REPO_DIR"/dist/claude/themes/*.json; do
+		[ -f "$theme" ] || continue
+		link_path "$theme" "$CLAUDE_DIR/themes/$(basename "$theme")" "themes/$(basename "$theme")"
 	done
 	cli_group_end
 

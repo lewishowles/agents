@@ -4,10 +4,11 @@
 # Build order:
 #   1. Docs tables generated from canonical skill and hook files (build-docs.py)
 #   2. dist/claude/hooks/ (copied from src/hooks/claude/ source)
-#   3. dist/claude/rules/code-style.md (copied from its Claude adapter source)
-#   4. dist/claude/CLAUDE.md and dist/codex/AGENTS.md (assembled from src/rules/)
-#   5. dist/claude/settings.json (build-settings.py)
-#   6. Validation (validate.sh)
+#   3. dist/claude/themes/ (copied from src/adapters/claude/themes/)
+#   4. dist/claude/rules/code-style.md (copied from its Claude adapter source)
+#   5. dist/claude/CLAUDE.md and dist/codex/AGENTS.md (assembled from src/rules/)
+#   6. dist/claude/settings.json (build-settings.py)
+#   7. Validation (validate.sh)
 
 set -euo pipefail
 
@@ -55,12 +56,26 @@ copy_hooks() {
 	done
 }
 
+# Replaces the generated Claude theme files with the current ones from
+# src/adapters/claude/themes/, so a theme removed from source also leaves dist.
+copy_themes() {
+	mkdir -p "$REPO_DIR/dist/claude/themes"
+	find "$REPO_DIR/dist/claude/themes" -maxdepth 1 -type f -delete
+
+	local theme  # Source theme file to copy into dist.
+	for theme in "$REPO_DIR"/src/adapters/claude/themes/*.json; do
+		[ -f "$theme" ] || continue
+		cp "$theme" "$REPO_DIR/dist/claude/themes/$(basename "$theme")"
+	done
+}
+
 mkdir -p "$REPO_DIR/dist/claude" "$REPO_DIR/dist/codex"
 
 cli_section "Generated outputs" "Build dist files and manifests"
 
 python3 "$REPO_DIR/scripts/build/build-docs.py" >/dev/null
 copy_hooks
+copy_themes
 mkdir -p "$REPO_DIR/dist/claude/rules"
 cp "$REPO_DIR/src/adapters/claude/rules/code-style.md" "$REPO_DIR/dist/claude/rules/code-style.md"
 write_target "$CLAUDE_TARGET" "${CLAUDE_PARTS[@]}"

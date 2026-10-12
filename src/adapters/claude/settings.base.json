@@ -1,5 +1,6 @@
 {
 	"outputStyle": "concise",
+	"theme": "custom:catppuccin-mocha",
 	"model": "opus",
 	"modelSettings": {
 		"claude-opus-5-5": {
@@ -18,7 +19,12 @@
 	},
 	"permissions": {
 		"defaultMode": "auto",
-		"additionalDirectories": ["~/.Trash", "~/Dev/Repositories/Configuration/Agents"],
+		"additionalDirectories": [
+			"~/.Trash",
+			"~/Dev/Repositories/Configuration/Agents",
+			"~/Dev/Repositories/Packages/dev-tools",
+			"~/Dev/Repositories/Packages/agent-tools"
+		],
 		"allow": [
 			"mcp__codebase-memory-mcp__*",
 			"Bash(hcom:*)",

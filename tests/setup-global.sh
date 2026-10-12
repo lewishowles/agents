@@ -392,6 +392,65 @@ test_hook_file_is_replaced_with_managed_link() {
 	assert_not_contains "$home_dir/.codex/config.toml" '[[hooks.'
 }
 
+# Checks that setup links both generated themes into whichever Claude config
+# directory it is given, covering both ~/.claude and ~/.claude-2.
+test_claude_themes_are_linked_in_each_config_dir() {
+	local home_dir="$TEST_ROOT/claude-themes"  # Isolated home for both Claude setup runs.
+	local claude_dir  # Claude config directory currently being checked.
+	local theme_name  # Generated Catppuccin theme currently being checked.
+
+	for claude_dir in "$home_dir/.claude" "$home_dir/.claude-2"; do
+		run_setup_target "$home_dir" "--claude" --claude-dir "$claude_dir" > /dev/null
+
+		for theme_name in catppuccin-mocha catppuccin-latte; do
+			assert_link "$claude_dir/themes/$theme_name.json"
+			assert_equals "$(readlink "$claude_dir/themes/$theme_name.json")" "$REPO_DIR/dist/claude/themes/$theme_name.json"
+		done
+	done
+}
+
+# Checks that setup leaves the user's own theme files and theme links unchanged.
+test_claude_setup_preserves_user_theme() {
+	local home_dir="$TEST_ROOT/user-theme"  # Isolated home with themes the user made.
+	local theme_path="$home_dir/.claude/themes/my-theme.json"  # Theme that setup must preserve.
+	local linked_theme_path="$home_dir/.claude/themes/linked-theme.json"  # Theme link the user made, which setup must preserve.
+	local linked_theme_target="$home_dir/personal-theme.json"  # File outside the themes folder that the user's link points to.
+
+	mkdir -p "$(dirname "$theme_path")"
+	printf '{"name":"my-theme"}\n' > "$theme_path"
+	printf '{"name":"personal-theme"}\n' > "$linked_theme_target"
+	ln -s "$linked_theme_target" "$linked_theme_path"
+	run_setup_target "$home_dir" "--claude" > /dev/null
+
+	assert_file "$theme_path"
+	assert_equals "$(cat "$theme_path")" '{"name":"my-theme"}'
+	assert_link "$linked_theme_path"
+	assert_equals "$(readlink "$linked_theme_path")" "$linked_theme_target"
+}
+
+# Checks that when setup replaces a plain theme file with a link, the old file
+# goes to backups/themes and no backup is left in the themes folder.
+test_claude_theme_replacement_uses_backups_directory() {
+	local home_dir="$TEST_ROOT/replaced-theme"  # Isolated home with an existing theme file.
+	local claude_dir="$home_dir/.claude-2"  # Alternate Claude config directory under test.
+	local theme_path="$claude_dir/themes/catppuccin-mocha.json"  # Theme replaced by the managed link.
+	local backups  # Timestamped backups of the replaced theme.
+
+	mkdir -p "$(dirname "$theme_path")"
+	printf '{"name":"old-theme"}\n' > "$theme_path"
+	run_setup_target "$home_dir" "--claude" --claude-dir "$claude_dir" > /dev/null
+
+	backups=("$claude_dir/backups/themes/catppuccin-mocha.json.bak."*)
+	assert_file "${backups[0]}"
+	assert_equals "$(cat "${backups[0]}")" '{"name":"old-theme"}'
+	assert_link "$theme_path"
+	assert_equals "$(readlink "$theme_path")" "$REPO_DIR/dist/claude/themes/catppuccin-mocha.json"
+
+	if compgen -G "$claude_dir/themes/*.bak.*" > /dev/null; then
+		fail "Expected no theme backup in $claude_dir/themes"
+	fi
+}
+
 # Checks that each setup mode installs one shared trash link and leaves it alone on a rerun.
 test_trash_wrapper_links_once_for_each_mode() {
 	local target  # Setup mode being checked in an isolated home.
@@ -1044,6 +1103,9 @@ test_refresh_runs_repository_sync
 test_config_replacement_creates_timestamped_backup
 test_setup_removes_retired_serena_server
 test_hook_file_is_replaced_with_managed_link
+test_claude_themes_are_linked_in_each_config_dir
+test_claude_setup_preserves_user_theme
+test_claude_theme_replacement_uses_backups_directory
 test_trash_wrapper_links_once_for_each_mode
 test_trash_wrapper_backs_up_existing_file
 test_trash_wrapper_preserves_symlinked_bin_directory

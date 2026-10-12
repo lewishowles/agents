@@ -20,6 +20,7 @@ backup_path() {
 	case "$path" in
 		"$HOME"/.claude*/skills/*)   backup_dir="$(dirname "$(dirname "$path")")/backups/skills" ;;
 		"$HOME"/.claude*/hooks/*)    backup_dir="$(dirname "$(dirname "$path")")/backups/hooks" ;;
+		"$HOME"/.claude*/themes/*)   backup_dir="$(dirname "$(dirname "$path")")/backups/themes" ;;
 		"$HOME"/.claude*/commands/*) backup_dir="$(dirname "$(dirname "$path")")/backups/commands" ;;
 		"$HOME/.agents/skills/"*)    backup_dir="$HOME/.agents/backups/skills" ;;
 		*)                           backup_dir="$(dirname "$path")" ;;
