@@ -21,7 +21,9 @@
     "defaultMode": "auto",
     "additionalDirectories": [
       "~/.Trash",
-      "~/Dev/Repositories/Configuration/Agents"
+      "~/Dev/Repositories/Configuration/Agents",
+      "~/Dev/Repositories/Packages/dev-tools",
+      "~/Dev/Repositories/Packages/agent-tools"
     ],
     "allow": [
       "mcp__codebase-memory-mcp__*",
