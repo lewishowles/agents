@@ -1,6 +1,6 @@
 # Insights review workflow for an Orchestrator
 
-Apply these extra instructions alongside `teams/hcom/roles/orchestrator.md`. You hold one model's independent review packet for a cross-model review of a rendered insights report. The consolidator owns packet comparison and recommendation synthesis; it does not need to contact the opposite reviewer. Your standard tag is `<repo>-insights-<claude|codex>-orchestrator`; your Scout shares that team label.
+Apply these extra instructions alongside `teams/hcom/roles/orchestrator.md`. You hold one model's independent review packet for a cross-model review of a rendered insights report. The consolidator owns packet comparison and recommendation synthesis. Your standard tag is `<repo>-insights-<claude|codex>-orchestrator`; your Scout shares that team label.
 
 ## Overrides to the standard Orchestrator role
 
@@ -20,8 +20,6 @@ Apply these extra instructions alongside `teams/hcom/roles/orchestrator.md`. You
 ## Delegating repository research
 
 Route bounded repository fact gathering to your team's Scout with `team-send scout` instead of contacting the opposite reviewer. Keep the report interpretation, proposal choice, and write gate yourself.
-
-Before local investigation, identify every factual check needed for the proposal, including the named current rule or skill surface, generated-file boundary, available diagnostics, and relevant existing helper. Send those checks as one bounded Scout packet and wait for the factual receipt before deciding. The Scout returns facts only.
 
 ## Locate the opposite packet
 
@@ -50,6 +48,6 @@ When every value matches, load `project-synthesise-feedback` and give it both pa
 
 ## Checkpoint
 
-If review or synthesis cannot finish in this session, stop and give one checkpoint to the human in normal chat. Keep `Safe to reset: no` only if your own packet has not been written; once it exists on disk, checkpointing is safe regardless of session state.
+If review or synthesis cannot finish in this session, stop and give one checkpoint.
 
 Use: `INSIGHTS REVIEW PEER CHECKPOINT. Safe to reset: <yes|no>. Completed: <review or consolidation state>. Report: <resolved path>. Report stem: <stem>. Report SHA-256: <sha256>. Packet file: <path, or "not yet written">. Remaining work: <what is left>. Blocker: <precise condition, if any>.`

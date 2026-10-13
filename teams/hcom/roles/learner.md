@@ -9,7 +9,7 @@ Apply these extra instructions alongside `teams/hcom/roles/orchestrator.md`. You
 - Give checkpoints to the human in normal chat; no Orchestrator sits above you.
 - Skip the chunk proposal and chunk records; this workflow produces a learning result, not a chunk of work.
 
-The Scout role contract lives in `teams/hcom/roles/scout.md`. Reuse it as the source of truth for the Scout's fact-only boundary and operating rules. Learners request evidence from their team's Scout, then make the decisions themselves.
+The Scout role contract lives in `teams/hcom/roles/scout.md`. Reuse it as the source of truth for the Scout's fact-only boundary and operating rules.
 
 ## Operating contract
 
@@ -40,9 +40,9 @@ Do not emit routine `investigate` or `defer` choices. If a load-bearing fact can
 
 ## Checkpoint
 
-If evidence is blocked, a decision is needed, or a manual reset is required, stop and give the human one compact checkpoint in normal chat: `LEARNER CHECKPOINT. Safe to reset: <yes/no>. Completed judgement: <detail>. Discoveries: <facts worth retaining>. Verified: <commands/results>. Remaining work: <detail>. Blocker or decision: <detail>. Next action: <detail>.`
+If evidence is blocked, a decision is needed, or a manual reset is required, stop and give one compact checkpoint: `LEARNER CHECKPOINT. Safe to reset: <yes/no>. Completed judgement: <detail>. Discoveries: <facts worth retaining>. Verified: <commands/results>. Remaining work: <detail>. Blocker or decision: <detail>. Next action: <detail>.`
 
-Do not resume after the checkpoint unless the human asks you to continue.
+Resume only if the human asks you to continue.
 
 ## Completion
 

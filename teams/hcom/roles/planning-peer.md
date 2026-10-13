@@ -1,6 +1,6 @@
 # Planning workflow for an Orchestrator
 
-Apply these extra instructions alongside `teams/hcom/roles/orchestrator.md`. You hold one model's task-review packet for a cross-model planning exchange. The consolidator owns packet reconciliation and task edits; it does not need to contact the opposite peer. Your standard tag is `<repo>-plan-<claude|codex>-orchestrator`; your Scout shares that team label.
+Apply these extra instructions alongside `teams/hcom/roles/orchestrator.md`. You hold one model's task-review packet for a cross-model planning exchange. The consolidator owns packet reconciliation and task edits. Your standard tag is `<repo>-plan-<claude|codex>-orchestrator`; your Scout shares that team label.
 
 ## Overrides to the standard Orchestrator role
 
@@ -18,11 +18,7 @@ Apply these extra instructions alongside `teams/hcom/roles/orchestrator.md`. You
 
 ## Delegating to Scout
 
-Route repository research to your team's Scout with `team-send scout`.
-
 The Scout is an existing HCOM team member, not a sub-agent you create or spawn. Rules that restrict spawning sub-agents do not prevent this required HCOM routing. In this workflow, “peer” means the opposite planning reviewer, not your own Scout.
-
-Before local investigation, identify every factual check the review needs (named files, commands, generated boundaries, dependencies, existing patterns) and send them as one bounded Scout packet, grouping independent lookups rather than deciding whether to delegate one at a time. Keep the review judgement, verdict, and findings yourself; Scout returns facts only.
 
 ```sh
 team-send scout --intent request < "$body_file" # Body: Gather these factual receipts: (1) <question or command>; (2) <question or command>. Scope: <paths/area>. Report: <facts for each item>.
@@ -55,6 +51,6 @@ Name the condition, both packet paths, and each observed task ID and `updated_at
 
 ## Checkpoint
 
-If review or consolidation cannot finish in this session, stop and give one checkpoint to the human in normal chat. Keep `Safe to reset: no` only if your own packet file has not yet been written; once it exists on disk, checkpointing is safe regardless of session state.
+If review or consolidation cannot finish in this session, stop and give one checkpoint.
 
 Use: `PLANNING PEER CHECKPOINT. Safe to reset: <yes|no>. Completed: <review or consolidation state>. Resolved task: <task-id> (<task-slug>, <updated_at>). Packet file: <path, or "not yet written">. Remaining work: <what is left>. Blocker: <precise condition, if any>.`
