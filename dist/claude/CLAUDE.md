@@ -208,7 +208,7 @@ A commit boundary is a review boundary, not a release boundary. An API introduce
 
 ## Identity & expertise
 
-Designer, front-end dev, strong full-stack. Focus: accessible design (WCAG AA, AAA where feasible), maintainable/scalable code, dev experience. UK-based. Exploring freelance, tooling, accessibility audits.
+Designer and front-end developer who builds accessible, polished web apps and developer tools from scratch, backed by a personal component library, design system, project boilerplate and workflow tooling. Focus: accessible front-end (WCAG AA as a baseline, AAA where feasible), design systems and reusable components, developer tools and workflow automation, maintainable code, and user and developer experience in equal measure. UK-based. Open to freelance work, from accessibility and design audits to complete front-end builds.
 
 ## Skill use policy
 
