@@ -459,6 +459,7 @@ setup_claude() {
 	cli_group_begin "Claude command-line tools"
 	ensure_friction
 	ensure_team_send
+	ensure_doc_paths
 	cli_group_end
 
 	cli_group_begin "Claude files"
@@ -561,6 +562,33 @@ ensure_team_send() {
 	cli_group_status success "team-send" "installed globally"
 }
 
+# Ensures doc-paths, the checker for Markdown links to missing files, is
+# available for validation and the writing and project-audit skills.
+ensure_doc_paths() {
+	if command -v doc-paths >/dev/null 2>&1; then
+		cli_group_status muted "doc-paths" "globally installed"
+		return
+	fi
+
+	if ! command -v uv >/dev/null 2>&1; then
+		cli_group_status failed "doc-paths" "missing and uv is not installed"
+		return 1
+	fi
+
+	cli_group_status warning "doc-paths" "installing globally"
+	if ! uv tool install --from ~/Dev/Repositories/Packages/agent-tools/packages/doc-paths doc-paths >/dev/null; then
+		cli_group_status failed "doc-paths" "global installation failed"
+		return 1
+	fi
+
+	if ! command -v doc-paths >/dev/null 2>&1; then
+		cli_group_status failed "doc-paths" "installation did not expose doc-paths"
+		return 1
+	fi
+
+	cli_group_status success "doc-paths" "installed globally"
+}
+
 setup_codex() {
 	cli_section "Codex global setup ($(display_path "$CODEX_DIR"))"
 
@@ -573,6 +601,7 @@ setup_codex() {
 
 	cli_group_begin "Codex command-line tools"
 	ensure_team_send
+	ensure_doc_paths
 	cli_group_end
 
 	cli_group_begin "Codex files"

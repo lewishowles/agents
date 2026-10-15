@@ -42,7 +42,8 @@ Every function: purpose comment + JSDoc-style `@param` lines. Use format `# @par
 # @param  {string}  path
 #     The file or symlink to back up.
 backup_path() {
-	local path="$1"  # File or symlink to move to its backup location.
+	# File or symlink to move to its backup location.
+	local path="$1"
 	…
 }
 ```
@@ -60,15 +61,21 @@ Every function needs this documentation, including one-line functions and functi
 
 ## Variables
 
-Every top-level and local variable needs a short purpose comment. Use a trailing `#` comment for a short declaration or a preceding `#` comment when it reads more clearly.
+Every top-level and local variable needs a short purpose comment on its own line above the declaration.
 
 ```bash
-LOG_FILE="$REPO_DIR/setup.log"  # Setup output for the current run.
+# Setup output for the current run.
+LOG_FILE="$REPO_DIR/setup.log"
 ```
 
 ```python
-PM_GROUP = "project-management"  # Listed first in the global index so it appears near slash-command docs.
+# Listed first in the global index so it appears near slash-command docs.
+PM_GROUP = "project-management"
 ```
+
+## Function order
+
+Put the main function first and each helper after the function that calls it, as in the JavaScript module order in `code-style`. In Bash, put the script's top-level steps in `main` and end the file with `main "$@"`; functions only need to be defined before that call runs. In Python, end with `if __name__ == "__main__":` calling `main()`.
 
 ## No banner dividers
 
@@ -90,9 +97,11 @@ If pattern appears more than once, extract named function. Name after what it re
 # @param  {string}  ...
 #     Allowed values passed as remaining arguments.
 is_valid() {
-	local value="$1"  # Value to compare with the allowed values.
+	# Value to compare with the allowed values.
+	local value="$1"
 	shift
-	local allowed  # Current allowed value being compared.
+	# Current allowed value being compared.
+	local allowed
 	for allowed in "$@"; do
 		[ "$value" = "$allowed" ] && return 0
 	done
@@ -118,19 +127,28 @@ If logic is complex, wrap heredoc in named function so call site stays readable.
 
 set -euo pipefail
 
-if ! command -v jq &>/dev/null; then
-	printf 'This script requires jq. Install it with: brew install jq\n' >&2
-	exit 1
-fi
+# Validates the configuration file and prints its name.
+#
+# @param  {string}  path
+#     The configuration file to read. Defaults to /path/to/config.json.
+main() {
+	if ! command -v jq &>/dev/null; then
+		printf 'This script requires jq. Install it with: brew install jq\n' >&2
+		exit 1
+	fi
 
-config_path="${1:-/path/to/config.json}"  # Configuration file to validate and read.
+	# Configuration file to validate and read.
+	local config_path="${1:-/path/to/config.json}"
 
-if [[ ! -f "$config_path" ]]; then
-	printf 'Config file not found: %s\n' "$config_path" >&2
-	exit 1
-fi
+	if [[ ! -f "$config_path" ]]; then
+		printf 'Config file not found: %s\n' "$config_path" >&2
+		exit 1
+	fi
 
-jq -r '.name // "unknown"' "$config_path"
+	jq -r '.name // "unknown"' "$config_path"
+}
+
+main "$@"
 ```
 
 ## Background processes in verification

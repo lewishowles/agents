@@ -82,6 +82,25 @@ EOF
 exit 0
 EOF
 
+	cat > "$bin_dir/doc-paths" <<'EOF'
+#!/bin/sh
+exit 0
+EOF
+
+	cat > "$bin_dir/uv" <<'EOF'
+#!/bin/sh
+printf '%s\n' "$*" >> "$SETUP_GLOBAL_UV_LOG"
+if [ "$1" != "tool" ] || [ "$2" != "install" ] || [ "$3" != "--from" ] || [ "$5" != "doc-paths" ]; then
+	exit 1
+fi
+
+cat > "$(dirname "$0")/doc-paths" <<'COMMAND'
+#!/bin/sh
+exit 0
+COMMAND
+chmod +x "$(dirname "$0")/doc-paths"
+EOF
+
 	cat > "$bin_dir/hcom" <<'EOF'
 #!/bin/sh
 if [ "$1" != "config" ] || [ "$2" != "codex_args" ]; then
@@ -113,7 +132,8 @@ EOF
 # newlines included. Setup calls it once per output line, so it uses the read
 # builtin rather than starting a cat process each time.
 cli_style_render() {
-	local text  # The whole input, read up to end of file.
+	# The whole input, read up to end of file.
+	local text
 
 	# read reports failure when it reaches end of file, which is expected here.
 	IFS= read -r -d '' text || :
@@ -121,7 +141,7 @@ cli_style_render() {
 }
 EOF
 
-	chmod +x "$bin_dir/bash" "$bin_dir/cli-style" "$bin_dir/cp" "$bin_dir/mv" "$bin_dir/git" "$bin_dir/friction" "$bin_dir/team-send" "$bin_dir/hcom" "$bin_dir/cli-style-adapter.sh"
+	chmod +x "$bin_dir/bash" "$bin_dir/cli-style" "$bin_dir/cp" "$bin_dir/mv" "$bin_dir/git" "$bin_dir/friction" "$bin_dir/team-send" "$bin_dir/doc-paths" "$bin_dir/uv" "$bin_dir/hcom" "$bin_dir/cli-style-adapter.sh"
 }
 
 # Creates an fzf stand-in that records the arguments and skill list it
@@ -130,7 +150,8 @@ EOF
 # @param  {string}  bin_dir
 #     Directory that receives the test-only fzf command.
 create_fzf_stub() {
-	local bin_dir="$1"  # Directory that receives the test-only fzf command.
+	# Directory that receives the test-only fzf command.
+	local bin_dir="$1"
 
 	mkdir -p "$bin_dir"
 
@@ -154,14 +175,22 @@ EOF
 # @param  {string}  excluded_skill
 #     Saved exclusion that fzf must leave unticked.
 assert_fzf_start_selection() {
-	local arguments_path="$1"  # File containing the fzf command arguments.
-	local input_path="$2"  # File containing the ordered canonical skill names passed to fzf.
-	local excluded_skill="$3"  # Saved exclusion that fzf must leave unticked.
-	local fzf_bind  # Start action sequence received by the fzf stand-in.
-	local remaining_actions  # Start actions that have not yet matched an input skill.
-	local expected_action  # Action expected for the current canonical skill.
-	local actual_action  # Action generated for the current canonical skill.
-	local skill_name  # Canonical skill currently being matched to a start action.
+	# File containing the fzf command arguments.
+	local arguments_path="$1"
+	# File containing the ordered canonical skill names passed to fzf.
+	local input_path="$2"
+	# Saved exclusion that fzf must leave unticked.
+	local excluded_skill="$3"
+	# Start action sequence received by the fzf stand-in.
+	local fzf_bind
+	# Start actions that have not yet matched an input skill.
+	local remaining_actions
+	# Action expected for the current canonical skill.
+	local expected_action
+	# Action generated for the current canonical skill.
+	local actual_action
+	# Canonical skill currently being matched to a start action.
+	local skill_name
 
 	fzf_bind=$(grep '^load:' "$arguments_path")
 	remaining_actions="${fzf_bind#load:}"
@@ -222,11 +251,16 @@ run_setup() {
 # @param  {string}  ...
 #     Additional setup-global arguments.
 run_setup_target() {
-	local home_dir="$1"  # Isolated home directory for the setup run.
-	local target="$2"  # Setup target option, or empty for automatic targeting.
-	local bin_dir="$TEST_ROOT/bin"  # Directory containing test-only command stubs.
-	local fail_backup_move="${SETUP_GLOBAL_TEST_FAIL_BACKUP_MOVE:-0}"  # Whether backup moves should fail.
-	local setup_path="${SETUP_GLOBAL_TEST_PATH:-$bin_dir:$PATH}"  # Command path used by the setup process.
+	# Isolated home directory for the setup run.
+	local home_dir="$1"
+	# Setup target option, or empty for automatic targeting.
+	local target="$2"
+	# Directory containing test-only command stubs.
+	local bin_dir="$TEST_ROOT/bin"
+	# Whether backup moves should fail.
+	local fail_backup_move="${SETUP_GLOBAL_TEST_FAIL_BACKUP_MOVE:-0}"
+	# Command path used by the setup process.
+	local setup_path="${SETUP_GLOBAL_TEST_PATH:-$bin_dir:$PATH}"
 	shift 2
 
 	mkdir -p "$home_dir"
@@ -239,6 +273,7 @@ run_setup_target() {
 		export SETUP_GLOBAL_SYNC="$REPO_DIR/scripts/sync.sh"
 		export SETUP_GLOBAL_VALIDATE="$REPO_DIR/scripts/validate.sh"
 		export SETUP_GLOBAL_CALL_LOG="$home_dir/setup-global-calls.log"
+		export SETUP_GLOBAL_UV_LOG="$home_dir/uv-calls.log"
 		export SETUP_GLOBAL_TEST_ADAPTER="$bin_dir/cli-style-adapter.sh"
 		export SETUP_GLOBAL_TEST_FAIL_BACKUP_MOVE="$fail_backup_move"
 
@@ -324,6 +359,47 @@ test_default_setup_skips_repository_refresh() {
 	assert_not_contains "$calls" "$REPO_DIR/scripts/validate.sh"
 }
 
+# Checks that both targets leave an available doc-paths command untouched.
+test_existing_doc_paths_is_preserved() {
+	# Isolated home for the setup run.
+	local home_dir="$TEST_ROOT/existing-doc-paths"
+
+	run_setup_target "$home_dir" "--both" > /dev/null
+
+	assert_not_exists "$home_dir/uv-calls.log"
+}
+
+# Checks that global setup installs a missing doc-paths command once for both targets.
+test_missing_doc_paths_is_installed() {
+	# Isolated home for the setup run.
+	local home_dir="$TEST_ROOT/install-doc-paths"
+	# Isolated command directory without doc-paths.
+	local bin_dir="$TEST_ROOT/install-bin"
+
+	/bin/cp -R "$TEST_ROOT/bin" "$bin_dir"
+	mv "$bin_dir/doc-paths" "$bin_dir/doc-paths-disabled"
+	SETUP_GLOBAL_TEST_PATH="$bin_dir:/usr/bin:/bin:/usr/sbin:/sbin" run_setup_target "$home_dir" "--both" > /dev/null
+
+	assert_contains "$home_dir/uv-calls.log" "tool install --from $home_dir/Dev/Repositories/Packages/agent-tools/packages/doc-paths doc-paths"
+	assert_equals "$(wc -l < "$home_dir/uv-calls.log" | tr -d ' ')" '1'
+	assert_file "$bin_dir/doc-paths"
+}
+
+# Checks that Codex setup on its own installs a missing doc-paths command.
+test_codex_installs_missing_doc_paths() {
+	# Isolated home for the setup run.
+	local home_dir="$TEST_ROOT/codex-install-doc-paths"
+	# Isolated command directory without doc-paths.
+	local bin_dir="$TEST_ROOT/codex-install-bin"
+
+	/bin/cp -R "$TEST_ROOT/bin" "$bin_dir"
+	mv "$bin_dir/doc-paths" "$bin_dir/doc-paths-disabled"
+	SETUP_GLOBAL_TEST_PATH="$bin_dir:/usr/bin:/bin:/usr/sbin:/sbin" run_setup_target "$home_dir" "--codex" > /dev/null
+
+	assert_equals "$(wc -l < "$home_dir/uv-calls.log" | tr -d ' ')" '1'
+	assert_file "$bin_dir/doc-paths"
+}
+
 # Refresh runs the repository sync, which validates the output itself, so setup
 # does not run validation a second time.
 test_refresh_runs_repository_sync() {
@@ -395,9 +471,12 @@ test_hook_file_is_replaced_with_managed_link() {
 # Checks that setup links both generated themes into whichever Claude config
 # directory it is given, covering both ~/.claude and ~/.claude-2.
 test_claude_themes_are_linked_in_each_config_dir() {
-	local home_dir="$TEST_ROOT/claude-themes"  # Isolated home for both Claude setup runs.
-	local claude_dir  # Claude config directory currently being checked.
-	local theme_name  # Generated Catppuccin theme currently being checked.
+	# Isolated home for both Claude setup runs.
+	local home_dir="$TEST_ROOT/claude-themes"
+	# Claude config directory currently being checked.
+	local claude_dir
+	# Generated Catppuccin theme currently being checked.
+	local theme_name
 
 	for claude_dir in "$home_dir/.claude" "$home_dir/.claude-2"; do
 		run_setup_target "$home_dir" "--claude" --claude-dir "$claude_dir" > /dev/null
@@ -411,10 +490,14 @@ test_claude_themes_are_linked_in_each_config_dir() {
 
 # Checks that setup leaves the user's own theme files and theme links unchanged.
 test_claude_setup_preserves_user_theme() {
-	local home_dir="$TEST_ROOT/user-theme"  # Isolated home with themes the user made.
-	local theme_path="$home_dir/.claude/themes/my-theme.json"  # Theme that setup must preserve.
-	local linked_theme_path="$home_dir/.claude/themes/linked-theme.json"  # Theme link the user made, which setup must preserve.
-	local linked_theme_target="$home_dir/personal-theme.json"  # File outside the themes folder that the user's link points to.
+	# Isolated home with themes the user made.
+	local home_dir="$TEST_ROOT/user-theme"
+	# Theme that setup must preserve.
+	local theme_path="$home_dir/.claude/themes/my-theme.json"
+	# Theme link the user made, which setup must preserve.
+	local linked_theme_path="$home_dir/.claude/themes/linked-theme.json"
+	# File outside the themes folder that the user's link points to.
+	local linked_theme_target="$home_dir/personal-theme.json"
 
 	mkdir -p "$(dirname "$theme_path")"
 	printf '{"name":"my-theme"}\n' > "$theme_path"
@@ -431,10 +514,14 @@ test_claude_setup_preserves_user_theme() {
 # Checks that when setup replaces a plain theme file with a link, the old file
 # goes to backups/themes and no backup is left in the themes folder.
 test_claude_theme_replacement_uses_backups_directory() {
-	local home_dir="$TEST_ROOT/replaced-theme"  # Isolated home with an existing theme file.
-	local claude_dir="$home_dir/.claude-2"  # Alternate Claude config directory under test.
-	local theme_path="$claude_dir/themes/catppuccin-mocha.json"  # Theme replaced by the managed link.
-	local backups  # Timestamped backups of the replaced theme.
+	# Isolated home with an existing theme file.
+	local home_dir="$TEST_ROOT/replaced-theme"
+	# Alternate Claude config directory under test.
+	local claude_dir="$home_dir/.claude-2"
+	# Theme replaced by the managed link.
+	local theme_path="$claude_dir/themes/catppuccin-mocha.json"
+	# Timestamped backups of the replaced theme.
+	local backups
 
 	mkdir -p "$(dirname "$theme_path")"
 	printf '{"name":"old-theme"}\n' > "$theme_path"
@@ -453,11 +540,16 @@ test_claude_theme_replacement_uses_backups_directory() {
 
 # Checks that each setup mode installs one shared trash link and leaves it alone on a rerun.
 test_trash_wrapper_links_once_for_each_mode() {
-	local target  # Setup mode being checked in an isolated home.
-	local home_dir  # Isolated home for the current setup mode.
-	local output  # Setup output, which should report the trash wrapper once.
-	local link  # Installed trash wrapper link.
-	local backups  # Any backup made during a rerun.
+	# Setup mode being checked in an isolated home.
+	local target
+	# Isolated home for the current setup mode.
+	local home_dir
+	# Setup output, which should report the trash wrapper once.
+	local output
+	# Installed trash wrapper link.
+	local link
+	# Any backup made during a rerun.
+	local backups
 
 	for target in claude codex both; do
 		home_dir="$TEST_ROOT/trash-$target"
@@ -482,10 +574,14 @@ test_trash_wrapper_links_once_for_each_mode() {
 
 # Checks that a pre-existing trash command is preserved when setup installs the wrapper.
 test_trash_wrapper_backs_up_existing_file() {
-	local home_dir="$TEST_ROOT/trash-existing"  # Isolated home with a pre-existing trash command.
-	local link="$home_dir/.local/bin/trash"  # Target path for the shared wrapper.
-	local output="$TEST_ROOT/trash-existing.txt"  # Setup output naming the backup.
-	local backups  # Timestamped backups of the pre-existing command.
+	# Isolated home with a pre-existing trash command.
+	local home_dir="$TEST_ROOT/trash-existing"
+	# Target path for the shared wrapper.
+	local link="$home_dir/.local/bin/trash"
+	# Setup output naming the backup.
+	local output="$TEST_ROOT/trash-existing.txt"
+	# Timestamped backups of the pre-existing command.
+	local backups
 
 	mkdir -p "$(dirname "$link")"
 	printf 'keep my trash command\n' > "$link"
@@ -502,10 +598,14 @@ test_trash_wrapper_backs_up_existing_file() {
 
 # Checks that setup adds the trash wrapper inside a symlinked ~/.local/bin, such as one managed by dotfiles, instead of replacing the folder.
 test_trash_wrapper_preserves_symlinked_bin_directory() {
-	local home_dir="$TEST_ROOT/trash-symlinked-bin"  # Isolated home with a dotfiles bin directory.
-	local bin_dir="$home_dir/dotfiles-bin"  # Existing directory that the bin symlink points to.
-	local bin_link="$home_dir/.local/bin"  # Symlink that setup must leave in place.
-	local backups  # Any backup of the bin directory made by setup.
+	# Isolated home with a dotfiles bin directory.
+	local home_dir="$TEST_ROOT/trash-symlinked-bin"
+	# Existing directory that the bin symlink points to.
+	local bin_dir="$home_dir/dotfiles-bin"
+	# Symlink that setup must leave in place.
+	local bin_link="$home_dir/.local/bin"
+	# Any backup of the bin directory made by setup.
+	local backups
 
 	mkdir -p "$home_dir/.local" "$bin_dir"
 	ln -s "$bin_dir" "$bin_link"
@@ -544,9 +644,12 @@ test_permission_profile_keeps_roots_and_drops_git_config_rule() {
 }
 
 test_skills_are_installed_and_editable() {
-	local home_dir="$TEST_ROOT/skills-installed"  # Isolated home directory for the setup run.
-	local marker_name="setup-global-test-marker-$(basename "$TEST_ROOT")"  # Temporary source marker name.
-	local source_marker="$ADDED_SKILL_DIR/$marker_name"  # Marker path in the temporary canonical skill.
+	# Isolated home directory for the setup run.
+	local home_dir="$TEST_ROOT/skills-installed"
+	# Temporary source marker name.
+	local marker_name="setup-global-test-marker-$(basename "$TEST_ROOT")"
+	# Marker path in the temporary canonical skill.
+	local source_marker="$ADDED_SKILL_DIR/$marker_name"
 
 	create_added_skill
 	run_setup "$home_dir" > /dev/null
@@ -558,12 +661,18 @@ test_skills_are_installed_and_editable() {
 }
 
 test_exclusions_persist_and_report() {
-	local home_dir="$TEST_ROOT/skill-exclusions"  # Isolated home directory for the setup run.
-	local output="$TEST_ROOT/skill-exclusions.txt"  # Output from the initial exclusion run.
-	local rerun_output="$TEST_ROOT/skill-exclusions-rerun.txt"  # Output from the persisted exclusion run.
-	local include_output="$TEST_ROOT/skill-exclusions-include.txt"  # Output after including one skill.
-	local include_all_output="$TEST_ROOT/skill-exclusions-include-all.txt"  # Output after including all skills.
-	local excluded_message='Excluded: accessibility, accessibility-audit (from ~/.agents/skill-exclusions; run with --include-all to restore)'  # Expected exclusion status line.
+	# Isolated home directory for the setup run.
+	local home_dir="$TEST_ROOT/skill-exclusions"
+	# Output from the initial exclusion run.
+	local output="$TEST_ROOT/skill-exclusions.txt"
+	# Output from the persisted exclusion run.
+	local rerun_output="$TEST_ROOT/skill-exclusions-rerun.txt"
+	# Output after including one skill.
+	local include_output="$TEST_ROOT/skill-exclusions-include.txt"
+	# Output after including all skills.
+	local include_all_output="$TEST_ROOT/skill-exclusions-include-all.txt"
+	# Expected exclusion status line.
+	local excluded_message='Excluded: accessibility, accessibility-audit (from ~/.agents/skill-exclusions; run with --include-all to restore)'
 
 	run_setup_target "$home_dir" "" --exclude accessibility,accessibility-audit > "$output"
 	assert_contains "$output" "$excluded_message"
@@ -593,7 +702,8 @@ test_exclusions_persist_and_report() {
 }
 
 test_new_skill_installs_after_exclusion() {
-	local home_dir="$TEST_ROOT/new-skill"  # Isolated home directory for the setup run.
+	# Isolated home directory for the setup run.
+	local home_dir="$TEST_ROOT/new-skill"
 
 	run_setup "$home_dir" --exclude accessibility > /dev/null
 	create_added_skill
@@ -605,8 +715,10 @@ test_new_skill_installs_after_exclusion() {
 }
 
 test_claude_only_exclusion_creates_agents_directory() {
-	local home_dir="$TEST_ROOT/claude-only-exclusion"  # Isolated home directory for the setup run.
-	local output="$TEST_ROOT/claude-only-exclusion.txt"  # Output from the Claude-only exclusion run.
+	# Isolated home directory for the setup run.
+	local home_dir="$TEST_ROOT/claude-only-exclusion"
+	# Output from the Claude-only exclusion run.
+	local output="$TEST_ROOT/claude-only-exclusion.txt"
 
 	run_setup_target "$home_dir" "--claude" --exclude accessibility > "$output"
 
@@ -618,8 +730,10 @@ test_claude_only_exclusion_creates_agents_directory() {
 }
 
 test_unknown_skill_fails_without_changes() {
-	local home_dir="$TEST_ROOT/unknown-skill"  # Isolated home directory for the setup run.
-	local output="$TEST_ROOT/unknown-skill.txt"  # Output from the rejected setup run.
+	# Isolated home directory for the setup run.
+	local home_dir="$TEST_ROOT/unknown-skill"
+	# Output from the rejected setup run.
+	local output="$TEST_ROOT/unknown-skill.txt"
 
 	mkdir -p "$home_dir/.agents"
 	printf 'accessibility\n' > "$home_dir/.agents/skill-exclusions"
@@ -634,8 +748,10 @@ test_unknown_skill_fails_without_changes() {
 }
 
 test_removed_skill_can_be_included() {
-	local home_dir="$TEST_ROOT/removed-skill"  # Isolated home directory for the setup run.
-	local removed_skill='removed-setup-global-skill'  # Saved exclusion with no canonical skill folder.
+	# Isolated home directory for the setup run.
+	local home_dir="$TEST_ROOT/removed-skill"
+	# Saved exclusion with no canonical skill folder.
+	local removed_skill='removed-setup-global-skill'
 
 	mkdir -p "$home_dir/.agents"
 	printf '%s\n' "$removed_skill" > "$home_dir/.agents/skill-exclusions"
@@ -645,8 +761,10 @@ test_removed_skill_can_be_included() {
 }
 
 test_unmanaged_excluded_directory_survives() {
-	local home_dir="$TEST_ROOT/unmanaged-excluded"  # Isolated home directory for the setup run.
-	local marker="$home_dir/.agents/skills/accessibility/keep.txt"  # Content that an exclusion must preserve.
+	# Isolated home directory for the setup run.
+	local home_dir="$TEST_ROOT/unmanaged-excluded"
+	# Content that an exclusion must preserve.
+	local marker="$home_dir/.agents/skills/accessibility/keep.txt"
 
 	run_setup "$home_dir" --exclude accessibility > /dev/null
 	mkdir -p "$(dirname "$marker")"
@@ -657,9 +775,12 @@ test_unmanaged_excluded_directory_survives() {
 }
 
 test_unmanaged_included_skill_is_backed_up() {
-	local home_dir="$TEST_ROOT/unmanaged-included"  # Isolated home directory for the setup run.
-	local output="$TEST_ROOT/unmanaged-included.txt"  # Output from the setup run.
-	local backups  # Timestamped backup directories created for the unmanaged skill path.
+	# Isolated home directory for the setup run.
+	local home_dir="$TEST_ROOT/unmanaged-included"
+	# Output from the setup run.
+	local output="$TEST_ROOT/unmanaged-included.txt"
+	# Timestamped backup directories created for the unmanaged skill path.
+	local backups
 
 	mkdir -p "$home_dir/.agents/skills/accessibility"
 	printf 'keep this content\n' > "$home_dir/.agents/skills/accessibility/keep.txt"
@@ -673,8 +794,10 @@ test_unmanaged_included_skill_is_backed_up() {
 }
 
 test_status_reports_an_installed_skill() {
-	local home_dir="$TEST_ROOT/status-installed"  # Isolated home directory for the status report.
-	local output="$TEST_ROOT/status-installed.txt"  # Output from the installed-skill report.
+	# Isolated home directory for the status report.
+	local home_dir="$TEST_ROOT/status-installed"
+	# Output from the installed-skill report.
+	local output="$TEST_ROOT/status-installed.txt"
 
 	mkdir -p "$home_dir/.claude/skills"
 	ln -s "$REPO_DIR/skills/accessibility/accessibility" "$home_dir/.claude/skills/accessibility"
@@ -685,8 +808,10 @@ test_status_reports_an_installed_skill() {
 }
 
 test_status_reports_a_missing_skill() {
-	local home_dir="$TEST_ROOT/status-missing"  # Isolated home directory for the status report.
-	local output="$TEST_ROOT/status-missing.txt"  # Output from the missing-skill report.
+	# Isolated home directory for the status report.
+	local home_dir="$TEST_ROOT/status-missing"
+	# Output from the missing-skill report.
+	local output="$TEST_ROOT/status-missing.txt"
 
 	run_setup_target "$home_dir" "--claude" --status > "$output"
 
@@ -694,8 +819,10 @@ test_status_reports_a_missing_skill() {
 }
 
 test_status_reports_an_excluded_skill() {
-	local home_dir="$TEST_ROOT/status-excluded"  # Isolated home directory for the status report.
-	local output="$TEST_ROOT/status-excluded.txt"  # Output from the excluded-skill report.
+	# Isolated home directory for the status report.
+	local home_dir="$TEST_ROOT/status-excluded"
+	# Output from the excluded-skill report.
+	local output="$TEST_ROOT/status-excluded.txt"
 
 	mkdir -p "$home_dir/.agents"
 	printf 'accessibility-audit\n' > "$home_dir/.agents/skill-exclusions"
@@ -706,9 +833,12 @@ test_status_reports_an_excluded_skill() {
 }
 
 test_status_reports_an_excluded_skill_with_a_lingering_link() {
-	local home_dir="$TEST_ROOT/status-lingering-link"  # Isolated home directory for the status report.
-	local output="$TEST_ROOT/status-lingering-link.txt"  # Output from the lingering-link report.
-	local lingering_link="$home_dir/.claude/skills/writing"  # Excluded repo-owned link that the report must not remove.
+	# Isolated home directory for the status report.
+	local home_dir="$TEST_ROOT/status-lingering-link"
+	# Output from the lingering-link report.
+	local output="$TEST_ROOT/status-lingering-link.txt"
+	# Excluded repo-owned link that the report must not remove.
+	local lingering_link="$home_dir/.claude/skills/writing"
 
 	mkdir -p "$home_dir/.agents" "$(dirname "$lingering_link")"
 	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
@@ -722,9 +852,12 @@ test_status_reports_an_excluded_skill_with_a_lingering_link() {
 }
 
 test_status_reports_conflicting_included_content() {
-	local home_dir="$TEST_ROOT/status-included-conflict"  # Isolated home directory for the status report.
-	local output="$TEST_ROOT/status-included-conflict.txt"  # Output from the included-conflict report.
-	local conflict_file="$home_dir/.claude/skills/code-style/keep.txt"  # Unmanaged included content that must remain conflicting.
+	# Isolated home directory for the status report.
+	local home_dir="$TEST_ROOT/status-included-conflict"
+	# Output from the included-conflict report.
+	local output="$TEST_ROOT/status-included-conflict.txt"
+	# Unmanaged included content that must remain conflicting.
+	local conflict_file="$home_dir/.claude/skills/code-style/keep.txt"
 
 	mkdir -p "$(dirname "$conflict_file")"
 	printf 'keep this content\n' > "$conflict_file"
@@ -737,9 +870,12 @@ test_status_reports_conflicting_included_content() {
 }
 
 test_status_reports_conflicting_excluded_content() {
-	local home_dir="$TEST_ROOT/status-excluded-conflict"  # Isolated home directory for the status report.
-	local output="$TEST_ROOT/status-excluded-conflict.txt"  # Output from the excluded-conflict report.
-	local conflict_file="$home_dir/.claude/skills/code-style/keep.txt"  # Unmanaged excluded content that must remain conflicting.
+	# Isolated home directory for the status report.
+	local home_dir="$TEST_ROOT/status-excluded-conflict"
+	# Output from the excluded-conflict report.
+	local output="$TEST_ROOT/status-excluded-conflict.txt"
+	# Unmanaged excluded content that must remain conflicting.
+	local conflict_file="$home_dir/.claude/skills/code-style/keep.txt"
 
 	mkdir -p "$home_dir/.agents" "$(dirname "$conflict_file")"
 	printf 'code-style\n' > "$home_dir/.agents/skill-exclusions"
@@ -753,10 +889,14 @@ test_status_reports_conflicting_excluded_content() {
 }
 
 test_status_does_not_change_files() {
-	local home_dir="$TEST_ROOT/status-read-only"  # Isolated home directory for the status report.
-	local output="$TEST_ROOT/status-read-only.txt"  # Output from the read-only status report.
-	local installed_link="$home_dir/.claude/skills/accessibility"  # Repo-owned link that must remain installed.
-	local excluded_skill="$home_dir/.agents/skills/code-style/keep.txt"  # Unmanaged excluded content that must remain conflicting.
+	# Isolated home directory for the status report.
+	local home_dir="$TEST_ROOT/status-read-only"
+	# Output from the read-only status report.
+	local output="$TEST_ROOT/status-read-only.txt"
+	# Repo-owned link that must remain installed.
+	local installed_link="$home_dir/.claude/skills/accessibility"
+	# Unmanaged excluded content that must remain conflicting.
+	local excluded_skill="$home_dir/.agents/skills/code-style/keep.txt"
 
 	mkdir -p "$home_dir/.agents/skills" "$home_dir/.claude/skills" "$(dirname "$excluded_skill")"
 	printf 'code-style\n' > "$home_dir/.agents/skill-exclusions"
@@ -774,8 +914,10 @@ test_status_does_not_change_files() {
 }
 
 test_status_rejects_skill_options_without_changes() {
-	local home_dir="$TEST_ROOT/status-with-skill-options"  # Isolated home directory for the rejected status run.
-	local output="$TEST_ROOT/status-with-skill-options.txt"  # Output from the rejected status run.
+	# Isolated home directory for the rejected status run.
+	local home_dir="$TEST_ROOT/status-with-skill-options"
+	# Output from the rejected status run.
+	local output="$TEST_ROOT/status-with-skill-options.txt"
 
 	mkdir -p "$home_dir/.agents"
 	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
@@ -793,9 +935,12 @@ test_status_rejects_skill_options_without_changes() {
 
 # Ensures the numbered selector defaults to both agents and saves its changes.
 test_select_fallback_updates_skill_exclusions() {
-	local home_dir="$TEST_ROOT/select-fallback"  # Isolated home directory for the numbered selection run.
-	local output="$TEST_ROOT/select-fallback.txt"  # Output from the numbered selection run.
-	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"  # Command path without fzf.
+	# Isolated home directory for the numbered selection run.
+	local home_dir="$TEST_ROOT/select-fallback"
+	# Output from the numbered selection run.
+	local output="$TEST_ROOT/select-fallback.txt"
+	# Command path without fzf.
+	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
 
 	SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true SETUP_GLOBAL_TEST_TERMINAL_INPUT=$'1 2\r' run_setup_target "$home_dir" "" --select > "$output"
 
@@ -811,9 +956,12 @@ test_select_fallback_updates_skill_exclusions() {
 
 # Ensures an empty numbered selection keeps every skill without failing on macOS Bash.
 test_select_fallback_empty_selection_includes_every_skill() {
-	local home_dir="$TEST_ROOT/select-fallback-empty"  # Isolated home directory for an empty numbered selection.
-	local output="$TEST_ROOT/select-fallback-empty.txt"  # Output from the empty numbered selection run.
-	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"  # Command path without fzf.
+	# Isolated home directory for an empty numbered selection.
+	local home_dir="$TEST_ROOT/select-fallback-empty"
+	# Output from the empty numbered selection run.
+	local output="$TEST_ROOT/select-fallback-empty.txt"
+	# Command path without fzf.
+	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
 
 	SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true SETUP_GLOBAL_TEST_TERMINAL_INPUT=$'\r' run_setup_target "$home_dir" "" --select > "$output"
 
@@ -824,9 +972,12 @@ test_select_fallback_empty_selection_includes_every_skill() {
 
 # Ensures cancelling the numbered selector preserves the saved exclusions.
 test_select_fallback_cancel_preserves_existing_state() {
-	local home_dir="$TEST_ROOT/select-fallback-cancel"  # Isolated home directory for the cancelled numbered selection.
-	local output="$TEST_ROOT/select-fallback-cancel.txt"  # Output from the cancelled numbered selection.
-	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"  # Command path without fzf.
+	# Isolated home directory for the cancelled numbered selection.
+	local home_dir="$TEST_ROOT/select-fallback-cancel"
+	# Output from the cancelled numbered selection.
+	local output="$TEST_ROOT/select-fallback-cancel.txt"
+	# Command path without fzf.
+	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
 
 	mkdir -p "$home_dir/.agents"
 	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
@@ -840,11 +991,16 @@ test_select_fallback_cancel_preserves_existing_state() {
 
 # Ensures fzf is started with --multi and its chosen skills are saved.
 test_select_fzf_updates_skill_exclusions() {
-	local home_dir="$TEST_ROOT/select-fzf"  # Isolated home directory for the fzf selection run.
-	local output="$TEST_ROOT/select-fzf.txt"  # Output from the fzf selection run.
-	local fzf_dir="$TEST_ROOT/fzf-bin"  # Directory containing the fzf stand-in.
-	local fzf_arguments="$home_dir/fzf-arguments.txt"  # Arguments received by the fzf stand-in.
-	local fzf_input="$home_dir/fzf-input.txt"  # Skills displayed to the fzf stand-in.
+	# Isolated home directory for the fzf selection run.
+	local home_dir="$TEST_ROOT/select-fzf"
+	# Output from the fzf selection run.
+	local output="$TEST_ROOT/select-fzf.txt"
+	# Directory containing the fzf stand-in.
+	local fzf_dir="$TEST_ROOT/fzf-bin"
+	# Arguments received by the fzf stand-in.
+	local fzf_arguments="$home_dir/fzf-arguments.txt"
+	# Skills displayed to the fzf stand-in.
+	local fzf_input="$home_dir/fzf-input.txt"
 
 	create_fzf_stub "$fzf_dir"
 	mkdir -p "$home_dir/.agents"
@@ -867,11 +1023,16 @@ test_select_fzf_updates_skill_exclusions() {
 
 # Ensures an empty fzf selection excludes every skill without failing on macOS Bash.
 test_select_fzf_excludes_every_skill() {
-	local home_dir="$TEST_ROOT/select-fzf-empty"  # Isolated home directory for an empty fzf selection.
-	local output="$TEST_ROOT/select-fzf-empty.txt"  # Output from the empty fzf selection run.
-	local fzf_dir="$TEST_ROOT/fzf-empty-bin"  # Directory containing the fzf stand-in.
-	local fzf_arguments="$home_dir/fzf-arguments.txt"  # Arguments received by the fzf stand-in.
-	local fzf_input="$home_dir/fzf-input.txt"  # Skills displayed to the fzf stand-in.
+	# Isolated home directory for an empty fzf selection.
+	local home_dir="$TEST_ROOT/select-fzf-empty"
+	# Output from the empty fzf selection run.
+	local output="$TEST_ROOT/select-fzf-empty.txt"
+	# Directory containing the fzf stand-in.
+	local fzf_dir="$TEST_ROOT/fzf-empty-bin"
+	# Arguments received by the fzf stand-in.
+	local fzf_arguments="$home_dir/fzf-arguments.txt"
+	# Skills displayed to the fzf stand-in.
+	local fzf_input="$home_dir/fzf-input.txt"
 
 	create_fzf_stub "$fzf_dir"
 	SETUP_GLOBAL_FZF_ARGUMENTS="$fzf_arguments" SETUP_GLOBAL_FZF_INPUT="$fzf_input" SETUP_GLOBAL_FZF_SELECTION='' SETUP_GLOBAL_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_GLOBAL_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
@@ -885,11 +1046,16 @@ test_select_fzf_excludes_every_skill() {
 
 # Ensures fzf cancellation leaves the saved exclusions and links untouched.
 test_select_fzf_cancel_preserves_existing_state() {
-	local home_dir="$TEST_ROOT/select-fzf-cancel"  # Isolated home directory for the cancelled fzf selection.
-	local output="$TEST_ROOT/select-fzf-cancel.txt"  # Output from the cancelled fzf selection.
-	local fzf_dir="$TEST_ROOT/fzf-cancel-bin"  # Directory containing the fzf stand-in.
-	local fzf_arguments="$home_dir/fzf-arguments.txt"  # Arguments received by the fzf stand-in.
-	local fzf_input="$home_dir/fzf-input.txt"  # Skills displayed to the fzf stand-in.
+	# Isolated home directory for the cancelled fzf selection.
+	local home_dir="$TEST_ROOT/select-fzf-cancel"
+	# Output from the cancelled fzf selection.
+	local output="$TEST_ROOT/select-fzf-cancel.txt"
+	# Directory containing the fzf stand-in.
+	local fzf_dir="$TEST_ROOT/fzf-cancel-bin"
+	# Arguments received by the fzf stand-in.
+	local fzf_arguments="$home_dir/fzf-arguments.txt"
+	# Skills displayed to the fzf stand-in.
+	local fzf_input="$home_dir/fzf-input.txt"
 
 	create_fzf_stub "$fzf_dir"
 	mkdir -p "$home_dir/.agents"
@@ -904,9 +1070,12 @@ test_select_fzf_cancel_preserves_existing_state() {
 
 # Ensures end-of-input cancels the numbered selector without changing state.
 test_select_fallback_end_of_input_preserves_existing_state() {
-	local home_dir="$TEST_ROOT/select-fallback-end-of-input"  # Isolated home directory for the ended numbered selection.
-	local output="$TEST_ROOT/select-fallback-end-of-input.txt"  # Output from the ended numbered selection.
-	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"  # Command path without fzf.
+	# Isolated home directory for the ended numbered selection.
+	local home_dir="$TEST_ROOT/select-fallback-end-of-input"
+	# Output from the ended numbered selection.
+	local output="$TEST_ROOT/select-fallback-end-of-input.txt"
+	# Command path without fzf.
+	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
 
 	mkdir -p "$home_dir/.agents"
 	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
@@ -920,9 +1089,12 @@ test_select_fallback_end_of_input_preserves_existing_state() {
 
 # Ensures an invalid skill number fails without changing saved exclusions or links.
 test_select_fallback_invalid_number_preserves_existing_state() {
-	local home_dir="$TEST_ROOT/select-fallback-invalid"  # Isolated home directory for invalid numbered input.
-	local output="$TEST_ROOT/select-fallback-invalid.txt"  # Output from the rejected numbered selection.
-	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"  # Command path without fzf.
+	# Isolated home directory for invalid numbered input.
+	local home_dir="$TEST_ROOT/select-fallback-invalid"
+	# Output from the rejected numbered selection.
+	local output="$TEST_ROOT/select-fallback-invalid.txt"
+	# Command path without fzf.
+	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
 
 	run_setup_target "$home_dir" "" --exclude writing > /dev/null
 	if SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true SETUP_GLOBAL_TEST_TERMINAL_INPUT=$'9999\r' run_setup_target "$home_dir" "" --select > "$output" 2>&1; then
@@ -940,10 +1112,14 @@ test_select_fallback_invalid_number_preserves_existing_state() {
 
 # Ensures --select rejects other skill options without changing saved exclusions or links.
 test_select_rejects_other_skill_options_without_changes() {
-	local home_dir="$TEST_ROOT/select-with-skill-options"  # Isolated home directory for rejected option combinations.
-	local output="$TEST_ROOT/select-with-skill-options.txt"  # Output from each rejected setup run.
-	local option  # Skill option currently combined with --select.
-	local -a option_args=()  # Arguments for the current skill option.
+	# Isolated home directory for rejected option combinations.
+	local home_dir="$TEST_ROOT/select-with-skill-options"
+	# Output from each rejected setup run.
+	local output="$TEST_ROOT/select-with-skill-options.txt"
+	# Skill option currently combined with --select.
+	local option
+	# Arguments for the current skill option.
+	local -a option_args=()
 
 	run_setup_target "$home_dir" "" --exclude writing > /dev/null
 	for option in --exclude --include --include-all; do
@@ -969,8 +1145,10 @@ test_select_rejects_other_skill_options_without_changes() {
 
 # Ensures --select fails safely when standard input is not a terminal.
 test_select_rejects_non_terminal_input() {
-	local home_dir="$TEST_ROOT/select-non-terminal"  # Isolated home directory for the rejected selection run.
-	local output="$TEST_ROOT/select-non-terminal.txt"  # Output from the rejected selection run.
+	# Isolated home directory for the rejected selection run.
+	local home_dir="$TEST_ROOT/select-non-terminal"
+	# Output from the rejected selection run.
+	local output="$TEST_ROOT/select-non-terminal.txt"
 
 	mkdir -p "$home_dir/.agents"
 	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
@@ -1009,10 +1187,14 @@ test_failed_backup_preserves_existing_config() {
 # Checks that setup keeps the user's HCOM options, adds the required folders that
 # exist and are not listed yet, and changes nothing on a second run.
 test_hcom_adds_missing_codex_folders() {
-	local home_dir="$TEST_ROOT/hcom-folders"  # Isolated home with every required folder present.
-	local output="$TEST_ROOT/hcom-folders.txt"  # Setup status output.
-	local existing_args="--model codex  --add-dir ~/Dev/Repositories/Configuration/zsh   --add-dir $REPO_DIR"  # User options and an existing required folder, with uneven spacing that setup must keep.
-	local expected_args  # Original arguments followed by the missing required folders.
+	# Isolated home with every required folder present.
+	local home_dir="$TEST_ROOT/hcom-folders"
+	# Setup status output.
+	local output="$TEST_ROOT/hcom-folders.txt"
+	# User options and an existing required folder, with uneven spacing that setup must keep.
+	local existing_args="--model codex  --add-dir ~/Dev/Repositories/Configuration/zsh   --add-dir $REPO_DIR"
+	# Original arguments followed by the missing required folders.
+	local expected_args
 
 	mkdir -p "$home_dir/.Trash" "$home_dir/Library/Caches/org.swift.swiftpm" "$home_dir/Library/org.swift.swiftpm"
 	printf '%s\n' "$existing_args" > "$home_dir/hcom-codex-args"
@@ -1032,8 +1214,10 @@ test_hcom_adds_missing_codex_folders() {
 
 # Checks that a tilde path counts as an existing home folder grant.
 test_hcom_recognises_tilde_folder() {
-	local home_dir="$TEST_ROOT/hcom-tilde"  # Isolated home with an existing tilde-form grant.
-	local existing_args='--add-dir ~/.Trash'  # HCOM argument using a literal tilde.
+	# Isolated home with an existing tilde-form grant.
+	local home_dir="$TEST_ROOT/hcom-tilde"
+	# HCOM argument using a literal tilde.
+	local existing_args='--add-dir ~/.Trash'
 
 	mkdir -p "$home_dir/.Trash"
 	printf '%s\n' "$existing_args" > "$home_dir/hcom-codex-args"
@@ -1044,7 +1228,8 @@ test_hcom_recognises_tilde_folder() {
 
 # Checks that setup does not add folders absent from the current home.
 test_hcom_skips_missing_folders() {
-	local home_dir="$TEST_ROOT/hcom-missing"  # Isolated home without the Trash or SwiftPM folders.
+	# Isolated home without the Trash or SwiftPM folders.
+	local home_dir="$TEST_ROOT/hcom-missing"
 
 	run_setup "$home_dir" > /dev/null
 
@@ -1053,10 +1238,14 @@ test_hcom_skips_missing_folders() {
 
 # Checks that Codex setup reports a missing HCOM command without changing its settings.
 test_hcom_absence_skips_codex_folders() {
-	local home_dir="$TEST_ROOT/hcom-absent"  # Isolated home for a setup run without HCOM.
-	local bin_dir="$TEST_ROOT/no-hcom-bin"  # Test commands excluding the HCOM stand-in.
-	local output="$TEST_ROOT/hcom-absent.txt"  # Setup status output.
-	local command_path  # Stub linked into the HCOM-free command directory.
+	# Isolated home for a setup run without HCOM.
+	local home_dir="$TEST_ROOT/hcom-absent"
+	# Test commands excluding the HCOM stand-in.
+	local bin_dir="$TEST_ROOT/no-hcom-bin"
+	# Setup status output.
+	local output="$TEST_ROOT/hcom-absent.txt"
+	# Stub linked into the HCOM-free command directory.
+	local command_path
 
 	mkdir -p "$bin_dir"
 	for command_path in "$TEST_ROOT/bin/"*; do
@@ -1075,8 +1264,10 @@ test_hcom_absence_skips_codex_folders() {
 
 # Checks that an HCOM read failure is reported while the rest of setup finishes.
 test_hcom_read_failure_does_not_stop_setup() {
-	local home_dir="$TEST_ROOT/hcom-read-failure"  # Isolated home with a failing HCOM read.
-	local output="$TEST_ROOT/hcom-read-failure.txt"  # Setup output containing the warning and completion row.
+	# Isolated home with a failing HCOM read.
+	local home_dir="$TEST_ROOT/hcom-read-failure"
+	# Setup output containing the warning and completion row.
+	local output="$TEST_ROOT/hcom-read-failure.txt"
 
 	mkdir -p "$home_dir"
 	: > "$home_dir/hcom-fail-read"
@@ -1089,8 +1280,10 @@ test_hcom_read_failure_does_not_stop_setup() {
 
 # Checks that an HCOM write failure is reported while the rest of setup finishes.
 test_hcom_write_failure_does_not_stop_setup() {
-	local home_dir="$TEST_ROOT/hcom-write-failure"  # Isolated home with a failing HCOM write.
-	local output="$TEST_ROOT/hcom-write-failure.txt"  # Setup output containing the warning and completion row.
+	# Isolated home with a failing HCOM write.
+	local home_dir="$TEST_ROOT/hcom-write-failure"
+	# Setup output containing the warning and completion row.
+	local output="$TEST_ROOT/hcom-write-failure.txt"
 
 	mkdir -p "$home_dir"
 	: > "$home_dir/hcom-fail-write"
@@ -1106,6 +1299,9 @@ create_command_stubs "$TEST_ROOT/bin"
 test_help_hides_backup_bypass
 test_public_backup_bypass_is_rejected
 test_default_setup_skips_repository_refresh
+test_existing_doc_paths_is_preserved
+test_missing_doc_paths_is_installed
+test_codex_installs_missing_doc_paths
 test_refresh_runs_repository_sync
 test_config_replacement_creates_timestamped_backup
 test_setup_removes_retired_serena_server
