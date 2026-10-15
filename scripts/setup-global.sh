@@ -7,6 +7,7 @@ set -euo pipefail
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 REPO_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 
+# shellcheck source=scripts/lib/setup-links.sh
 source "$REPO_DIR/scripts/lib/setup-links.sh"
 
 # Prints the options this script accepts.
@@ -593,8 +594,8 @@ setup_codex() {
 	cli_section "Codex global setup ($(display_path "$CODEX_DIR"))"
 
 	cli_group_begin "Codex directories"
-	ensure_container_dir "$HOME/.agents" "~/.agents"
-	ensure_container_dir "$HOME/.agents/skills" "~/.agents/skills"
+	ensure_container_dir "$HOME/.agents" "$(display_path "$HOME/.agents")"
+	ensure_container_dir "$HOME/.agents/skills" "$(display_path "$HOME/.agents/skills")"
 	ensure_container_dir "$CODEX_DIR" "$(display_path "$CODEX_DIR")"
 	ensure_container_dir "$CODEX_DIR/hooks" "hooks"
 	cli_group_end
@@ -956,12 +957,14 @@ ensure_codex_permission_settings() {
 		!skip { print }
 	' "$config" > "$temp"
 
-	printf '\n' >> "$temp"
-	codex_config_section "permissions.project-edit" >> "$temp"
-	printf '\n[permissions.project-edit.workspace_roots]\n' >> "$temp"
-	awk '{ print $0 " = true" }' "$roots_temp" >> "$temp"
-	printf '\n' >> "$temp"
-	codex_config_section "permissions.project-edit.network" >> "$temp"
+	{
+		printf '\n'
+		codex_config_section "permissions.project-edit"
+		printf '\n[permissions.project-edit.workspace_roots]\n'
+		awk '{ print $0 " = true" }' "$roots_temp"
+		printf '\n'
+		codex_config_section "permissions.project-edit.network"
+	} >> "$temp"
 
 	trash "$roots_temp"
 	mv "$temp" "$config"
@@ -1181,6 +1184,7 @@ if [ -z "$target" ]; then
 fi
 
 bash "$REPO_DIR/scripts/install-cli-style.sh"
+# shellcheck source=scripts/lib/cli-style-output.sh
 source "$REPO_DIR/scripts/lib/cli-style-output.sh"
 
 if [ "$status_requested" = true ]; then

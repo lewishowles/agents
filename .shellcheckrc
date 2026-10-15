@@ -1,0 +1,2 @@
+# Follow files loaded with `source` so their functions and variables are checked too.
+external-sources=true
