@@ -12,7 +12,7 @@ Single source for shared rules and skills. `scripts/sync.sh` composes agent-spec
 
 ## Current vs target state
 
-**Current:** `skills/`, `src/` (`src/rules/`, `src/hooks/`, `src/adapters/`, `src/fragments/`), `dist/claude/`, `dist/codex/`, `scripts/`, `templates/`, and `docs/`. Canonical skill folders are the only skill source and are installed directly; generated output is limited to the composed agent files, hooks, settings, and documentation. Dual-target phases are complete; deferred hook ideas remain in root `PROGRESS.md`.
+**Current:** `skills/`, `src/` (`src/rules/`, `src/hooks/`, `src/adapters/`, `src/fragments/`), `dist/claude/`, `dist/codex/`, `scripts/`, and `docs/`. Canonical skill folders are the only skill source and are installed directly; generated output is limited to the composed agent files, hooks, settings, and documentation. Dual-target phases are complete; deferred hook ideas remain in root `PROGRESS.md`.
 
 ## Target directory structure
 
@@ -48,16 +48,11 @@ Configuration/Agents/
 │   └── diagnostics/         # diagnostics logs (when present)
 ├── .claude/skills/agent-config/  # repo-local maintenance skill
 ├── .agents/skills/agent-config     # symlink to the repo-local maintenance skill
-├── templates/
-│   ├── claude/
-│   ├── codex/
-│   └── shared/
 ├── scripts/
 │   ├── audit/               # tracked transcript and usage analysis tools
 │   ├── sync.sh               # full regeneration of target outputs and docs
 │   ├── validate.sh           # checks dist/ consistency; exits 0 on pass
 │   ├── setup-global.sh      # --claude|--codex|--both
-│   ├── setup-project.sh     # --claude|--codex|--both
 │   ├── build/                # build-docs.py, build-settings.py
 │   ├── validate/              # per-check scripts run by validate.sh
 │   └── lib/                   # colours.sh, dist-targets.sh, cli-style-output.sh, ...
@@ -66,7 +61,7 @@ Configuration/Agents/
 
 Root holds human-facing contracts that tools auto-discover and the user reads each session (`AGENTS.md`, `PROGRESS.md`, `README.md`); `.agent/` holds agent-operated internals. Keep new files on the correct side of that line.
 
-Durable scripts live under tracked `scripts/`, never under `.agent/`. Project setup checks that the global `doc-paths` and `friction` commands are installed; it links nothing into `.agent/`.
+Durable scripts live under tracked `scripts/`, never under `.agent/`. Global setup installs the `doc-paths` and `friction` commands.
 
 ## Symlink topology (after `setup-global.sh --both`)
 
@@ -89,8 +84,7 @@ repo/.agents/skills/agent-config → repo/.claude/skills/agent-config (repo-loca
 - Regenerating `CLAUDE.md`/`AGENTS.md` from source → `scripts/sync.sh`
 - A shared skill → `skills/<group>/<name>/SKILL.md` plus any support files
 - This repo's own maintenance skill → `.claude/skills/agent-config/SKILL.md`
-- Project scaffolding templates (`AGENTS.md` starting points) → `templates/`
-- Project setup / symlink wiring → `scripts/setup-project.sh`, `scripts/setup-global.sh`
+- Global symlink wiring → `scripts/setup-global.sh`
 - Transcript and usage analysis → `scripts/audit/`; generated reports stay under `.agent/audits/`
 
 **Skill vs. rule boundary:** if guidance should apply on every turn regardless of task, it belongs in `rules/`. If it is triggered by a specific task type or file context, it belongs in `skills/`. Do not add always-on conventions to a skill, and do not put task-specific workflows in a rule. Record lasting ownership splits between two skills in those skills' own files.

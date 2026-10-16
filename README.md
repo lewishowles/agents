@@ -1,6 +1,6 @@
 # Global agent configuration
 
-Shared configuration for Claude Code and Codex, this repository keeps common agent rules, skills, hooks, and project templates in one place.
+Shared configuration for Claude Code and Codex, this repository keeps common agent rules, skills, and hooks in one place.
 
 ## Set up global configuration
 
@@ -13,14 +13,6 @@ scripts/setup-global.sh --both
 Setup links every skill into Claude and Codex by default, one symlink per skill. Edits to a linked skill take effect without rebuilding. Use `--exclude` to leave skills out, `--include` to add them back, `--include-all` to restore the full set, `--status` to check the links, or `--select` to choose interactively. See [choosing skills](docs/setup.md#choose-which-skills-to-install) for examples.
 
 Several of Claude's hooks need `jq` to run. Install it with `brew install jq` before running the command if you use Claude.
-
-## Set up a project
-
-Global skills work without project setup. This optional step adds project instructions (`AGENTS.md`, `CLAUDE.md`, and `.claudeignore` where applicable), optional skill-pack links, and the global `doc-paths` and `friction` tools. It lists what it will add before changing anything. Run it from the project root:
-
-```bash
-/path/to/repository/scripts/setup-project.sh --both
-```
 
 ## Read next
 

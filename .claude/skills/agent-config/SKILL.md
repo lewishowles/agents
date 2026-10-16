@@ -1,7 +1,7 @@
 ---
 name: agent-config
 description: >
-  Use this skill when maintaining this specific agent configuration repository, including AGENTS.md, PROGRESS.md, .claude/skills/agent-config/SKILL.md, skills/**, src/rules/**, src/adapters/**, src/hooks/claude/**/**, scripts/*.sh, scripts/*.py, docs/**, and templates/**. Covers this repo's source layout, canonical skill folders, hook conventions, trigger patterns, and generated dist files. Pair with bash or writing as needed.
+  Use this skill when maintaining this specific agent configuration repository, including AGENTS.md, PROGRESS.md, .claude/skills/agent-config/SKILL.md, skills/**, src/rules/**, src/adapters/**, src/hooks/claude/**/**, scripts/*.sh, scripts/*.py, and docs/**. Covers this repo's source layout, canonical skill folders, hook conventions, trigger patterns, and generated dist files. Pair with bash or writing as needed.
 related-skills:
   - bash
   - writing
@@ -60,8 +60,6 @@ Configuration/Agents/
 │   │   ├── build-docs.py            # Generates docs/ tables from canonical skill and hook files
 │   │   ├── build-settings.py        # Generates dist/claude/settings.json from settings.base.json
 │   ├── setup-global.sh          # Creates global symlinks for Claude and Codex
-│   └── setup-project.sh         # Scaffolds AGENTS.md for a new project
-├── templates/                   # Project AGENTS.md templates only
 └── README.md
 ```
 

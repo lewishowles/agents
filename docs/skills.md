@@ -107,7 +107,7 @@ To re-enable a skill suppressed by a parent settings file, set it to `"on"` in t
 }
 ```
 
-Project setup does not create a local `.claude/settings.json` by default. Prefer `AGENTS.md` and ordinary docs for repo-specific guidance, and agent-run for project command registrations.
+Nothing creates a local `.claude/settings.json` by default. Prefer `AGENTS.md` and ordinary docs for repo-specific guidance, and agent-run for project command registrations.
 
 ## Add a new skill
 
