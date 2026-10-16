@@ -10,9 +10,158 @@ REPO_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 # shellcheck source=scripts/lib/setup-links.sh
 source "$REPO_DIR/scripts/lib/setup-links.sh"
 
-# Prints the options this script accepts.
-usage() {
-	printf 'Usage: %s [--claude|--codex|--both] [--claude-dir <path>] [--codex-dir <path>] [--select] [--exclude <skill>[,<skill>...]] [--include <skill>[,<skill>...]] [--include-all] [--status] [--refresh]\n' "$(basename "$0")"
+# Reads the command-line options and saves any changes to the skill selection.
+# Then it either reports which skills are linked, or installs the configuration
+# for Claude, Codex or both along with the shared trash wrapper and Git hooks.
+#
+# @param  {string}  ...
+#     Command-line options passed to the script.
+main() {
+	target=""
+	refresh=false
+	skill_options_requested=false  # Whether command-line skill options were supplied.
+	select_requested=false  # Whether the terminal skill selection flow was requested.
+	status_requested=false  # Whether to report skill link states without changing skill links.
+	skill_exclusions_file="$HOME/.agents/skill-exclusions"  # File that stores excluded skill names.
+	excluded_skills=()  # Skill names excluded from the selected setup targets.
+	skill_operation_types=()  # Pending include or exclude operations in command-line order.
+	skill_operation_names=()  # Skill names associated with the pending operations.
+	skill_paths=()  # Canonical skill directories available for interactive selection.
+	CLAUDE_DIR="$HOME/.claude"  # Overridable so a second account can install alongside the default one.
+	CODEX_DIR="$HOME/.codex"    # Overridable so a second account can install alongside the default one.
+
+	while [ $# -gt 0 ]; do
+		case "$1" in
+			--claude)        target="claude" ;;
+			--codex)         target="codex" ;;
+			--both)          target="both" ;;
+			--claude-dir)    CLAUDE_DIR="$2"; shift ;;
+			--codex-dir)     CODEX_DIR="$2"; shift ;;
+			--select)
+				select_requested=true
+				skill_options_requested=true
+				;;
+			--exclude)
+				if [ "$#" -lt 2 ] || ! parse_skill_list "exclude" "$2"; then
+					usage >&2
+					exit 1
+				fi
+				skill_options_requested=true
+				shift
+				;;
+			--include)
+				if [ "$#" -lt 2 ] || ! parse_skill_list "include" "$2"; then
+					usage >&2
+					exit 1
+				fi
+				skill_options_requested=true
+				shift
+				;;
+			--include-all)
+				skill_operation_types+=("include-all")
+				skill_operation_names+=("")
+				skill_options_requested=true
+				;;
+			--status)        status_requested=true ;;
+			--refresh)       refresh=true ;;
+			--help)          usage; exit 0 ;;
+			*)               usage >&2; exit 1 ;;
+		esac
+		shift
+	done
+
+	if [ "$status_requested" = true ] && [ "$skill_options_requested" = true ]; then
+		printf '%s\n' '--status cannot be combined with --select, --exclude, --include, or --include-all.' >&2
+		usage >&2
+		exit 1
+	fi
+
+	if [ "$select_requested" = true ] && [ "${#skill_operation_types[@]}" -gt 0 ]; then
+		printf '%s\n' '--select cannot be combined with --exclude, --include, or --include-all.' >&2
+		usage >&2
+		exit 1
+	fi
+
+	if [ "$select_requested" = true ] && ! [ -t 0 ]; then
+		printf '%s\n' '--select requires a terminal. Use --exclude or --include when standard input is not a terminal.' >&2
+		exit 1
+	fi
+
+	load_skill_exclusions
+	if ! validate_skill_operations; then
+		exit 1
+	fi
+
+	if [ "$select_requested" = true ]; then
+		if ! collect_canonical_skills; then
+			exit 1
+		fi
+
+		if command -v fzf >/dev/null 2>&1; then
+			if ! select_skills_with_fzf; then
+				printf '%s\n' 'Skill selection cancelled. Nothing changed.'
+				exit 0
+			fi
+		else
+			selection_status=0  # Result of the numbered selector: 0 accepted, 1 cancelled, 2 invalid.
+			select_skills_with_numbered_list || selection_status=$?
+
+			if [ "$selection_status" -eq 1 ]; then
+				printf '%s\n' 'Skill selection cancelled. Nothing changed.'
+				exit 0
+			elif [ "$selection_status" -ne 0 ]; then
+				exit 1
+			fi
+		fi
+
+		save_skill_exclusions
+	elif [ "$skill_options_requested" = true ]; then
+		apply_skill_operations
+		save_skill_exclusions
+	fi
+
+	report_excluded_skills
+
+	if [ -z "$target" ]; then
+		if [ "$skill_options_requested" = true ] || [ "$status_requested" = true ]; then
+			target="both"
+		else
+			target=$(prompt_target)
+		fi
+	fi
+
+	bash "$REPO_DIR/scripts/install-cli-style.sh"
+	# shellcheck source=scripts/lib/cli-style-output.sh
+	source "$REPO_DIR/scripts/lib/cli-style-output.sh"
+
+	if [ "$status_requested" = true ]; then
+		report_skill_status "$target"
+		exit 0
+	fi
+
+	if [ "$refresh" = true ]; then
+		bash "$REPO_DIR/scripts/sync.sh"
+	fi
+
+	case "$target" in
+		claude) setup_claude ;;
+		codex)  setup_codex ;;
+		both)   setup_claude; setup_codex ;;
+	esac
+
+	# Link the trash wrapper once, outside the per-agent setup, because ~/.local/bin is shared by
+	# both agents and the user's own shell.
+	cli_section "Shared command-line tools"
+	cli_group_begin "Trash wrapper"
+	# mkdir -p follows a symlinked ~/.local/bin, such as one kept in dotfiles, instead of replacing it.
+	mkdir -p "$HOME/.local/bin"
+	link_path "$REPO_DIR/src/bin/trash" "$HOME/.local/bin/trash" "$(display_path "$HOME/.local/bin/trash")"
+	cli_group_end
+
+	configure_git_hooks
+
+	printf '\n'
+	cli_status success "Done."
 }
 
 # Parses a comma-separated skill list into the pending setup operations.
@@ -46,51 +195,9 @@ parse_skill_list() {
 	done
 }
 
-# Returns 0 when a canonical skill folder has the requested name.
-#
-# @param  {string}  requested_name
-#     Skill name to find in the canonical skills directory.
-canonical_skill_exists() {
-	local requested_name="$1"  # Skill name supplied by the user.
-	local skill  # Canonical skill directory currently being checked.
-
-	for skill in "$REPO_DIR"/skills/*/*; do
-		[ -d "$skill" ] || continue
-		if [ "$(basename "$skill")" = "$requested_name" ]; then
-			return 0
-		fi
-	done
-
-	return 1
-}
-
-# Rejects unknown exclusions and includes unless an include clears a saved name.
-#
-# @return  {integer}
-#     0 when every requested skill name is known, or 1 otherwise.
-validate_skill_operations() {
-	local index  # Index of the pending skill operation being validated.
-	local skill_name  # Requested skill name currently being validated.
-	local operation  # Pending operation for the requested skill name.
-
-	if [ "${#skill_operation_types[@]}" -eq 0 ]; then
-		return 0
-	fi
-
-	for index in "${!skill_operation_types[@]}"; do
-		operation="${skill_operation_types[$index]}"
-		if [ "$operation" = "include-all" ]; then
-			continue
-		fi
-
-		skill_name="${skill_operation_names[$index]}"
-		if ! canonical_skill_exists "$skill_name" && {
-			[ "$operation" != "include" ] || ! excluded_skill_exists "$skill_name"
-		}; then
-			printf 'Unknown skill: %s\n' "$skill_name" >&2
-			return 1
-		fi
-	done
+# Prints the options this script accepts.
+usage() {
+	printf 'Usage: %s [--claude|--codex|--both] [--claude-dir <path>] [--codex-dir <path>] [--select] [--exclude <skill>[,<skill>...]] [--include <skill>[,<skill>...]] [--include-all] [--status] [--refresh]\n' "$(basename "$0")"
 }
 
 # Reads persisted skill exclusions without creating the exclusions file.
@@ -126,47 +233,14 @@ excluded_skill_exists() {
 	return 1
 }
 
-# Adds a skill name to the current exclusion list once.
+# Rejects unknown exclusions and includes unless an include clears a saved name.
 #
-# @param  {string}  skill_name
-#     Skill name to exclude from future setup runs.
-add_excluded_skill() {
-	local skill_name="$1"  # Skill name to add to the exclusion list.
-
-	if ! excluded_skill_exists "$skill_name"; then
-		excluded_skills+=("$skill_name")
-	fi
-}
-
-# Removes a skill name from the current exclusion list.
-#
-# @param  {string}  skill_name
-#     Skill name to include in future setup runs.
-remove_excluded_skill() {
-	local skill_name="$1"  # Skill name to remove from the exclusion list.
-	local excluded_skill  # Existing exclusion currently being retained.
-	local -a remaining_skills=()  # Exclusions that do not match the requested name.
-
-	if [ "${#excluded_skills[@]}" -gt 0 ]; then
-		for excluded_skill in "${excluded_skills[@]}"; do
-			if [ "$excluded_skill" != "$skill_name" ]; then
-				remaining_skills+=("$excluded_skill")
-			fi
-		done
-	fi
-
-	if [ "${#remaining_skills[@]}" -gt 0 ]; then
-		excluded_skills=("${remaining_skills[@]}")
-	else
-		excluded_skills=()
-	fi
-}
-
-# Applies the validated skill operations in their command-line order.
-apply_skill_operations() {
-	local index  # Index of the pending operation being applied.
-	local operation  # Operation name for the current pending operation.
-	local skill_name  # Skill name for the current pending operation.
+# @return  {integer}
+#     0 when every requested skill name is known, or 1 otherwise.
+validate_skill_operations() {
+	local index  # Index of the pending skill operation being validated.
+	local skill_name  # Requested skill name currently being validated.
+	local operation  # Pending operation for the requested skill name.
 
 	if [ "${#skill_operation_types[@]}" -eq 0 ]; then
 		return 0
@@ -174,61 +248,36 @@ apply_skill_operations() {
 
 	for index in "${!skill_operation_types[@]}"; do
 		operation="${skill_operation_types[$index]}"
+		if [ "$operation" = "include-all" ]; then
+			continue
+		fi
+
 		skill_name="${skill_operation_names[$index]}"
-		case "$operation" in
-			exclude) add_excluded_skill "$skill_name" ;;
-			include) remove_excluded_skill "$skill_name" ;;
-			include-all) excluded_skills=() ;;
-		esac
-	done
-}
-
-# Writes the current exclusions, removing the file when no exclusions remain.
-save_skill_exclusions() {
-	local skill_name  # Excluded skill name currently being written.
-	local temp  # Temporary file used for an atomic replacement.
-
-	if [ "${#excluded_skills[@]}" -eq 0 ]; then
-		if [ -e "$skill_exclusions_file" ] || [ -L "$skill_exclusions_file" ]; then
-			trash "$skill_exclusions_file"
+		if ! canonical_skill_exists "$skill_name" && {
+			[ "$operation" != "include" ] || ! excluded_skill_exists "$skill_name"
+		}; then
+			printf 'Unknown skill: %s\n' "$skill_name" >&2
+			return 1
 		fi
-		return 0
-	fi
-
-	mkdir -p "$HOME/.agents"
-	temp=$(mktemp)
-	for skill_name in "${excluded_skills[@]}"; do
-		printf '%s\n' "$skill_name" >> "$temp"
 	done
-	mv "$temp" "$skill_exclusions_file"
 }
 
-# Replaces exclusions with every canonical skill omitted from the selection.
-# The caller must have already collected skill_paths.
+# Returns 0 when a canonical skill folder has the requested name.
 #
-# @param  {string}  ...
-#     Canonical skill names selected for installation.
-set_exclusions_from_selected_skills() {
-	local selected_skill  # Selected canonical skill currently being checked.
-	local skill_path  # Canonical skill directory currently being checked.
-	local skill_name  # Canonical skill name currently being checked.
-	local selected=false  # Whether the canonical skill remains selected.
+# @param  {string}  requested_name
+#     Skill name to find in the canonical skills directory.
+canonical_skill_exists() {
+	local requested_name="$1"  # Skill name supplied by the user.
+	local skill  # Canonical skill directory currently being checked.
 
-	excluded_skills=()
-	for skill_path in "${skill_paths[@]}"; do
-		skill_name=$(basename "$skill_path")
-		selected=false
-		for selected_skill in "$@"; do
-			if [ "$selected_skill" = "$skill_name" ]; then
-				selected=true
-				break
-			fi
-		done
-
-		if [ "$selected" = false ]; then
-			excluded_skills+=("$skill_name")
+	for skill in "$REPO_DIR"/skills/*/*; do
+		[ -d "$skill" ] || continue
+		if [ "$(basename "$skill")" = "$requested_name" ]; then
+			return 0
 		fi
 	done
+
+	return 1
 }
 
 # Selects included skills with fzf and updates the exclusions from its output.
@@ -269,6 +318,34 @@ select_skills_with_fzf() {
 	else
 		set_exclusions_from_selected_skills
 	fi
+}
+
+# Replaces exclusions with every canonical skill omitted from the selection.
+# The caller must have already collected skill_paths.
+#
+# @param  {string}  ...
+#     Canonical skill names selected for installation.
+set_exclusions_from_selected_skills() {
+	local selected_skill  # Selected canonical skill currently being checked.
+	local skill_path  # Canonical skill directory currently being checked.
+	local skill_name  # Canonical skill name currently being checked.
+	local selected=false  # Whether the canonical skill remains selected.
+
+	excluded_skills=()
+	for skill_path in "${skill_paths[@]}"; do
+		skill_name=$(basename "$skill_path")
+		selected=false
+		for selected_skill in "$@"; do
+			if [ "$selected_skill" = "$skill_name" ]; then
+				selected=true
+				break
+			fi
+		done
+
+		if [ "$selected" = false ]; then
+			excluded_skills+=("$skill_name")
+		fi
+	done
 }
 
 # Selects included skills from a numbered terminal list and updates exclusions.
@@ -336,6 +413,96 @@ select_skills_with_numbered_list() {
 	fi
 }
 
+# Writes the current exclusions, removing the file when no exclusions remain.
+save_skill_exclusions() {
+	local skill_name  # Excluded skill name currently being written.
+	local temp  # Temporary file used for an atomic replacement.
+
+	if [ "${#excluded_skills[@]}" -eq 0 ]; then
+		if [ -e "$skill_exclusions_file" ] || [ -L "$skill_exclusions_file" ]; then
+			trash "$skill_exclusions_file"
+		fi
+		return 0
+	fi
+
+	mkdir -p "$HOME/.agents"
+	temp=$(mktemp)
+	for skill_name in "${excluded_skills[@]}"; do
+		printf '%s\n' "$skill_name" >> "$temp"
+	done
+	mv "$temp" "$skill_exclusions_file"
+}
+
+# Applies the validated skill operations in their command-line order.
+apply_skill_operations() {
+	local index  # Index of the pending operation being applied.
+	local operation  # Operation name for the current pending operation.
+	local skill_name  # Skill name for the current pending operation.
+
+	if [ "${#skill_operation_types[@]}" -eq 0 ]; then
+		return 0
+	fi
+
+	for index in "${!skill_operation_types[@]}"; do
+		operation="${skill_operation_types[$index]}"
+		skill_name="${skill_operation_names[$index]}"
+		case "$operation" in
+			exclude) add_excluded_skill "$skill_name" ;;
+			include) remove_excluded_skill "$skill_name" ;;
+			include-all) excluded_skills=() ;;
+		esac
+	done
+}
+
+# Adds a skill name to the current exclusion list once.
+#
+# @param  {string}  skill_name
+#     Skill name to exclude from future setup runs.
+add_excluded_skill() {
+	local skill_name="$1"  # Skill name to add to the exclusion list.
+
+	if ! excluded_skill_exists "$skill_name"; then
+		excluded_skills+=("$skill_name")
+	fi
+}
+
+# Removes a skill name from the current exclusion list.
+#
+# @param  {string}  skill_name
+#     Skill name to include in future setup runs.
+remove_excluded_skill() {
+	local skill_name="$1"  # Skill name to remove from the exclusion list.
+	local excluded_skill  # Existing exclusion currently being retained.
+	local -a remaining_skills=()  # Exclusions that do not match the requested name.
+
+	if [ "${#excluded_skills[@]}" -gt 0 ]; then
+		for excluded_skill in "${excluded_skills[@]}"; do
+			if [ "$excluded_skill" != "$skill_name" ]; then
+				remaining_skills+=("$excluded_skill")
+			fi
+		done
+	fi
+
+	if [ "${#remaining_skills[@]}" -gt 0 ]; then
+		excluded_skills=("${remaining_skills[@]}")
+	else
+		excluded_skills=()
+	fi
+}
+
+# Tells the user which skills this run skips and where that list is saved,
+# so a missing skill is explained rather than looking like a broken install.
+report_excluded_skills() {
+	local formatted  # Comma-separated exclusion names for terminal output.
+
+	if [ "${#excluded_skills[@]}" -eq 0 ]; then
+		return 0
+	fi
+
+	formatted=$(format_excluded_skills)
+	printf 'Excluded: %s (from ~/.agents/skill-exclusions; run with --include-all to restore)\n' "$formatted"
+}
+
 # Joins the current exclusions into one comma-separated list for output.
 format_excluded_skills() {
 	local formatted=''  # Comma-separated exclusion names for terminal output.
@@ -352,17 +519,16 @@ format_excluded_skills() {
 	printf '%s' "$formatted"
 }
 
-# Tells the user which skills this run skips and where that list is saved,
-# so a missing skill is explained rather than looking like a broken install.
-report_excluded_skills() {
-	local formatted  # Comma-separated exclusion names for terminal output.
+prompt_target() {
+	printf 'Which agent(s)? [1] Claude  [2] Codex  [3] Both: '
+	read -r choice
 
-	if [ "${#excluded_skills[@]}" -eq 0 ]; then
-		return 0
-	fi
-
-	formatted=$(format_excluded_skills)
-	printf 'Excluded: %s (from ~/.agents/skill-exclusions; run with --include-all to restore)\n' "$formatted"
+	case "$choice" in
+		1) printf 'claude' ;;
+		2) printf 'codex' ;;
+		3) printf 'both' ;;
+		*) printf 'Invalid choice.\n' >&2; exit 1 ;;
+	esac
 }
 
 # Reports every canonical skill's state for the requested agent targets.
@@ -428,21 +594,6 @@ report_skill_status() {
 			done
 		fi
 	done
-}
-
-# Links canonical skills while passing the current exclusion list safely on
-# macOS Bash 3.2, where expanding an empty array under `set -u` fails.
-#
-# @param  {string}  target_dir
-#     Directory to install skill symlinks into.
-link_configured_skills() {
-	local target_dir="$1"  # Directory to install skill symlinks into.
-
-	if [ "${#excluded_skills[@]}" -gt 0 ]; then
-		link_skills "$target_dir" "${excluded_skills[@]}"
-	else
-		link_skills "$target_dir"
-	fi
 }
 
 setup_claude() {
@@ -590,6 +741,21 @@ ensure_doc_paths() {
 	cli_group_status success "doc-paths" "installed globally"
 }
 
+# Links canonical skills while passing the current exclusion list safely on
+# macOS Bash 3.2, where expanding an empty array under `set -u` fails.
+#
+# @param  {string}  target_dir
+#     Directory to install skill symlinks into.
+link_configured_skills() {
+	local target_dir="$1"  # Directory to install skill symlinks into.
+
+	if [ "${#excluded_skills[@]}" -gt 0 ]; then
+		link_skills "$target_dir" "${excluded_skills[@]}"
+	else
+		link_skills "$target_dir"
+	fi
+}
+
 setup_codex() {
 	cli_section "Codex global setup ($(display_path "$CODEX_DIR"))"
 
@@ -627,72 +793,115 @@ setup_codex() {
 	setup_hcom_codex_folders
 }
 
-# Adds the folders sandboxed Codex agents need to the --add-dir list that HCOM
-# passes to every Codex agent it starts, which HCOM stores in ~/.hcom/config.toml.
-# Only folders that exist on this machine are added, and entries the user added are
-# kept as written. Agents that are already running keep the list they started with.
-setup_hcom_codex_folders() {
-	# Folders outside the agent's own project that it writes to: this repository,
-	# agent-run logs and progress records, the Trash, and SwiftPM's cache and settings.
-	local -a required_folders=("$REPO_DIR" "$HOME/.agents" "$HOME/.Trash" "$HOME/Library/Caches/org.swift.swiftpm" "$HOME/Library/org.swift.swiftpm")
-	local -a existing_args=()  # Current HCOM arguments split into option and value tokens.
-	local codex_args  # Current HCOM argument string; missing folders are appended so the user's own options and spacing stay as written.
-	local folder  # Required folder currently being checked.
-	local argument_index  # Token position in the existing argument list.
-	local existing_folder  # Path following an existing --add-dir option.
-	local folder_present  # Whether HCOM already grants the current folder.
-	local changed=0  # Whether any folder was added.
+# Ensures $CODEX_DIR/config.toml contains the managed defaults, MCP server
+# entries, feature flags, memory settings, and TUI status line. Legacy inline hooks are
+# removed so Codex uses the managed hooks.json file.
+ensure_codex_config() {
+	local config="$CODEX_DIR/config.toml"
+	local defaults_temp temp
 
-	if ! command -v hcom >/dev/null 2>&1; then
-		cli_status skipped "HCOM" "not installed"
-		return
-	fi
+	defaults_temp=$(mktemp)
+	temp=$(mktemp)
+	touch "$config"
+	ensure_codex_defaults "$config" "$defaults_temp"
 
-	# A failing hcom command is reported rather than stopping the rest of setup.
-	if ! codex_args=$(hcom config codex_args); then
-		cli_status warning "HCOM" "could not read Codex arguments; run: hcom config codex_args"
-		return
-	fi
+	# Apply every managed feature flag and memory setting. The deprecated
+	# codex_hooks flag is removed, because the managed hooks flag replaces it.
+	# This runs before the managed sections below are moved to the end, so a
+	# newly added section keeps its place on later runs.
+	ensure_codex_section_settings "$defaults_temp" "features" "codex_hooks"
+	ensure_codex_section_settings "$defaults_temp" "memories"
 
-	read -r -a existing_args <<< "$codex_args"
+	# Strip managed MCP server sections before re-appending them,
+	# so re-running setup never creates duplicate entries. The Serena
+	# section is stripped but not re-added, because Serena is no longer used.
+	awk '
+		/^\[mcp_servers\.codebase-memory-mcp(\.|\])/{ skip = 1; next }
+		/^\[mcp_servers\.serena(\.|\])/{ skip = 1; next }
+		/^\[mcp_servers\.mdn(\.|\])/{ skip = 1; next }
+		/^\[mcp_servers\.sketch(\.|\])/{ skip = 1; next }
+		/^\[/{ skip = 0 }
+		!skip { print }
+	' "$defaults_temp" > "$temp"
+	rm "$defaults_temp"
 
-	for folder in "${required_folders[@]}"; do
-		if [ ! -d "$folder" ]; then
-			continue
-		fi
-
-		folder_present=0
-
-		for argument_index in "${!existing_args[@]}"; do
-			if [ "${existing_args[$argument_index]}" != "--add-dir" ]; then
-				continue
-			fi
-
-			existing_folder="${existing_args[$((argument_index + 1))]:-}"
-			existing_folder="${existing_folder/#\~\//$HOME/}"
-			if [ "$existing_folder" = "$folder" ]; then
-				folder_present=1
-				break
-			fi
-		done
-
-		if [ "$folder_present" -eq 0 ]; then
-			codex_args="${codex_args:+$codex_args }--add-dir $folder"
-			changed=1
-		fi
+	# Re-add repository-managed MCP server configuration.
+	for section in "mcp_servers.codebase-memory-mcp" "mcp_servers.mdn" "mcp_servers.sketch" "mcp_servers.sketch.tools.run_code"; do
+		printf '\n' >> "$temp"
+		codex_config_section "$section" >> "$temp"
 	done
+	ensure_codex_permission_settings "$temp"
+	ensure_codex_tui_settings "$temp"
 
-	if [ "$changed" -eq 0 ]; then
-		cli_status muted "HCOM" "Codex folders already configured"
+	local hooks_temp
+	hooks_temp=$(mktemp)
+	remove_inline_codex_hooks "$temp" "$hooks_temp"
+	mv "$hooks_temp" "$temp"
+
+	if cmp -s "$config" "$temp"; then
+		rm "$temp"
+		cli_group_status muted "Codex config" "already configured"
 		return
 	fi
 
-	if ! hcom config codex_args "$codex_args"; then
-		cli_status warning "HCOM" "could not update Codex arguments; check hcom config codex_args --info, then rerun setup"
-		return
-	fi
+	local backup
+	backup=$(backup_path "$config")
+	mv "$temp" "$config"
+	cli_group_status success "configured Codex MCP servers and hooks" "backup at $(display_path "$backup")"
+}
 
-	cli_status success "HCOM" "Codex folders updated; relaunch from a fresh terminal"
+# Sets the root-level Codex defaults while preserving unrelated configuration.
+#
+# @param  {string}  source
+#     Existing Codex config file to read.
+# @param  {string}  destination
+#     Temporary file that receives the updated configuration.
+ensure_codex_defaults() {
+	local source="$1" destination="$2"
+	local approval_policy default_permissions model_reasoning_effort model_verbosity model_reasoning_summary hide_agent_reasoning suppress_unstable_features_warning
+
+	approval_policy=$(codex_config_value "root" "approval_policy")
+	default_permissions=$(codex_config_value "root" "default_permissions")
+	model_reasoning_effort=$(codex_config_value "root" "model_reasoning_effort")
+	model_verbosity=$(codex_config_value "root" "model_verbosity")
+	model_reasoning_summary=$(codex_config_value "root" "model_reasoning_summary")
+	hide_agent_reasoning=$(codex_config_value "root" "hide_agent_reasoning")
+	suppress_unstable_features_warning=$(codex_config_value "root" "suppress_unstable_features_warning")
+
+	awk -v approval_policy="$approval_policy" -v default_permissions="$default_permissions" \
+		-v model_reasoning_effort="$model_reasoning_effort" -v model_verbosity="$model_verbosity" \
+		-v model_reasoning_summary="$model_reasoning_summary" -v hide_agent_reasoning="$hide_agent_reasoning" \
+		-v suppress_unstable_features_warning="$suppress_unstable_features_warning" '
+		function print_defaults() {
+			print "approval_policy = " approval_policy
+			print "default_permissions = " default_permissions
+			print "model_reasoning_effort = " model_reasoning_effort
+			print "model_verbosity = " model_verbosity
+			print "model_reasoning_summary = " model_reasoning_summary
+			print "hide_agent_reasoning = " hide_agent_reasoning
+			print "suppress_unstable_features_warning = " suppress_unstable_features_warning
+		}
+		BEGIN {
+			in_root = 1
+			defaults_written = 0
+		}
+		/^\[/ {
+			if (in_root) {
+				print_defaults()
+				defaults_written = 1
+				in_root = 0
+			}
+			print
+			next
+		}
+		in_root && /^(approval_policy|default_permissions|sandbox_mode|model_reasoning_effort|model_verbosity|model_reasoning_summary|hide_agent_reasoning|suppress_unstable_features_warning)[[:space:]]*=/ { next }
+		{ print }
+		END {
+			if (!defaults_written) {
+				print_defaults()
+			}
+		}
+	' "$source" > "$destination"
 }
 
 # Prints one repository-managed Codex configuration value.
@@ -720,20 +929,6 @@ codex_config_value() {
 			exit
 		}
 	' "$REPO_DIR/src/adapters/codex/config.base.toml"
-}
-
-# Prints one repository-managed Codex TOML section.
-#
-# @param  {string}  section
-#     TOML section name to read.
-codex_config_section() {
-	local section="$1"
-
-	sed "s|{{HOME}}|$HOME|g" "$REPO_DIR/src/adapters/codex/config.base.toml" | awk -v section="$section" '
-		$0 == "[" section "]" { in_section = 1 }
-		/^\[/ && in_section && $0 != "[" section "]" { exit }
-		in_section { print }
-	'
 }
 
 # Sets every key from one repository-managed Codex section, keeping any other
@@ -804,6 +999,88 @@ ensure_codex_section_settings() {
 	mv "$temp" "$config"
 }
 
+# Prints one repository-managed Codex TOML section.
+#
+# @param  {string}  section
+#     TOML section name to read.
+codex_config_section() {
+	local section="$1"
+
+	sed "s|{{HOME}}|$HOME|g" "$REPO_DIR/src/adapters/codex/config.base.toml" | awk -v section="$section" '
+		$0 == "[" section "]" { in_section = 1 }
+		/^\[/ && in_section && $0 != "[" section "]" { exit }
+		in_section { print }
+	'
+}
+
+# Replaces the managed permission profile and removes incompatible sandbox settings.
+#
+# @param  {string}  config
+#     Codex config file to update.
+ensure_codex_permission_settings() {
+	local config="$1"
+	local roots_temp temp
+
+	roots_temp=$(mktemp)
+	temp=$(mktemp)
+	collect_codex_workspace_roots "$config" "$roots_temp"
+
+	awk '
+		/^\[sandbox_workspace_write\]$/ || /^\[permissions\.project-edit(\.|\])/{ skip = 1; next }
+		/^\[/ { skip = 0 }
+		!skip { print }
+	' "$config" > "$temp"
+
+	{
+		printf '\n'
+		codex_config_section "permissions.project-edit"
+		printf '\n[permissions.project-edit.workspace_roots]\n'
+		awk '{ print $0 " = true" }' "$roots_temp"
+		printf '\n'
+		codex_config_section "permissions.project-edit.network"
+	} >> "$temp"
+
+	trash "$roots_temp"
+	mv "$temp" "$config"
+}
+
+# Collects the managed and existing workspace roots without duplicates.
+# Legacy sandbox roots are included so setup migrates them into the profile.
+#
+# @param  {string}  config
+#     Existing Codex config whose workspace roots should be preserved.
+# @param  {string}  destination
+#     File that receives quoted TOML paths, one per line.
+collect_codex_workspace_roots() {
+	local config="$1" destination="$2"
+
+	{
+		sed "s|{{HOME}}|$HOME|g" "$REPO_DIR/src/adapters/codex/config.base.toml"
+		printf '\n'
+		cat "$config"
+	} | awk '
+		/^\[/ { section = $0 }
+		section == "[permissions.project-edit.workspace_roots]" && /^[[:space:]]*"[^"]+"[[:space:]]*=[[:space:]]*true/ {
+			root = $0
+			sub(/^[[:space:]]*/, "", root)
+			sub(/"[[:space:]]*=.*$/, "\"", root)
+			if (!seen[root]++) {
+				print root
+			}
+		}
+		section == "[sandbox_workspace_write]" && /^writable_roots[[:space:]]*=/ {
+			line = $0
+			while (match(line, /"[^"]+"/)) {
+				root = substr(line, RSTART, RLENGTH)
+				if (!seen[root]++) {
+					print root
+				}
+				line = substr(line, RSTART + RLENGTH)
+			}
+		}
+	' > "$destination"
+}
+
 # Ensures the Codex TUI uses the managed settings while preserving unrelated
 # TUI preferences.
 #
@@ -848,128 +1125,6 @@ ensure_codex_tui_settings() {
 	mv "$temp" "$config"
 }
 
-# Sets the root-level Codex defaults while preserving unrelated configuration.
-#
-# @param  {string}  source
-#     Existing Codex config file to read.
-# @param  {string}  destination
-#     Temporary file that receives the updated configuration.
-ensure_codex_defaults() {
-	local source="$1" destination="$2"
-	local approval_policy default_permissions model_reasoning_effort model_verbosity model_reasoning_summary hide_agent_reasoning suppress_unstable_features_warning
-
-	approval_policy=$(codex_config_value "root" "approval_policy")
-	default_permissions=$(codex_config_value "root" "default_permissions")
-	model_reasoning_effort=$(codex_config_value "root" "model_reasoning_effort")
-	model_verbosity=$(codex_config_value "root" "model_verbosity")
-	model_reasoning_summary=$(codex_config_value "root" "model_reasoning_summary")
-	hide_agent_reasoning=$(codex_config_value "root" "hide_agent_reasoning")
-	suppress_unstable_features_warning=$(codex_config_value "root" "suppress_unstable_features_warning")
-
-	awk -v approval_policy="$approval_policy" -v default_permissions="$default_permissions" \
-		-v model_reasoning_effort="$model_reasoning_effort" -v model_verbosity="$model_verbosity" \
-		-v model_reasoning_summary="$model_reasoning_summary" -v hide_agent_reasoning="$hide_agent_reasoning" \
-		-v suppress_unstable_features_warning="$suppress_unstable_features_warning" '
-		function print_defaults() {
-			print "approval_policy = " approval_policy
-			print "default_permissions = " default_permissions
-			print "model_reasoning_effort = " model_reasoning_effort
-			print "model_verbosity = " model_verbosity
-			print "model_reasoning_summary = " model_reasoning_summary
-			print "hide_agent_reasoning = " hide_agent_reasoning
-			print "suppress_unstable_features_warning = " suppress_unstable_features_warning
-		}
-		BEGIN {
-			in_root = 1
-			defaults_written = 0
-		}
-		/^\[/ {
-			if (in_root) {
-				print_defaults()
-				defaults_written = 1
-				in_root = 0
-			}
-			print
-			next
-		}
-		in_root && /^(approval_policy|default_permissions|sandbox_mode|model_reasoning_effort|model_verbosity|model_reasoning_summary|hide_agent_reasoning|suppress_unstable_features_warning)[[:space:]]*=/ { next }
-		{ print }
-		END {
-			if (!defaults_written) {
-				print_defaults()
-			}
-		}
-	' "$source" > "$destination"
-}
-
-# Collects the managed and existing workspace roots without duplicates.
-# Legacy sandbox roots are included so setup migrates them into the profile.
-#
-# @param  {string}  config
-#     Existing Codex config whose workspace roots should be preserved.
-# @param  {string}  destination
-#     File that receives quoted TOML paths, one per line.
-collect_codex_workspace_roots() {
-	local config="$1" destination="$2"
-
-	{
-		sed "s|{{HOME}}|$HOME|g" "$REPO_DIR/src/adapters/codex/config.base.toml"
-		printf '\n'
-		cat "$config"
-	} | awk '
-		/^\[/ { section = $0 }
-		section == "[permissions.project-edit.workspace_roots]" && /^[[:space:]]*"[^"]+"[[:space:]]*=[[:space:]]*true/ {
-			root = $0
-			sub(/^[[:space:]]*/, "", root)
-			sub(/"[[:space:]]*=.*$/, "\"", root)
-			if (!seen[root]++) {
-				print root
-			}
-		}
-		section == "[sandbox_workspace_write]" && /^writable_roots[[:space:]]*=/ {
-			line = $0
-			while (match(line, /"[^"]+"/)) {
-				root = substr(line, RSTART, RLENGTH)
-				if (!seen[root]++) {
-					print root
-				}
-				line = substr(line, RSTART + RLENGTH)
-			}
-		}
-	' > "$destination"
-}
-
-# Replaces the managed permission profile and removes incompatible sandbox settings.
-#
-# @param  {string}  config
-#     Codex config file to update.
-ensure_codex_permission_settings() {
-	local config="$1"
-	local roots_temp temp
-
-	roots_temp=$(mktemp)
-	temp=$(mktemp)
-	collect_codex_workspace_roots "$config" "$roots_temp"
-
-	awk '
-		/^\[sandbox_workspace_write\]$/ || /^\[permissions\.project-edit(\.|\])/{ skip = 1; next }
-		/^\[/ { skip = 0 }
-		!skip { print }
-	' "$config" > "$temp"
-
-	{
-		printf '\n'
-		codex_config_section "permissions.project-edit"
-		printf '\n[permissions.project-edit.workspace_roots]\n'
-		awk '{ print $0 " = true" }' "$roots_temp"
-		printf '\n'
-		codex_config_section "permissions.project-edit.network"
-	} >> "$temp"
-
-	trash "$roots_temp"
-	mv "$temp" "$config"
-}
-
 # Removes inline Codex hook definitions while preserving user configuration
 # and Codex-managed hook trust state. Hooks are defined in hooks.json.
 #
@@ -988,61 +1143,72 @@ remove_inline_codex_hooks() {
 	' "$source" > "$destination"
 }
 
-# Ensures $CODEX_DIR/config.toml contains the managed defaults, MCP server
-# entries, feature flags, memory settings, and TUI status line. Legacy inline hooks are
-# removed so Codex uses the managed hooks.json file.
-ensure_codex_config() {
-	local config="$CODEX_DIR/config.toml"
-	local defaults_temp temp
+# Adds the folders sandboxed Codex agents need to the --add-dir list that HCOM
+# passes to every Codex agent it starts, which HCOM stores in ~/.hcom/config.toml.
+# Only folders that exist on this machine are added, and entries the user added are
+# kept as written. Agents that are already running keep the list they started with.
+setup_hcom_codex_folders() {
+	# Folders outside the agent's own project that it writes to: this repository,
+	# agent-run logs and progress records, the Trash, and SwiftPM's cache and settings.
+	local -a required_folders=("$REPO_DIR" "$HOME/.agents" "$HOME/.Trash" "$HOME/Library/Caches/org.swift.swiftpm" "$HOME/Library/org.swift.swiftpm")
+	local -a existing_args=()  # Current HCOM arguments split into option and value tokens.
+	local codex_args  # Current HCOM argument string; missing folders are appended so the user's own options and spacing stay as written.
+	local folder  # Required folder currently being checked.
+	local argument_index  # Token position in the existing argument list.
+	local existing_folder  # Path following an existing --add-dir option.
+	local folder_present  # Whether HCOM already grants the current folder.
+	local changed=0  # Whether any folder was added.
 
-	defaults_temp=$(mktemp)
-	temp=$(mktemp)
-	touch "$config"
-	ensure_codex_defaults "$config" "$defaults_temp"
-
-	# Apply every managed feature flag and memory setting. The deprecated
-	# codex_hooks flag is removed, because the managed hooks flag replaces it.
-	# This runs before the managed sections below are moved to the end, so a
-	# newly added section keeps its place on later runs.
-	ensure_codex_section_settings "$defaults_temp" "features" "codex_hooks"
-	ensure_codex_section_settings "$defaults_temp" "memories"
-
-	# Strip managed MCP server sections before re-appending them,
-	# so re-running setup never creates duplicate entries. The Serena
-	# section is stripped but not re-added, because Serena is no longer used.
-	awk '
-		/^\[mcp_servers\.codebase-memory-mcp(\.|\])/{ skip = 1; next }
-		/^\[mcp_servers\.serena(\.|\])/{ skip = 1; next }
-		/^\[mcp_servers\.mdn(\.|\])/{ skip = 1; next }
-		/^\[mcp_servers\.sketch(\.|\])/{ skip = 1; next }
-		/^\[/{ skip = 0 }
-		!skip { print }
-	' "$defaults_temp" > "$temp"
-	rm "$defaults_temp"
-
-	# Re-add repository-managed MCP server configuration.
-	for section in "mcp_servers.codebase-memory-mcp" "mcp_servers.mdn" "mcp_servers.sketch" "mcp_servers.sketch.tools.run_code"; do
-		printf '\n' >> "$temp"
-		codex_config_section "$section" >> "$temp"
-	done
-	ensure_codex_permission_settings "$temp"
-	ensure_codex_tui_settings "$temp"
-
-	local hooks_temp
-	hooks_temp=$(mktemp)
-	remove_inline_codex_hooks "$temp" "$hooks_temp"
-	mv "$hooks_temp" "$temp"
-
-	if cmp -s "$config" "$temp"; then
-		rm "$temp"
-		cli_group_status muted "Codex config" "already configured"
+	if ! command -v hcom >/dev/null 2>&1; then
+		cli_status skipped "HCOM" "not installed"
 		return
 	fi
 
-	local backup
-	backup=$(backup_path "$config")
-	mv "$temp" "$config"
-	cli_group_status success "configured Codex MCP servers and hooks" "backup at $(display_path "$backup")"
+	# A failing hcom command is reported rather than stopping the rest of setup.
+	if ! codex_args=$(hcom config codex_args); then
+		cli_status warning "HCOM" "could not read Codex arguments; run: hcom config codex_args"
+		return
+	fi
+
+	read -r -a existing_args <<< "$codex_args"
+
+	for folder in "${required_folders[@]}"; do
+		if [ ! -d "$folder" ]; then
+			continue
+		fi
+
+		folder_present=0
+
+		for argument_index in "${!existing_args[@]}"; do
+			if [ "${existing_args[$argument_index]}" != "--add-dir" ]; then
+				continue
+			fi
+
+			existing_folder="${existing_args[$((argument_index + 1))]:-}"
+			existing_folder="${existing_folder/#\~\//$HOME/}"
+			if [ "$existing_folder" = "$folder" ]; then
+				folder_present=1
+				break
+			fi
+		done
+
+		if [ "$folder_present" -eq 0 ]; then
+			codex_args="${codex_args:+$codex_args }--add-dir $folder"
+			changed=1
+		fi
+	done
+
+	if [ "$changed" -eq 0 ]; then
+		cli_status muted "HCOM" "Codex folders already configured"
+		return
+	fi
+
+	if ! hcom config codex_args "$codex_args"; then
+		cli_status warning "HCOM" "could not update Codex arguments; check hcom config codex_args --info, then rerun setup"
+		return
+	fi
+
+	cli_status success "HCOM" "Codex folders updated; relaunch from a fresh terminal"
 }
 
 # Configures git to use src/hooks/git/ as the hook directory for this repo.
@@ -1058,160 +1224,4 @@ configure_git_hooks() {
 	cli_status success "git hooks path set" "src/hooks/git/"
 }
 
-prompt_target() {
-	printf 'Which agent(s)? [1] Claude  [2] Codex  [3] Both: '
-	read -r choice
-
-	case "$choice" in
-		1) printf 'claude' ;;
-		2) printf 'codex' ;;
-		3) printf 'both' ;;
-		*) printf 'Invalid choice.\n' >&2; exit 1 ;;
-	esac
-}
-
-target=""
-refresh=false
-skill_options_requested=false  # Whether command-line skill options were supplied.
-select_requested=false  # Whether the terminal skill selection flow was requested.
-status_requested=false  # Whether to report skill link states without changing skill links.
-skill_exclusions_file="$HOME/.agents/skill-exclusions"  # File that stores excluded skill names.
-excluded_skills=()  # Skill names excluded from the selected setup targets.
-skill_operation_types=()  # Pending include or exclude operations in command-line order.
-skill_operation_names=()  # Skill names associated with the pending operations.
-skill_paths=()  # Canonical skill directories available for interactive selection.
-CLAUDE_DIR="$HOME/.claude"  # Overridable so a second account can install alongside the default one.
-CODEX_DIR="$HOME/.codex"    # Overridable so a second account can install alongside the default one.
-
-while [ $# -gt 0 ]; do
-	case "$1" in
-		--claude)        target="claude" ;;
-		--codex)         target="codex" ;;
-		--both)          target="both" ;;
-		--claude-dir)    CLAUDE_DIR="$2"; shift ;;
-		--codex-dir)     CODEX_DIR="$2"; shift ;;
-		--select)
-			select_requested=true
-			skill_options_requested=true
-			;;
-		--exclude)
-			if [ "$#" -lt 2 ] || ! parse_skill_list "exclude" "$2"; then
-				usage >&2
-				exit 1
-			fi
-			skill_options_requested=true
-			shift
-			;;
-		--include)
-			if [ "$#" -lt 2 ] || ! parse_skill_list "include" "$2"; then
-				usage >&2
-				exit 1
-			fi
-			skill_options_requested=true
-			shift
-			;;
-		--include-all)
-			skill_operation_types+=("include-all")
-			skill_operation_names+=("")
-			skill_options_requested=true
-			;;
-		--status)        status_requested=true ;;
-		--refresh)       refresh=true ;;
-		--help)          usage; exit 0 ;;
-		*)               usage >&2; exit 1 ;;
-	esac
-	shift
-done
-
-if [ "$status_requested" = true ] && [ "$skill_options_requested" = true ]; then
-	printf '%s\n' '--status cannot be combined with --select, --exclude, --include, or --include-all.' >&2
-	usage >&2
-	exit 1
-fi
-
-if [ "$select_requested" = true ] && [ "${#skill_operation_types[@]}" -gt 0 ]; then
-	printf '%s\n' '--select cannot be combined with --exclude, --include, or --include-all.' >&2
-	usage >&2
-	exit 1
-fi
-
-if [ "$select_requested" = true ] && ! [ -t 0 ]; then
-	printf '%s\n' '--select requires a terminal. Use --exclude or --include when standard input is not a terminal.' >&2
-	exit 1
-fi
-
-load_skill_exclusions
-if ! validate_skill_operations; then
-	exit 1
-fi
-
-if [ "$select_requested" = true ]; then
-	if ! collect_canonical_skills; then
-		exit 1
-	fi
-
-	if command -v fzf >/dev/null 2>&1; then
-		if ! select_skills_with_fzf; then
-			printf '%s\n' 'Skill selection cancelled. Nothing changed.'
-			exit 0
-		fi
-	else
-		selection_status=0  # Result of the numbered selector: 0 accepted, 1 cancelled, 2 invalid.
-		select_skills_with_numbered_list || selection_status=$?
-
-		if [ "$selection_status" -eq 1 ]; then
-			printf '%s\n' 'Skill selection cancelled. Nothing changed.'
-			exit 0
-		elif [ "$selection_status" -ne 0 ]; then
-			exit 1
-		fi
-	fi
-
-	save_skill_exclusions
-elif [ "$skill_options_requested" = true ]; then
-	apply_skill_operations
-	save_skill_exclusions
-fi
-
-report_excluded_skills
-
-if [ -z "$target" ]; then
-	if [ "$skill_options_requested" = true ] || [ "$status_requested" = true ]; then
-		target="both"
-	else
-		target=$(prompt_target)
-	fi
-fi
-
-bash "$REPO_DIR/scripts/install-cli-style.sh"
-# shellcheck source=scripts/lib/cli-style-output.sh
-source "$REPO_DIR/scripts/lib/cli-style-output.sh"
-
-if [ "$status_requested" = true ]; then
-	report_skill_status "$target"
-	exit 0
-fi
-
-if [ "$refresh" = true ]; then
-	bash "$REPO_DIR/scripts/sync.sh"
-fi
-
-case "$target" in
-	claude) setup_claude ;;
-	codex)  setup_codex ;;
-	both)   setup_claude; setup_codex ;;
-esac
-
-# Link the trash wrapper once, outside the per-agent setup, because ~/.local/bin is shared by
-# both agents and the user's own shell.
-cli_section "Shared command-line tools"
-cli_group_begin "Trash wrapper"
-# mkdir -p follows a symlinked ~/.local/bin, such as one kept in dotfiles, instead of replacing it.
-mkdir -p "$HOME/.local/bin"
-link_path "$REPO_DIR/src/bin/trash" "$HOME/.local/bin/trash" "$(display_path "$HOME/.local/bin/trash")"
-cli_group_end
-
-configure_git_hooks
-
-printf '\n'
-cli_status success "Done."
+main "$@"
