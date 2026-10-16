@@ -9,17 +9,20 @@ set -euo pipefail
 
 command -v jq >/dev/null 2>&1 || exit 0
 
-input="$(cat)"  # Raw PreToolUse payload on stdin.
+# Raw PreToolUse payload on stdin.
+input="$(cat)"
 tool_name="$(printf '%s' "$input" | jq -r '.tool_name // empty' 2>/dev/null)" || exit 0
 [[ "$tool_name" == "Bash" ]] || exit 0
 
 command_str="$(printf '%s' "$input" | jq -r '.tool_input.command // empty' 2>/dev/null)" || exit 0
 [[ -n "$command_str" ]] || exit 0
 
-normalised="${command_str//$'\n'/ }"  # Newlines flattened so patterns see one line (covers heredoc bodies).
+# Newlines flattened so patterns see one line (covers heredoc bodies).
+normalised="${command_str//$'\n'/ }"
 
 hcom_send_pattern='(^|[;&|`(]|[[:space:]])(command[[:space:]]+)?hcom[[:space:]]+send([[:space:]]|$)'
-commit_mention_pattern='[Cc]ommit message'  # The label an Implementer or Reviewer copies from the rules.
+# The label an Implementer or Reviewer copies from the rules.
+commit_mention_pattern='[Cc]ommit message'
 # A Conventional Commit subject: `type:` or `type(scope):` followed by real text.
 conventional_subject_pattern='(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9._/-]{1,40}\))?!?:[[:space:]]+[^[:space:]]'
 

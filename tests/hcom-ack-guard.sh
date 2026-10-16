@@ -15,10 +15,14 @@ source "$SCRIPT_DIR/lib/test-helpers.sh"
 
 trap cleanup EXIT
 
-TEST_STATUS=0  # Exit status of the most recent hook run.
-STDOUT_FILE="$TEST_ROOT/stdout.txt"  # Standard output of the most recent hook run.
-STDERR_FILE="$TEST_ROOT/stderr.txt"  # Standard error of the most recent hook run.
-EXPECTED_NO_OP_COMMAND="printf 'guard-hcom-ack: acknowledgement not sent; nothing in this command ran; re-run any other work in the command without the acknowledgement\n'"  # Command returned for acknowledgement sends.
+# Exit status of the most recent hook run.
+TEST_STATUS=0
+# Standard output of the most recent hook run.
+STDOUT_FILE="$TEST_ROOT/stdout.txt"
+# Standard error of the most recent hook run.
+STDERR_FILE="$TEST_ROOT/stderr.txt"
+# Command returned for acknowledgement sends.
+EXPECTED_NO_OP_COMMAND="printf 'guard-hcom-ack: acknowledgement not sent; nothing in this command ran; re-run any other work in the command without the acknowledgement\n'"
 
 # Runs the HCOM acknowledgement guard with one Bash tool payload. The payload
 # carries a working directory as well as the command, so the Codex assertion can
@@ -29,8 +33,10 @@ EXPECTED_NO_OP_COMMAND="printf 'guard-hcom-ack: acknowledgement not sent; nothin
 # @param  {string}  runtime
 #     Runtime argument for the hook ("codex" for Codex, empty for Claude).
 run_guard() {
-	local command="$1"  # Shell command placed in the tool payload.
-	local runtime="${2:-}"  # Runtime argument forwarded to the hook.
+	# Shell command placed in the tool payload.
+	local command="$1"
+	# Runtime argument forwarded to the hook.
+	local runtime="${2:-}"
 
 	set +e
 	jq -n --arg command "$command" '{tool_name: "Bash", tool_input: {command: $command, workdir: "/tmp"}}' \
@@ -44,7 +50,8 @@ run_guard() {
 # @param  {string}  command
 #     Shell command expected to be suppressed.
 assert_swallowed() {
-	local command="$1"  # Acknowledgement command expected to be rewritten.
+	# Acknowledgement command expected to be rewritten.
+	local command="$1"
 
 	run_guard "$command"
 
@@ -65,7 +72,8 @@ assert_swallowed() {
 # @param  {string}  command
 #     Shell command expected to be suppressed.
 assert_swallowed_codex() {
-	local command="$1"  # Acknowledgement command expected to be rewritten.
+	# Acknowledgement command expected to be rewritten.
+	local command="$1"
 
 	run_guard "$command" "codex"
 
@@ -85,7 +93,8 @@ assert_swallowed_codex() {
 # @param  {string}  command
 #     Shell command expected to be allowed.
 assert_allowed() {
-	local command="$1"  # Command expected to pass without hook output.
+	# Command expected to pass without hook output.
+	local command="$1"
 
 	run_guard "$command"
 	assert_equals "$TEST_STATUS" "0"

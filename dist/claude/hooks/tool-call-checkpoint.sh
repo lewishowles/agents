@@ -18,8 +18,10 @@
 
 set -euo pipefail
 
-readonly DEFAULT_TOOL_CALL_LIMIT=20  # Calls before the advisory for any HCOM team session without a role-specific limit.
-readonly WORKER_TOOL_CALL_LIMIT=40  # Calls before the advisory for HCOM Scouts and Implementers, whose startup reads need room before the first review point.
+# Calls before the advisory for any HCOM team session without a role-specific limit.
+readonly DEFAULT_TOOL_CALL_LIMIT=20
+# Calls before the advisory for HCOM Scouts and Implementers, whose startup reads need room before the first review point.
+readonly WORKER_TOOL_CALL_LIMIT=40
 readonly COMPACTION_CONTEXT="CONTEXT CHECKPOINT: This session is about to compact. Before continuing, hand off or record the current scope, changed paths, verification, blockers and next decision. Do not expand scope or reset peers."
 # Resolve managed hook symlinks so the companion remains beside the generated script.
 script_path="${BASH_SOURCE[0]}"
@@ -69,7 +71,8 @@ resolve_tool_call_limit() {
 	esac
 }
 
-readonly TOOL_CALL_LIMIT="$(resolve_tool_call_limit)"  # Limit applied to this session's counter.
+# Limit applied to this session's counter.
+readonly TOOL_CALL_LIMIT="$(resolve_tool_call_limit)"
 
 runtime="${1:-}"
 case "$runtime" in

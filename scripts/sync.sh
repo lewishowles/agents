@@ -62,7 +62,8 @@ copy_themes() {
 	mkdir -p "$REPO_DIR/dist/claude/themes"
 	find "$REPO_DIR/dist/claude/themes" -maxdepth 1 -type f -delete
 
-	local theme  # Source theme file to copy into dist.
+	# Source theme file to copy into dist.
+	local theme
 	for theme in "$REPO_DIR"/src/adapters/claude/themes/*.json; do
 		[ -f "$theme" ] || continue
 		cp "$theme" "$REPO_DIR/dist/claude/themes/$(basename "$theme")"

@@ -55,7 +55,8 @@ has_timeout='(^|[[:space:]])timeout([[:space:]]|$)'
 # @param  {string}  text
 #     Command text to scan.
 has_spin() {
-	local text="$1"  # Command text to scan for a busy-loop header.
+	# Command text to scan for a busy-loop header.
+	local text="$1"
 
 	[[ "$text" =~ $while_spin || "$text" =~ $until_spin || "$text" =~ $for_spin ]]
 }

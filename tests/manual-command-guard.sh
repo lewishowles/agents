@@ -3,12 +3,18 @@
 
 set -euo pipefail
 
-SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)  # Directory holding this test.
-REPO_DIR=$(cd "$SCRIPT_DIR/.." && pwd)  # Repository root, used to find the hook.
-TEST_ROOT=$(mktemp -d)  # Throwaway directory used as the session working directory.
-STUB_BIN="$TEST_ROOT/bin"  # Holds the fake agent-run placed first on PATH.
-AGENT_RUN_CALLS="$TEST_ROOT/agent-run-calls.txt"  # Each call to the fake agent-run, so tests can prove it was skipped.
-ORIGINAL_PATH="$PATH"  # PATH before the fake agent-run is added, for the agent-run-missing case.
+# Directory holding this test.
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+# Repository root, used to find the hook.
+REPO_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
+# Throwaway directory used as the session working directory.
+TEST_ROOT=$(mktemp -d)
+# Holds the fake agent-run placed first on PATH.
+STUB_BIN="$TEST_ROOT/bin"
+# Each call to the fake agent-run, so tests can prove it was skipped.
+AGENT_RUN_CALLS="$TEST_ROOT/agent-run-calls.txt"
+# PATH before the fake agent-run is added, for the agent-run-missing case.
+ORIGINAL_PATH="$PATH"
 
 source "$SCRIPT_DIR/lib/test-helpers.sh"
 
@@ -45,7 +51,8 @@ esac
 EOF
 chmod +x "$STUB_BIN/agent-run"
 
-TEST_STATUS=0  # Exit status of the last hook run.
+# Exit status of the last hook run.
+TEST_STATUS=0
 
 # Runs the manual-command guard with one Bash tool payload.
 #
@@ -56,9 +63,12 @@ TEST_STATUS=0  # Exit status of the last hook run.
 # @param  {string}  path_value
 #     PATH used while the hook checks for agent-run.
 run_guard() {
-	local command="$1"  # Shell command presented to the hook.
-	local output_file="$2"  # File that receives the hook's standard error.
-	local path_value="${3:-$STUB_BIN:$ORIGINAL_PATH}"  # PATH used by the hook.
+	# Shell command presented to the hook.
+	local command="$1"
+	# File that receives the hook's standard error.
+	local output_file="$2"
+	# PATH used by the hook.
+	local path_value="${3:-$STUB_BIN:$ORIGINAL_PATH}"
 
 	set +e
 	jq -n --arg command "$command" --arg cwd "$TEST_ROOT" \
@@ -74,8 +84,10 @@ run_guard() {
 # @param  {string}  command
 #     Shell command expected to be denied.
 assert_blocked() {
-	local command="$1"  # Shell command expected to be denied.
-	local output_file="$TEST_ROOT/blocked.txt"  # Captured hook error output.
+	# Shell command expected to be denied.
+	local command="$1"
+	# Captured hook error output.
+	local output_file="$TEST_ROOT/blocked.txt"
 
 	run_guard "$command" "$output_file"
 
@@ -87,8 +99,10 @@ assert_blocked() {
 # @param  {string}  command
 #     Shell command expected to be allowed.
 assert_allowed() {
-	local command="$1"  # Shell command expected to be allowed.
-	local output_file="$TEST_ROOT/allowed.txt"  # Captured hook error output.
+	# Shell command expected to be allowed.
+	local command="$1"
+	# Captured hook error output.
+	local output_file="$TEST_ROOT/allowed.txt"
 
 	run_guard "$command" "$output_file"
 
@@ -104,7 +118,8 @@ AGENT_RUN_MODE=manual assert_blocked "cd $TEST_ROOT && npm test"
 AGENT_RUN_MODE=manual assert_blocked "git status --short && npm test"
 : > "$AGENT_RUN_CALLS"
 AGENT_RUN_MODE=manual assert_blocked "npm test && npm other"
-CALL_COUNT="$(wc -l < "$AGENT_RUN_CALLS" | tr -d '[:space:]')"  # Number of registry lookups for one chained command.
+# Number of registry lookups for one chained command.
+CALL_COUNT="$(wc -l < "$AGENT_RUN_CALLS" | tr -d '[:space:]')"
 assert_equals "$CALL_COUNT" "1"
 assert_contains "$AGENT_RUN_CALLS" "$TEST_ROOT|agent-run list --json"
 AGENT_RUN_MODE=manual assert_allowed "npm other"
@@ -156,7 +171,8 @@ assert_empty "$AGENT_RUN_CALLS"
 AGENT_RUN_MODE=empty assert_blocked "playwright test"
 assert_empty "$AGENT_RUN_CALLS"
 
-NO_AGENT_RUN_PATH="$(dirname "$(command -v jq)"):/usr/bin:/bin"  # Only jq and system tools, so no agent-run is found.
+# Only jq and system tools, so no agent-run is found.
+NO_AGENT_RUN_PATH="$(dirname "$(command -v jq)"):/usr/bin:/bin"
 AGENT_RUN_MODE=empty run_guard "cypress run" "$TEST_ROOT/absent.txt" "$NO_AGENT_RUN_PATH"
 assert_equals "$TEST_STATUS" "2"
 assert_contains "$TEST_ROOT/absent.txt" "cd $TEST_ROOT && cypress run"

@@ -5,9 +5,12 @@ set -euo pipefail
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 REPO_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 TEST_ROOT=$(mktemp -d)
-ADDED_SKILL_GROUP="$REPO_DIR/skills/setup-global-test-$(basename "$TEST_ROOT")"  # Temporary canonical skill group.
-ADDED_SKILL_NAME="setup-global-test-skill-$(basename "$TEST_ROOT")"  # Temporary canonical skill name.
-ADDED_SKILL_DIR="$ADDED_SKILL_GROUP/$ADDED_SKILL_NAME"  # Temporary canonical skill directory.
+# Temporary canonical skill group.
+ADDED_SKILL_GROUP="$REPO_DIR/skills/setup-global-test-$(basename "$TEST_ROOT")"
+# Temporary canonical skill name.
+ADDED_SKILL_NAME="setup-global-test-skill-$(basename "$TEST_ROOT")"
+# Temporary canonical skill directory.
+ADDED_SKILL_DIR="$ADDED_SKILL_GROUP/$ADDED_SKILL_NAME"
 
 source "$SCRIPT_DIR/lib/test-helpers.sh"
 

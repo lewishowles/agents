@@ -3,24 +3,31 @@
 
 set -euo pipefail
 
-SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)  # Directory containing this test.
-REPO_DIR=$(cd "$SCRIPT_DIR/.." && pwd)  # Repository whose hook is under test.
-TEST_ROOT=$(mktemp -d)  # Temporary output for each hook run.
+# Directory containing this test.
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+# Repository whose hook is under test.
+REPO_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
+# Temporary output for each hook run.
+TEST_ROOT=$(mktemp -d)
 
 source "$SCRIPT_DIR/lib/test-helpers.sh"
 
 trap cleanup EXIT
 
-TEST_STATUS=0  # Exit status of the last hook run.
-STDOUT_FILE="$TEST_ROOT/stdout.txt"  # Standard output of the last hook run.
-STDERR_FILE="$TEST_ROOT/stderr.txt"  # Standard error of the last hook run.
+# Exit status of the last hook run.
+TEST_STATUS=0
+# Standard output of the last hook run.
+STDOUT_FILE="$TEST_ROOT/stdout.txt"
+# Standard error of the last hook run.
+STDERR_FILE="$TEST_ROOT/stderr.txt"
 
 # Runs the recipient guard with one Bash tool command.
 #
 # @param  {string}  command
 #     Shell command presented to the hook.
 run_guard() {
-	local command="$1"  # Shell command to inspect.
+	# Shell command to inspect.
+	local command="$1"
 
 	set +e
 	jq -n --arg command "$command" '{tool_name: "Bash", tool_input: {command: $command}}' \
@@ -34,7 +41,8 @@ run_guard() {
 # @param  {string}  command
 #     Shell command expected to be blocked.
 assert_blocked() {
-	local command="$1"  # Send without an @recipient.
+	# Send without an @recipient.
+	local command="$1"
 
 	run_guard "$command"
 
@@ -48,7 +56,8 @@ assert_blocked() {
 # @param  {string}  command
 #     Shell command expected to pass.
 assert_allowed() {
-	local command="$1"  # Command with a recipient or no HCOM send.
+	# Command with a recipient or no HCOM send.
+	local command="$1"
 
 	run_guard "$command"
 

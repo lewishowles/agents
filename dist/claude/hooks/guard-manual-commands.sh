@@ -10,11 +10,14 @@ set -euo pipefail
 
 command -v jq >/dev/null 2>&1 || exit 0
 
-input="$(cat)"  # Hook payload from Claude Code.
-tool_name="$(printf '%s' "$input" | jq -r '.tool_name // empty' 2>/dev/null)" || exit 0  # Tool about to run.
+# Hook payload from Claude Code.
+input="$(cat)"
+# Tool about to run.
+tool_name="$(printf '%s' "$input" | jq -r '.tool_name // empty' 2>/dev/null)" || exit 0
 [[ "$tool_name" == "Bash" ]] || exit 0
 
-command_str="$(printf '%s' "$input" | jq -r '.tool_input.command // empty' 2>/dev/null)" || exit 0  # Full shell command the agent wants to run.
+# Full shell command the agent wants to run.
+command_str="$(printf '%s' "$input" | jq -r '.tool_input.command // empty' 2>/dev/null)" || exit 0
 [[ -n "$command_str" ]] || exit 0
 
 # The session's working directory, where agent-run looks up the repository's registered commands.
@@ -41,15 +44,24 @@ REGISTRY_COMMANDS_JSON='[]'
 # @param  {string}  command
 #     The full shell command line from the tool call.
 split_command_segments() {
-	local command="$1"  # Shell command to split into executable segments.
-	local current_segment=""  # Text collected for the current segment.
-	local character=""  # Current character being inspected.
-	local next_character=""  # Character after the current one for && and ||.
-	local previous_character=""  # Character before a possible redirection operator.
-	local quote=""  # Active single- or double-quote delimiter, if any.
-	local escaped=false  # Whether the previous character escaped the current one.
-	local index=0  # Current character position in the command.
-	local command_length="${#command}"  # Number of characters in the command.
+	# Shell command to split into executable segments.
+	local command="$1"
+	# Text collected for the current segment.
+	local current_segment=""
+	# Current character being inspected.
+	local character=""
+	# Character after the current one for && and ||.
+	local next_character=""
+	# Character before a possible redirection operator.
+	local previous_character=""
+	# Active single- or double-quote delimiter, if any.
+	local quote=""
+	# Whether the previous character escaped the current one.
+	local escaped=false
+	# Current character position in the command.
+	local index=0
+	# Number of characters in the command.
+	local command_length="${#command}"
 
 	COMMAND_SEGMENTS=()
 
@@ -127,12 +139,18 @@ split_command_segments() {
 # @param  {string}  command
 #     One command from the command line, with no separators.
 extract_command_words() {
-	local command="$1"  # Shell command to split into words.
-	local -a words=()  # Whitespace-delimited shell words from the command.
-	local word  # Current word being inspected.
-	local index=0  # Current position while removing command prefixes.
-	local word_count=0  # Number of words in the command.
-	local last_index=0  # Position of the final command word while removing closing brackets.
+	# Shell command to split into words.
+	local command="$1"
+	# Whitespace-delimited shell words from the command.
+	local -a words=()
+	# Current word being inspected.
+	local word
+	# Current position while removing command prefixes.
+	local index=0
+	# Number of words in the command.
+	local word_count=0
+	# Position of the final command word while removing closing brackets.
+	local last_index=0
 
 	read -r -a words <<< "$command"
 	word_count="${#words[@]}"
@@ -209,12 +227,18 @@ extract_command_words() {
 # Prints `playwright` or `cypress` when COMMAND_WORDS runs one, either directly, by
 # path, or through npx, bunx, yarn, pnpm, uv run or npm exec. Returns 1 otherwise.
 find_browser_runner() {
-	local first_word="${COMMAND_WORDS[0]:-}"  # First executable word after shell prefixes.
-	local first_command_name="${first_word##*/}"  # Basename used to match wrappers and direct runners.
-	local runner_index=0  # Position of the runner after its package-manager wrapper.
-	local runner=""  # Browser runner name, when one is present.
-	local wrapper_subcommand="${COMMAND_WORDS[1]:-}"  # Wrapper subcommand or bare runner name.
-	local wrapper_subcommand_name="${wrapper_subcommand##*/}"  # Basename used for pnpm's bare runner form.
+	# First executable word after shell prefixes.
+	local first_word="${COMMAND_WORDS[0]:-}"
+	# Basename used to match wrappers and direct runners.
+	local first_command_name="${first_word##*/}"
+	# Position of the runner after its package-manager wrapper.
+	local runner_index=0
+	# Browser runner name, when one is present.
+	local runner=""
+	# Wrapper subcommand or bare runner name.
+	local wrapper_subcommand="${COMMAND_WORDS[1]:-}"
+	# Basename used for pnpm's bare runner form.
+	local wrapper_subcommand_name="${wrapper_subcommand##*/}"
 
 	case "$first_command_name" in
 		playwright|cypress)
@@ -302,8 +326,10 @@ find_browser_runner() {
 # @param  {string}  first_word
 #     The program name, which may include a path.
 is_registry_candidate() {
-	local first_word="$1"  # First executable word to classify.
-	local command_name="${first_word##*/}"  # Basename used for path-qualified commands.
+	# First executable word to classify.
+	local first_word="$1"
+	# Basename used for path-qualified commands.
+	local command_name="${first_word##*/}"
 
 	case "$command_name" in
 		""|:|true|false|cd|pwd|echo|printf|test|\[|command|env|export|unset|read|cat|head|tail|cut|sort|uniq|tr|sed|awk|grep|rg|find|ls|du|df|file|stat|git|mkdir|cp|mv|trash|chmod|touch|date|basename|dirname|sleep|which|type)
@@ -319,7 +345,8 @@ is_registry_candidate() {
 # registered command marked manual. A missing or failing agent-run counts as having
 # no registrations, so this never blocks because agent-run is unavailable.
 has_manual_registration() {
-	local list_json=""  # JSON response from agent-run.
+	# JSON response from agent-run.
+	local list_json=""
 
 	command -v agent-run >/dev/null 2>&1 || return 1
 
@@ -353,7 +380,8 @@ has_manual_registration() {
 # @param  {string}  reason
 #     What was found, shown in the message, such as `raw playwright command`.
 block() {
-	local reason="$1"  # Reason shown alongside the command to run manually.
+	# Reason shown alongside the command to run manually.
+	local reason="$1"
 
 	printf 'guard-manual-commands: blocked %s. Run it yourself in a terminal: cd %q && %s\n' \
 		"$reason" "$working_directory" "$command_str" >&2
@@ -381,7 +409,8 @@ for command_segment in "${COMMAND_SEGMENTS[@]}"; do
 	extract_command_words "$command_segment"
 	[[ "${#COMMAND_WORDS[@]}" -gt 0 ]] || continue
 
-	first_word="${COMMAND_WORDS[0]}"  # The program this command runs.
+	# The program this command runs.
+	first_word="${COMMAND_WORDS[0]}"
 	is_registry_candidate "$first_word" || continue
 
 	# This command's words as a JSON list, for comparison with registered argv lists.

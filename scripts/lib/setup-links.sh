@@ -119,9 +119,12 @@ prune_stale_repo_links() {
 # @param  {string}  target
 #     The installed skill path being checked.
 is_repo_owned_link() {
-	local source="$1"  # Canonical path that a managed link must name.
-	local target="$2"  # Installed link path being checked.
-	local current  # Link text currently stored at the installed path.
+	# Canonical path that a managed link must name.
+	local source="$1"
+	# Installed link path being checked.
+	local target="$2"
+	# Link text currently stored at the installed path.
+	local current
 
 	if [ ! -L "$target" ]; then
 		return 1
@@ -134,10 +137,14 @@ is_repo_owned_link() {
 # Collects each canonical skill directory and rejects duplicate folder names.
 # The caller must declare a local skill_paths array before calling this helper.
 collect_canonical_skills() {
-	local skill  # Canonical skill directory currently being collected.
-	local slug  # Skill name taken from the canonical directory basename.
-	local other  # Previously collected skill directory used for duplicate checks.
-	local other_slug  # Skill name taken from the previously collected directory.
+	# Canonical skill directory currently being collected.
+	local skill
+	# Skill name taken from the canonical directory basename.
+	local slug
+	# Previously collected skill directory used for duplicate checks.
+	local other
+	# Skill name taken from the previously collected directory.
+	local other_slug
 
 	skill_paths=()
 	for skill in "$REPO_DIR"/skills/*/*; do
@@ -206,15 +213,23 @@ link_path() {
 # @param  {string}  ...
 #     Skill names that must not be linked.
 link_skills() {
-	local target_dir="$1"  # Directory to install skill symlinks into.
+	# Directory to install skill symlinks into.
+	local target_dir="$1"
 	shift
-	local -a excluded_skills=("$@")  # Skill names that must not be linked.
-	local skill  # Canonical skill directory currently being checked or linked.
-	local slug  # Skill name taken from the canonical directory basename.
-	local excluded  # Whether the current skill is excluded from this setup run.
-	local excluded_skill  # Excluded skill name currently being checked.
-	local skill_link  # Installed skill path currently being checked or removed.
-	local skill_paths=()  # Canonical skill directories that passed duplicate checks.
+	# Skill names that must not be linked.
+	local -a excluded_skills=("$@")
+	# Canonical skill directory currently being checked or linked.
+	local skill
+	# Skill name taken from the canonical directory basename.
+	local slug
+	# Whether the current skill is excluded from this setup run.
+	local excluded
+	# Excluded skill name currently being checked.
+	local excluded_skill
+	# Installed skill path currently being checked or removed.
+	local skill_link
+	# Canonical skill directories that passed duplicate checks.
+	local skill_paths=()
 
 	if ! collect_canonical_skills; then
 		return 1

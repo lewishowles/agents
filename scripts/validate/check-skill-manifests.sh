@@ -35,7 +35,8 @@ declare -A SKILL_NAMES=()
 declare -A SKILL_PATHS=()
 
 while IFS= read -r -d '' skill_file; do
-	dir_name=$(basename "$(dirname "$skill_file")")  # The folder name the skill name must match.
+	# The folder name the skill name must match.
+	dir_name=$(basename "$(dirname "$skill_file")")
 
 	# Parse the front matter once and print four fields split by the unit
 	# separator character: whether it opens and closes with ---, the name, 1

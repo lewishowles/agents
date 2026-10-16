@@ -21,16 +21,21 @@ command_str="$(printf '%s' "$input" | jq -r '.tool_input.command // empty' 2>/de
 
 normalised_command="${command_str//$'\n'/;}"
 hcom_send_pattern='(^|[;&|][[:space:]]*)(command[[:space:]]+)?hcom[[:space:]]+send([[:space:]]|$)'
-team_send_pattern='(^|[;&|][[:space:]]*)(command[[:space:]]+)?([^[:space:];&|]+/)?team-send[[:space:]]+(orchestrator|scout|implementer|reviewer)([[:space:]]|$)'  # Finds a team-send to a core role, written role first as the team rules show it. Its body arrives on stdin, so only the intent can mark it as an acknowledgement.
+# Finds a team-send to a core role, written role first as the team rules show it. Its body arrives on stdin, so only the intent can mark it as an acknowledgement.
+team_send_pattern='(^|[;&|][[:space:]]*)(command[[:space:]]+)?([^[:space:];&|]+/)?team-send[[:space:]]+(orchestrator|scout|implementer|reviewer)([[:space:]]|$)'
 ack_intent_pattern='(^|[[:space:]])--intent(=|[[:space:]]+)ack([[:space:]]|$)'
-inform_intent_pattern='(^|[[:space:]])--intent(=|[[:space:]]+)inform([[:space:]]|$)'  # Finds acknowledgement text disguised as a result.
-acknowledgement_text_pattern=$'^(Acknowledged|Acknowledgement|Understood|I will|I\'ll|I’ll|Will do)([[:space:][:punct:]]|$)'  # Covers common acknowledgement-only openings.
+# Finds acknowledgement text disguised as a result.
+inform_intent_pattern='(^|[[:space:]])--intent(=|[[:space:]]+)inform([[:space:]]|$)'
+# Covers common acknowledgement-only openings.
+acknowledgement_text_pattern=$'^(Acknowledged|Acknowledgement|Understood|I will|I\'ll|I’ll|Will do)([[:space:][:punct:]]|$)'
 
-message_text="${normalised_command#* -- }"  # HCOM message after the option separator.
+# HCOM message after the option separator.
+message_text="${normalised_command#* -- }"
 message_text="${message_text#\'}"
 message_text="${message_text#\"}"
 
-is_acknowledgement=false  # True when the command is an acknowledgement-only team message.
+# True when the command is an acknowledgement-only team message.
+is_acknowledgement=false
 
 if [[ "$normalised_command" =~ $hcom_send_pattern ]] \
 	&& { [[ "$normalised_command" =~ $ack_intent_pattern ]] \
@@ -44,7 +49,8 @@ fi
 
 [[ "$is_acknowledgement" == true ]] || exit 0
 
-no_op_command="printf 'guard-hcom-ack: acknowledgement not sent; nothing in this command ran; re-run any other work in the command without the acknowledgement\n'"  # Replacement that explains the suppressed command.
+# Replacement that explains the suppressed command.
+no_op_command="printf 'guard-hcom-ack: acknowledgement not sent; nothing in this command ran; re-run any other work in the command without the acknowledgement\n'"
 
 printf '%s' "$input" | jq -c --arg command "$no_op_command" --arg runtime "$runtime" \
 	'{hookSpecificOutput: {hookEventName: "PreToolUse", updatedInput: (.tool_input | .command = $command)}}

@@ -56,7 +56,8 @@ def read_skill_metadata(skill_file: Path) -> dict:
 # sorted by name.
 def skill_metadata() -> list[dict]:
 	skills = []
-	skill_files = CANONICAL_SKILLS_DIR.glob("*/*/SKILL.md")  # The SKILL.md file of every skill.
+	# The SKILL.md file of every skill.
+	skill_files = CANONICAL_SKILLS_DIR.glob("*/*/SKILL.md")
 	for skill_file in skill_files:
 		skills.append(read_skill_metadata(skill_file))
 	return sorted(skills, key=lambda item: item["name"])

@@ -9,11 +9,14 @@ set -euo pipefail
 command -v jq >/dev/null 2>&1 || exit 0
 command -v python3 >/dev/null 2>&1 || exit 0
 
-input="$(cat)"  # PreToolUse payload from the agent runtime.
-tool_name="$(printf '%s' "$input" | jq -r '.tool_name // empty' 2>/dev/null)" || exit 0  # Tool about to run.
+# PreToolUse payload from the agent runtime.
+input="$(cat)"
+# Tool about to run.
+tool_name="$(printf '%s' "$input" | jq -r '.tool_name // empty' 2>/dev/null)" || exit 0
 [[ "$tool_name" == "Bash" ]] || exit 0
 
-command_str="$(printf '%s' "$input" | jq -r '.tool_input.command // empty' 2>/dev/null)" || exit 0  # Shell command about to run.
+# Shell command about to run.
+command_str="$(printf '%s' "$input" | jq -r '.tool_input.command // empty' 2>/dev/null)" || exit 0
 [[ -n "$command_str" ]] || exit 0
 
 # Python splits the command into separate shell commands and arguments, which
@@ -33,10 +36,14 @@ import sys
 # @param  {str}  command
 #     The full shell command from the tool call.
 def without_heredoc_bodies(command: str) -> str:
-	kept = []  # Command lines outside any heredoc body.
-	delimiters = []  # End markers of the heredocs still open, in order.
-	quote = None  # The open quote character across command lines.
-	heredoc = re.compile(r"(?<!<)<<(?!<)-?\s*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\1")  # A heredoc operator, never a `<<<` here-string, and its end marker, which may be quoted.
+	# Command lines outside any heredoc body.
+	kept = []
+	# End markers of the heredocs still open, in order.
+	delimiters = []
+	# The open quote character across command lines.
+	quote = None
+	# A heredoc operator, never a `<<<` here-string, and its end marker, which may be quoted.
+	heredoc = re.compile(r"(?<!<)<<(?!<)-?\s*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\1")
 
 	for line in command.splitlines(keepends=True):
 		if delimiters:
@@ -44,8 +51,10 @@ def without_heredoc_bodies(command: str) -> str:
 				delimiters.pop(0)
 			continue
 
-		escaped = False  # Whether the previous character was a backslash.
-		comment_start = len(line)  # Where an unquoted # comment starts (a # at the start of a word), or the line length when there is none.
+		# Whether the previous character was a backslash.
+		escaped = False
+		# Where an unquoted # comment starts (a # at the start of a word), or the line length when there is none.
+		comment_start = len(line)
 
 		for index, character in enumerate(line):
 			if escaped:
@@ -85,10 +94,14 @@ def without_heredoc_bodies(command: str) -> str:
 # @param  {str}  command
 #     The shell command with heredoc bodies already removed.
 def shell_commands(command: str) -> list[str]:
-	commands = []  # Finished commands.
-	current = []  # Characters of the command being read.
-	quote = None  # The open quote character, if inside a quoted string.
-	escaped = False  # Whether the previous character was a backslash.
+	# Finished commands.
+	commands = []
+	# Characters of the command being read.
+	current = []
+	# The open quote character, if inside a quoted string.
+	quote = None
+	# Whether the previous character was a backslash.
+	escaped = False
 
 	for character in command:
 		if escaped:
@@ -131,7 +144,8 @@ def shell_commands(command: str) -> list[str]:
 def missing_recipient(command: str) -> bool:
 	for segment in shell_commands(without_heredoc_bodies(command)):
 		try:
-			words = shlex.split(segment)  # The command's arguments, unquoted.
+			# The command's arguments, unquoted.
+			words = shlex.split(segment)
 		except ValueError:
 			continue
 
@@ -144,14 +158,16 @@ def missing_recipient(command: str) -> bool:
 		if not words or words[0].rsplit("/", 1)[-1] != "hcom":
 			continue
 
-		position = 1  # The position of the hcom subcommand, after any global options such as --name x.
+		# The position of the hcom subcommand, after any global options such as --name x.
+		position = 1
 		while position < len(words) and words[position].startswith("-"):
 			position += 2 if words[position] == "--name" else 1
 
 		if words[position:position + 1] != ["send"]:
 			continue
 
-		arguments = iter(words[position + 1:])  # The send options and recipients, read in order.
+		# The send options and recipients, read in order.
+		arguments = iter(words[position + 1:])
 		for argument in arguments:
 			if argument == "--":
 				break

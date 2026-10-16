@@ -17,18 +17,30 @@ source "$REPO_DIR/scripts/lib/setup-links.sh"
 # @param  {string}  ...
 #     Command-line options passed to the script.
 main() {
+	# Which agents to set up (claude, codex or both). Comes from the options, defaults to both for skill and status options, and is otherwise asked for.
 	target=""
+	# Whether to run sync.sh to regenerate dist/ before installing links.
 	refresh=false
-	skill_options_requested=false  # Whether command-line skill options were supplied.
-	select_requested=false  # Whether the terminal skill selection flow was requested.
-	status_requested=false  # Whether to report skill link states without changing skill links.
-	skill_exclusions_file="$HOME/.agents/skill-exclusions"  # File that stores excluded skill names.
-	excluded_skills=()  # Skill names excluded from the selected setup targets.
-	skill_operation_types=()  # Pending include or exclude operations in command-line order.
-	skill_operation_names=()  # Skill names associated with the pending operations.
-	skill_paths=()  # Canonical skill directories available for interactive selection.
-	CLAUDE_DIR="$HOME/.claude"  # Overridable so a second account can install alongside the default one.
-	CODEX_DIR="$HOME/.codex"    # Overridable so a second account can install alongside the default one.
+	# Whether command-line skill options were supplied.
+	skill_options_requested=false
+	# Whether the terminal skill selection flow was requested.
+	select_requested=false
+	# Whether to report skill link states without changing skill links.
+	status_requested=false
+	# File that stores excluded skill names.
+	skill_exclusions_file="$HOME/.agents/skill-exclusions"
+	# Skill names excluded from the selected setup targets.
+	excluded_skills=()
+	# Pending include or exclude operations in command-line order.
+	skill_operation_types=()
+	# Skill names associated with the pending operations.
+	skill_operation_names=()
+	# Canonical skill directories available for interactive selection.
+	skill_paths=()
+	# Overridable so a second account can install alongside the default one.
+	CLAUDE_DIR="$HOME/.claude"
+	# Overridable so a second account can install alongside the default one.
+	CODEX_DIR="$HOME/.codex"
 
 	while [ $# -gt 0 ]; do
 		case "$1" in
@@ -103,7 +115,8 @@ main() {
 				exit 0
 			fi
 		else
-			selection_status=0  # Result of the numbered selector: 0 accepted, 1 cancelled, 2 invalid.
+			# Result of the numbered selector: 0 accepted, 1 cancelled, 2 invalid.
+			selection_status=0
 			select_skills_with_numbered_list || selection_status=$?
 
 			if [ "$selection_status" -eq 1 ]; then
@@ -171,10 +184,14 @@ main() {
 # @param  {string}  value
 #     Comma-separated skill names supplied on the command line.
 parse_skill_list() {
-	local operation="$1"  # Pending operation to apply to each skill name.
-	local value="$2"  # Comma-separated skill names from the command line.
-	local skill_name  # Skill name currently being parsed.
-	local -a names=()  # Skill names parsed from the option value.
+	# Pending operation to apply to each skill name.
+	local operation="$1"
+	# Comma-separated skill names from the command line.
+	local value="$2"
+	# Skill name currently being parsed.
+	local skill_name
+	# Skill names parsed from the option value.
+	local -a names=()
 
 	IFS=',' read -r -a names <<< "$value"
 	if [ "${#names[@]}" -eq 0 ]; then
@@ -202,7 +219,8 @@ usage() {
 
 # Reads persisted skill exclusions without creating the exclusions file.
 load_skill_exclusions() {
-	local skill_name  # Persisted skill name currently being read.
+	# Persisted skill name currently being read.
+	local skill_name
 
 	[ -f "$skill_exclusions_file" ] || return 0
 
@@ -219,8 +237,10 @@ load_skill_exclusions() {
 # @param  {string}  skill_name
 #     Skill name to find in the current exclusion list.
 excluded_skill_exists() {
-	local skill_name="$1"  # Skill name to find in the exclusion list.
-	local excluded_skill  # Excluded skill name currently being checked.
+	# Skill name to find in the exclusion list.
+	local skill_name="$1"
+	# Excluded skill name currently being checked.
+	local excluded_skill
 
 	if [ "${#excluded_skills[@]}" -gt 0 ]; then
 		for excluded_skill in "${excluded_skills[@]}"; do
@@ -238,9 +258,12 @@ excluded_skill_exists() {
 # @return  {integer}
 #     0 when every requested skill name is known, or 1 otherwise.
 validate_skill_operations() {
-	local index  # Index of the pending skill operation being validated.
-	local skill_name  # Requested skill name currently being validated.
-	local operation  # Pending operation for the requested skill name.
+	# Index of the pending skill operation being validated.
+	local index
+	# Requested skill name currently being validated.
+	local skill_name
+	# Pending operation for the requested skill name.
+	local operation
 
 	if [ "${#skill_operation_types[@]}" -eq 0 ]; then
 		return 0
@@ -267,8 +290,10 @@ validate_skill_operations() {
 # @param  {string}  requested_name
 #     Skill name to find in the canonical skills directory.
 canonical_skill_exists() {
-	local requested_name="$1"  # Skill name supplied by the user.
-	local skill  # Canonical skill directory currently being checked.
+	# Skill name supplied by the user.
+	local requested_name="$1"
+	# Canonical skill directory currently being checked.
+	local skill
 
 	for skill in "$REPO_DIR"/skills/*/*; do
 		[ -d "$skill" ] || continue
@@ -288,11 +313,16 @@ select_skills_with_fzf() {
 	# fzf has no option to preselect rows, so on load this walks down the list
 	# once, ticking each included skill, then returns to the top.
 	local fzf_bind='load:'
-	local fzf_header='Tab toggles a skill, Enter confirms, Esc cancels. Ticked skills are installed.'  # Instructions displayed above the skill list.
-	local selected_output  # Newline-separated skill names returned by fzf.
-	local skill_path  # Canonical skill directory currently being prepared for fzf.
-	local skill_name  # Canonical skill name currently being prepared for fzf.
-	local -a selected_skills=()  # Canonical skill names retained by fzf.
+	# Instructions displayed above the skill list.
+	local fzf_header='Tab toggles a skill, Enter confirms, Esc cancels. Ticked skills are installed.'
+	# Newline-separated skill names returned by fzf.
+	local selected_output
+	# Canonical skill directory currently being prepared for fzf.
+	local skill_path
+	# Canonical skill name currently being prepared for fzf.
+	local skill_name
+	# Canonical skill names retained by fzf.
+	local -a selected_skills=()
 
 	for skill_path in "${skill_paths[@]}"; do
 		skill_name=$(basename "$skill_path")
@@ -326,10 +356,14 @@ select_skills_with_fzf() {
 # @param  {string}  ...
 #     Canonical skill names selected for installation.
 set_exclusions_from_selected_skills() {
-	local selected_skill  # Selected canonical skill currently being checked.
-	local skill_path  # Canonical skill directory currently being checked.
-	local skill_name  # Canonical skill name currently being checked.
-	local selected=false  # Whether the canonical skill remains selected.
+	# Selected canonical skill currently being checked.
+	local selected_skill
+	# Canonical skill directory currently being checked.
+	local skill_path
+	# Canonical skill name currently being checked.
+	local skill_name
+	# Whether the canonical skill remains selected.
+	local selected=false
 
 	excluded_skills=()
 	for skill_path in "${skill_paths[@]}"; do
@@ -353,13 +387,20 @@ set_exclusions_from_selected_skills() {
 # @return  {integer}
 #     0 when numbers are accepted, 1 when cancelled, or 2 for an invalid number.
 select_skills_with_numbered_list() {
-	local selection  # Numbered fallback response entered in the terminal.
-	local index  # Current canonical skill position in the selection list.
-	local excluded_index  # Numbered fallback entry currently being validated.
-	local keep_skill=false  # Whether the current canonical skill remains selected.
-	local skill_name  # Current canonical skill name displayed in the selection list.
-	local -a excluded_indexes=()  # Numbered fallback entries that the user leaves out.
-	local -a selected_skills=()  # Canonical skill names retained by the numbered list.
+	# Numbered fallback response entered in the terminal.
+	local selection
+	# Current canonical skill position in the selection list.
+	local index
+	# Numbered fallback entry currently being validated.
+	local excluded_index
+	# Whether the current canonical skill remains selected.
+	local keep_skill=false
+	# Current canonical skill name displayed in the selection list.
+	local skill_name
+	# Numbered fallback entries that the user leaves out.
+	local -a excluded_indexes=()
+	# Canonical skill names retained by the numbered list.
+	local -a selected_skills=()
 
 	for index in "${!skill_paths[@]}"; do
 		skill_name=$(basename "${skill_paths[$index]}")
@@ -415,8 +456,10 @@ select_skills_with_numbered_list() {
 
 # Writes the current exclusions, removing the file when no exclusions remain.
 save_skill_exclusions() {
-	local skill_name  # Excluded skill name currently being written.
-	local temp  # Temporary file used for an atomic replacement.
+	# Excluded skill name currently being written.
+	local skill_name
+	# Temporary file used for an atomic replacement.
+	local temp
 
 	if [ "${#excluded_skills[@]}" -eq 0 ]; then
 		if [ -e "$skill_exclusions_file" ] || [ -L "$skill_exclusions_file" ]; then
@@ -435,9 +478,12 @@ save_skill_exclusions() {
 
 # Applies the validated skill operations in their command-line order.
 apply_skill_operations() {
-	local index  # Index of the pending operation being applied.
-	local operation  # Operation name for the current pending operation.
-	local skill_name  # Skill name for the current pending operation.
+	# Index of the pending operation being applied.
+	local index
+	# Operation name for the current pending operation.
+	local operation
+	# Skill name for the current pending operation.
+	local skill_name
 
 	if [ "${#skill_operation_types[@]}" -eq 0 ]; then
 		return 0
@@ -459,7 +505,8 @@ apply_skill_operations() {
 # @param  {string}  skill_name
 #     Skill name to exclude from future setup runs.
 add_excluded_skill() {
-	local skill_name="$1"  # Skill name to add to the exclusion list.
+	# Skill name to add to the exclusion list.
+	local skill_name="$1"
 
 	if ! excluded_skill_exists "$skill_name"; then
 		excluded_skills+=("$skill_name")
@@ -471,9 +518,12 @@ add_excluded_skill() {
 # @param  {string}  skill_name
 #     Skill name to include in future setup runs.
 remove_excluded_skill() {
-	local skill_name="$1"  # Skill name to remove from the exclusion list.
-	local excluded_skill  # Existing exclusion currently being retained.
-	local -a remaining_skills=()  # Exclusions that do not match the requested name.
+	# Skill name to remove from the exclusion list.
+	local skill_name="$1"
+	# Existing exclusion currently being retained.
+	local excluded_skill
+	# Exclusions that do not match the requested name.
+	local -a remaining_skills=()
 
 	if [ "${#excluded_skills[@]}" -gt 0 ]; then
 		for excluded_skill in "${excluded_skills[@]}"; do
@@ -493,7 +543,8 @@ remove_excluded_skill() {
 # Tells the user which skills this run skips and where that list is saved,
 # so a missing skill is explained rather than looking like a broken install.
 report_excluded_skills() {
-	local formatted  # Comma-separated exclusion names for terminal output.
+	# Comma-separated exclusion names for terminal output.
+	local formatted
 
 	if [ "${#excluded_skills[@]}" -eq 0 ]; then
 		return 0
@@ -505,8 +556,10 @@ report_excluded_skills() {
 
 # Joins the current exclusions into one comma-separated list for output.
 format_excluded_skills() {
-	local formatted=''  # Comma-separated exclusion names for terminal output.
-	local skill_name  # Excluded skill name currently being formatted.
+	# Comma-separated exclusion names for terminal output.
+	local formatted=''
+	# Excluded skill name currently being formatted.
+	local skill_name
 
 	for skill_name in "${excluded_skills[@]}"; do
 		if [ -n "$formatted" ]; then
@@ -536,15 +589,24 @@ prompt_target() {
 # @param  {string}  target
 #     The selected Claude, Codex, or both agent targets.
 report_skill_status() {
-	local target="$1"  # Agent target selection being reported.
-	local -a status_agents=()  # Agent roots selected for the read-only report.
-	local status_agent  # Current agent root being reported.
-	local status_label  # Agent name displayed in the report heading.
-	local status_skills_dir  # Agent skill link directory being reported.
-	local skill_paths=()  # Canonical skill directories included in this report.
-	local status_skill  # Canonical skill directory currently being reported.
-	local status_name  # Canonical skill name being reported.
-	local status_link  # Agent skill path being classified.
+	# Agent target selection being reported.
+	local target="$1"
+	# Agent roots selected for the read-only report.
+	local -a status_agents=()
+	# Current agent root being reported.
+	local status_agent
+	# Agent name displayed in the report heading.
+	local status_label
+	# Agent skill link directory being reported.
+	local status_skills_dir
+	# Canonical skill directories included in this report.
+	local skill_paths=()
+	# Canonical skill directory currently being reported.
+	local status_skill
+	# Canonical skill name being reported.
+	local status_name
+	# Agent skill path being classified.
+	local status_link
 
 	case "$target" in
 		claude) status_agents=("claude") ;;
@@ -637,7 +699,8 @@ setup_claude() {
 
 	cli_group_begin "Claude themes"
 	prune_stale_repo_links "$CLAUDE_DIR/themes" "$REPO_DIR/dist/claude/themes" "themes"
-	local theme  # Generated theme file to link into the Claude config folder.
+	# Generated theme file to link into the Claude config folder.
+	local theme
 	for theme in "$REPO_DIR"/dist/claude/themes/*.json; do
 		[ -f "$theme" ] || continue
 		link_path "$theme" "$CLAUDE_DIR/themes/$(basename "$theme")" "themes/$(basename "$theme")"
@@ -646,7 +709,8 @@ setup_claude() {
 
 	cli_group_begin "Claude rules"
 	prune_stale_repo_links "$CLAUDE_DIR/rules" "$REPO_DIR/dist/claude/rules" "rules"
-	local rule  # Generated rule file to link into the Claude config folder.
+	# Generated rule file to link into the Claude config folder.
+	local rule
 	for rule in "$REPO_DIR"/dist/claude/rules/*.md; do
 		[ -f "$rule" ] || continue
 		link_path "$rule" "$CLAUDE_DIR/rules/$(basename "$rule")" "rules/$(basename "$rule")"
@@ -747,7 +811,8 @@ ensure_doc_paths() {
 # @param  {string}  target_dir
 #     Directory to install skill symlinks into.
 link_configured_skills() {
-	local target_dir="$1"  # Directory to install skill symlinks into.
+	# Directory to install skill symlinks into.
+	local target_dir="$1"
 
 	if [ "${#excluded_skills[@]}" -gt 0 ]; then
 		link_skills "$target_dir" "${excluded_skills[@]}"
@@ -943,7 +1008,8 @@ codex_config_value() {
 ensure_codex_section_settings() {
 	local config="$1" section="$2"
 	shift 2
-	local managed temp  # File of managed key lines, and the updated config.
+	# File of managed key lines, and the updated config.
+	local managed temp
 
 	managed=$(mktemp)
 	temp=$(mktemp)
@@ -1151,13 +1217,20 @@ setup_hcom_codex_folders() {
 	# Folders outside the agent's own project that it writes to: this repository,
 	# agent-run logs and progress records, the Trash, and SwiftPM's cache and settings.
 	local -a required_folders=("$REPO_DIR" "$HOME/.agents" "$HOME/.Trash" "$HOME/Library/Caches/org.swift.swiftpm" "$HOME/Library/org.swift.swiftpm")
-	local -a existing_args=()  # Current HCOM arguments split into option and value tokens.
-	local codex_args  # Current HCOM argument string; missing folders are appended so the user's own options and spacing stay as written.
-	local folder  # Required folder currently being checked.
-	local argument_index  # Token position in the existing argument list.
-	local existing_folder  # Path following an existing --add-dir option.
-	local folder_present  # Whether HCOM already grants the current folder.
-	local changed=0  # Whether any folder was added.
+	# Current HCOM arguments split into option and value tokens.
+	local -a existing_args=()
+	# Current HCOM argument string; missing folders are appended so the user's own options and spacing stay as written.
+	local codex_args
+	# Required folder currently being checked.
+	local folder
+	# Token position in the existing argument list.
+	local argument_index
+	# Path following an existing --add-dir option.
+	local existing_folder
+	# Whether HCOM already grants the current folder.
+	local folder_present
+	# Whether any folder was added.
+	local changed=0
 
 	if ! command -v hcom >/dev/null 2>&1; then
 		cli_status skipped "HCOM" "not installed"

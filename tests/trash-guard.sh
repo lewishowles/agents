@@ -5,14 +5,22 @@
 
 set -euo pipefail
 
-SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)  # The folder that holds this test.
-REPO_DIR=$(cd "$SCRIPT_DIR/.." && pwd)  # The repository that holds the wrapper.
-TEST_ROOT=$(mktemp -d)  # Temporary files, folders and the fake trash command.
-WRAPPER="$REPO_DIR/src/bin/trash"  # The wrapper being tested.
-STDOUT_FILE="$TEST_ROOT/stdout.txt"  # The wrapper's output from the latest run.
-STDERR_FILE="$TEST_ROOT/stderr.txt"  # The wrapper's error output from the latest run.
-ARGUMENTS_FILE="$TEST_ROOT/arguments.txt"  # The arguments the fake received, one per line; absent when it did not run.
-TEST_STATUS=0  # The wrapper's exit status from the latest run.
+# The folder that holds this test.
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+# The repository that holds the wrapper.
+REPO_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
+# Temporary files, folders and the fake trash command.
+TEST_ROOT=$(mktemp -d)
+# The wrapper being tested.
+WRAPPER="$REPO_DIR/src/bin/trash"
+# The wrapper's output from the latest run.
+STDOUT_FILE="$TEST_ROOT/stdout.txt"
+# The wrapper's error output from the latest run.
+STDERR_FILE="$TEST_ROOT/stderr.txt"
+# The arguments the fake received, one per line; absent when it did not run.
+ARGUMENTS_FILE="$TEST_ROOT/arguments.txt"
+# The wrapper's exit status from the latest run.
+TEST_STATUS=0
 
 # shellcheck source=tests/lib/test-helpers.sh
 # shellcheck disable=SC1091
@@ -57,7 +65,8 @@ run_trash() {
 # @param  {string}  argument
 #     The path the wrapper should refuse.
 assert_refused() {
-	local argument="$1"  # The path expected in the error message.
+	# The path expected in the error message.
+	local argument="$1"
 
 	run_trash "$TEST_ROOT/file" "$argument"
 

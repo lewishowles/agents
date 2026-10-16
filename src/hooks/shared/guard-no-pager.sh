@@ -7,17 +7,21 @@ set -euo pipefail
 
 command -v jq >/dev/null 2>&1 || exit 0
 
-input="$(cat)"  # Raw PreToolUse payload on stdin.
+# Raw PreToolUse payload on stdin.
+input="$(cat)"
 tool_name="$(printf '%s' "$input" | jq -r '.tool_name // empty' 2>/dev/null)" || exit 0
 [[ "$tool_name" == "Bash" ]] || exit 0
 
 command_str="$(printf '%s' "$input" | jq -r '.tool_input.command // empty' 2>/dev/null)" || exit 0
 [[ -n "$command_str" ]] || exit 0
 
-normalised="${command_str//$'\n'/ }"  # Newlines flattened so the patterns see one line.
+# Newlines flattened so the patterns see one line.
+normalised="${command_str//$'\n'/ }"
 
-git_pattern='(^|[;&|`(]|[[:space:]])git[[:space:]]'  # A git invocation anywhere in the command.
-no_pager_pattern='(^|[[:space:]])--no-pager([[:space:]]|$)'  # The flag as its own token, not a substring.
+# A git invocation anywhere in the command.
+git_pattern='(^|[;&|`(]|[[:space:]])git[[:space:]]'
+# The flag as its own token, not a substring.
+no_pager_pattern='(^|[[:space:]])--no-pager([[:space:]]|$)'
 # `--no-pager` in its valid slot: straight after `git` and any pre-subcommand global options.
 valid_pattern='git([[:space:]]+(-C[[:space:]]+[^[:space:]]+|-c[[:space:]]+[^[:space:]]+|--git-dir=[^[:space:]]+|--work-tree=[^[:space:]]+|--paginate|-P))*[[:space:]]+--no-pager([[:space:]]|$)'
 

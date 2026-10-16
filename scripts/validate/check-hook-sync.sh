@@ -44,8 +44,10 @@ while IFS= read -r -d '' shared_file; do
 	done
 done < <(find "$REPO_DIR/src/hooks/shared" -maxdepth 1 -type f \( -name '*.sh' -o -name '*.md' \) -print0 | sort -z)
 
-rule="$REPO_DIR/dist/claude/rules/code-style.md"  # The installed copy that sync.sh writes.
-rule_source="$REPO_DIR/src/adapters/claude/rules/code-style.md"  # The hand-written rule that sync.sh copies.
+# The installed copy that sync.sh writes.
+rule="$REPO_DIR/dist/claude/rules/code-style.md"
+# The hand-written rule that sync.sh copies.
+rule_source="$REPO_DIR/src/adapters/claude/rules/code-style.md"
 
 if [ ! -f "$rule" ]; then
 	validate_fail "dist/claude/rules/code-style.md missing (run scripts/sync.sh)"

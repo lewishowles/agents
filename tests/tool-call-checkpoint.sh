@@ -17,14 +17,22 @@ source "$SCRIPT_DIR/lib/test-helpers.sh"
 
 trap cleanup EXIT
 
-HOOK="$REPO_DIR/src/hooks/shared/tool-call-checkpoint.sh"  # Script under test.
-SESSION=""  # Session ID for the current scenario; set by start_session.
-STATE_FILE=""  # Counter file the hook writes under TMPDIR for the current session.
-LIMIT_OVERRIDE=""  # Value passed as AGENT_TOOL_CALL_LIMIT; empty leaves it unset.
-AGENT_NAME=""  # Value passed as HCOM_NAME; empty leaves it unset.
-AGENT_TAG=""  # Value passed as HCOM_TAG; __UNSET__ removes it.
-PLANNING_WORKFLOW=""  # Value passed as HCOM_PLANNING_WORKFLOW.
-INSIGHTS_REVIEW_WORKFLOW=""  # Value passed as HCOM_INSIGHTS_REVIEW_WORKFLOW.
+# Script under test.
+HOOK="$REPO_DIR/src/hooks/shared/tool-call-checkpoint.sh"
+# Session ID for the current scenario; set by start_session.
+SESSION=""
+# Counter file the hook writes under TMPDIR for the current session.
+STATE_FILE=""
+# Value passed as AGENT_TOOL_CALL_LIMIT; empty leaves it unset.
+LIMIT_OVERRIDE=""
+# Value passed as HCOM_NAME; empty leaves it unset.
+AGENT_NAME=""
+# Value passed as HCOM_TAG; __UNSET__ removes it.
+AGENT_TAG=""
+# Value passed as HCOM_PLANNING_WORKFLOW.
+PLANNING_WORKFLOW=""
+# Value passed as HCOM_INSIGHTS_REVIEW_WORKFLOW.
+INSIGHTS_REVIEW_WORKFLOW=""
 
 # Starts a fresh counter scenario with its own session ID and limit override.
 #
@@ -62,7 +70,8 @@ start_session() {
 run_hook() {
 	local tool_name="$1"
 	local output_file="$2"
-	local -a hook_env=(env -u HCOM_TAG TMPDIR="$TEST_ROOT" AGENT_TOOL_CALL_LIMIT="$LIMIT_OVERRIDE" HCOM_NAME="$AGENT_NAME" HCOM_PLANNING_WORKFLOW="$PLANNING_WORKFLOW" HCOM_INSIGHTS_REVIEW_WORKFLOW="$INSIGHTS_REVIEW_WORKFLOW")  # The env command that runs the hook with this scenario's variables; HCOM_TAG is removed unless the scenario sets it.
+	# The env command that runs the hook with this scenario's variables; HCOM_TAG is removed unless the scenario sets it.
+	local -a hook_env=(env -u HCOM_TAG TMPDIR="$TEST_ROOT" AGENT_TOOL_CALL_LIMIT="$LIMIT_OVERRIDE" HCOM_NAME="$AGENT_NAME" HCOM_PLANNING_WORKFLOW="$PLANNING_WORKFLOW" HCOM_INSIGHTS_REVIEW_WORKFLOW="$INSIGHTS_REVIEW_WORKFLOW")
 
 	if [[ "$AGENT_TAG" != "__UNSET__" ]]; then
 		hook_env+=("HCOM_TAG=$AGENT_TAG")
@@ -83,7 +92,8 @@ assert_silent() {
 	local tool_name="$1"
 	local expected_count="$2"
 	local output_file="$TEST_ROOT/silent.txt"
-	local actual_count="missing"  # Counter value read back from the state file.
+	# Counter value read back from the state file.
+	local actual_count="missing"
 
 	run_hook "$tool_name" "$output_file"
 
@@ -113,7 +123,8 @@ assert_advisory() {
 #     Limit whose final call is left for the caller to send.
 fill_to_limit() {
 	local limit="$1"
-	local count  # Counter value expected after each call.
+	# Counter value expected after each call.
+	local count
 
 	for count in $(seq "$(( $(cat "$STATE_FILE") + 1 ))" "$(( limit - 1 ))"); do
 		assert_silent "Write" "$count"
