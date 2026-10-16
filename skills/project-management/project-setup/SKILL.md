@@ -1,7 +1,7 @@
 ---
 name: project-setup
 description: >
-  Use this skill to start a new project or feature — explores the repo, asks clarifying questions, and creates the initial plan as progress CLI records before any implementation begins.
+  Use this skill to start a new project or feature, or to create a missing AGENTS.md — explores the repo, asks clarifying questions, and creates the initial plan as progress CLI records before any implementation begins.
 ---
 # Project setup
 
@@ -14,6 +14,8 @@ The `progress` CLI stores project state in SQLite. Use release, task, chunk, dis
 ## Project facts
 
 Check `<project-root>/AGENTS.md`, ordinary docs, and `agent-run list --json` before planning. Use AGENTS.md for durable project facts and gotchas, ordinary docs for usage, and agent-run for commands and manual-only rules.
+
+If the repo has no AGENTS.md, create one at the project root with sections for purpose, functionality, tech choices, architecture notes, and gotchas (durable facts, standing conventions, and traps a newcomer would get wrong). Creating AGENTS.md does not need a plan first.
 
 Use `agent-run detect --json` to preview likely commands and record their names in the plan. Register a missing command during implementation or verification with `agent-run detect --add <name>` (repeatable) or `agent-run detect --all`, then report what you registered. Do not register commands during planning or review. Use `agent-run run <name> --json` for verification and `agent-run run --json -- <argv>` for one-off commands. Manual-only commands stay with the human.
 
@@ -160,7 +162,7 @@ Optional; omit if none. What's still unresolved.
 Focused checks, manual review, or evidence needed before handoff.
 ```
 
-When permanent decisions emerge, move them to `AGENTS.md`'s `## Need to know` section, architecture docs, user docs, or ADR only when ADR criteria are met. `AGENTS.md` is read every session and never gets compacted, so it's the right home for a fact once it proves durable.
+When permanent decisions emerge, move them to `AGENTS.md`'s gotchas section, architecture docs, user docs, or ADR only when ADR criteria are met. `AGENTS.md` is read every session and never gets compacted, so it's the right home for a fact once it proves durable.
 
 ## CONTEXT.md — domain glossary
 

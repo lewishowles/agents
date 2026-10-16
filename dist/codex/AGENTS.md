@@ -2,7 +2,7 @@
 
 Baseline rules for all projects. Project-specific rules live in AGENTS.md.
 
-**Each project must have AGENTS.md at the project root.** Run `scripts/setup-project.sh --codex` from this repo, or create one with: purpose, functionality, tech choices, architecture notes, gotchas. AGENTS.md lives at the project root, not in `~/.agents/`.
+**Each project must have AGENTS.md at the project root.** If it is missing, create one with the project-setup skill. AGENTS.md lives at the project root, not in `~/.agents/`.
 
 ## General configuration
 
