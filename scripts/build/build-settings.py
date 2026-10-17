@@ -12,11 +12,15 @@
 import json
 from pathlib import Path
 
+# Anchor input and output paths to this repository.
 REPO_DIR = Path(__file__).resolve().parent.parent.parent
+# Editable settings source.
 BASE_FILE = (
 	REPO_DIR / "src" / "adapters" / "claude" / "settings.base.json"
-)  # Editable settings source.
+)
+# Find the Claude hook manifests to register in settings.
 HOOKS_DIR = REPO_DIR / "src" / "hooks" / "claude"
+# Write the settings file used by Claude.
 OUT_FILE = REPO_DIR / "dist" / "claude" / "settings.json"
 
 
@@ -29,6 +33,7 @@ OUT_FILE = REPO_DIR / "dist" / "claude" / "settings.json"
 def hook_command(manifest: dict) -> str:
 	if "command" in manifest:
 		return manifest["command"]
+	# Use the hook's name to find its installed shell script.
 	name = manifest["name"]
 	return f"bash -c 'bash \"$HOME/.claude/hooks/{name}.sh\"'"
 
@@ -40,6 +45,7 @@ def hook_command(manifest: dict) -> str:
 # @param  {str}   command
 #     The command string returned by hook_command.
 def build_hook_entry(hook_def: dict, command: str) -> dict:
+	# Build the command definition stored under a hook event.
 	entry: dict = {"type": "command", "command": command}
 	if "timeout" in hook_def:
 		entry["timeout"] = hook_def["timeout"]
@@ -49,7 +55,9 @@ def build_hook_entry(hook_def: dict, command: str) -> dict:
 
 
 def main() -> None:
+	# Load the settings that remain editable outside hook manifests.
 	base = json.loads(BASE_FILE.read_text())
+	# Add generated hook registrations to the settings object.
 	hooks_block: dict = base.setdefault("hooks", {})
 
 	# Group hooks by (event, matcher) so hooks for the same event are batched
@@ -57,15 +65,19 @@ def main() -> None:
 	groups: dict[tuple, list] = {}
 
 	for hook_dir in sorted(HOOKS_DIR.iterdir()):
+		# Locate the hook definition within this hook's directory.
 		manifest_file = hook_dir / "hook.json"
 		if not manifest_file.exists():
 			continue
+		# Read the hook's commands and registered events.
 		manifest = json.loads(manifest_file.read_text())
 
 		for ev in manifest.get("events", []):
+			# Use this event's command when it overrides the hook command.
 			command = ev.get("command")
 			if command is None:
 				command = hook_command(manifest)
+			# Batch hooks that share an event and matcher.
 			key = (ev["event"], ev.get("matcher"))
 			groups.setdefault(key, []).append((manifest["name"], command, ev))
 
@@ -75,7 +87,9 @@ def main() -> None:
 	for (event, matcher), entries in sorted(
 		groups.items(), key=lambda kv: (kv[0][0], kv[0][1] or "")
 	):
+		# Build the commands for this event and matcher.
 		hook_entries = [build_hook_entry(ev, cmd) for _, cmd, ev in entries]
+		# Append this batch to the event's settings entries.
 		event_list: list = hooks_block.setdefault(event, [])
 		if matcher:
 			event_list.append({"matcher": matcher, "hooks": hook_entries})
