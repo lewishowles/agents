@@ -1,28 +1,29 @@
 import type { On, RenderElement } from "claude-code";
 import { expect, test } from "claude-code/testing";
 
-import { checkpointLimit, formatMeter, formatTaskLine, truncateLine } from "../hooks/format";
+import { checkpointLimit, deriveTeam, formatCheckpoint, formatMeter, formatPeers, formatTaskLine, hcomWaitArgv, keepSessionMessages, truncateLine } from "../hooks/format";
+import type { HcomMessage, HcomPeer } from "../hooks/format";
 
-/** A stand-in for the band content that `next` returns from another plugin. */
+// A stand-in for the band content that `next` returns from another plugin.
 const stock: RenderElement = { type: "Text", props: {}, children: ["existing band"] };
 
-/** The host values that vary between band scenarios. */
+// The host values that vary between band scenarios.
 type HostValues = {
-	/** Tasks returned by `progress task list`. */
+	// Tasks returned by `progress task list`.
 	tasks?: object[];
-	/** Chunks returned by `progress chunk list`. */
+	// Chunks returned by `progress chunk list`.
 	chunks?: object[];
-	/** Whether the progress commands report an error. */
+	// Whether the progress commands report an error.
 	progressFails?: boolean;
-	/** Context window fill supplied by the host. */
+	// Context window fill supplied by the host.
 	percent?: number;
-	/** Context tokens supplied when fill is unavailable. */
+	// Context tokens supplied when fill is unavailable.
 	tokens?: number;
-	/** The counter file's contents, or null when the file is missing. */
+	// The counter file's contents, or null when the file is missing.
 	calls?: string | null;
-	/** The HCOM_TAG value used to select a role limit. */
+	// The HCOM_TAG value used to select a role limit.
 	tag?: string;
-	/** The AGENT_TOOL_CALL_LIMIT value that overrides the role limit. */
+	// The AGENT_TOOL_CALL_LIMIT value that overrides the role limit.
 	override?: string;
 };
 
@@ -225,4 +226,121 @@ test("The checkpoint limit follows the tag and a valid override", () => {
 	expect(checkpointLimit("team-orchestrator", undefined)).toBe(20);
 	expect(checkpointLimit("team-scout", "12")).toBe(12);
 	expect(checkpointLimit("team-scout", "0")).toBe(40);
+});
+
+test("The peer row shows only this team's roles, statuses, and outstanding wait ages", () => {
+	const agents: HcomPeer[] = [
+		{ name: "team-orchestrator-hepu", tag: "team-orchestrator", status: "active", status_age_seconds: 9 },
+		{ name: "team-scout-heti", tag: "team-scout", status: "listening", status_age_seconds: 80 },
+		{ name: "team-extra-scout-hata", tag: "team-extra-scout", status: "active", status_age_seconds: 2 },
+		{ name: "other-scout-kohi", tag: "other-scout", status: "active", status_age_seconds: 2 },
+	];
+	const messages: HcomMessage[] = [{
+		id: "10", ts: "2026-10-16T12:00:00Z", from: "team-orchestrator-hepu", delivered_to: ["heti"],
+		intent: "request", text: "Please check this",
+	}];
+	const team = deriveTeam(agents, messages, "hepu", "team-orchestrator", Date.parse("2026-10-16T12:02:00Z"), 10);
+
+	expect(team?.peers).toEqual([{ role: "scout", status: "listening", ageSeconds: 90, waitSeconds: 120 }]);
+	expect(formatPeers(team?.peers ?? [], 89)).toBe("Peers: scout listening 1m (waiting 2m)");
+	expect(Array.from(formatPeers(team?.peers ?? [], 24)).length).toBeLessThanOrEqual(24);
+});
+
+test("A reply clears the wait mark and a later request restores it", () => {
+	const agents: HcomPeer[] = [
+		{ name: "team-orchestrator-hepu", tag: "team-orchestrator", status: "active", status_age_seconds: 0 },
+		{ name: "team-scout-heti", tag: "team-scout", status: "active", status_age_seconds: 0 },
+	];
+	const messages: HcomMessage[] = [
+		{ id: "1", ts: "2026-10-16T12:00:00Z", from: "hepu", delivered_to: ["team-scout-heti"], intent: "request", text: "First" },
+		{ id: "2", ts: "2026-10-16T12:01:00Z", from: "heti", delivered_to: ["hepu"], intent: "inform", reply_to: "1", text: "Done" },
+		{ id: "3", ts: "2026-10-16T12:02:00Z", from: "hepu", delivered_to: ["heti"], intent: "request", text: "Second" },
+	];
+
+	expect(deriveTeam(agents, messages.slice(0, 2), "hepu", "team-orchestrator", Date.parse("2026-10-16T12:03:00Z"))?.peers[0]?.waitSeconds).toBeUndefined();
+	expect(deriveTeam(agents, messages, "hepu", "team-orchestrator", Date.parse("2026-10-16T12:03:00Z"))?.peers[0]?.waitSeconds).toBe(60);
+});
+
+test("Only this session's messages count towards the retained message limit", () => {
+	const agents: HcomPeer[] = [
+		{ name: "team-orchestrator-hepu", tag: "team-orchestrator", status: "active", status_age_seconds: 0 },
+		{ name: "team-scout-heti", tag: "team-scout", status: "active", status_age_seconds: 0 },
+	];
+	const request: HcomMessage = {
+		id: "1", ts: "2026-10-16T12:00:00Z", from: "team-orchestrator-hepu", delivered_to: ["heti"],
+		intent: "request", text: "Please check this",
+	};
+	const otherMessages: HcomMessage[] = Array.from({ length: 1000 }, (_, index) => ({
+		id: String(index + 2), ts: "2026-10-16T12:01:00Z", from: "other-scout-kohi", delivered_to: ["other-orchestrator-hoku"],
+		intent: "inform", text: "Unrelated update",
+	}));
+	const reply: HcomMessage = {
+		id: "1002", ts: "2026-10-16T12:02:00Z", from: "heti", delivered_to: ["team-orchestrator-hepu"],
+		intent: "inform", reply_to: "1", text: "Done",
+	};
+	const messages = keepSessionMessages([request, ...otherMessages, request], "hepu", 1000);
+	const team = deriveTeam(agents, messages, "hepu", "team-orchestrator", Date.parse("2026-10-16T12:02:00Z"));
+
+	expect(messages).toEqual([request]);
+	expect(team?.peers[0]?.waitSeconds).toBe(120);
+	expect(keepSessionMessages([...messages, reply], "hepu", 1000)).toEqual([request, reply]);
+	expect(keepSessionMessages([request, reply], "hepu", 1)).toEqual([reply]);
+});
+
+test("A peer's onward request leaves the wait mark in place", () => {
+	const agents: HcomPeer[] = [
+		{ name: "team-orchestrator-hepu", tag: "team-orchestrator", status: "active", status_age_seconds: 0 },
+		{ name: "team-scout-heti", tag: "team-scout", status: "active", status_age_seconds: 0 },
+	];
+	const messages: HcomMessage[] = [
+		{ id: "1", ts: "2026-10-16T12:00:00Z", from: "hepu", delivered_to: ["heti"], intent: "request", text: "Please investigate" },
+		{ id: "2", ts: "2026-10-16T12:01:00Z", from: "heti", delivered_to: ["third-agent"], intent: "request", reply_to: "1", text: "Please check this part" },
+	];
+
+	expect(deriveTeam(agents, messages, "hepu", "team-orchestrator", Date.parse("2026-10-16T12:02:00Z"))?.peers[0]?.waitSeconds).toBe(120);
+});
+
+test("A stopped peer needs a decision until this session sends another message", () => {
+	const agents: HcomPeer[] = [
+		{ name: "team-orchestrator-hepu", tag: "team-orchestrator", status: "active", status_age_seconds: 0 },
+		{ name: "team-implementer-hesu", tag: "team-implementer", status: "listening", status_age_seconds: 0 },
+	];
+	const stoppedMessage: HcomMessage = {
+		id: "2", ts: "2026-10-16T12:01:00Z", from: "team-implementer-hesu", delivered_to: ["team-orchestrator-hepu"],
+		intent: "inform", text: "State: stopped; human decision required. Safe to reset: no",
+	};
+	const laterReport: HcomMessage = {
+		id: "4", ts: "2026-10-16T12:03:00Z", from: "hesu", delivered_to: ["hepu"],
+		intent: "inform", text: "Safe to reset: yes",
+	};
+	const messages: HcomMessage[] = [
+		{ id: "1", ts: "2026-10-16T12:00:00Z", from: "hesu", delivered_to: ["hepu"], intent: "inform", text: "Safe to reset: yes" },
+		stoppedMessage,
+		{ id: "3", ts: "2026-10-16T12:02:00Z", from: "hepu", delivered_to: ["hesu"], intent: "request", text: "Continue" },
+		laterReport,
+	];
+
+	expect(deriveTeam(agents, messages.slice(0, 1), "hepu", "team-orchestrator", Date.parse("2026-10-16T12:03:00Z"))?.checkpoints).toEqual([]);
+	expect(deriveTeam(agents, messages.slice(0, 2), "hepu", "team-orchestrator", Date.parse("2026-10-16T12:03:00Z"))?.checkpoints).toEqual(["implementer"]);
+	expect(deriveTeam(agents, messages.slice(0, 3), "hepu", "team-orchestrator", Date.parse("2026-10-16T12:03:00Z"))?.checkpoints).toEqual([]);
+	expect(deriveTeam(agents, [stoppedMessage, laterReport], "hepu", "team-orchestrator", Date.parse("2026-10-16T12:04:00Z"))?.checkpoints).toEqual([]);
+	expect(formatCheckpoint(["implementer"], 89)).toBe("Implementer stopped: continue or reset?");
+	expect(formatCheckpoint(["implementer", "scout"], 89)).toBe("Implementer and Scout stopped: continue or reset?");
+	expect(formatCheckpoint(["implementer", "scout", "reviewer"], 89)).toBe("Implementer, Scout and Reviewer stopped: continue or reset?");
+	expect(Array.from(formatCheckpoint(["implementer", "scout", "reviewer"], 24)).length).toBeLessThanOrEqual(24);
+});
+
+test("HCOM rows stay hidden when the session identity does not resolve", () => {
+	const agents: HcomPeer[] = [{ name: "team-scout-heti", tag: "team-scout", status: "active", status_age_seconds: 2 }];
+
+	expect(deriveTeam(agents, [], "unknown", "team-orchestrator", Date.now())).toBeNull();
+	expect(deriveTeam(agents, [], "heti", "other-scout", Date.now())).toBeNull();
+	expect(deriveTeam(agents, [], "heti", "scout", Date.now())).toBeNull();
+});
+
+test("The HCOM wait uses an event ID strictly after the last event read", () => {
+	const argv = hcomWaitArgv(164796, "hepu", 1000);
+
+	expect(argv).toEqual(["hcom", "events", "--full", "--sql", "id > 164796", "--wait", "30", "--last", "1000", "--name", "hepu"]);
+	expect(argv).not.toContain("--after");
 });
