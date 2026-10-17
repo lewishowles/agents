@@ -1,0 +1,7 @@
+{
+	"name": "status-band",
+	"version": "0.1.0",
+	"author": { "name": "Lewis Howles" },
+	"description": "Shows the current progress task, context use, and tool-call count above the Claude prompt",
+	"types": "./types/index.d.ts"
+}
