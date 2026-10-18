@@ -5,11 +5,11 @@ import argparse
 import json
 from pathlib import Path
 
-# Anchor paths to this repository so the script works from any directory.
+# The repository root, so the script finds its files from any working directory.
 REPO_DIR = Path(__file__).resolve().parent.parent.parent
-# Find the Claude hook manifests used in the generated table.
+# The folder of Claude hook manifests that the hooks table is built from.
 HOOKS_DIR = REPO_DIR / "src" / "hooks" / "claude"
-# Find the canonical skill files used in the generated table.
+# The folder of skill groups that the skills table is built from.
 CANONICAL_SKILLS_DIR = REPO_DIR / "skills"
 
 
@@ -20,22 +20,22 @@ CANONICAL_SKILLS_DIR = REPO_DIR / "skills"
 # @param  {Path}  skill_file  The path to the skill's SKILL.md.
 # @return {dict}  The skill's name and description.
 def read_skill_metadata(skill_file: Path) -> dict:
-	# Read the front matter that supplies the table entry.
+	# The lines of the SKILL.md file, which must open with front matter.
 	lines = skill_file.read_text().splitlines()
 	if not lines or lines[0] != "---":
 		raise ValueError(f"Missing front matter in {skill_file}")
 
 	try:
-		# Find where the skill's front matter ends.
+		# The position of the line that closes the front matter.
 		end = lines.index("---", 1)
 	except ValueError as error:
 		raise ValueError(f"Missing front matter end in {skill_file}") from error
 
-	# Hold the skill's display name from its front matter.
+	# The skill's name from its front matter, empty until the name line is found.
 	name = ""
-	# Collect description text for the table cell.
+	# The lines of the skill's description, joined into one table cell at the end.
 	description_lines = []
-	# Track whether following lines belong to a block description.
+	# Whether the next lines continue a folded or literal block description.
 	reading_description = False
 	for line in lines[1:end]:
 		if line.startswith("name:"):
@@ -43,7 +43,7 @@ def read_skill_metadata(skill_file: Path) -> dict:
 			reading_description = False
 			continue
 		if line.startswith("description:"):
-			# Read either the complete description or the start of a block.
+			# The text after the description key: the whole description, or the > or | that starts a block.
 			description = line.removeprefix("description:").strip()
 			reading_description = description.startswith((">", "|"))
 			if not reading_description:
@@ -64,7 +64,7 @@ def read_skill_metadata(skill_file: Path) -> dict:
 # Return the name and description of every skill under skills/<group>/,
 # sorted by name.
 def skill_metadata() -> list[dict]:
-	# Collect the metadata for every skill in the generated table.
+	# The name and description of each skill found so far.
 	skills = []
 	# The SKILL.md file of every skill.
 	skill_files = CANONICAL_SKILLS_DIR.glob("*/*/SKILL.md")
@@ -75,7 +75,7 @@ def skill_metadata() -> list[dict]:
 
 # Return all Claude hook manifests in display order.
 def hook_manifests() -> list[dict]:
-	# Collect the hook definitions for the generated table.
+	# The contents of each hook.json file found so far.
 	manifests = []
 	for hook_file in sorted(HOOKS_DIR.glob("*/hook.json")):
 		manifests.append(json.loads(hook_file.read_text()))
@@ -87,17 +87,17 @@ def hook_manifests() -> list[dict]:
 # @param  {Path}  path  Markdown file path.
 # @param  {str}   name  Marker name, e.g. user-skills.
 def current_block(path: Path, name: str) -> str:
-	# Identify the opening marker for the requested generated block.
+	# The comment that marks the start of the generated block.
 	start = f"<!-- BEGIN GENERATED: {name} -->"
-	# Identify the closing marker for the requested generated block.
+	# The comment that marks the end of the generated block.
 	end = f"<!-- END GENERATED: {name} -->"
-	# Read the document whose generated block is being checked.
+	# The full Markdown document.
 	text = path.read_text()
-	# Keep the text after the opening marker for the closing-marker check.
+	# The start marker (empty when the document lacks it) and the text after it.
 	_, marker, rest = text.partition(start)
 	if not marker:
 		raise ValueError(f"Missing start marker {start} in {path}")
-	# Keep the current block content for comparison with generated content.
+	# The current block content and the end marker (empty when the document lacks it).
 	body, marker, _ = rest.partition(end)
 	if not marker:
 		raise ValueError(f"Missing end marker {end} in {path}")
@@ -111,17 +111,17 @@ def current_block(path: Path, name: str) -> str:
 # @param  {str}   body
 #     New block content without surrounding markers.
 def replace_block(path: Path, name: str, body: str) -> None:
-	# Identify the opening marker to preserve the document around the block.
+	# The comment that marks the start of the generated block.
 	start = f"<!-- BEGIN GENERATED: {name} -->"
-	# Identify the closing marker to preserve the document around the block.
+	# The comment that marks the end of the generated block.
 	end = f"<!-- END GENERATED: {name} -->"
-	# Read the document before replacing its generated block.
+	# The full Markdown document before the block is replaced.
 	text = path.read_text()
-	# Preserve the text before the block and find its closing marker.
+	# The text before the start marker, the start marker (empty when the document lacks it) and the text after it.
 	before, marker, rest = text.partition(start)
 	if not marker:
 		raise ValueError(f"Missing start marker {start} in {path}")
-	# Preserve the text after the block for the rewritten document.
+	# The end marker (empty when the document lacks it) and the text after it, which ends the rewritten document.
 	_, marker, after = rest.partition(end)
 	if not marker:
 		raise ValueError(f"Missing end marker {end} in {path}")
@@ -142,7 +142,7 @@ def cell(value: str) -> str:
 
 
 def build_user_skills_table() -> str:
-	# Start the skill table with its headings.
+	# The rows of the skills table, starting with its header.
 	lines = [
 		"| Skill | When to use |",
 		"| ----- | ----------- |",
@@ -153,29 +153,29 @@ def build_user_skills_table() -> str:
 
 
 def build_registered_hooks_table() -> str:
-	# Start the hook table with its headings.
+	# The rows of the hooks table, starting with its header.
 	lines = [
 		"| Hook | Purpose | Event | Behaviour on failure |",
 		"| ---- | ------- | ----- | -------------------- |",
 	]
 	for manifest in hook_manifests():
-		# Show the hook's registered name in the table.
+		# The hook's name, shown in the Hook column.
 		name = manifest["name"]
-		# Show the hook's stated purpose in the table.
+		# The hook's purpose, shown in the Purpose column.
 		description = manifest.get("description", "")
-		# Collect the events that appear in the hook's table cell.
+		# The labels of every event the hook runs on, for the Event column.
 		events = []
 		for event in manifest.get("events", []):
-			# Show the event and any matcher required to run the hook.
+			# The event name, followed by its matcher when it has one.
 			label = event["event"]
 			if event.get("matcher"):
 				label += f" (`{event['matcher']}`)"
 			events.append(label)
-		# Show how the hook behaves when it fails.
+		# The hook's failure mode, shown in the Behaviour on failure column.
 		failure = manifest.get("failureMode", "")
-		# List the tools the hook needs to run.
+		# The tools the hook needs installed.
 		dependencies = manifest.get("dependencies", [])
-		# Add required tools to the hook's failure-behaviour cell.
+		# The note that lists the hook's required tools after the failure mode, or empty when there are none.
 		dependency_text = (
 			f"; requires {', '.join(dependencies)}" if dependencies else ""
 		)
@@ -199,10 +199,10 @@ def generated_blocks() -> list[tuple[Path, str, str]]:
 
 # Return the number of generated blocks whose on-disk content does not match what would be generated.
 def check_blocks() -> int:
-	# Count generated blocks whose document content needs updating.
+	# The number of blocks that differ from what this script would write.
 	failures = 0
 	for path, name, body in generated_blocks():
-		# Compare each block with the content this script would write.
+		# The block content this script would write, including its generated notice.
 		expected = f"{generated_notice()}\n{body.rstrip()}"
 		if current_block(path, name) != expected:
 			print(f"Out of sync: {path.relative_to(REPO_DIR)} ({name})")
@@ -211,16 +211,16 @@ def check_blocks() -> int:
 
 
 def main() -> None:
-	# Define the command-line option for checking generated documents.
+	# The command-line parser, with a --check option that checks the docs tables without rewriting them.
 	parser = argparse.ArgumentParser()
 	parser.add_argument(
 		"--check", action="store_true", help="Check generated docs without writing."
 	)
-	# Select whether to check or write the generated blocks.
+	# The parsed command-line options.
 	args = parser.parse_args()
 
 	if args.check:
-		# Count blocks that differ from the generated content.
+		# The number of blocks that are out of date.
 		failures = check_blocks()
 		if failures:
 			raise SystemExit(1)
