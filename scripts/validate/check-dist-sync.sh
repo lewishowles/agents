@@ -7,7 +7,9 @@ set -euo pipefail
 
 source "$(cd "$(dirname "$0")/.." && pwd)/lib/validation-helpers.sh"
 
+# The original repository root, used to copy source files and compare generated output.
 REAL_REPO_DIR="$REPO_DIR"
+# A temporary repository tree for rebuilding the generated agent files.
 TMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TMP_DIR"' EXIT
 

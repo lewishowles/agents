@@ -5,6 +5,7 @@ set -euo pipefail
 
 source "$(cd "$(dirname "$0")/.." && pwd)/lib/validation-helpers.sh"
 
+# The generated files required for a valid installation.
 GENERATED_FILES=(
 	"dist/claude/CLAUDE.md"
 	"dist/claude/settings.json"

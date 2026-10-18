@@ -7,10 +7,13 @@ source "$(cd "$(dirname "$0")/.." && pwd)/lib/validation-helpers.sh"
 
 validate_require_jq
 
+# The number of hook copies missing from or out of sync with dist/.
 STALE=0
 
 while IFS= read -r -d '' manifest; do
+	# The folder containing this hook manifest.
 	dir=$(dirname "$manifest")
+	# The hook name used to find its source script.
 	name=$(jq -r '.name' "$manifest")
 
 	for src in "$dir/${name}.sh" "$dir/${name}"; do
@@ -18,6 +21,7 @@ while IFS= read -r -d '' manifest; do
 			continue
 		fi
 
+		# The dist/ copy of this source file, which must match it.
 		dst="$REPO_DIR/dist/claude/hooks/$(basename "$src")"
 
 		if [ ! -f "$dst" ]; then
@@ -31,6 +35,7 @@ while IFS= read -r -d '' manifest; do
 done < <(find "$REPO_DIR/src/hooks/claude" -name "hook.json" -print0 | sort -z)
 
 while IFS= read -r -d '' shared_file; do
+	# The file name this shared hook has in both dist/claude/hooks and dist/codex/hooks.
 	shared_name=$(basename "$shared_file")
 
 	for destination in "$REPO_DIR/dist/claude/hooks/$shared_name" "$REPO_DIR/dist/codex/hooks/$shared_name"; do

@@ -38,15 +38,20 @@ while IFS= read -r -d '' skill_file; do
 	# The folder name the skill name must match.
 	dir_name=$(basename "$(dirname "$skill_file")")
 
-	# Parse the front matter once and print four fields split by the unit
+	# The skill's front matter, parsed once into four fields split by the unit
 	# separator character: whether it opens and closes with ---, the name, 1
 	# when the description is not empty, and its top-level keys.
 	metadata=$(awk '
 		BEGIN {
+			# Whether the front matter opens on the first line and closes with ---.
 			valid = 1
+			# Whether the current line is inside the front matter.
 			in_front_matter = 0
+			# Whether the closing front-matter marker has been seen.
 			closed = 0
+			# Whether the description field contains text.
 			has_description = 0
+			# The comma-separated top-level front-matter keys.
 			front_matter_keys = ""
 		}
 
@@ -66,6 +71,7 @@ while IFS= read -r -d '' skill_file; do
 		}
 
 		valid && in_front_matter && !closed && $0 ~ /^[^[:space:]][^:]*:[[:space:]]*/ {
+			# The top-level key on this front-matter line.
 			key = $0
 			sub(/:.*/, "", key)
 			gsub(/[[:space:]]+$/, "", key)
@@ -77,12 +83,14 @@ while IFS= read -r -d '' skill_file; do
 		}
 
 		valid && in_front_matter && !closed && $0 ~ /^name:[[:space:]]*/ {
+			# The skill name declared in the front matter.
 			name = $0
 			sub(/^name:[[:space:]]*/, "", name)
 			gsub(/[[:space:]]+$/, "", name)
 		}
 
 		valid && in_front_matter && !closed && $0 ~ /^description:[[:space:]]*/ {
+			# The description declared in the front matter.
 			description = $0
 			sub(/^description:[[:space:]]*/, "", description)
 			gsub(/[[:space:]]+$/, "", description)
@@ -111,6 +119,7 @@ while IFS= read -r -d '' skill_file; do
 
 	# Every top-level key must be a standard key or an allowed runtime extension,
 	# so a copied skill still loads in any runtime that follows the standard.
+	# The top-level keys as an array, one key per item, for that check.
 	IFS=',' read -r -a front_matter_key_list <<< "$front_matter_keys"
 
 	for front_matter_key in "${front_matter_key_list[@]}"; do
