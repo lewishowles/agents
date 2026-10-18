@@ -6,6 +6,7 @@ SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 REPO_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 TEST_ROOT=$(mktemp -d)
 
+# shellcheck source=SCRIPTDIR/lib/test-helpers.sh
 source "$SCRIPT_DIR/lib/test-helpers.sh"
 
 trap cleanup EXIT

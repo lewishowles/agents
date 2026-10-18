@@ -16,6 +16,7 @@ AGENT_RUN_CALLS="$TEST_ROOT/agent-run-calls.txt"
 # PATH before the fake agent-run is added, for the agent-run-missing case.
 ORIGINAL_PATH="$PATH"
 
+# shellcheck source=SCRIPTDIR/lib/test-helpers.sh
 source "$SCRIPT_DIR/lib/test-helpers.sh"
 
 trap cleanup EXIT

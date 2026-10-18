@@ -12,6 +12,7 @@ ADDED_SKILL_NAME="setup-global-test-skill-$(basename "$TEST_ROOT")"
 # Temporary canonical skill directory.
 ADDED_SKILL_DIR="$ADDED_SKILL_GROUP/$ADDED_SKILL_NAME"
 
+# shellcheck source=SCRIPTDIR/lib/test-helpers.sh
 source "$SCRIPT_DIR/lib/test-helpers.sh"
 
 # Removes the temporary canonical skill and isolated test home.

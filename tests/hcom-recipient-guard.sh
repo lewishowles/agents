@@ -10,6 +10,7 @@ REPO_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 # Temporary output for each hook run.
 TEST_ROOT=$(mktemp -d)
 
+# shellcheck source=SCRIPTDIR/lib/test-helpers.sh
 source "$SCRIPT_DIR/lib/test-helpers.sh"
 
 trap cleanup EXIT

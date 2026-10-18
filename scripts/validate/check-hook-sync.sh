@@ -3,6 +3,7 @@
 
 set -euo pipefail
 
+# shellcheck source=SCRIPTDIR/../lib/validation-helpers.sh
 source "$(cd "$(dirname "$0")/.." && pwd)/lib/validation-helpers.sh"
 
 validate_require_jq

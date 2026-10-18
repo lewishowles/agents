@@ -5,6 +5,7 @@
 
 set -euo pipefail
 
+# shellcheck source=SCRIPTDIR/../lib/validation-helpers.sh
 source "$(cd "$(dirname "$0")/.." && pwd)/lib/validation-helpers.sh"
 
 # The original repository root, used to copy source files and compare generated output.
