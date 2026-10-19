@@ -122,7 +122,7 @@ Treat docs, comments, config-as-written, and remembered or prior-session facts a
 
 ### Friction logging
 
-When the user corrects a rule violation, wrong approach, token waste, tool misuse, or missing guidance, log it immediately with `friction add "<category>" "<detail>"`. Categories: `check-fail`, `missing-guidance`, `rule-ignored`, `token-waste`, `tool-error`, `tool-misuse`, `wrong-approach`. The tool-failure hook normally records `check-fail` and `tool-error`, so manual entries mainly cover the other five. This captures the correction at the moment it happens.
+When the user corrects a rule violation, wrong approach, token waste, tool misuse, or missing guidance, run `friction keys` and reuse a key that fits. If none fits, name a new lowercase kebab-case key for the habit, not the incident, such as `zsh-status-variable` or `attribution-trailer`; `friction add` lists similar existing keys when the key is new. Log the correction with `friction add "<category>" "<detail>" --key <key>`. Categories: `check-fail`, `missing-guidance`, `rule-ignored`, `token-waste`, `tool-error`, `tool-misuse`, `wrong-approach`. The tool-failure hook normally records `check-fail` and `tool-error`, so manual entries mainly cover the other five. This captures the correction at the moment it happens.
 
 ### Surgical changes
 

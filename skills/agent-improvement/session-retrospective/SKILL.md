@@ -73,6 +73,8 @@ Avoid broad reads. This skill is learning triage, not audit.
 
 ## Output
 
+Before suggesting a friction entry, run `friction keys` and reuse a key that fits; otherwise name a new one.
+
 Use this shape unless the user asks for a different format:
 
 ````markdown
@@ -91,7 +93,7 @@ Use this shape unless the user asks for a different format:
 ## Suggested friction entries
 
 ```sh
-friction add "<category>" "<detail>"
+friction add "<category>" "<detail>" --key <key>
 ```
 
 ## Proposed guidance changes

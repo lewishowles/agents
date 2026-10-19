@@ -87,7 +87,7 @@ This check is defined directly in `settings.json`. Before every Read call, it ch
 
 **No dependencies:** an inline `jq` and shell pipeline runs in any environment.
 
-Log friction manually with `friction add "<category>" "<detail>"`. `tool-failure-log` records failed Claude tool calls automatically; use `friction summary` to group recurring entries.
+Check `friction keys` first, then log friction manually with `friction add "<category>" "<detail>" --key <key>`. `tool-failure-log` records failed Claude tool calls automatically; `friction summary` groups keyed entries by category and key.
 
 ## Adding a new hook
 
