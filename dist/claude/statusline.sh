@@ -12,7 +12,8 @@ input=$(cat)
 
 # The folder the session is working in, used for the label and worktree check.
 workspace_dir=$(printf '%s' "$input" | jq -r '.workspace.current_dir // empty')
-# The folder label on the first line: the session folder's name, or the main repo's name in a worktree.
+# The folder label on the first line: the session folder's name, or the main
+# repo's name in a worktree.
 dir=$(basename "$workspace_dir" 2>/dev/null)
 tokens=$(printf '%s' "$input" | jq -r '.context_window.total_input_tokens // empty')
 model=$(printf '%s' "$input" | jq -r '.model.display_name // empty')
@@ -36,7 +37,8 @@ sep=" ${grey}·${reset} "
 #
 # The worktree root path to print on the last line, or empty outside a worktree.
 worktree_path=""
-# The worktree's Git folder, the shared Git folder, and the worktree root, one per line.
+# The worktree's Git folder, the shared Git folder, and the worktree root, one
+# per line.
 if [[ -n "$workspace_dir" ]] && git_dirs_output=$(git -C "$workspace_dir" rev-parse --path-format=absolute --git-dir --git-common-dir --show-toplevel 2>/dev/null); then
 	# The session's own Git folder.
 	git_dir="${git_dirs_output%%$'\n'*}"

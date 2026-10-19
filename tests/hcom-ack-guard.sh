@@ -130,9 +130,97 @@ assert_swallowed_codex "team-send scout --intent ack --reply-to 42 < body.txt"
 assert_swallowed_codex "command /usr/local/bin/team-send reviewer --intent=ack --reply-to 42 < body.txt"
 assert_swallowed_codex "printf 'Received.' | team-send orchestrator --intent ack --reply-to 42"
 
+assert_swallowed "git diff -- README.md && hcom send @peer --intent ack -- ok"
+assert_swallowed_codex "git diff -- README.md && hcom send @peer --intent ack -- ok"
+assert_swallowed "rg -- foo src | team-send scout --intent ack --reply-to 42"
+assert_swallowed_codex "rg -- foo src | team-send scout --intent ack --reply-to 42"
+
+# A here-string followed by a real acknowledgement, which must still be blocked.
+here_string_then_ack=$(cat <<'COMMAND'
+cat <<<word
+hcom send @peer --intent ack -- ok
+COMMAND
+)
+
+# An arithmetic shift followed by a real acknowledgement, which must still be blocked.
+arithmetic_shift_then_ack=$(cat <<'COMMAND'
+x=$((1<<4))
+hcom send @peer --intent ack -- ok
+COMMAND
+)
+
+# An arithmetic shift with spaces followed by a real acknowledgement.
+spaced_arithmetic_shift_then_ack=$(cat <<'COMMAND'
+x=$(( 1 << 4 ))
+hcom send @peer --intent ack -- ok
+COMMAND
+)
+
+# A tab-stripping heredoc whose closing word has two leading tabs before a real acknowledgement.
+tabbed_heredoc_then_ack=$(cat <<'COMMAND'
+cat <<-EOF
+body
+		EOF
+hcom send @peer --intent ack -- ok
+COMMAND
+)
+
+# Two heredoc bodies followed by a real acknowledgement.
+two_heredocs_then_ack=$(cat <<'COMMAND'
+cat <<A <<B
+first body
+A
+second body
+B
+hcom send @peer --intent ack -- ok
+COMMAND
+)
+
+assert_swallowed "$here_string_then_ack"
+assert_swallowed_codex "$here_string_then_ack"
+assert_swallowed "$arithmetic_shift_then_ack"
+assert_swallowed_codex "$arithmetic_shift_then_ack"
+assert_swallowed "$spaced_arithmetic_shift_then_ack"
+assert_swallowed_codex "$spaced_arithmetic_shift_then_ack"
+assert_swallowed "$tabbed_heredoc_then_ack"
+assert_swallowed_codex "$tabbed_heredoc_then_ack"
+assert_swallowed "$two_heredocs_then_ack"
+assert_swallowed_codex "$two_heredocs_then_ack"
+
+# The report in HCOM event 8059 quotes a refused acknowledgement in a heredoc.
+report_with_quoted_ack=$(cat <<'COMMAND'
+cat >> /tmp/components-task-review-receipt.txt <<'EOF'
+
+Delivery note: the earlier `hcom send @components-orchestrator --intent ack --reply-to 7959 --name vari --file ...` attempt was rejected by `guard-hcom-ack` with “acknowledgement not sent; nothing in this command ran”.
+EOF
+team-send orchestrator --intent inform --reply-to 7959 < /tmp/components-task-review-receipt.txt
+COMMAND
+)
+
+# A report whose heredoc body quotes a team-send acknowledgement, sent as inform in the same call.
+team_quote_with_inform=$(cat <<'COMMAND'
+cat > /tmp/team-report.txt <<'EOF'
+team-send scout --intent ack
+EOF
+team-send orchestrator --intent inform --reply-to 42 < /tmp/team-report.txt
+COMMAND
+)
+
+# A send-looking line inside the second of two heredoc bodies is still message text.
+ack_inside_second_heredoc=$(cat <<'COMMAND'
+cat <<A <<B
+first body
+A
+hcom send @peer --intent ack -- ok
+B
+COMMAND
+)
+
 assert_allowed "hcom send @peer --intent request -- 'Run checks'"
 assert_allowed "hcom send @peer --intent inform -- 'Checks passed'"
 assert_allowed "hcom send @peer --intent inform -- 'Correction: formatter log is available'"
+assert_allowed "hcom send @peer --intent inform -- 'Checks passed; earlier command used --intent ack'"
+assert_allowed "hcom send @peer --intent inform -- 'Checks passed; hcom send @peer --intent ack was rejected'"
 assert_allowed "rg -n -- '--intent ack' teams/hcom"
 assert_allowed "printf '%s' 'hcom send @peer --intent ack'"
 assert_allowed "team-send scout --intent request < body.txt"
@@ -140,5 +228,9 @@ assert_allowed "team-send reviewer --intent inform < body.txt"
 assert_allowed "team-send scout --intent inform < acknowledgement.txt"
 assert_allowed "printf 'Checks passed' | team-send orchestrator --intent inform --reply-to 42"
 assert_allowed "printf '%s' 'team-send scout --intent ack'"
+assert_allowed "printf 'a && hcom send @p --intent ack -- x'"
+assert_allowed "$report_with_quoted_ack"
+assert_allowed "$team_quote_with_inform"
+assert_allowed "$ack_inside_second_heredoc"
 
 printf '✓ HCOM acknowledgement guard tests passed\n'
