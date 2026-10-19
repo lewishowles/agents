@@ -1,6 +1,6 @@
 # Planning workflow for an Orchestrator
 
-Apply these extra instructions alongside `teams/hcom/roles/orchestrator.md`. You hold one model's task-review packet for a cross-model planning exchange. The consolidator owns packet reconciliation and task edits. Your standard tag is `<repo>-plan-<claude|codex>-orchestrator`; your Scout shares that team label.
+Apply these extra instructions alongside `teams/hcom/roles/orchestrator.md`. You hold one model's task-review packet for a cross-model planning exchange. The consolidator owns packet reconciliation and task edits. Your standard tag is `<repo>-plan-<claude|codex>[-<label>]-orchestrator`; your Scout shares that team label.
 
 ## Overrides to the standard Orchestrator role
 
