@@ -3,6 +3,7 @@ name: project-continue
 description: >
   Use this skill when starting or resuming tracked work, completing a progress chunk or task, closing or handing off a session, or reaching a tool-call checkpoint during tracked work. Covers progress task, chunk, decision, discovery, and handoff records.
 ---
+
 # Project continue
 
 Start, resume, complete, and hand off work using the `progress` CLI records, with optional root-level `PROGRESS.md` freeform prose when present.
@@ -125,12 +126,12 @@ Finishing work includes completing the progress CLI records and settling the han
 Make one Edit/Write call covering every section below, not a separate call per bullet.
 
 - Keep implementation detail in the progress chunk records.
-- When implementation and verification for a chunk are done, complete it with `progress chunk complete <chunk-id>` as you present the work. Do not wait for the user to reply first, and do not treat this as a commit: the diff and suggested commit message still go to the user for review. An HCOM Orchestrator with human-run checks still pending leaves the chunk active under the stopping-point rule in `teams/hcom/roles/orchestrator.md`.
+- When implementation and verification for a chunk are done, complete it with `progress chunk complete <chunk-id>` as you present the work. Do not wait for the user to reply first, and do not treat this as a commit: the diff and suggested commit message still go to the user for review. An HCOM Orchestrator at a commit point completes the chunk even when human-run checks are pending, recording them as assumed passed; at a tool-call limit the chunk stays active under the stopping-point rule in `teams/hcom/roles/orchestrator.md`.
 - If another chunk remains, refresh the compact handoff with `progress context set --task <task-id>` only when a fresh session would otherwise lack something it needs, such as a decision or constraint not already in the chunk contract or the discovery and decision records. If it needs nothing, clear that task's handoff with `progress context set --task <task-id>` and no fields.
 - If that was the last chunk and no pending or active chunks remain, complete the task with `progress task complete <task-id>`, which clears its handoff automatically. `progress next` is the correct source once nothing is active. Update release and queue state through `progress release` and `progress task move` as needed. Do not archive completion in `PROGRESS.md`.
 - A whole task finished in one pass with no separate chunks follows the same rule: complete the task as you present the work.
 - If the user comes back with changes, make them in the same session as part of getting that chunk right; do not open a new chunk for routine corrections. Reopen the task only for a genuine change of structure, which is rare.
-- When you do refresh the handoff mid-task: set `previous_step` to the last state change; set `next_step` to the first concrete follow-up action; put unrecoverable task constraints in `standing_context`, pending checks rather than past results in `verify_with`, and any interruption or in-flight command and its known state in `stop_marker`.
+- When you do refresh the handoff mid-task: set `previous_step` to the last state change; set `next_step` to the first concrete follow-up action; put unrecoverable task constraints in `standing_context`, checks still to run rather than past results in `verify_with` (treat checks handed to the human as passed unless they report a failure), and any interruption or in-flight command and its known state in `stop_marker`.
 - Update release status and queue order through `progress release` and `progress task move` when a release's last task lands as done
 - If nothing remains for the current goal while the task is unfinished, clear its handoff with `progress context set --task <task-id>` and no fields rather than leaving stale TODOs in it
 - Compact now if the project keeps root-level `PROGRESS.md` prose and it has grown significantly; current context makes it cheaper
@@ -146,7 +147,7 @@ After settling the handoff, do not print or paraphrase its fields, except for th
 1. **What changed** — 1–3 sentences: what was done and what was verified, or skipped and why
 2. **Suggested commit message** — the scoped Conventional Commit message as plain text, per global-rules
 
-Then stop. Do not add a next-step section, restate the next chunk or task contract, or ask the user to confirm before continuing. The chunk record is already complete (or stays active for an HCOM Orchestrator with human-run checks pending), and a fresh session resumes from the selected task's records.
+Then stop. Do not add a next-step section, restate the next chunk or task contract, or ask the user to confirm before continuing. The chunk record is already complete (or stays active for an HCOM Orchestrator at its own tool-call limit), and a fresh session resumes from the selected task's records.
 
 ## Wrapping up
 
