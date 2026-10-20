@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 # Shared helpers for repository validation scripts.
 
+# The folder that holds the shared validation helpers.
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+# The repository root, used to load the shared shell libraries.
 REPO_DIR=$(cd "$SCRIPT_DIR/../.." && pwd)
 
 source "$REPO_DIR/scripts/lib/colours.sh"
 source "$REPO_DIR/scripts/lib/cli-style-output.sh"
 
+# The number of validation errors reported so far.
 VALIDATE_ERRORS=0
 
 # Prints an error message and increments the validation error counter.
@@ -41,8 +44,10 @@ validate_section() {
 # @param  {string}  ...
 #     Allowed values passed as remaining arguments.
 validate_is_valid() {
+	# The value to check against the allowed values.
 	local value="$1"
 	shift
+	# The allowed value being compared.
 	local allowed
 
 	for allowed in "$@"; do

@@ -14,7 +14,9 @@ timestamp() {
 # @param  {string}  path
 #     The file or symlink to back up.
 backup_path() {
+	# The file or symlink to back up.
 	local path="$1"
+	# The folder that holds backups for this kind of path.
 	local backup_dir
 
 	case "$path" in
@@ -26,15 +28,18 @@ backup_path() {
 		*)                           backup_dir="$(dirname "$path")" ;;
 	esac
 
+	# The original filename, used to find older backups of the same path.
 	local backup_base
 	backup_base="$(basename "$path")"
 	mkdir -p "$backup_dir"
 
+	# An older backup of the same path, to remove.
 	local old
 	while IFS= read -r old; do
 		trash "$old"
 	done < <(find "$backup_dir" -maxdepth 1 -name "${backup_base}.bak.*" 2>/dev/null)
 
+	# The timestamped path the file or symlink moves to.
 	local backup="$backup_dir/${backup_base}.bak.$(timestamp)"
 	mv "$path" "$backup"
 	printf '%s' "$backup"
@@ -45,6 +50,7 @@ backup_path() {
 # @param  {string}  path
 #     The absolute path to display.
 display_path() {
+	# The absolute path to shorten for terminal output.
 	local path="$1"
 
 	case "$path" in
@@ -61,10 +67,13 @@ display_path() {
 # @param  {string}  label
 #     Human-readable name for output messages.
 ensure_container_dir() {
+	# The path that must be a real directory rather than a file or symlink.
 	local path="$1"
+	# The readable name used when reporting a replacement.
 	local label="$2"
 
 	if [ -L "$path" ] || { [ -e "$path" ] && [ ! -d "$path" ]; }; then
+		# The backup path for the file or symlink being replaced.
 		local backup
 		backup=$(backup_path "$path")
 		mkdir -p "$path"
@@ -86,13 +95,18 @@ ensure_container_dir() {
 # @param  {string}  remove_all
 #     Set to 1 to remove all repo-owned links, including valid links.
 prune_stale_repo_links() {
+	# The folder whose symlinks are checked for removal.
 	local dir="$1"
+	# The path prefix that identifies links pointing into this repository.
 	local repo_prefix="$2"
+	# The readable folder name used in removal messages.
 	local label="$3"
+	# Whether to remove working repository links as well as broken ones (1 to remove them).
 	local remove_all="${4:-0}"
 
 	[ -d "$dir" ] || return 0
 
+	# The installed link being checked, and the path it points to.
 	local link target
 	for link in "$dir"/*; do
 		[ -L "$link" ] || continue
@@ -178,19 +192,24 @@ collect_canonical_skills() {
 # @param  {string}  label
 #     Human-readable name for output messages.
 link_path() {
+	# The repository file or folder the link should point to.
 	local source="$1"
+	# The installed path where the symlink should be.
 	local target="$2"
+	# The readable name used in link status messages.
 	local label="$3"
 
 	if is_repo_owned_link "$source" "$target"; then
 		cli_group_status muted "$label" "already linked"
 		return
 	elif [ -L "$target" ]; then
+		# The backup path for the symlink being replaced.
 		local backup
 		backup=$(backup_path "$target")
 		ln -s "$source" "$target"
 		cli_group_status warning "relinked $label" "backup at $(display_path "$backup")"
 	elif [ -e "$target" ]; then
+		# The backup path for the file or folder being replaced.
 		local backup
 		backup=$(backup_path "$target")
 		ln -s "$source" "$target"
