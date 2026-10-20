@@ -11,9 +11,6 @@ validate_require_jq
 # The failure modes accepted by Claude hook manifests.
 VALID_FAILURE_MODES=("block" "ignore" "silent")
 
-# The number of manifests that passed the JSON and name checks.
-HOOK_COUNT=0
-
 while IFS= read -r -d '' manifest; do
 	# The folder containing this hook manifest.
 	dir=$(dirname "$manifest")
@@ -77,8 +74,6 @@ while IFS= read -r -d '' manifest; do
 	elif [ ! -x "$hook_script" ]; then
 		validate_fail "Hook script not executable: $hook_script"
 	fi
-
-	HOOK_COUNT=$((HOOK_COUNT + 1))
 done < <(find "$REPO_DIR/src/hooks/claude" -name "hook.json" -print0 | sort -z)
 
 validate_finish
