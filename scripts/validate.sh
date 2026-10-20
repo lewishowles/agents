@@ -14,12 +14,15 @@ if [ "${BASH_VERSINFO[0]}" -lt 4 ]; then
 	fi
 fi
 
+# The folder containing this script, regardless of the caller's location.
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+# The repository whose generated files and configuration are checked.
 REPO_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 
 source "$REPO_DIR/scripts/lib/colours.sh"
 source "$REPO_DIR/scripts/lib/cli-style-output.sh"
 
+# The number of validation commands that reported a failure.
 FAILED_CHECKS=0
 
 cli_section "Validation" "Run repository checks"
@@ -36,7 +39,10 @@ cli_group_begin "Checks"
 # @param  {string}  ...
 #     Command and arguments to execute.
 run_check() {
+	# The human-readable name shown for the current validation command.
 	local label="$1"
+	# The command output, printed when the check fails or when the staleness check
+	# reports stale files.
 	local output
 	shift
 	if [ "${CLI_STYLE_VERBOSE:-0}" = "1" ]; then

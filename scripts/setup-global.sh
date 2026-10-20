@@ -3,8 +3,9 @@
 
 set -euo pipefail
 
-# Resolved at startup so aliases can call this script from any directory.
+# The folder containing this script, resolved so aliases work from any directory.
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+# The repository containing the configuration installed by this script.
 REPO_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 
 # shellcheck source=scripts/lib/setup-links.sh
@@ -17,7 +18,8 @@ source "$REPO_DIR/scripts/lib/setup-links.sh"
 # @param  {string}  ...
 #     Command-line options passed to the script.
 main() {
-	# Which agents to set up (claude, codex or both). Comes from the options, defaults to both for skill and status options, and is otherwise asked for.
+	# The agents to set up (claude, codex or both). It comes from the options, defaults
+	# to both for the skill and status options, and is otherwise asked for.
 	target=""
 	# Whether to run sync.sh to regenerate dist/ before installing links.
 	refresh=false
@@ -27,19 +29,19 @@ main() {
 	select_requested=false
 	# Whether to report skill link states without changing skill links.
 	status_requested=false
-	# File that stores excluded skill names.
+	# The file that stores excluded skill names between setup runs.
 	skill_exclusions_file="$HOME/.agents/skill-exclusions"
-	# Skill names excluded from the selected setup targets.
+	# The skill names excluded from the selected setup targets.
 	excluded_skills=()
-	# Pending include or exclude operations in command-line order.
+	# The pending include or exclude operations in command-line order.
 	skill_operation_types=()
-	# Skill names associated with the pending operations.
+	# The skill names associated with the pending operations.
 	skill_operation_names=()
-	# Canonical skill directories available for interactive selection.
+	# The canonical skill directories available for interactive selection.
 	skill_paths=()
-	# Overridable so a second account can install alongside the default one.
+	# The Claude configuration folder, overridable for a second account.
 	CLAUDE_DIR="$HOME/.claude"
-	# Overridable so a second account can install alongside the default one.
+	# The Codex configuration folder, overridable for a second account.
 	CODEX_DIR="$HOME/.codex"
 
 	while [ $# -gt 0 ]; do
@@ -115,7 +117,7 @@ main() {
 				exit 0
 			fi
 		else
-			# Result of the numbered selector: 0 accepted, 1 cancelled, 2 invalid.
+			# The numbered selector result: 0 accepted, 1 cancelled, or 2 invalid.
 			selection_status=0
 			select_skills_with_numbered_list || selection_status=$?
 
@@ -184,13 +186,13 @@ main() {
 # @param  {string}  value
 #     Comma-separated skill names supplied on the command line.
 parse_skill_list() {
-	# Pending operation to apply to each skill name.
+	# The include or exclude action applied to each requested skill.
 	local operation="$1"
-	# Comma-separated skill names from the command line.
+	# The comma-separated skill names supplied on the command line.
 	local value="$2"
-	# Skill name currently being parsed.
+	# The current skill name, trimmed before it is queued with its action.
 	local skill_name
-	# Skill names parsed from the option value.
+	# The individual skill names supplied in this option.
 	local -a names=()
 
 	IFS=',' read -r -a names <<< "$value"
@@ -219,7 +221,7 @@ usage() {
 
 # Reads persisted skill exclusions without creating the exclusions file.
 load_skill_exclusions() {
-	# Persisted skill name currently being read.
+	# The saved skill name currently added to the exclusion list.
 	local skill_name
 
 	[ -f "$skill_exclusions_file" ] || return 0
@@ -237,9 +239,9 @@ load_skill_exclusions() {
 # @param  {string}  skill_name
 #     Skill name to find in the current exclusion list.
 excluded_skill_exists() {
-	# Skill name to find in the exclusion list.
+	# The skill name looked up in the current exclusion list.
 	local skill_name="$1"
-	# Excluded skill name currently being checked.
+	# The saved exclusion compared with the requested skill.
 	local excluded_skill
 
 	if [ "${#excluded_skills[@]}" -gt 0 ]; then
@@ -258,11 +260,11 @@ excluded_skill_exists() {
 # @return  {integer}
 #     0 when every requested skill name is known, or 1 otherwise.
 validate_skill_operations() {
-	# Index of the pending skill operation being validated.
+	# The position of the skill operation currently being validated.
 	local index
-	# Requested skill name currently being validated.
+	# The skill name checked against canonical and saved exclusions.
 	local skill_name
-	# Pending operation for the requested skill name.
+	# The include or exclude action associated with this skill name.
 	local operation
 
 	if [ "${#skill_operation_types[@]}" -eq 0 ]; then
@@ -290,9 +292,9 @@ validate_skill_operations() {
 # @param  {string}  requested_name
 #     Skill name to find in the canonical skills directory.
 canonical_skill_exists() {
-	# Skill name supplied by the user.
+	# The skill name being looked up among canonical skill folders.
 	local requested_name="$1"
-	# Canonical skill directory currently being checked.
+	# The canonical skill folder compared with the requested name.
 	local skill
 
 	for skill in "$REPO_DIR"/skills/*/*; do
@@ -310,18 +312,19 @@ canonical_skill_exists() {
 # @return  {integer}
 #     0 when fzf returns a selection, or 1 when the selection is cancelled.
 select_skills_with_fzf() {
-	# fzf has no option to preselect rows, so on load this walks down the list
-	# once, ticking each included skill, then returns to the top.
+	# The fzf actions run when the list loads. fzf cannot preselect rows, so these
+	# walk down the list once, ticking each included skill, then return to the top.
 	local fzf_bind='load:'
-	# Instructions displayed above the skill list.
+	# The selection instructions displayed above the fzf skill list.
 	local fzf_header='Tab toggles a skill, Enter confirms, Esc cancels. Ticked skills are installed.'
-	# Newline-separated skill names returned by fzf.
+	# The selected skill names returned by fzf, one per line.
 	local selected_output
-	# Canonical skill directory currently being prepared for fzf.
+	# The canonical skill folder currently added to the fzf list.
 	local skill_path
-	# Canonical skill name currently being prepared for fzf.
+	# The current skill name, used first to preselect its fzf row and then to read
+	# back fzf's selection.
 	local skill_name
-	# Canonical skill names retained by fzf.
+	# The canonical skill names left selected after the fzf prompt closes.
 	local -a selected_skills=()
 
 	for skill_path in "${skill_paths[@]}"; do
@@ -356,11 +359,11 @@ select_skills_with_fzf() {
 # @param  {string}  ...
 #     Canonical skill names selected for installation.
 set_exclusions_from_selected_skills() {
-	# Selected canonical skill currently being checked.
+	# The selected skill compared against each canonical skill.
 	local selected_skill
-	# Canonical skill directory currently being checked.
+	# The canonical skill folder whose inclusion is being checked.
 	local skill_path
-	# Canonical skill name currently being checked.
+	# The canonical skill name checked against the selection.
 	local skill_name
 	# Whether the canonical skill remains selected.
 	local selected=false
@@ -387,19 +390,19 @@ set_exclusions_from_selected_skills() {
 # @return  {integer}
 #     0 when numbers are accepted, 1 when cancelled, or 2 for an invalid number.
 select_skills_with_numbered_list() {
-	# Numbered fallback response entered in the terminal.
+	# The user's response to the numbered skill selector.
 	local selection
-	# Current canonical skill position in the selection list.
+	# The position of the current skill in the numbered list.
 	local index
-	# Numbered fallback entry currently being validated.
+	# The excluded entry number currently being validated.
 	local excluded_index
 	# Whether the current canonical skill remains selected.
 	local keep_skill=false
-	# Current canonical skill name displayed in the selection list.
+	# The current skill name displayed in the numbered list.
 	local skill_name
-	# Numbered fallback entries that the user leaves out.
+	# The entry numbers the user chose to leave out.
 	local -a excluded_indexes=()
-	# Canonical skill names retained by the numbered list.
+	# The canonical skill names retained by the numbered selector.
 	local -a selected_skills=()
 
 	for index in "${!skill_paths[@]}"; do
@@ -456,9 +459,9 @@ select_skills_with_numbered_list() {
 
 # Writes the current exclusions, removing the file when no exclusions remain.
 save_skill_exclusions() {
-	# Excluded skill name currently being written.
+	# The excluded skill name currently saved to the selection file.
 	local skill_name
-	# Temporary file used for an atomic replacement.
+	# The temporary file used to replace the saved exclusions atomically.
 	local temp
 
 	if [ "${#excluded_skills[@]}" -eq 0 ]; then
@@ -478,11 +481,11 @@ save_skill_exclusions() {
 
 # Applies the validated skill operations in their command-line order.
 apply_skill_operations() {
-	# Index of the pending operation being applied.
+	# The position of the pending skill operation being applied.
 	local index
-	# Operation name for the current pending operation.
+	# The include or exclude action currently being applied.
 	local operation
-	# Skill name for the current pending operation.
+	# The skill name affected by the current action.
 	local skill_name
 
 	if [ "${#skill_operation_types[@]}" -eq 0 ]; then
@@ -505,7 +508,7 @@ apply_skill_operations() {
 # @param  {string}  skill_name
 #     Skill name to exclude from future setup runs.
 add_excluded_skill() {
-	# Skill name to add to the exclusion list.
+	# The skill name to add to the exclusion list.
 	local skill_name="$1"
 
 	if ! excluded_skill_exists "$skill_name"; then
@@ -518,11 +521,11 @@ add_excluded_skill() {
 # @param  {string}  skill_name
 #     Skill name to include in future setup runs.
 remove_excluded_skill() {
-	# Skill name to remove from the exclusion list.
+	# The skill name to remove from the exclusion list.
 	local skill_name="$1"
-	# Existing exclusion currently being retained.
+	# The exclusion currently checked against the requested name.
 	local excluded_skill
-	# Exclusions that do not match the requested name.
+	# The exclusions kept after the requested skill is removed.
 	local -a remaining_skills=()
 
 	if [ "${#excluded_skills[@]}" -gt 0 ]; then
@@ -543,7 +546,7 @@ remove_excluded_skill() {
 # Tells the user which skills this run skips and where that list is saved,
 # so a missing skill is explained rather than looking like a broken install.
 report_excluded_skills() {
-	# Comma-separated exclusion names for terminal output.
+	# The exclusion names joined for the terminal report.
 	local formatted
 
 	if [ "${#excluded_skills[@]}" -eq 0 ]; then
@@ -556,9 +559,9 @@ report_excluded_skills() {
 
 # Joins the current exclusions into one comma-separated list for output.
 format_excluded_skills() {
-	# Comma-separated exclusion names for terminal output.
+	# The exclusion names joined for the terminal report.
 	local formatted=''
-	# Excluded skill name currently being formatted.
+	# The excluded skill name currently appended to the report.
 	local skill_name
 
 	for skill_name in "${excluded_skills[@]}"; do
@@ -574,6 +577,7 @@ format_excluded_skills() {
 
 prompt_target() {
 	printf 'Which agent(s)? [1] Claude  [2] Codex  [3] Both: '
+	# The agent selection entered at the terminal prompt.
 	read -r choice
 
 	case "$choice" in
@@ -589,23 +593,23 @@ prompt_target() {
 # @param  {string}  target
 #     The selected Claude, Codex, or both agent targets.
 report_skill_status() {
-	# Agent target selection being reported.
+	# The selected agent targets included in this report.
 	local target="$1"
-	# Agent roots selected for the read-only report.
+	# The agent roots selected for the read-only report.
 	local -a status_agents=()
-	# Current agent root being reported.
+	# The current agent root whose skill links are reported.
 	local status_agent
-	# Agent name displayed in the report heading.
+	# The agent name displayed in the report heading.
 	local status_label
-	# Agent skill link directory being reported.
+	# The installed skill link folder for the current agent.
 	local status_skills_dir
-	# Canonical skill directories included in this report.
+	# The canonical skill folders included in this report.
 	local skill_paths=()
-	# Canonical skill directory currently being reported.
+	# The canonical skill folder currently being reported.
 	local status_skill
-	# Canonical skill name being reported.
+	# The canonical name used to label and locate the installed skill link.
 	local status_name
-	# Agent skill path being classified.
+	# The installed skill path checked for a link or conflict.
 	local status_link
 
 	case "$target" in
@@ -690,6 +694,7 @@ setup_claude() {
 
 	cli_group_begin "Claude hooks"
 	prune_stale_repo_links "$CLAUDE_DIR/hooks" "$REPO_DIR/dist/claude/hooks" "hooks"
+	# The generated hook file currently being linked into Claude's configuration.
 	local hook
 	for hook in "$REPO_DIR"/dist/claude/hooks/*; do
 		[ -f "$hook" ] || continue
@@ -699,7 +704,7 @@ setup_claude() {
 
 	cli_group_begin "Claude themes"
 	prune_stale_repo_links "$CLAUDE_DIR/themes" "$REPO_DIR/dist/claude/themes" "themes"
-	# Generated theme file to link into the Claude config folder.
+	# The generated theme file linked into Claude's configuration folder.
 	local theme
 	for theme in "$REPO_DIR"/dist/claude/themes/*.json; do
 		[ -f "$theme" ] || continue
@@ -709,7 +714,7 @@ setup_claude() {
 
 	cli_group_begin "Claude rules"
 	prune_stale_repo_links "$CLAUDE_DIR/rules" "$REPO_DIR/dist/claude/rules" "rules"
-	# Generated rule file to link into the Claude config folder.
+	# The generated rule file linked into Claude's configuration folder.
 	local rule
 	for rule in "$REPO_DIR"/dist/claude/rules/*.md; do
 		[ -f "$rule" ] || continue
@@ -718,6 +723,7 @@ setup_claude() {
 	cli_group_end
 
 	cli_group_begin "Claude commands"
+	# The generated command file currently being linked into Claude's configuration.
 	local command
 	for command in "$REPO_DIR"/dist/claude/commands/*; do
 		[ -f "$command" ] || continue
@@ -811,7 +817,7 @@ ensure_doc_paths() {
 # @param  {string}  target_dir
 #     Directory to install skill symlinks into.
 link_configured_skills() {
-	# Directory to install skill symlinks into.
+	# The agent skill folder receiving links to canonical skills.
 	local target_dir="$1"
 
 	if [ "${#excluded_skills[@]}" -gt 0 ]; then
@@ -841,6 +847,7 @@ setup_codex() {
 	link_path "$REPO_DIR/dist/codex/AGENTS.md" "$CODEX_DIR/AGENTS.md" "Codex AGENTS.md"
 	link_path "$REPO_DIR/dist/codex/hooks.json" "$CODEX_DIR/hooks.json" "Codex hooks"
 	prune_stale_repo_links "$CODEX_DIR/hooks" "$REPO_DIR/dist/codex/hooks" "hooks"
+	# The generated hook file currently being linked into Codex's configuration.
 	local hook
 	for hook in "$REPO_DIR"/dist/codex/hooks/*; do
 		[ -f "$hook" ] || continue
@@ -862,7 +869,10 @@ setup_codex() {
 # entries, feature flags, memory settings, and TUI status line. Legacy inline hooks are
 # removed so Codex uses the managed hooks.json file.
 ensure_codex_config() {
+	# The user's Codex configuration file updated by setup.
 	local config="$CODEX_DIR/config.toml"
+	# The working copy with the managed root and section settings applied, then the
+	# final copy with the managed MCP server sections added back.
 	local defaults_temp temp
 
 	defaults_temp=$(mktemp)
@@ -898,6 +908,7 @@ ensure_codex_config() {
 	ensure_codex_permission_settings "$temp"
 	ensure_codex_tui_settings "$temp"
 
+	# The temporary config file with legacy inline hooks removed.
 	local hooks_temp
 	hooks_temp=$(mktemp)
 	remove_inline_codex_hooks "$temp" "$hooks_temp"
@@ -909,6 +920,7 @@ ensure_codex_config() {
 		return
 	fi
 
+	# The saved copy of the configuration before setup replaces it.
 	local backup
 	backup=$(backup_path "$config")
 	mv "$temp" "$config"
@@ -922,7 +934,9 @@ ensure_codex_config() {
 # @param  {string}  destination
 #     Temporary file that receives the updated configuration.
 ensure_codex_defaults() {
+	# The current configuration and the file receiving managed root settings.
 	local source="$1" destination="$2"
+	# The managed root values that replace matching settings in the current config.
 	local approval_policy default_permissions model_reasoning_effort model_verbosity model_reasoning_summary hide_agent_reasoning suppress_unstable_features_warning
 
 	approval_policy=$(codex_config_value "root" "approval_policy")
@@ -976,6 +990,7 @@ ensure_codex_defaults() {
 # @param  {string}  key
 #     Setting name to read.
 codex_config_value() {
+	# The config section and setting whose managed value is requested.
 	local section="$1" key="$2"
 
 	awk -v section="$section" -v key="$key" '
@@ -1006,9 +1021,10 @@ codex_config_value() {
 # @param  {string}  ...
 #     Retired key names to remove from the section.
 ensure_codex_section_settings() {
+	# The config file and section receiving the managed settings.
 	local config="$1" section="$2"
 	shift 2
-	# File of managed key lines, and the updated config.
+	# The file of managed key lines and the completed configuration.
 	local managed temp
 
 	managed=$(mktemp)
@@ -1070,6 +1086,7 @@ ensure_codex_section_settings() {
 # @param  {string}  section
 #     TOML section name to read.
 codex_config_section() {
+	# The section whose managed key lines are printed from the base config.
 	local section="$1"
 
 	sed "s|{{HOME}}|$HOME|g" "$REPO_DIR/src/adapters/codex/config.base.toml" | awk -v section="$section" '
@@ -1084,7 +1101,9 @@ codex_config_section() {
 # @param  {string}  config
 #     Codex config file to update.
 ensure_codex_permission_settings() {
+	# The Codex config file whose permission profile is updated.
 	local config="$1"
+	# The file of allowed workspace roots and the completed config file.
 	local roots_temp temp
 
 	roots_temp=$(mktemp)
@@ -1118,6 +1137,7 @@ ensure_codex_permission_settings() {
 # @param  {string}  destination
 #     File that receives quoted TOML paths, one per line.
 collect_codex_workspace_roots() {
+	# The current config and the file receiving all distinct allowed workspace roots.
 	local config="$1" destination="$2"
 
 	{
@@ -1153,7 +1173,9 @@ collect_codex_workspace_roots() {
 # @param  {string}  config
 #     Codex config file to update.
 ensure_codex_tui_settings() {
+	# The Codex config file whose terminal display settings are updated.
 	local config="$1"
+	# The managed display settings and the file receiving the updated config.
 	local alternate_screen status_line status_line_use_colors temp
 
 	alternate_screen=$(codex_config_value "tui" "alternate_screen")
@@ -1199,6 +1221,7 @@ ensure_codex_tui_settings() {
 # @param  {string}  destination
 #     Temporary file that receives the configuration without inline hooks.
 remove_inline_codex_hooks() {
+	# The config to read and the file receiving its settings without inline hooks.
 	local source="$1" destination="$2"
 
 	awk '
@@ -1214,18 +1237,19 @@ remove_inline_codex_hooks() {
 # Only folders that exist on this machine are added, and entries the user added are
 # kept as written. Agents that are already running keep the list they started with.
 setup_hcom_codex_folders() {
-	# Folders outside the agent's own project that it writes to: this repository,
+	# The folders outside the agent's own project that it writes to: this repository,
 	# agent-run logs and progress records, the Trash, and SwiftPM's cache and settings.
 	local -a required_folders=("$REPO_DIR" "$HOME/.agents" "$HOME/.Trash" "$HOME/Library/Caches/org.swift.swiftpm" "$HOME/Library/org.swift.swiftpm")
-	# Current HCOM arguments split into option and value tokens.
+	# The current HCOM arguments split into option and value tokens.
 	local -a existing_args=()
-	# Current HCOM argument string; missing folders are appended so the user's own options and spacing stay as written.
+	# The current HCOM argument string. Missing folders are appended to it, so the
+	# user's own options and spacing stay as written.
 	local codex_args
-	# Required folder currently being checked.
+	# The required folder currently checked for an existing permission.
 	local folder
-	# Token position in the existing argument list.
+	# The token position in the existing HCOM argument list.
 	local argument_index
-	# Path following an existing --add-dir option.
+	# The folder path following an existing --add-dir option.
 	local existing_folder
 	# Whether HCOM already grants the current folder.
 	local folder_present

@@ -23,7 +23,9 @@ if [ "${BASH_VERSINFO[0]}" -lt 4 ]; then
 	fi
 fi
 
+# The folder containing this script, regardless of the caller's location.
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+# The repository whose source files are copied into generated outputs.
 REPO_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 
 source "$REPO_DIR/scripts/lib/colours.sh"
@@ -38,6 +40,7 @@ copy_hooks() {
 	mkdir -p "$REPO_DIR/dist/codex/hooks"
 	find "$REPO_DIR/dist/codex/hooks" -maxdepth 1 -type f -delete
 
+	# The source hook folder and script currently being copied into dist.
 	local hook_dir script
 	for hook_dir in "$REPO_DIR/src/hooks/claude/"/*/; do
 		[ -d "$hook_dir" ] || continue
@@ -48,6 +51,7 @@ copy_hooks() {
 		done
 	done
 
+	# The shared hook file copied for both Claude and Codex.
 	local shared_file
 	for shared_file in "$REPO_DIR/src/hooks/shared/"*.sh "$REPO_DIR/src/hooks/shared/"*.md; do
 		[ -f "$shared_file" ] || continue
@@ -62,7 +66,7 @@ copy_themes() {
 	mkdir -p "$REPO_DIR/dist/claude/themes"
 	find "$REPO_DIR/dist/claude/themes" -maxdepth 1 -type f -delete
 
-	# Source theme file to copy into dist.
+	# The source theme file copied into the Claude output folder.
 	local theme
 	for theme in "$REPO_DIR"/src/adapters/claude/themes/*.json; do
 		[ -f "$theme" ] || continue
