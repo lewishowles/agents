@@ -25,6 +25,9 @@ if [ ! -x "$CLI_STYLE_BIN" ]; then
 	exit 1
 fi
 
+# The cli-style binary prints the adapter's path when the script runs, so the
+# path is unknown to shellcheck.
+# shellcheck disable=SC1090
 source "$("$CLI_STYLE_BIN" adapter-path bash)"
 
 # Renders a status row through the installed cli-style binary.

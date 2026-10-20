@@ -40,7 +40,8 @@ backup_path() {
 	done < <(find "$backup_dir" -maxdepth 1 -name "${backup_base}.bak.*" 2>/dev/null)
 
 	# The timestamped path the file or symlink moves to.
-	local backup="$backup_dir/${backup_base}.bak.$(timestamp)"
+	local backup
+	backup="$backup_dir/${backup_base}.bak.$(timestamp)"
 	mv "$path" "$backup"
 	printf '%s' "$backup"
 }
@@ -53,6 +54,8 @@ display_path() {
 	# The absolute path to shorten for terminal output.
 	local path="$1"
 
+	# The ~ is printed as text on purpose, to shorten home paths in the output.
+	# shellcheck disable=SC2088
 	case "$path" in
 		"$HOME"/*) printf '~/%s' "${path#"$HOME"/}" ;;
 		*) printf '%s' "$path" ;;

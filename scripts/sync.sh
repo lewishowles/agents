@@ -28,7 +28,6 @@ SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 # The repository whose source files are copied into generated outputs.
 REPO_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 
-source "$REPO_DIR/scripts/lib/colours.sh"
 source "$REPO_DIR/scripts/lib/cli-style-output.sh"
 source "$REPO_DIR/scripts/lib/dist-targets.sh"
 

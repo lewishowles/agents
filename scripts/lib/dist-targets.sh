@@ -4,6 +4,10 @@
 # and scripts/validate/check-dist-sync.sh (drift check against a temp rebuild).
 # Requires REPO_DIR to already be set before sourcing.
 
+# scripts/sync.sh and scripts/validate/check-dist-sync.sh read these values after
+# loading this file, so shellcheck cannot see that they are used.
+# shellcheck disable=SC2034
+
 # The output path for the composed Claude rules.
 CLAUDE_TARGET="$REPO_DIR/dist/claude/CLAUDE.md"
 # The output path for the composed Codex rules.

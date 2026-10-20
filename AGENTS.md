@@ -55,7 +55,7 @@ Configuration/Agents/
 │   ├── setup-global.sh      # --claude|--codex|--both
 │   ├── build/                # build-docs.py, build-settings.py
 │   ├── validate/              # per-check scripts run by validate.sh
-│   └── lib/                   # colours.sh, dist-targets.sh, cli-style-output.sh, ...
+│   └── lib/                   # dist-targets.sh, cli-style-output.sh, setup-links.sh, ...
 └── docs/                      # human reference docs; marked tables are generated
 ```
 

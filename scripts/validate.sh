@@ -19,7 +19,6 @@ SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 # The repository whose generated files and configuration are checked.
 REPO_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 
-source "$REPO_DIR/scripts/lib/colours.sh"
 source "$REPO_DIR/scripts/lib/cli-style-output.sh"
 
 # The number of validation commands that reported a failure.

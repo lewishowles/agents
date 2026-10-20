@@ -6,7 +6,6 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 # The repository root, used to load the shared shell libraries.
 REPO_DIR=$(cd "$SCRIPT_DIR/../.." && pwd)
 
-source "$REPO_DIR/scripts/lib/colours.sh"
 source "$REPO_DIR/scripts/lib/cli-style-output.sh"
 
 # The number of validation errors reported so far.
