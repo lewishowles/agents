@@ -4,19 +4,6 @@ These are per-project runtime dependencies that users install — not skills, no
 
 Last reviewed: 2026-09-28.
 
-## Removed: Serena MCP
-
-Serena was removed on 2026-09-28. Each Codex agent started its own copy, and each copy started Vue and TypeScript language servers that held roughly 1 to 1.5 GB of memory. With several hcom teams running, that filled an 8 GB machine and pushed it into heavy swapping.
-
-The transcripts didn't justify the cost. Across 939 Codex sessions from 10 to 28 September:
-
-- Scouts used Serena in 33 of 504 sessions, and implementers in 55 of 382
-- Most calls were `find_symbol` and `get_symbols_overview`, which a scoped `rg -w` or codebase-memory also answer
-- The features only a language server provides were almost unused: 2 reference lookups, no renames, and 38 diagnostics calls
-- Starting Serena up (`initial_instructions` and `activate_project`) took more calls than all the real use put together
-
-Claude sessions over the same period made no Serena calls.
-
 ## MDN MCP
 
 HTTP MCP server from Mozilla exposing MDN documentation and live browser-compatibility (Baseline) data. It answers "does this feature exist, and where is it supported?" from a current source rather than model training data, which goes stale quickly for web-platform features.

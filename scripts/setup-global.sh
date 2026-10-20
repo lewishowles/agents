@@ -888,11 +888,9 @@ ensure_codex_config() {
 	ensure_codex_section_settings "$defaults_temp" "memories"
 
 	# Strip managed MCP server sections before re-appending them,
-	# so re-running setup never creates duplicate entries. The Serena
-	# section is stripped but not re-added, because Serena is no longer used.
+	# so re-running setup never creates duplicate entries.
 	awk '
 		/^\[mcp_servers\.codebase-memory-mcp(\.|\])/{ skip = 1; next }
-		/^\[mcp_servers\.serena(\.|\])/{ skip = 1; next }
 		/^\[mcp_servers\.mdn(\.|\])/{ skip = 1; next }
 		/^\[mcp_servers\.sketch(\.|\])/{ skip = 1; next }
 		/^\[/{ skip = 0 }

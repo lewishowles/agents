@@ -444,19 +444,6 @@ test_refresh_runs_repository_sync() {
 	assert_not_contains "$calls" "$REPO_DIR/scripts/validate.sh"
 }
 
-# Setup removes the Serena server that older setups added to the Codex config.
-test_setup_removes_retired_serena_server() {
-	# The isolated home with a retired Serena server entry.
-	local home_dir="$TEST_ROOT/serena-removal"
-
-	mkdir -p "$home_dir/.codex"
-	printf '[mcp_servers.serena]\ncommand = "serena"\n' > "$home_dir/.codex/config.toml"
-	run_setup "$home_dir" > /dev/null
-
-	assert_not_contains "$home_dir/.codex/config.toml" '[mcp_servers.serena]'
-	assert_contains "$home_dir/.codex/config.toml" '[mcp_servers.codebase-memory-mcp]'
-}
-
 # Setup backs up an existing Codex config with a timestamp before replacing it
 # with the managed settings.
 test_config_replacement_creates_timestamped_backup() {
@@ -1354,7 +1341,6 @@ test_missing_doc_paths_is_installed
 test_codex_installs_missing_doc_paths
 test_refresh_runs_repository_sync
 test_config_replacement_creates_timestamped_backup
-test_setup_removes_retired_serena_server
 test_hook_file_is_replaced_with_managed_link
 test_claude_themes_are_linked_in_each_config_dir
 test_claude_setup_preserves_user_theme
