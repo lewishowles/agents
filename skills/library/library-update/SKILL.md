@@ -3,6 +3,7 @@ name: library-update
 description: >
   Use this skill to survey supported @lewishowles library releases in a project, or to audit one library for new APIs, fixes, and every place the project could adopt them.
 ---
+
 # Library update
 
 Find the improvements a shared-library release offers and where the project can use them.
@@ -56,7 +57,7 @@ npm view @lewishowles/lint-config version versions time --json
 npm view @lewishowles/pkg-checks version versions time --json
 ```
 
-Confirm before running npm registry commands if network access has not already been approved. Identify the latest stable published version from `version` or the `latest` dist-tag. Versions follow the format `X.Y.Z`.
+Asking for this skill is permission to run the read-only npm commands it lists for `@lewishowles` packages (`npm view`, `npm pack --dry-run`, and the components CLI's `list` and `info` through `npx`), so run them without asking first. If the sandbox blocks network access, stop and give the user the exact command to run instead. Identify the latest stable published version from `version` or the `latest` dist-tag. Versions follow the format `X.Y.Z`.
 
 In a survey, use step 3's npm metadata to skim only the releases since the installed version, then check relevant project usage. Report installed versus latest, breaking changes that affect the project, and one line on adoption work from those releases. Recommend a separate single-library run for each with adoption work, and recommend a deep run to find unused current features even when a library is up to date. Keep the survey brief; the remaining steps describe a deep run.
 
@@ -80,7 +81,7 @@ Identify:
 - **Bug fixes** — particularly for patterns the project already uses
 - **Deprecations** — things still working but flagged for removal
 
-For `@lewishowles/components`, use `npx @lewishowles/components@<latest> list` and `npx @lewishowles/components@<latest> info <component>` to compare the latest API with project usage. The npm confirmation rule above applies. Follow the component-library skill for CLI details. For helpers, which has no consumer CLI, use the latest version's README and exports.
+For `@lewishowles/components`, use `npx @lewishowles/components@<latest> list` and `npx @lewishowles/components@<latest> info <component>` to compare the latest API with project usage. These run without asking, as described above. Follow the component-library skill for CLI details. For helpers, which has no consumer CLI, use the latest version's README and exports.
 
 ## Step 4: hunt through actual usage
 
