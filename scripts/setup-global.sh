@@ -145,7 +145,13 @@ main() {
 		fi
 	fi
 
-	bash "$REPO_DIR/scripts/install-cli-style.sh"
+	if [ "$status_requested" != true ]; then
+		bash "$REPO_DIR/scripts/install-cli-style.sh"
+	else
+		# The python3 calls in the status helpers would otherwise cache bytecode
+		# in the user's home, and status must leave the home unchanged.
+		export PYTHONDONTWRITEBYTECODE=1
+	fi
 	# shellcheck source=scripts/lib/cli-style-output.sh
 	source "$REPO_DIR/scripts/lib/cli-style-output.sh"
 

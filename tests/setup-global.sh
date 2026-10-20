@@ -280,8 +280,9 @@ run_setup_target() {
 		export HOME="$home_dir"
 		# The command path that makes the setup process use test stubs.
 		export PATH="$setup_path"
-		# The cli-style stub that points setup at the test adapter.
-		export CLI_STYLE_BIN="$bin_dir/cli-style"
+		# The cli-style stub that points setup at the test adapter. A test can set
+		# SETUP_GLOBAL_TEST_CLI_STYLE_BIN to a missing path to run setup without it.
+		export CLI_STYLE_BIN="${SETUP_GLOBAL_TEST_CLI_STYLE_BIN:-$bin_dir/cli-style}"
 		# The cli-style installer path that the bash stub logs instead of running.
 		export SETUP_GLOBAL_INSTALLER="$REPO_DIR/scripts/install-cli-style.sh"
 		# The repository sync script path that the bash stub logs instead of running.
@@ -327,6 +328,28 @@ EXPECT
 			bash "$REPO_DIR/scripts/setup-global.sh" ${target:+"$target"} "$@"
 		fi
 	)
+}
+
+# Prints one line per path in a test directory, with a checksum for each file
+# and the target of each link, so two runs can be compared.
+#
+# @param  {string}  directory
+#     The directory to inspect.
+snapshot_test_directory() {
+	# The directory whose paths and contents are listed.
+	local directory="$1"
+	# The current path within the directory.
+	local file_path
+
+	while IFS= read -r file_path; do
+		if [ -L "$file_path" ]; then
+			printf 'link %s %s\n' "$file_path" "$(readlink "$file_path")"
+		elif [ -f "$file_path" ]; then
+			printf 'file %s %s\n' "$file_path" "$(shasum < "$file_path")"
+		else
+			printf 'directory %s\n' "$file_path"
+		fi
+	done < <(find "$directory" -print | LC_ALL=C sort)
 }
 
 # Creates a temporary canonical skill that the EXIT trap removes.
@@ -920,20 +943,54 @@ test_status_does_not_change_files() {
 	local installed_link="$home_dir/.claude/skills/accessibility"
 	# Unmanaged excluded content that must remain conflicting.
 	local excluded_skill="$home_dir/.agents/skills/code-style/keep.txt"
+	# The home contents before the status report.
+	local home_before
+	# The repository file state before the status report.
+	local repo_before
 
 	mkdir -p "$home_dir/.agents/skills" "$home_dir/.claude/skills" "$(dirname "$excluded_skill")"
 	printf 'code-style\n' > "$home_dir/.agents/skill-exclusions"
 	printf 'keep this content\n' > "$excluded_skill"
 	ln -s "$REPO_DIR/skills/accessibility/accessibility" "$installed_link"
+	home_before=$(snapshot_test_directory "$home_dir")
+	repo_before=$(git -C "$REPO_DIR" status --porcelain --untracked-files=all)
 
 	run_setup_target "$home_dir" "" --status > "$output"
 
+	assert_not_exists "$home_dir/setup-global-calls.log"
+	assert_equals "$(snapshot_test_directory "$home_dir")" "$home_before"
+	assert_equals "$(git -C "$REPO_DIR" status --porcelain --untracked-files=all)" "$repo_before"
 	assert_contains "$output" 'Claude skills'
 	assert_contains "$output" 'Codex skills'
 	assert_equals "$(readlink "$installed_link")" "$REPO_DIR/skills/accessibility/accessibility"
 	assert_equals "$(cat "$excluded_skill")" 'keep this content'
 	assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'code-style'
 	assert_not_exists "$home_dir/.codex"
+}
+
+# Checks that status stops with an install hint when cli-style is missing.
+test_status_requires_cli_style_without_changes() {
+	# Isolated home directory for the status report.
+	local home_dir="$TEST_ROOT/status-without-cli-style"
+	# Output from the rejected status report.
+	local output="$TEST_ROOT/status-without-cli-style.txt"
+	# The home contents before the status report.
+	local home_before
+	# The repository file state before the status report.
+	local repo_before
+
+	mkdir -p "$home_dir"
+	home_before=$(snapshot_test_directory "$home_dir")
+	repo_before=$(git -C "$REPO_DIR" status --porcelain --untracked-files=all)
+
+	if SETUP_GLOBAL_TEST_CLI_STYLE_BIN="$TEST_ROOT/missing-cli-style" run_setup_target "$home_dir" "--claude" --status > "$output" 2>&1; then
+		fail '--status succeeded without cli-style'
+	fi
+
+	assert_contains "$output" 'cli-style is not installed. Run: scripts/install-cli-style.sh'
+	assert_not_exists "$home_dir/setup-global-calls.log"
+	assert_equals "$(snapshot_test_directory "$home_dir")" "$home_before"
+	assert_equals "$(git -C "$REPO_DIR" status --porcelain --untracked-files=all)" "$repo_before"
 }
 
 test_status_rejects_skill_options_without_changes() {
@@ -1364,6 +1421,7 @@ test_status_reports_an_excluded_skill_with_a_lingering_link
 test_status_reports_conflicting_included_content
 test_status_reports_conflicting_excluded_content
 test_status_does_not_change_files
+test_status_requires_cli_style_without_changes
 test_status_rejects_skill_options_without_changes
 test_select_fallback_updates_skill_exclusions
 test_select_fallback_empty_selection_includes_every_skill

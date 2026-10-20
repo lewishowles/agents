@@ -136,7 +136,7 @@ scripts/setup-global.sh --include-all
 
 These options apply to both agents unless you pass `--claude` or `--codex`. Excluded names are saved in `~/.agents/skill-exclusions`, which both agents share. The file lists only exclusions, so new skills added to this repository are installed on later setup runs. `--include-all` clears the exclusions and restores the full set.
 
-Run `scripts/setup-global.sh --status` to see whether each skill is installed, excluded, missing, or conflicting in each agent's skill directory. An excluded skill can also show `link still present`. Status prints a command to fix each missing or conflicting skill and each leftover link and makes no changes.
+Run `scripts/setup-global.sh --status` to see whether each skill is installed, excluded, missing, or conflicting in each agent's skill directory. An excluded skill can also show `link still present`. Status prints a command to fix each missing or conflicting skill and each leftover link and makes no changes. It needs an installed cli-style renderer but does not install one or use the network. If cli-style is missing, status exits with a hint to run `scripts/install-cli-style.sh`.
 
 Run `scripts/setup-global.sh --select` to choose skills in a terminal. The picker uses `fzf --multi` if `fzf` is installed, or a numbered list otherwise. Cancelling leaves the selection unchanged. The picker requires a terminal; use `--exclude` and `--include` in scripts.
 
