@@ -3,8 +3,11 @@
 
 set -euo pipefail
 
+# The folder containing this test and its shared helpers.
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+# The repository containing the guard under test.
 REPO_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
+# A temporary folder for captured guard output.
 TEST_ROOT=$(mktemp -d)
 
 # shellcheck source=SCRIPTDIR/lib/test-helpers.sh
@@ -12,6 +15,7 @@ source "$SCRIPT_DIR/lib/test-helpers.sh"
 
 trap cleanup EXIT
 
+# The exit status of the latest guard run.
 TEST_STATUS=0
 
 # Runs the search guard with one Bash tool payload.
@@ -21,7 +25,9 @@ TEST_STATUS=0
 # @param  {string}  output_file
 #     File that receives the hook's standard error.
 run_guard() {
+	# The shell command passed to the guard.
 	local command="$1"
+	# The file that captures the guard's standard error.
 	local output_file="$2"
 
 	set +e
@@ -36,7 +42,9 @@ run_guard() {
 # @param  {string}  command
 #     Shell command expected to be denied.
 assert_blocked() {
+	# The shell command expected to be blocked.
 	local command="$1"
+	# The file that captures a blocked command's error output.
 	local output_file="$TEST_ROOT/blocked.txt"
 
 	run_guard "$command" "$output_file"
@@ -49,7 +57,9 @@ assert_blocked() {
 # @param  {string}  command
 #     Shell command expected to be allowed.
 assert_allowed() {
+	# The shell command expected to pass.
 	local command="$1"
+	# The file checked for unexpected guard output.
 	local output_file="$TEST_ROOT/allowed.txt"
 
 	run_guard "$command" "$output_file"

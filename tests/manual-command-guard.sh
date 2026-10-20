@@ -3,17 +3,17 @@
 
 set -euo pipefail
 
-# Directory holding this test.
+# The folder containing this test and its shared helpers.
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
-# Repository root, used to find the hook.
+# The repository containing the guard under test.
 REPO_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
-# Throwaway directory used as the session working directory.
+# The temporary folder used as the hook's working directory.
 TEST_ROOT=$(mktemp -d)
-# Holds the fake agent-run placed first on PATH.
+# The folder holding the fake agent-run placed first on PATH.
 STUB_BIN="$TEST_ROOT/bin"
-# Each call to the fake agent-run, so tests can prove it was skipped.
+# The log of calls to the fake agent-run, so tests can check that it was skipped.
 AGENT_RUN_CALLS="$TEST_ROOT/agent-run-calls.txt"
-# PATH before the fake agent-run is added, for the agent-run-missing case.
+# The PATH the test started with, which hook runs get by default after the fake agent-run folder.
 ORIGINAL_PATH="$PATH"
 
 # shellcheck source=SCRIPTDIR/lib/test-helpers.sh
@@ -52,7 +52,7 @@ esac
 EOF
 chmod +x "$STUB_BIN/agent-run"
 
-# Exit status of the last hook run.
+# The exit status of the last hook run.
 TEST_STATUS=0
 
 # Runs the manual-command guard with one Bash tool payload.
@@ -64,11 +64,11 @@ TEST_STATUS=0
 # @param  {string}  path_value
 #     PATH used while the hook checks for agent-run.
 run_guard() {
-	# Shell command presented to the hook.
+	# The shell command presented to the hook.
 	local command="$1"
-	# File that receives the hook's standard error.
+	# The file receiving the hook's standard error.
 	local output_file="$2"
-	# PATH used by the hook.
+	# The PATH used by the hook for this call.
 	local path_value="${3:-$STUB_BIN:$ORIGINAL_PATH}"
 
 	set +e
@@ -85,9 +85,9 @@ run_guard() {
 # @param  {string}  command
 #     Shell command expected to be denied.
 assert_blocked() {
-	# Shell command expected to be denied.
+	# The shell command expected to be denied.
 	local command="$1"
-	# Captured hook error output.
+	# The file holding the blocked command's error output.
 	local output_file="$TEST_ROOT/blocked.txt"
 
 	run_guard "$command" "$output_file"
@@ -100,9 +100,9 @@ assert_blocked() {
 # @param  {string}  command
 #     Shell command expected to be allowed.
 assert_allowed() {
-	# Shell command expected to be allowed.
+	# The shell command expected to be allowed.
 	local command="$1"
-	# Captured hook error output.
+	# The file checked for unexpected guard output.
 	local output_file="$TEST_ROOT/allowed.txt"
 
 	run_guard "$command" "$output_file"
@@ -172,7 +172,7 @@ assert_empty "$AGENT_RUN_CALLS"
 AGENT_RUN_MODE=empty assert_blocked "playwright test"
 assert_empty "$AGENT_RUN_CALLS"
 
-# Only jq and system tools, so no agent-run is found.
+# The PATH with only jq and system tools, so the hook cannot find agent-run.
 NO_AGENT_RUN_PATH="$(dirname "$(command -v jq)"):/usr/bin:/bin"
 AGENT_RUN_MODE=empty run_guard "cypress run" "$TEST_ROOT/absent.txt" "$NO_AGENT_RUN_PATH"
 assert_equals "$TEST_STATUS" "2"

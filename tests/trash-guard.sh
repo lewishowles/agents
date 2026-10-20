@@ -38,7 +38,9 @@ exit "${TRASH_GUARD_FAKE_STATUS:-0}"
 FAKE
 chmod +x "$TEST_ROOT/fake-trash"
 
+# The fake trash command the wrapper runs in place of the real one.
 export TRASH_GUARD_TEST_BIN="$TEST_ROOT/fake-trash"
+# The file where the fake trash command records the arguments it was given.
 export TRASH_GUARD_ARGUMENTS_FILE="$ARGUMENTS_FILE"
 
 mkdir -p "$TEST_ROOT/folder"

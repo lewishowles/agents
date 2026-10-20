@@ -9,8 +9,11 @@
 
 set -euo pipefail
 
+# The folder containing this test and its shared helpers.
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+# The repository containing the hook under test.
 REPO_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
+# A temporary folder for hook state and captured output.
 TEST_ROOT=$(mktemp -d)
 
 # shellcheck source=SCRIPTDIR/lib/test-helpers.sh
@@ -18,21 +21,21 @@ source "$SCRIPT_DIR/lib/test-helpers.sh"
 
 trap cleanup EXIT
 
-# Script under test.
+# The hook whose checkpoint behaviour is under test.
 HOOK="$REPO_DIR/src/hooks/shared/tool-call-checkpoint.sh"
-# Session ID for the current scenario; set by start_session.
+# The session ID for the current scenario, set by start_session.
 SESSION=""
-# Counter file the hook writes under TMPDIR for the current session.
+# The counter file the hook writes for the current session.
 STATE_FILE=""
-# Value passed as AGENT_TOOL_CALL_LIMIT; empty leaves it unset.
+# The tool-call limit passed to the hook; an empty value leaves it unset.
 LIMIT_OVERRIDE=""
-# Value passed as HCOM_NAME; empty leaves it unset.
+# The agent name passed to the hook; an empty value leaves it unset.
 AGENT_NAME=""
-# Value passed as HCOM_TAG; __UNSET__ removes it.
+# The agent tag passed to the hook; __UNSET__ removes it.
 AGENT_TAG=""
-# Value passed as HCOM_PLANNING_WORKFLOW.
+# The flag marking a planning workflow for the hook.
 PLANNING_WORKFLOW=""
-# Value passed as HCOM_INSIGHTS_REVIEW_WORKFLOW.
+# The flag marking an insights review workflow for the hook.
 INSIGHTS_REVIEW_WORKFLOW=""
 
 # Starts a fresh counter scenario with its own session ID and limit override.
@@ -48,9 +51,13 @@ INSIGHTS_REVIEW_WORKFLOW=""
 #     hook counts calls; pass an empty string for an empty tag, or __UNSET__
 #     to remove the variable.
 start_session() {
+	# The scenario name used to distinguish its session state.
 	local name="$1"
+	# The call limit supplied for this scenario.
 	local limit_override="$2"
+	# The agent name supplied for this scenario, when present.
 	local agent_name="${3:-}"
+	# The agent tag for this scenario; the default reviewer tag makes the hook count calls.
 	local agent_tag="${4-Agents-reviewer}"
 
 	SESSION="checkpoint-test-$name-$$"
@@ -69,9 +76,11 @@ start_session() {
 # @param  {string}  output_file
 #     File that receives the hook's standard output.
 run_hook() {
+	# The tool name sent in the hook payload.
 	local tool_name="$1"
+	# The file receiving this hook run's standard output.
 	local output_file="$2"
-	# The env command that runs the hook with this scenario's variables; HCOM_TAG is removed unless the scenario sets it.
+	# The env command that runs the hook with this scenario's settings, without HCOM_TAG unless set below.
 	local -a hook_env=(env -u HCOM_TAG TMPDIR="$TEST_ROOT" AGENT_TOOL_CALL_LIMIT="$LIMIT_OVERRIDE" HCOM_NAME="$AGENT_NAME" HCOM_PLANNING_WORKFLOW="$PLANNING_WORKFLOW" HCOM_INSIGHTS_REVIEW_WORKFLOW="$INSIGHTS_REVIEW_WORKFLOW")
 
 	if [[ "$AGENT_TAG" != "__UNSET__" ]]; then
@@ -90,10 +99,13 @@ run_hook() {
 # @param  {string}  expected_count
 #     Counter value expected afterwards.
 assert_silent() {
+	# The tool name sent to the hook.
 	local tool_name="$1"
+	# The counter value expected after the call.
 	local expected_count="$2"
+	# The file checked for unexpected hook output.
 	local output_file="$TEST_ROOT/silent.txt"
-	# Counter value read back from the state file.
+	# The counter value read from the state file, or "missing" when no file exists.
 	local actual_count="missing"
 
 	run_hook "$tool_name" "$output_file"
@@ -110,7 +122,9 @@ assert_silent() {
 # @param  {string}  tool_name
 #     Tool name to send.
 assert_advisory() {
+	# The tool name whose call should trigger the advisory.
 	local tool_name="$1"
+	# The file holding the advisory returned by the hook.
 	local output_file="$TEST_ROOT/advisory.json"
 
 	run_hook "$tool_name" "$output_file"
@@ -123,8 +137,9 @@ assert_advisory() {
 # @param  {string}  limit
 #     Limit whose final call is left for the caller to send.
 fill_to_limit() {
+	# The call limit; the loop stops one call short so the caller makes the call that reaches it.
 	local limit="$1"
-	# Counter value expected after each call.
+	# The counter value expected after each silent call.
 	local count
 
 	for count in $(seq "$(( $(cat "$STATE_FILE") + 1 ))" "$(( limit - 1 ))"); do
