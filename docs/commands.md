@@ -1,26 +1,6 @@
 # Commands
 
-Type commands in Claude Code with a `/` prefix. The built-in commands and skills you can invoke this way are listed below.
-
-## Built-in Claude Code commands
-
-These are provided by Claude Code itself and are always available.
-
-| Command        | What it does                                              |
-| -------------- | --------------------------------------------------------- |
-| `/help`        | List available commands and keyboard shortcuts            |
-| `/clear`       | Clear the current conversation context                    |
-| `/compact`     | Summarise the conversation to free up context space       |
-| `/config`      | Open Claude Code settings (theme, model, etc.)            |
-| `/model`       | Switch the active model (e.g. `/model claude-sonnet-4-6`) |
-| `/cost`        | Show token usage and estimated cost for the session       |
-| `/status`      | Show current session status                               |
-| `/init`        | Initialise a new `CLAUDE.md` in the current project       |
-| `/review`      | Review a pull request                                     |
-| `/fast`        | Toggle fast mode (Opus 4.6 with faster output)            |
-| `/vim`         | Toggle Vim keybindings                                    |
-| `/bug`         | Report a Claude Code bug                                  |
-| `/pr_comments` | Fetch comments from a GitHub pull request                 |
+Type the commands provided by this repository in Claude Code with a `/` prefix. For built-in commands, see the [official Claude Code documentation](https://code.claude.com/docs/en/commands).
 
 ## Custom commands
 

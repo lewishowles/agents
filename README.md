@@ -18,13 +18,5 @@ Several of Claude's hooks need `jq` to run. Install it with `brew install jq` be
 
 - [Setup](docs/setup.md): manual wiring, troubleshooting, and token usage reports
 - [Skills](docs/skills.md): available skills and trigger behaviour
-- [Commands](docs/commands.md): built-in and custom commands
+- [Commands](docs/commands.md): commands provided by this repository
 - [Hooks](docs/hooks.md): Claude and Codex hook behaviour
-
-## Shell aliases
-
-I recommend adding an alias to `~/.zshrc` if you run global setup often:
-
-```bash
-alias setup:agents:global="/path/to/repository/scripts/setup-global.sh --both"
-```

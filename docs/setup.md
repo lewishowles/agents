@@ -1,6 +1,14 @@
 # Setup
 
-Use the scripts for normal installs. These manual steps are here as a fallback when you need to inspect or repair the wiring.
+Use the scripts for normal installs, and add a shell alias if you run them often. The manual steps after that are a fallback for when you need to inspect or repair the wiring.
+
+## Shell aliases
+
+Add this alias to `~/.zshrc`:
+
+```bash
+alias setup:agents:global="/path/to/repository/scripts/setup-global.sh --both"
+```
 
 ## Global Claude setup
 
