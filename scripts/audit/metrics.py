@@ -21,8 +21,11 @@ import re
 import statistics
 import subprocess
 
+# The Claude project directory containing session transcripts.
 ROOT = os.path.expanduser("~/.claude/projects")
+# The maximum command length used to compare repeated calls, shared with redundancy.py.
 COMMAND_TEXT_LIMIT = 300
+# The maximum tool result length included in flattened record text.
 RESULT_TEXT_LIMIT = 3000
 
 
@@ -32,13 +35,16 @@ def session_paths(days):
 	@param  {int}  days
 	    Size of the window in days.
 	"""
+	# The earliest transcript modification time included in the window.
 	cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(
 		days=days
 	)
 
+	# The transcript paths that fall within the requested window.
 	paths = []
 
 	for path in glob.glob(os.path.join(ROOT, "*", "*.jsonl")):
+		# The transcript modification time checked against the cutoff.
 		mtime = datetime.datetime.fromtimestamp(
 			os.stat(path).st_mtime, datetime.timezone.utc
 		)
@@ -61,6 +67,7 @@ def records(path):
 
 def blocks(record):
 	"""Yield the content blocks of a user or assistant record."""
+	# The message content, which may be text or structured blocks.
 	content = (record.get("message") or {}).get("content")
 
 	if isinstance(content, str):
@@ -73,6 +80,7 @@ def blocks(record):
 
 def record_text(record):
 	"""Flatten a record's text and tool-result content into one string."""
+	# The text fragments joined into one searchable record string.
 	parts = []
 
 	for block in blocks(record):
@@ -100,6 +108,7 @@ def classify_bash_command(command):
 
 	command = command.strip()
 
+	# The npm test or lint command, when the command contains one.
 	npm_match = re.search(r"\bnpm\s+(?:run\s+)?(test|lint)\b", command)
 	if npm_match:
 		return f"npm {npm_match.group(1)}"
@@ -108,6 +117,7 @@ def classify_bash_command(command):
 		return "vitest"
 
 	for segment in re.split(r"\s*(?:&&|\|\||[;|])\s*", command):
+		# The words used to identify this command segment's executable.
 		tokens = segment.strip().split()
 		if not tokens:
 			continue
@@ -137,6 +147,7 @@ def section(title, finding):
 def corpus(paths):
 	section("Corpus", "Scope and method")
 
+	# The project directories represented by the selected transcripts.
 	projects = {os.path.basename(os.path.dirname(p)) for p in paths}
 
 	print(f"sessions in window: {len(paths)}")
@@ -149,12 +160,17 @@ def corpus(paths):
 def progress_churn(paths):
 	section("PROGRESS.md churn", "F1")
 
+	# The total PROGRESS.md edits across sessions that edited it more than once.
 	total = 0
+	# The number of sessions with repeated PROGRESS.md edits.
 	sessions = 0
+	# The edit and session counts grouped by day.
 	by_day = collections.defaultdict(lambda: [0, 0])
+	# Each session with repeated PROGRESS.md edits, sorted later to list the worst.
 	worst = []
 
 	for path in paths:
+		# The number of PROGRESS.md edits in this transcript.
 		edits = 0
 
 		for record in records(path):
@@ -168,6 +184,7 @@ def progress_churn(paths):
 					edits += 1
 
 		if edits > 1:
+			# The transcript modification date used for daily totals.
 			day = datetime.datetime.fromtimestamp(os.path.getmtime(path)).strftime(
 				"%Y-%m-%d"
 			)
@@ -208,6 +225,7 @@ def count_pairs(sequence, window, by_type):
 	@param  {Counter|None}  by_type
 	    Optional counter to tally the edited file's type into.
 	"""
+	# The number of edits followed closely by a read of the same file.
 	pairs = 0
 
 	for index, (name, path_edited) in enumerate(sequence):
@@ -219,6 +237,7 @@ def count_pairs(sequence, window, by_type):
 				pairs += 1
 
 				if by_type is not None:
+					# The edited path used to group pairs by file type.
 					text = str(path_edited)
 					by_type[
 						"PROGRESS.md"
@@ -240,14 +259,21 @@ def read_after_edit(paths):
 	# or tool_result block and a parsed-content search misses almost all of them.
 	notice = "PostToolUse hook modified"
 
+	# The main agent's edit and read pair counts, keyed by how many following calls were checked.
 	windows = {3: 0, 5: 0}
+	# The edited file types counted in the shorter window.
 	by_type = collections.Counter()
+	# The number of formatter notices found in the selected transcripts.
 	notices = 0
+	# The number of nearby re-reads that came after a formatter notice.
 	after_notice = 0
+	# The number of nearby re-reads with no formatter notice before them.
 	without_notice = 0
+	# The number of edit and read pairs found in delegated calls.
 	sidechain_pairs = 0
 
 	for path in paths:
+		# The ordered tool calls and formatter notices in this transcript.
 		sequence = []
 
 		with open(path, errors="replace") as handle:
@@ -257,6 +283,7 @@ def read_after_edit(paths):
 					notices += 1
 
 				try:
+					# The parsed transcript record for this line.
 					record = json.loads(line)
 				except ValueError:
 					continue
@@ -276,11 +303,13 @@ def read_after_edit(paths):
 		# Main-agent pairs are counted separately from delegated ones: the report
 		# quotes the main-agent figure, since subagent transcripts are governed by
 		# their own delegation packets.
+		# The main-agent file calls used for the report's pair counts.
 		main = [
 			(name, path_edited)
 			for name, path_edited, side in sequence
 			if not side and name != "NOTICE"
 		]
+		# The delegated file calls counted separately from main-agent calls.
 		delegated = [
 			(name, path_edited)
 			for name, path_edited, side in sequence
@@ -292,13 +321,16 @@ def read_after_edit(paths):
 		sidechain_pairs += count_pairs(delegated, 3, None)
 
 		# Notices stay in the sequence here, so a re-read can be attributed to one.
+		# Every call and notice in this transcript's sequence, without its sidechain flag.
 		flat = [(name, path_edited) for name, path_edited, _ in sequence]
 
 		for index, (name, path_edited) in enumerate(flat):
 			if name not in ("Edit", "Write"):
 				continue
 
+			# The following calls checked for a nearby read or formatter notice.
 			lookahead = flat[index + 1 : index + 6]
+			# Whether a formatter notice appears among those following calls.
 			saw_notice = any(item[0] == "NOTICE" for item in lookahead)
 
 			for later_name, later_path in lookahead:
@@ -328,6 +360,7 @@ def friction():
 	"""Print post-cutoff friction figures returned by the friction CLI."""
 	section("Friction CLI composition", "F8")
 
+	# The friction command that lists the entries for the report.
 	command = [
 		"friction",
 		"list",
@@ -339,23 +372,31 @@ def friction():
 	]
 
 	try:
+		# The friction CLI result containing JSON event data.
 		result = subprocess.run(command, capture_output=True, check=True, text=True)
+		# The parsed friction CLI response.
 		response = json.loads(result.stdout)
 	except (OSError, subprocess.CalledProcessError, json.JSONDecodeError):
 		print("friction CLI data unavailable")
 		return
 
+	# The friction event rows, when the response has the expected shape.
 	rows = response.get("data") if isinstance(response, dict) else None
 	if not isinstance(rows, list) or not all(isinstance(row, dict) for row in rows):
 		print("friction CLI returned invalid JSON")
 		return
 
+	# The event counts grouped by friction category.
 	categories = collections.Counter(row.get("category") for row in rows)
+	# The failed-check events examined for missing error details.
 	check_fails = [row for row in rows if row.get("category") == "check-fail"]
+	# The failed-check events without an error summary.
 	empty = [row for row in check_fails if not row.get("error")]
+	# The failed-check counts grouped by repository directory.
 	by_repo = collections.Counter(
 		os.path.basename(str(row.get("cwd", ""))) for row in check_fails
 	)
+	# The failed-check counts grouped by minute to show retry clusters.
 	per_minute = collections.Counter(
 		str(row.get("timestamp_utc", ""))[:16] for row in check_fails
 	)
@@ -376,7 +417,9 @@ def friction():
 def verbosity(paths):
 	section("Assistant response verbosity", "Not findings")
 
+	# The lengths of assistant text blocks in selected sessions.
 	lengths = []
+	# The large text blocks retained as report examples.
 	large = []
 
 	for path in paths:
@@ -388,6 +431,7 @@ def verbosity(paths):
 				if block.get("type") != "text":
 					continue
 
+				# The assistant text measured for response length.
 				text = block.get("text", "").strip()
 
 				if not text:
@@ -424,6 +468,7 @@ def commands(paths):
 	"""Print the number of Bash commands, and how many ran raw npm or Vitest, bounded their output, or ran Playwright scoped to named tests or broadly."""
 	section("Command discipline", "Successful patterns")
 
+	# The Bash command counts grouped by report category.
 	counts = collections.Counter()
 
 	for path in paths:
@@ -435,8 +480,10 @@ def commands(paths):
 				if name != "Bash":
 					continue
 
+				# The Bash command text checked for execution patterns.
 				command = str(params.get("command", ""))
 				counts["bash total"] += 1
+				# The command family used to count raw npm and Vitest calls.
 				classification = classify_bash_command(command)
 
 				if classification in ("npm test", "npm lint", "vitest"):
@@ -446,6 +493,7 @@ def commands(paths):
 					counts["output bounded"] += 1
 
 				if re.search(r"test:component|playwright test|\.pw\.js", command):
+					# Whether this Playwright call names a test file or selection.
 					scoped = re.search(r"--test-file|\.pw\.js|--grep|-g ", command)
 					counts["playwright scoped" if scoped else "playwright broad"] += 1
 
@@ -467,13 +515,18 @@ def skills(paths):
 
 	# Skills load either through the Skill tool or by injection, which appears in
 	# the transcript as a "Base directory for this skill" preamble.
+	# The transcript marker used to recognise an injected skill.
 	injected = re.compile(r"Base directory for this skill: \S+/([\w-]+)")
 
+	# The number of sessions with at least three source edits.
 	sessions = 0
+	# The number of those sessions that loaded code-style.
 	with_code_style = 0
 
 	for path in paths:
+		# The skills seen in this transcript through calls or injection.
 		loaded = set()
+		# The number of JavaScript, TypeScript and Vue file edits in this session.
 		source_edits = 0
 
 		for record in records(path):
@@ -501,12 +554,15 @@ def skills(paths):
 
 
 def main():
+	# The command-line parser for the report's time window.
 	parser = argparse.ArgumentParser(description=__doc__)
 	parser.add_argument(
 		"--days", type=int, default=21, help="window size in days (default 21)"
 	)
+	# The parsed command-line options, including the time window.
 	args = parser.parse_args()
 
+	# The transcript paths selected for this report.
 	paths = session_paths(args.days)
 
 	corpus(paths)

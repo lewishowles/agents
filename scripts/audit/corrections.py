@@ -8,8 +8,10 @@ import os
 import re
 import sys
 
+# The Claude project directory containing session transcripts.
 ROOT = os.path.expanduser("~/.claude/projects")
 
+# The phrases that identify a user message as a possible correction.
 PAT = re.compile(r"""(?ix)
  \b(
   you\s+(didn't|did\s+not|should\s+have|shouldn't|were\s+asked|just|keep|keeps?|again|already|never)
@@ -46,24 +48,32 @@ def matches_correction(text):
 
 def main():
 	"""Scan recent Claude transcripts and write matching corrections as JSON to the given output path."""
+	# The earliest transcript modification time included in the scan.
 	cutoff = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=21)
+	# The correction records collected from recent sessions.
 	results = []
 
 	for path in glob.glob(os.path.join(ROOT, "*", "*.jsonl")):
+		# The transcript metadata used to check its modification time.
 		st = os.stat(path)
 		if datetime.datetime.fromtimestamp(st.st_mtime, datetime.timezone.utc) < cutoff:
 			continue
+		# The main-session user and assistant messages from this transcript.
 		recs = []
 		with open(path, errors="replace") as f:
 			for line in f:
 				try:
+					# The parsed transcript record for this line.
 					d = json.loads(line)
 				except Exception:
 					continue
 				if d.get("type") not in ("user", "assistant") or d.get("isSidechain"):
 					continue
+				# The message body carried by the transcript record.
 				m = d.get("message", {})
+				# The message content, which may be text or structured blocks.
 				c = m.get("content")
+				# The message text and tool calls collected from its content blocks.
 				texts, tools = [], []
 				if isinstance(c, str):
 					texts.append(c)
@@ -74,6 +84,7 @@ def main():
 						if b.get("type") == "text":
 							texts.append(b.get("text", ""))
 						elif b.get("type") == "tool_use":
+							# The tool arguments whose file path, command, pattern or skill labels the call.
 							i = b.get("input") or {}
 							tools.append(
 								f"{b.get('name')}({i.get('file_path') or (i.get('command') or i.get('pattern') or i.get('skill') or '')!s:.90})"
@@ -94,7 +105,7 @@ def main():
 				continue
 			if not matches_correction(txt):
 				continue
-			# gather preceding assistant activity
+			# The preceding assistant tool calls and text that give this correction context.
 			prev_tools, prev_text = [], ""
 			for j in range(idx - 1, max(-1, idx - 25), -1):
 				if recs[j][0] == "user":
