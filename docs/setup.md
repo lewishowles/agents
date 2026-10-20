@@ -21,7 +21,7 @@ ln -s /path/to/repository/dist/claude/commands/new-command.md ~/.claude/commands
 
 Repeat for each skill, hook, and command. Per-item links allow plugin-installed items to coexist.
 
-This repo does not ship or manage plugins. Add a Claude Code plugin with `/plugins install <marketplace>/<plugin-name>`; plugins install globally and coexist with this repo's linked skills and hooks.
+This repo ships the skin plugin in `src/plugins/skin/`. It adds Catppuccin colours to Claude Code tool rows, Bash results and turn footers, and draws Markdown tables as boxed grids. Global setup does not install it; try it with `claude --plugin-dir /path/to/repository/src/plugins/skin`. Add other Claude Code plugins with `/plugin install <plugin-name>@<marketplace>`; they coexist with this repo's linked skills and hooks.
 
 ## Global Codex setup
 
