@@ -290,7 +290,9 @@ run_setup_target() {
 	(
 		# The isolated home used by the setup process.
 		export HOME="$home_dir"
-		# The command path that makes the setup process use test stubs.
+		# The command path that makes the setup process use test stubs. It changes
+		# only inside this subshell, so the stubs never reach later tests.
+		# shellcheck disable=SC2030
 		export PATH="$setup_path"
 		# The cli-style stub that points setup at the test adapter. A test can set
 		# SETUP_GLOBAL_TEST_CLI_STYLE_BIN to a missing path to run setup without it.
@@ -796,9 +798,11 @@ test_permission_profile_keeps_roots_and_drops_git_config_rule() {
 	local home_dir="$TEST_ROOT/permission-profile"
 
 	create_existing_config "$home_dir"
-	printf '\n[sandbox_workspace_write]\nnetwork_access = false\nexclude_slash_tmp = true\nwritable_roots = ["/tmp/keep"]\n' >> "$home_dir/.codex/config.toml"
-	printf '\n[permissions.project-edit.workspace_roots]\n"/tmp/already-added" = true\n' >> "$home_dir/.codex/config.toml"
-	printf '\n[permissions.project-edit.filesystem.":workspace_roots"]\n".git/config" = "write"\n".git/config.lock" = "write"\n' >> "$home_dir/.codex/config.toml"
+	{
+		printf '\n[sandbox_workspace_write]\nnetwork_access = false\nexclude_slash_tmp = true\nwritable_roots = ["/tmp/keep"]\n'
+		printf '\n[permissions.project-edit.workspace_roots]\n"/tmp/already-added" = true\n'
+		printf '\n[permissions.project-edit.filesystem.":workspace_roots"]\n".git/config" = "write"\n".git/config.lock" = "write"\n'
+	} >> "$home_dir/.codex/config.toml"
 	run_setup "$home_dir" > /dev/null
 
 	assert_contains "$home_dir/.codex/config.toml" '[permissions.project-edit.network]'
@@ -816,7 +820,8 @@ test_skills_are_installed_and_editable() {
 	# Isolated home directory for the setup run.
 	local home_dir="$TEST_ROOT/skills-installed"
 	# Temporary source marker name.
-	local marker_name="setup-global-test-marker-$(basename "$TEST_ROOT")"
+	local marker_name
+	marker_name="setup-global-test-marker-$(basename "$TEST_ROOT")"
 	# Marker path in the temporary canonical skill.
 	local source_marker="$ADDED_SKILL_DIR/$marker_name"
 
@@ -1212,6 +1217,8 @@ test_select_fzf_updates_skill_exclusions() {
 	mkdir -p "$home_dir/.agents"
 	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
 	# The fzf capture files, chosen skills, command path, and terminal setting for this picker run.
+	# PATH here is this test's own value; ShellCheck confuses it with the copy run_setup_target changes in its subshell.
+	# shellcheck disable=SC2031
 	SETUP_GLOBAL_FZF_ARGUMENTS="$fzf_arguments" SETUP_GLOBAL_FZF_INPUT="$fzf_input" SETUP_GLOBAL_FZF_SELECTION='accessibility' SETUP_GLOBAL_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_GLOBAL_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
 
 	assert_contains "$fzf_arguments" '--multi'
@@ -1243,6 +1250,8 @@ test_select_fzf_excludes_every_skill() {
 
 	create_fzf_stub "$fzf_dir"
 	# The fzf capture files, chosen skills, command path, and terminal setting for this picker run.
+	# PATH here is this test's own value; ShellCheck confuses it with the copy run_setup_target changes in its subshell.
+	# shellcheck disable=SC2031
 	SETUP_GLOBAL_FZF_ARGUMENTS="$fzf_arguments" SETUP_GLOBAL_FZF_INPUT="$fzf_input" SETUP_GLOBAL_FZF_SELECTION='' SETUP_GLOBAL_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_GLOBAL_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
 
 	assert_contains "$fzf_arguments" '--multi'
@@ -1269,6 +1278,8 @@ test_select_fzf_cancel_preserves_existing_state() {
 	mkdir -p "$home_dir/.agents"
 	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
 	# The fzf capture files, cancelled picker status, command path, and terminal setting for this picker run.
+	# PATH here is this test's own value; ShellCheck confuses it with the copy run_setup_target changes in its subshell.
+	# shellcheck disable=SC2031
 	SETUP_GLOBAL_FZF_ARGUMENTS="$fzf_arguments" SETUP_GLOBAL_FZF_INPUT="$fzf_input" SETUP_GLOBAL_FZF_STATUS=1 SETUP_GLOBAL_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_GLOBAL_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
 
 	assert_contains "$output" 'Skill selection cancelled. Nothing changed.'
