@@ -231,6 +231,18 @@ create_existing_config() {
 	printf 'custom_setting = "keep"\n' > "$home_dir/.codex/config.toml"
 }
 
+# Creates the agent-tools package folders that setup installs missing commands
+# from, inside an isolated home.
+#
+# @param  {string}  home_dir
+#     Isolated home directory for one setup run.
+create_agent_tools_checkout() {
+	# The isolated home where the package checkout is created.
+	local home_dir="$1"
+
+	mkdir -p "$home_dir/Dev/Repositories/Packages/agent-tools/packages/"{friction,team-send,doc-paths}
+}
+
 # Runs the global setup in a temporary home with test-only command stubs.
 #
 # @param  {string}  home_dir
@@ -419,6 +431,115 @@ test_existing_doc_paths_is_preserved() {
 	assert_not_exists "$home_dir/uv-calls.log"
 }
 
+# A missing installer must be reported for every command needed by both agents.
+test_preflight_reports_missing_uv_without_changes() {
+	# The isolated home for the rejected setup run.
+	local home_dir="$TEST_ROOT/preflight-no-uv"
+	# The stub directory with no installed agent-tools commands.
+	local bin_dir="$TEST_ROOT/preflight-no-uv-bin"
+	# The setup output containing each missing command and its fix.
+	local output="$TEST_ROOT/preflight-no-uv.txt"
+	# The home snapshot before setup starts.
+	local before
+
+	/bin/cp -R "$TEST_ROOT/bin" "$bin_dir"
+	trash "$bin_dir/friction" "$bin_dir/team-send" "$bin_dir/doc-paths" "$bin_dir/uv"
+	mkdir -p "$home_dir/.agents"
+	create_agent_tools_checkout "$home_dir"
+	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
+	before=$(snapshot_test_directory "$home_dir")
+
+	if SETUP_GLOBAL_TEST_PATH="$bin_dir:/usr/bin:/bin:/usr/sbin:/sbin" run_setup_target "$home_dir" "--both" --exclude accessibility > "$output" 2>&1; then
+		fail 'Expected setup to stop when uv is missing'
+	fi
+
+	assert_contains "$output" 'friction is not installed. Install uv so setup can install it.'
+	assert_contains "$output" 'team-send is not installed. Install uv so setup can install it.'
+	assert_contains "$output" 'doc-paths is not installed. Install uv so setup can install it.'
+	assert_not_contains "$output" 'Clone agent-tools'
+	assert_contains "$output" 'Setup stopped before changing anything.'
+	assert_equals "$(snapshot_test_directory "$home_dir")" "$before"
+	assert_not_exists "$home_dir/setup-global-calls.log"
+}
+
+# A missing package checkout must be reported before setup saves skill choices.
+test_preflight_reports_missing_checkout_without_changes() {
+	# The isolated home for the rejected setup run.
+	local home_dir="$TEST_ROOT/preflight-no-checkout"
+	# The stub directory with no installed agent-tools commands.
+	local bin_dir="$TEST_ROOT/preflight-no-checkout-bin"
+	# The setup output containing each missing command and its fix.
+	local output="$TEST_ROOT/preflight-no-checkout.txt"
+	# The expected checkout location, deliberately absent.
+	local source_dir="$home_dir/Dev/Repositories/Packages/agent-tools"
+	# The home snapshot before setup starts.
+	local before
+
+	/bin/cp -R "$TEST_ROOT/bin" "$bin_dir"
+	trash "$bin_dir/friction" "$bin_dir/team-send" "$bin_dir/doc-paths"
+	mkdir -p "$home_dir"
+	before=$(snapshot_test_directory "$home_dir")
+
+	if SETUP_GLOBAL_TEST_PATH="$bin_dir:/usr/bin:/bin:/usr/sbin:/sbin" run_setup_target "$home_dir" "--both" --include-all > "$output" 2>&1; then
+		fail 'Expected setup to stop when the agent-tools checkout is missing'
+	fi
+
+	assert_contains "$output" "friction is not installed. Clone agent-tools to $source_dir so setup can install it."
+	assert_contains "$output" "team-send is not installed. Clone agent-tools to $source_dir so setup can install it."
+	assert_contains "$output" "doc-paths is not installed. Clone agent-tools to $source_dir so setup can install it."
+	assert_contains "$output" 'Setup stopped before changing anything.'
+	assert_equals "$(snapshot_test_directory "$home_dir")" "$before"
+	assert_not_exists "$home_dir/.agents/skill-exclusions"
+}
+
+# Installed commands need neither uv nor the package checkout.
+test_preflight_accepts_installed_commands_without_installer() {
+	# The isolated home for a setup run with installed commands.
+	local home_dir="$TEST_ROOT/preflight-installed"
+	# The stub directory without uv.
+	local bin_dir="$TEST_ROOT/preflight-installed-bin"
+
+	/bin/cp -R "$TEST_ROOT/bin" "$bin_dir"
+	trash "$bin_dir/uv"
+	SETUP_GLOBAL_TEST_PATH="$bin_dir:/usr/bin:/bin:/usr/sbin:/sbin" run_setup_target "$home_dir" "--both" > /dev/null
+
+	assert_not_exists "$home_dir/uv-calls.log"
+	assert_link "$home_dir/.agents/AGENTS.md"
+}
+
+# Codex setup does not require friction when its other commands are installed.
+test_preflight_checks_only_codex_commands() {
+	# The isolated home for Codex setup.
+	local home_dir="$TEST_ROOT/preflight-codex"
+	# The stub directory without friction.
+	local bin_dir="$TEST_ROOT/preflight-codex-bin"
+
+	/bin/cp -R "$TEST_ROOT/bin" "$bin_dir"
+	trash "$bin_dir/friction" "$bin_dir/uv"
+	SETUP_GLOBAL_TEST_PATH="$bin_dir:/usr/bin:/bin:/usr/sbin:/sbin" run_setup_target "$home_dir" "--codex" > /dev/null
+
+	assert_not_exists "$home_dir/uv-calls.log"
+	assert_link "$home_dir/.agents/AGENTS.md"
+}
+
+# Status reports skill links without checking installation prerequisites.
+test_status_skips_agent_tools_preflight() {
+	# The isolated home for the status run.
+	local home_dir="$TEST_ROOT/status-no-agent-tools"
+	# The stub directory without agent-tools commands.
+	local bin_dir="$TEST_ROOT/status-no-agent-tools-bin"
+	# The status output.
+	local output="$TEST_ROOT/status-no-agent-tools.txt"
+
+	/bin/cp -R "$TEST_ROOT/bin" "$bin_dir"
+	trash "$bin_dir/friction" "$bin_dir/team-send" "$bin_dir/doc-paths" "$bin_dir/uv"
+	SETUP_GLOBAL_TEST_PATH="$bin_dir:/usr/bin:/bin:/usr/sbin:/sbin" run_setup_target "$home_dir" "--both" --status > "$output"
+
+	assert_not_contains "$output" 'is not installed'
+	assert_not_contains "$output" 'Setup stopped before changing anything.'
+	assert_not_exists "$home_dir/setup-global-calls.log"
+}
+
 # Checks that global setup installs a missing doc-paths command once for both targets.
 test_missing_doc_paths_is_installed() {
 	# Isolated home for the setup run.
@@ -428,6 +549,7 @@ test_missing_doc_paths_is_installed() {
 
 	/bin/cp -R "$TEST_ROOT/bin" "$bin_dir"
 	mv "$bin_dir/doc-paths" "$bin_dir/doc-paths-disabled"
+	create_agent_tools_checkout "$home_dir"
 	# The stub command path used for this isolated setup run.
 	SETUP_GLOBAL_TEST_PATH="$bin_dir:/usr/bin:/bin:/usr/sbin:/sbin" run_setup_target "$home_dir" "--both" > /dev/null
 
@@ -445,6 +567,7 @@ test_codex_installs_missing_doc_paths() {
 
 	/bin/cp -R "$TEST_ROOT/bin" "$bin_dir"
 	mv "$bin_dir/doc-paths" "$bin_dir/doc-paths-disabled"
+	create_agent_tools_checkout "$home_dir"
 	# The stub command path used for this isolated setup run.
 	SETUP_GLOBAL_TEST_PATH="$bin_dir:/usr/bin:/bin:/usr/sbin:/sbin" run_setup_target "$home_dir" "--codex" > /dev/null
 
@@ -1394,6 +1517,11 @@ test_help_hides_backup_bypass
 test_public_backup_bypass_is_rejected
 test_default_setup_skips_repository_refresh
 test_existing_doc_paths_is_preserved
+test_preflight_reports_missing_uv_without_changes
+test_preflight_reports_missing_checkout_without_changes
+test_preflight_accepts_installed_commands_without_installer
+test_preflight_checks_only_codex_commands
+test_status_skips_agent_tools_preflight
 test_missing_doc_paths_is_installed
 test_codex_installs_missing_doc_paths
 test_refresh_runs_repository_sync

@@ -43,6 +43,8 @@ main() {
 	CLAUDE_DIR="$HOME/.claude"
 	# The Codex configuration folder, overridable for a second account.
 	CODEX_DIR="$HOME/.codex"
+	# The local agent-tools checkout that setup installs missing commands from.
+	AGENT_TOOLS_DIR="$HOME/Dev/Repositories/Packages/agent-tools"
 
 	while [ $# -gt 0 ]; do
 		case "$1" in
@@ -128,14 +130,9 @@ main() {
 				exit 1
 			fi
 		fi
-
-		save_skill_exclusions
 	elif [ "$skill_options_requested" = true ]; then
 		apply_skill_operations
-		save_skill_exclusions
 	fi
-
-	report_excluded_skills
 
 	if [ -z "$target" ]; then
 		if [ "$skill_options_requested" = true ] || [ "$status_requested" = true ]; then
@@ -144,6 +141,15 @@ main() {
 			target=$(prompt_target)
 		fi
 	fi
+
+	if [ "$status_requested" != true ]; then
+		preflight_agent_tools "$target" || exit 1
+		if [ "$skill_options_requested" = true ]; then
+			save_skill_exclusions
+		fi
+	fi
+
+	report_excluded_skills
 
 	if [ "$status_requested" != true ]; then
 		bash "$REPO_DIR/scripts/install-cli-style.sh"
@@ -183,6 +189,57 @@ main() {
 
 	printf '\n'
 	cli_status success "Done."
+}
+
+# Checks that setup can provide every agent-tools command the chosen target
+# needs, before setup writes anything. A command passes when it is already
+# installed, or when uv and its package in the agent-tools checkout are both
+# present. Returns 1 after listing each missing command with its fix.
+#
+# Messages are plain text because cli-style may not be installed yet.
+#
+# @param  {string}  target
+#     The agent setup target: claude, codex or both.
+preflight_agent_tools() {
+	# The agent setup target that decides which commands are needed.
+	local target="$1"
+	# The commands the chosen target needs; Claude also needs friction.
+	local required_commands=(team-send doc-paths)
+	# The command being checked.
+	local command_name
+	# Whether any command can be neither found nor installed.
+	local missing=false
+	# Whether uv is available to install missing commands.
+	local uv_available=true
+
+	if [ "$target" = claude ] || [ "$target" = both ]; then
+		required_commands=(friction "${required_commands[@]}")
+	fi
+
+	if ! command -v uv >/dev/null 2>&1; then
+		uv_available=false
+	fi
+
+	for command_name in "${required_commands[@]}"; do
+		if command -v "$command_name" >/dev/null 2>&1; then
+			continue
+		fi
+
+		if [ "$uv_available" = false ]; then
+			printf '%s is not installed. Install uv so setup can install it.\n' "$command_name" >&2
+			missing=true
+		fi
+
+		if [ ! -d "$AGENT_TOOLS_DIR/packages/$command_name" ]; then
+			printf '%s is not installed. Clone agent-tools to %s so setup can install it.\n' "$command_name" "$AGENT_TOOLS_DIR" >&2
+			missing=true
+		fi
+	done
+
+	if [ "$missing" = true ]; then
+		printf 'Setup stopped before changing anything.\n' >&2
+		return 1
+	fi
 }
 
 # Parses a comma-separated skill list into the pending setup operations.
@@ -751,7 +808,7 @@ ensure_friction() {
 	fi
 
 	cli_group_status warning "friction" "installing globally"
-	if ! uv tool install --from ~/Dev/Repositories/Packages/agent-tools/packages/friction friction >/dev/null; then
+	if ! uv tool install --from "$AGENT_TOOLS_DIR/packages/friction" friction >/dev/null; then
 		cli_group_status failed "friction" "global installation failed"
 		return 1
 	fi
@@ -777,7 +834,7 @@ ensure_team_send() {
 	fi
 
 	cli_group_status warning "team-send" "installing globally"
-	if ! uv tool install --from ~/Dev/Repositories/Packages/agent-tools/packages/team-send team-send >/dev/null; then
+	if ! uv tool install --from "$AGENT_TOOLS_DIR/packages/team-send" team-send >/dev/null; then
 		cli_group_status failed "team-send" "global installation failed"
 		return 1
 	fi
@@ -804,7 +861,7 @@ ensure_doc_paths() {
 	fi
 
 	cli_group_status warning "doc-paths" "installing globally"
-	if ! uv tool install --from ~/Dev/Repositories/Packages/agent-tools/packages/doc-paths doc-paths >/dev/null; then
+	if ! uv tool install --from "$AGENT_TOOLS_DIR/packages/doc-paths" doc-paths >/dev/null; then
 		cli_group_status failed "doc-paths" "global installation failed"
 		return 1
 	fi

@@ -144,6 +144,8 @@ If a file or folder that setup did not create already sits where an included ski
 
 Repository refresh is optional during global setup. Pass `--refresh` to regenerate local repository output and validate it before linking.
 
+Before changing files, global setup checks that the selected agent's helper commands are installed or can be installed from the local agent-tools checkout with `uv`. Claude needs `friction`, `team-send`, and `doc-paths`; Codex needs `team-send` and `doc-paths`. If a required command is missing and `uv` or its source package under `~/Dev/Repositories/Packages/agent-tools` is unavailable, setup lists each missing command and the fix, then stops without saving skill choices. `--status` skips this check.
+
 ## Register project commands
 
 From the project root, preview likely commands and register the ones agents may run:
