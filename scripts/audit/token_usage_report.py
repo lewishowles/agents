@@ -23,7 +23,9 @@ import sqlite3
 import sys
 from pathlib import Path
 
+# The repository root used to locate fixed report output paths.
 REPO_ROOT = Path(__file__).resolve().parents[2]
+# The audit script directory added to the import path for direct execution.
 AUDIT_DIRECTORY = Path(__file__).resolve().parent
 
 # Both direct script execution and ``from scripts.audit import token_usage_report`` are
@@ -61,15 +63,20 @@ from token_usage_types import (  # noqa: E402
 	Window,
 )
 
+# The Claude project transcript folder, including any configured location.
 CLAUDE_ROOT = (
 	Path(os.environ.get("CLAUDE_CONFIG_DIR", "~/.claude")).expanduser() / "projects"
 )
+# The Codex home directory used to find current and archived sessions.
 _CODEX_HOME = Path(os.environ.get("CODEX_HOME", "~/.codex")).expanduser()
+# The current and archived Codex transcript folders searched for reports.
 CODEX_ROOTS = (
 	_CODEX_HOME / "sessions",
 	_CODEX_HOME / "archived_sessions",
 )
+# The optional hcom database used to label transcript sessions.
 HCOM_DATABASE = Path("~/.hcom/hcom.db").expanduser()
+# The repository folder where the three latest report files are written.
 REPORT_DIRECTORY = REPO_ROOT / ".agent/audits/usage"
 
 
@@ -107,11 +114,13 @@ def build_window(arguments: argparse.Namespace) -> Window:
 		if arguments.until < arguments.since:
 			arguments.parser.error("--until must not be before --since")
 
+		# The inclusive UTC start of the requested calendar-date range.
 		start = datetime.datetime.combine(
 			arguments.since,
 			datetime.time.min,
 			datetime.timezone.utc,
 		)
+		# The exclusive UTC end after the requested final date.
 		end = datetime.datetime.combine(
 			arguments.until + datetime.timedelta(days=1),
 			datetime.time.min,
@@ -119,6 +128,7 @@ def build_window(arguments: argparse.Namespace) -> Window:
 		)
 		return start, end, arguments.since.isoformat(), arguments.until.isoformat()
 
+	# The number of trailing days selected, defaulting to seven.
 	days = 7 if arguments.days is None else arguments.days
 	if days < 0:
 		arguments.parser.error("--days must not be negative")
@@ -161,6 +171,7 @@ def hcom_role(tag: object, parent_name: object) -> str:
 	Returns:
 		The repository-scoped role suffix, or ``unattributed`` when absent.
 	"""
+	# The available hcom tag or parent name that may contain a team role.
 	value = tag or parent_name or ""
 	if not isinstance(value, str) or not value:
 		return "unattributed"
@@ -174,7 +185,9 @@ def load_hcom_labels() -> tuple[dict[str, HcomLabel], dict[str, HcomLabel]]:
 	Returns:
 		Mappings keyed by session id and normalised transcript path.
 	"""
+	# The hcom labels indexed by transcript session identifier.
 	by_session_id: dict[str, HcomLabel] = {}
+	# The hcom labels indexed by normalised transcript path.
 	by_path: dict[str, HcomLabel] = {}
 
 	if not HCOM_DATABASE.is_file():
@@ -189,6 +202,7 @@ def load_hcom_labels() -> tuple[dict[str, HcomLabel], dict[str, HcomLabel]]:
 			)
 		) as connection:
 			connection.row_factory = sqlite3.Row
+			# The database records containing agent labels and transcript links.
 			rows = connection.execute(
 				"SELECT name, session_id, transcript_path, tag, parent_name, tool "
 				"FROM instances"
@@ -197,15 +211,18 @@ def load_hcom_labels() -> tuple[dict[str, HcomLabel], dict[str, HcomLabel]]:
 		return by_session_id, by_path
 
 	for row in rows:
+		# The agent name, role, and runtime for this database record.
 		label: HcomLabel = {
 			"agent_name": row["name"] or "unattributed",
 			"role": hcom_role(row["tag"], row["parent_name"]),
 			"tool": row["tool"] or "unknown",
 		}
+		# The session identifier used to join this agent label to a transcript.
 		session_id = row["session_id"]
 		if isinstance(session_id, str) and session_id:
 			by_session_id[session_id] = label
 
+		# The normalised transcript path used to join this agent label.
 		path = normalise_path(row["transcript_path"])
 		if path:
 			by_path[path] = label
@@ -228,6 +245,7 @@ def apply_hcom_label(
 	Returns:
 		None. The session hcom label is updated in place when matched.
 	"""
+	# The hcom label matched by transcript path or, failing that, session identifier.
 	label = by_path.get(normalise_path(session["transcript_path"]))
 	if label is None:
 		label = by_session_id.get(session["session_id"])
@@ -245,6 +263,7 @@ def make_report(sessions: list[Session], window: Window) -> Report:
 	Returns:
 		The deterministic serialisable report object.
 	"""
+	# The UTC filter bounds and dates displayed for the selected window.
 	start, end, display_since, display_until = window
 
 	def ratio_data(numerator: int, denominator: int) -> RatioData:
@@ -282,7 +301,9 @@ def make_report(sessions: list[Session], window: Window) -> Report:
 		Returns:
 			None. The grouped aggregate is updated in place.
 		"""
+		# The aggregate rows already collected for this grouping key.
 		row = group.setdefault(key, {})
+		# The aggregate row for this runtime within the grouping key.
 		tool_row = row.setdefault(
 			tool,
 			{
@@ -293,6 +314,7 @@ def make_report(sessions: list[Session], window: Window) -> Report:
 		tool_row["session_count"] += session_count
 		add_totals(tool_row["tokens"], tokens, tool)
 
+	# The token totals and session counts collected for each runtime.
 	by_tool: dict[str, AggregateRow] = {
 		tool: {
 			"session_count": 0,
@@ -300,12 +322,17 @@ def make_report(sessions: list[Session], window: Window) -> Report:
 		}
 		for tool in TOOLS
 	}
+	# The token totals grouped by model within each runtime.
 	by_model: dict[str, Group] = {tool: {} for tool in TOOLS}
+	# The token totals grouped by UTC day.
 	by_day: Group = {}
+	# The token totals grouped by project directory.
 	by_project: Group = {}
+	# The token totals grouped by hcom role.
 	by_role: Group = {}
 
 	for session in sessions:
+		# The runtime used to place this session in the correct totals.
 		tool = session["tool"]
 		by_tool[tool]["session_count"] += 1
 		add_totals(by_tool[tool]["tokens"], session["tokens"], tool)
@@ -320,6 +347,7 @@ def make_report(sessions: list[Session], window: Window) -> Report:
 		add_group(by_role, session["hcom"]["role"], tool, 1, session["tokens"])
 
 	for tool in TOOLS:
+		# The accumulated token fields used to calculate this runtime's ratios.
 		tokens = by_tool[tool]["tokens"]
 		by_tool[tool]["empty"] = by_tool[tool]["session_count"] == 0
 		if tool == "Claude":
@@ -338,9 +366,13 @@ def make_report(sessions: list[Session], window: Window) -> Report:
 				f"No {tool} token usage records in the selected window."
 			)
 
+	# The combined driver rows indexed by category and key.
 	rows: dict[tuple[str, str], DriverLedgerRow] = {}
+	# The number of tool calls across all included sessions.
 	tool_call_count = 0
+	# The number of tool calls without a driver grouping across sessions.
 	unattributed_count = 0
+	# The estimated payload tokens for calls without a driver grouping.
 	unattributed_payload = 0
 
 	for session in sessions:
@@ -349,10 +381,12 @@ def make_report(sessions: list[Session], window: Window) -> Report:
 		unattributed_payload += session["unattributed"]["payload_estimate_tokens"]
 
 		for source in session["driver_ledger"]:
+			# The category and key that identify a driver row across sessions.
 			identity = (source["category"], source["key"])
 			if identity not in rows:
 				rows[identity] = dict(source)
 			else:
+				# The existing combined driver row updated with this session's counts.
 				row = rows[identity]
 				row["count"] += source["count"]
 				row["payload_estimate_tokens"] += source["payload_estimate_tokens"]
@@ -360,11 +394,14 @@ def make_report(sessions: list[Session], window: Window) -> Report:
 				row["retry_count"] += source["retry_count"]
 				row["repeated"] = row["repeated"] or source["repeated"]
 
+	# The driver rows ordered by estimated payload, then by category and key.
 	ordered_rows = sorted(
 		rows.values(),
 		key=lambda row: (-row["payload_estimate_tokens"], row["category"], row["key"]),
 	)
+	# The number of tool calls assigned to the ordered driver rows.
 	attributed_count = sum(row["count"] for row in ordered_rows)
+	# The attribution totals used to check that all calls are accounted for.
 	driver_data: DriverReconciliation = {
 		"driver_ledger": ordered_rows,
 		"tool_call_count": tool_call_count,
@@ -377,6 +414,7 @@ def make_report(sessions: list[Session], window: Window) -> Report:
 		},
 		"reconciles": tool_call_count == attributed_count + unattributed_count,
 	}
+	# The sessions ranked by token total, with ties broken by runtime, then session ID.
 	ordered_sessions = sorted(
 		sessions,
 		key=lambda session: (
@@ -413,12 +451,15 @@ def make_report(sessions: list[Session], window: Window) -> Report:
 			"driver_ledger": session["driver_ledger"],
 		}
 
+	# The serialised rows for every included session in ranked order.
 	all_sessions: list[SessionReport] = [
 		session_report(session, rank)
 		for rank, session in enumerate(ordered_sessions, start=1)
 	]
+	# The ten highest-token session rows shown in the compact report.
 	top_sessions = all_sessions[:10]
 
+	# The runtime totals with empty token objects omitted from the report.
 	totals_by_tool: dict[str, AggregateRow] = {
 		tool: {
 			field: value
@@ -470,6 +511,7 @@ def parse_arguments() -> argparse.Namespace:
 	Returns:
 		Parsed command-line options with the parser attached for validation errors.
 	"""
+	# The command-line parser that reports invalid date selections.
 	parser = argparse.ArgumentParser(description=__doc__)
 	parser.add_argument(
 		"--since", type=parse_date, help="inclusive UTC date, YYYY-MM-DD"
@@ -480,6 +522,7 @@ def parse_arguments() -> argparse.Namespace:
 	parser.add_argument(
 		"--days", type=int, help="window ending now in UTC (default: 7)"
 	)
+	# The parsed command-line options, which also carry the parser so later checks can report errors.
 	arguments = parser.parse_args()
 	arguments.parser = parser
 	return arguments
@@ -491,8 +534,11 @@ def transcript_paths() -> tuple[list[Path], list[Path]]:
 	Returns:
 		Sorted Claude paths followed by sorted Codex rollout paths.
 	"""
+	# The Claude transcript files found under the configured projects folder.
 	claude_paths = sorted(CLAUDE_ROOT.rglob("*.jsonl")) if CLAUDE_ROOT.is_dir() else []
+	# The Codex transcript files found across current and archived sessions.
 	codex_paths = []
+	# The Codex transcript paths already collected from the search roots.
 	seen = set()
 
 	for root in CODEX_ROOTS:
@@ -517,8 +563,11 @@ def write_report(report: Report) -> tuple[Path, Path, Path]:
 		Summary Markdown path, detail Markdown path, and JSON path.
 	"""
 	REPORT_DIRECTORY.mkdir(parents=True, exist_ok=True)
+	# The fixed JSON path for the latest usage report.
 	json_path = REPORT_DIRECTORY / "latest.json"
+	# The fixed Markdown path for the compact usage summary.
 	markdown_path = REPORT_DIRECTORY / "latest.md"
+	# The fixed Markdown path for the detailed usage report.
 	detail_markdown_path = REPORT_DIRECTORY / "latest-detail.md"
 
 	json_path.write_text(
@@ -537,13 +586,19 @@ def main() -> None:
 	Returns:
 		None. Reports are written and a bounded summary is printed.
 	"""
+	# The selected command-line bounds for this report run.
 	arguments = parse_arguments()
+	# The UTC filter bounds and display dates for this report run.
 	window = build_window(arguments)
+	# The UTC instants used to filter transcript records.
 	start, end, _, _ = window
+	# The Claude and Codex transcript paths available for this report run.
 	claude_paths, codex_paths = transcript_paths()
+	# The parsed sessions included in the selected window.
 	sessions: list[Session] = []
 
 	for path in claude_paths:
+		# The Claude session parsed from this transcript, when it has report data.
 		session = parse_claude_session(path, start, end)
 		if session is not None:
 			sessions.append(session)
@@ -553,11 +608,14 @@ def main() -> None:
 		if session is not None:
 			sessions.append(session)
 
+	# The agent labels indexed by session identifier and transcript path.
 	by_session_id, by_path = load_hcom_labels()
 	for session in sessions:
 		apply_hcom_label(session, by_session_id, by_path)
 
+	# The serialisable report assembled from parsed sessions.
 	report = make_report(sessions, window)
+	# The three report paths written for this run, in display order.
 	markdown_path, detail_markdown_path, json_path = write_report(report)
 	print(
 		f"Wrote {report['session_count']} sessions, tokens not cost, "

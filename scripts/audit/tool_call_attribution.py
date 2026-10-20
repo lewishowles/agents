@@ -16,6 +16,7 @@ from token_usage_types import (
 )
 
 
+# The estimation method, four characters per token, recorded with every payload estimate.
 DRIVER_METHOD = "chars/4"
 
 
@@ -81,6 +82,7 @@ def command_input(tool_input: dict[str, object]) -> str:
 		The first non-empty command value, or an empty string when absent.
 	"""
 	for key in ("command", "cmd"):
+		# The first non-empty command value supplied under a supported input key.
 		command = safe_text(tool_input.get(key))
 		if command:
 			return command
@@ -111,6 +113,7 @@ def extract_file_target(name: str, tool_input: dict[str, object]) -> str | None:
 	Returns:
 		The normalised file target, or None when absent.
 	"""
+	# The file path supplied for a read, write, or edit call, when present.
 	target = safe_text(tool_input.get("file_path") or tool_input.get("path"))
 	return target or None
 
@@ -125,6 +128,7 @@ def extract_skill_target(name: str, tool_input: dict[str, object]) -> str | None
 	Returns:
 		The normalised skill target, or None when absent.
 	"""
+	# The skill name supplied for a skill call, when present.
 	target = safe_text(tool_input.get("skill") or tool_input.get("name"))
 	return target or None
 
@@ -193,6 +197,7 @@ def driver_rule(name: str) -> DriverRule | None:
 	Returns:
 		The matching classification rule, or None for unsupported tools.
 	"""
+	# The fixed classification rule for this tool name, when one exists.
 	rule = DRIVER_RULES.get(name)
 	if rule is not None:
 		return rule
@@ -247,7 +252,9 @@ def build_driver_classification(
 	Returns:
 		The completed driver classification.
 	"""
+	# The tool name and input used to find repeated calls.
 	repeat_name, repeat_input = driver_repeat_identity(name, category, target)
+	# The grouping key supplied by the caller or derived from the target.
 	key = classification_key or target
 	if classification_key is None and category == "bash":
 		key = classify_bash_command(target) or "other"
@@ -274,6 +281,7 @@ def fallback_driver_classification(
 	Returns:
 		A fallback classification using the safest available target.
 	"""
+	# The safest available target for an otherwise unknown tool.
 	target = safe_text(
 		tool_input.get("file_path")
 		or tool_input.get("path")
@@ -299,10 +307,12 @@ def driver_classification(
 	if not isinstance(name, str) or not name:
 		return None
 
+	# The fixed or dynamic rule used to classify this tool name.
 	rule = driver_rule(name)
 	if rule is None:
 		return fallback_driver_classification(name, tool_input)
 
+	# The target extracted by the tool's rule, when present.
 	target = rule["target_extractor"](name, tool_input)
 	if target is None:
 		return None
@@ -320,6 +330,7 @@ def new_driver_call(name: object, tool_input: dict[str, object]) -> DriverCall:
 	Returns:
 		The bounded internal tool-call record.
 	"""
+	# The driver grouping attached to this parsed call, when available.
 	classification = driver_classification(name, tool_input)
 	return {
 		"name": name,
@@ -380,6 +391,7 @@ def update_driver_call_result(
 	Returns:
 		None. The matching call is updated when the identifier is known.
 	"""
+	# The earlier tool call matched by this result identifier.
 	call = calls_by_id.get(call_id)
 	if call is not None:
 		call["result"] = result_text(result)
@@ -395,13 +407,17 @@ def estimated_payload_tokens(call: DriverCall) -> int:
 	Returns:
 		The estimated payload size in tokens.
 	"""
+	# The grouping that supplies the target text for this call.
 	classification = call["classification"]
 	if classification is None:
+		# The tool name used as the target when the call has no grouping.
 		target = safe_text(call.get("name"))
 	else:
 		target = classification["target"]
 
+	# The target and result text, cut to their length limits, used for the estimate.
 	parts = [target[:COMMAND_TEXT_LIMIT], safe_text(call["result"])[:RESULT_TEXT_LIMIT]]
+	# The number of characters across both payload parts.
 	character_count = sum(len(part) for part in parts)
 	return math.ceil(character_count / 4) if character_count else 0
 
@@ -415,7 +431,9 @@ def finalise_driver_ledger(session: Session) -> None:
 	Returns:
 		None. Driver ledger fields are updated in the session.
 	"""
+	# The parsed tool calls to group into this session's ledger.
 	calls = session["_driver_calls"]
+	# The call identities and positions used to detect repetitions.
 	repetition_calls = [
 		(
 			call["classification"]["repeat_name"]
@@ -426,27 +444,39 @@ def finalise_driver_ledger(session: Session) -> None:
 		)
 		for index, call in enumerate(calls)
 	]
+	# The call positions identified as repeats of earlier calls.
 	repeated_indexes = repeated_call_indexes(repetition_calls)
+	# The grouped ledger rows indexed by category and key.
 	rows: dict[tuple[str, str], DriverLedgerRow] = {}
+	# The number of calls without a driver grouping.
 	unattributed_count = 0
+	# The estimated payload tokens for calls without a grouping.
 	unattributed_payload = 0
+	# Whether an earlier call with the same category and key failed.
 	failed_before: dict[tuple[str, str], bool] = {}
 
 	for index, call in enumerate(calls):
+		# The grouping attached to this parsed call, when available.
 		classification = call["classification"]
+		# The estimated payload tokens for this call.
 		payload_estimate = estimated_payload_tokens(call)
 		if classification is None:
 			unattributed_count += 1
 			unattributed_payload += payload_estimate
 			continue
 
+		# The report category assigned to this classified call.
 		category = classification["category"]
+		# The key that groups matching calls in the ledger.
 		key = classification["key"]
+		# The category and key used to find this call's ledger row.
 		identity = (category, key)
+		# The number of retries added when an earlier matching call failed.
 		retry_count = 1 if failed_before.get(identity) else 0
 		if call["failed"]:
 			failed_before[identity] = True
 
+		# The existing or newly created ledger row for this call's identity.
 		row = rows.setdefault(
 			identity,
 			{
@@ -466,6 +496,7 @@ def finalise_driver_ledger(session: Session) -> None:
 		row["retry_count"] += retry_count
 		row["repeated"] = row["repeated"] or index in repeated_indexes
 
+	# The ledger rows ranked by estimated payload, then by category and key.
 	ordered_rows = sorted(
 		rows.values(),
 		key=lambda row: (-row["payload_estimate_tokens"], row["category"], row["key"]),
