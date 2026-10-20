@@ -136,7 +136,7 @@ After understanding the affected flow, stop at the first option that fully satis
 4. Installed dependency: use a package the project already carries
 5. New code: write the minimum needed for the confirmed requirement
 
-- No features beyond request, no single-use abstractions or unasked flexibility
+- No features beyond request, no single-use shared abstractions or unasked flexibility
 - Scope limits what you change without asking, not what you notice or raise. A task's list of planned steps is not an exhaustive list of useful changes. Do not reject an idea solely because the record omits it or lists other steps. When an adjacent change would clearly serve the same purpose, name it as an option with a recommendation instead of dropping it silently. If it would change a confirmed requirement or explicit exclusion, explain why and ask before changing the contract.
 - Don't improve adjacent code, comments, or formatter-owned whitespace; don't refactor what works; match existing style
 - Spot unrelated dead code? Mention it, don't delete

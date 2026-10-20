@@ -137,6 +137,8 @@ Use one `task` record for the work and its stable contract: identity, overview, 
 
 The contract is the stable "what": an ordered list of steps, one `--contract-step` each, with the order preserved as given. The steps describe observable outcomes, public behaviour, invariants, constraints, and relevant states, independent of tools. For public, user-visible, or behaviourally significant work, name only the applicable failure and recovery states, such as loading, empty, denied, error, partial, stale, interrupted, or recovery. Keep it observable and invariant-focused, not implementation or testing steps; route accessibility, security, error-handling, and testing mechanics to specialist skills.
 
+Require an exact match or unchanged behaviour only when a real user or caller depends on it. Otherwise, describe the outcome instead of using exactness as a safety net.
+
 Make the final `--contract-step` an explicit out-of-scope statement naming the adjacent work a reader could reasonably assume is included; put release-wide exclusions in the release `--out-of-scope` field. Tasks have no separate non-goals field, and every delegation packet has to state explicit non-scope, so a task without this makes each handoff redraw the boundary from memory. Name a specific exclusion or leave the statement out; a generic "nothing else is in scope" line adds nothing.
 
 Files are a list too. Give each file or spec path its own `--file`, rather than joining several into one value.

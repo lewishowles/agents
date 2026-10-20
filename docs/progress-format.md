@@ -43,6 +43,7 @@ Write task records, chunk titles and descriptions, feature specs, and decisions 
 - Keep confirmed requirements, recommended defaults, and unresolved questions visibly separate.
 - Describe interactions explicitly, including ordering, filtering, focus, state composition, and failure or recovery behaviour where relevant.
 - Write accessibility requirements and acceptance criteria as observable behaviour.
+- Require exact matching or unchanged behaviour only when a real user or caller depends on it; otherwise, describe the outcome instead of adding exactness as a safety net.
 - Preserve edge cases, constraints, failure behaviour, verification requirements, and technical decisions when simplifying the wording.
 - Make a task's title and overview and a chunk's title and description readable on their own: state what changed and why in plain words. Keep implementation detail, file paths, technique names, and discovery notes out of them; put those in the chunk body, a `discovery` record, or a `decision` record. For example, write `fix the blank cell for dotted column IDs` / `the cell lookup fails when a column ID contains a dot`, not `treat column IDs as opaque configuration keys and build cells from configured columns`.
 

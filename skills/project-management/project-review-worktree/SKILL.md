@@ -50,7 +50,7 @@ Check these against changed files and state which were checked:
 
 - **Helper reuse** — reuse an existing helper, component, or command where it covers this
 - **No switchboard drift** — a reused helper hasn't accumulated a boolean/option flag per new caller; that's a maintainability finding, not reuse
-- **No single-use abstractions** — no composable, helper, or test utility with one caller
+- **No single-use shared abstractions** — no shared or exported composable, helper, or test utility with one caller; a private function with one caller is allowed when it separates concerns or makes the caller clearer
 - **Simplest viable shape** — compare with direct code; new helpers, registry fields, callbacks, options, and indirection must make current use clearer, not prepare for possible reuse
 - **Naming and sibling consistency** — uses neighbouring conventions where they remain clear and suitable; precedent does not excuse a weak name, a name that is ambiguous beside the other names in this file, or unnecessary structure
 - **Declaration placement** — each new declaration and setup call reads in data-flow order, next to its callers and the code it composes, not appended after an unrelated block
