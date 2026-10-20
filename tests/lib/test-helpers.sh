@@ -20,6 +20,7 @@ fail() {
 # @param  {string}  path
 #     File path to check.
 assert_file() {
+	# The file path whose existence is checked.
 	local path="$1"
 
 	[ -f "$path" ] || fail "Expected file: $path"
@@ -30,6 +31,7 @@ assert_file() {
 # @param  {string}  path
 #     Path to check.
 assert_link() {
+	# The link path expected to resolve to a file.
 	local path="$1"
 
 	[ -L "$path" ] || fail "Expected symlink: $path"
@@ -41,6 +43,7 @@ assert_link() {
 # @param  {string}  path
 #     Path to check.
 assert_dir_link() {
+	# The link path expected to resolve to a directory.
 	local path="$1"
 
 	[ -L "$path" ] || fail "Expected symlink: $path"
@@ -52,6 +55,7 @@ assert_dir_link() {
 # @param  {string}  path
 #     Directory path to check.
 assert_dir() {
+	# The directory path whose existence is checked.
 	local path="$1"
 
 	[ -d "$path" ] || fail "Expected directory: $path"
@@ -62,6 +66,7 @@ assert_dir() {
 # @param  {string}  path
 #     Path to check.
 assert_not_exists() {
+	# The path expected to be absent.
 	local path="$1"
 
 	[ ! -e "$path" ] || fail "Expected no path: $path"
@@ -72,6 +77,7 @@ assert_not_exists() {
 # @param  {string}  path
 #     Path to check.
 assert_not_file() {
+	# The path expected to contain no file.
 	local path="$1"
 
 	[ ! -f "$path" ] || fail "Expected no file: $path"
@@ -84,7 +90,9 @@ assert_not_file() {
 # @param  {string}  pattern
 #     Fixed string to find.
 assert_contains() {
+	# The file searched for the expected text.
 	local path="$1"
+	# The fixed text expected in the file.
 	local pattern="$2"
 
 	grep -Fq -- "$pattern" "$path" || fail "Expected $path to contain: $pattern"
@@ -97,7 +105,9 @@ assert_contains() {
 # @param  {string}  pattern
 #     Fixed string that must be absent.
 assert_not_contains() {
+	# The file searched for forbidden text.
 	local path="$1"
+	# The fixed text expected to be absent.
 	local pattern="$2"
 
 	! grep -Fq -- "$pattern" "$path" || fail "Expected $path not to contain: $pattern"
@@ -110,7 +120,9 @@ assert_not_contains() {
 # @param  {string}  expected
 #     Expected value.
 assert_equals() {
+	# The value produced by the test.
 	local actual="$1"
+	# The value the test expects.
 	local expected="$2"
 
 	[ "$actual" = "$expected" ] || fail "Expected '$expected', got '$actual'"
@@ -121,6 +133,7 @@ assert_equals() {
 # @param  {string}  path
 #     File path to inspect.
 assert_empty() {
+	# The file expected to be empty or missing.
 	local path="$1"
 
 	[ ! -s "$path" ] || fail "Expected $path to be empty"

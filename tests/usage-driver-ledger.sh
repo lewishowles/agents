@@ -2,12 +2,17 @@
 # Prove the driver ledger against synthetic Case 1 and Case 2 Claude and Codex sessions.
 set -euo pipefail
 
+# The directory containing this ledger test script.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# The repository root used to run the usage report.
 REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+# The fixture directory for the first pair of sessions.
 FIXTURE_DIR="$SCRIPT_DIR/fixtures/usage-case-1"
 
+# The report command output for the first fixture.
 output=$(
 	cd "$REPO_DIR"
+	# The Claude and Codex session directories used by the report command.
 	CLAUDE_CONFIG_DIR="$FIXTURE_DIR/claude" \
 	CODEX_HOME="$FIXTURE_DIR/codex" \
 	python3 scripts/audit/token_usage_report.py --since 2026-08-01 --until 2026-08-01 2>&1
@@ -20,9 +25,13 @@ import json
 from pathlib import Path
 
 
+# The folder containing the generated usage reports.
 report_directory = Path(".agent/audits/usage")
+# The generated usage report for the first fixture.
 report = json.loads((report_directory / "latest.json").read_text(encoding="utf-8"))
+# The generated Markdown summary report.
 markdown = (report_directory / "latest.md").read_text(encoding="utf-8")
+# The detailed generated Markdown report.
 detail_markdown = (report_directory / "latest-detail.md").read_text(encoding="utf-8")
 
 assert report["session_count"] == 2
@@ -31,8 +40,11 @@ assert report["driver_reconciliation"]["tool_call_count"] == 16
 assert report["driver_reconciliation"]["attributed_count"] == 16
 assert report["driver_reconciliation"]["unattributed_count"] == 0
 
+# The reported sessions indexed by tool.
 sessions = {session["tool"]: session for session in report["sessions"]}
+# The Claude session whose totals and drivers are checked.
 claude = sessions["Claude"]
+# The Codex session whose totals and drivers are checked.
 codex = sessions["Codex"]
 
 assert claude["tokens"] == {
@@ -61,7 +73,9 @@ for session in (claude, codex):
 		key=lambda row: (-row["payload_estimate_tokens"], row["category"], row["key"]),
 	)
 
+# The Claude driver rows indexed by category and key.
 claude_rows = {(row["category"], row["key"]): row for row in claude["driver_ledger"]}
+# The Codex driver rows indexed by category and key.
 codex_rows = {(row["category"], row["key"]): row for row in codex["driver_ledger"]}
 assert claude_rows[("bash", "rg")]["count"] == 1
 assert claude_rows[("read", "/fixture/claude/project/src/app.py")]["repeated"] is True
@@ -95,6 +109,7 @@ print("usage driver ledger Case 1: PASS")
 PY
 
 printf '%s\n' 'Running usage driver ledger Case 2'
+# The fixture directory for the retry and failure case.
 CASE2_FIXTURE_DIR="$SCRIPT_DIR/fixtures/usage-case-2"
 output=$(
 	cd "$REPO_DIR"
@@ -110,7 +125,9 @@ import json
 from pathlib import Path
 
 
+# The folder containing the generated usage reports.
 report_directory = Path(".agent/audits/usage")
+# The generated usage report for the retry and failure case.
 report = json.loads((report_directory / "latest.json").read_text(encoding="utf-8"))
 
 assert report["session_count"] == 2
@@ -119,10 +136,15 @@ assert report["driver_reconciliation"]["attributed_count"] == 5
 assert report["driver_reconciliation"]["unattributed_count"] == 0
 assert report["driver_reconciliation"]["reconciles"] is True
 
+# The reported sessions indexed by tool.
 sessions = {session["tool"]: session for session in report["sessions"]}
+# The Claude session with retried calls.
 claude = sessions["Claude"]
+# The Codex session with a successful call.
 codex = sessions["Codex"]
+# The Claude driver rows indexed by category and key.
 claude_rows = {(row["category"], row["key"]): row for row in claude["driver_ledger"]}
+# The Codex driver rows indexed by category and key.
 codex_rows = {(row["category"], row["key"]): row for row in codex["driver_ledger"]}
 
 assert claude["tool_call_count"] == 4
@@ -145,6 +167,7 @@ assert codex["driver_reconciles"] is True
 assert codex_rows[("bash", "rg")]["failure_count"] == 0
 assert codex_rows[("bash", "rg")]["retry_count"] == 0
 
+# The combined driver rows indexed by category and key.
 aggregate_rows = {(row["category"], row["key"]): row for row in report["driver_ledger"]}
 assert aggregate_rows[("bash", "rg")]["count"] == 3
 assert aggregate_rows[("bash", "rg")]["failure_count"] == 1
@@ -168,6 +191,7 @@ print("usage driver ledger Case 2: PASS")
 PY
 
 printf '%s\n' 'Running usage partial-data Case 3'
+# The fixture directory for the partial data case.
 CASE3_FIXTURE_DIR="$SCRIPT_DIR/fixtures/usage-case-3"
 output=$(
 	cd "$REPO_DIR"
@@ -183,9 +207,13 @@ import json
 from pathlib import Path
 
 
+# The folder containing the generated usage reports.
 report_directory = Path(".agent/audits/usage")
+# The generated usage report for the partial data case.
 report = json.loads((report_directory / "latest.json").read_text(encoding="utf-8"))
+# The generated Markdown summary report.
 markdown = (report_directory / "latest.md").read_text(encoding="utf-8")
+# The detailed generated Markdown report.
 detail_markdown = (report_directory / "latest-detail.md").read_text(encoding="utf-8")
 
 assert report["session_count"] == 4
@@ -195,6 +223,7 @@ assert report["partial_data"] == {
 	"skipped_record_counts": {"Claude": 4, "Codex": 4},
 }
 
+# The reported sessions indexed by tool and session ID.
 sessions = {(session["tool"], session["session_id"]): session for session in report["sessions"]}
 assert sessions[("Claude", "claude-case-3")]["tokens"]["total_tokens"] == 28
 assert sessions[("Claude", "claude-case-3")]["skipped_record_count"] == 2
@@ -228,6 +257,7 @@ from scripts.audit.token_usage_rendering import (
 
 
 with tempfile.TemporaryDirectory() as temporary_directory:
+	# The absent transcript path used to test a failed read.
 	missing_path = Path(temporary_directory) / "missing.jsonl"
 	try:
 		list(token_usage_report.records(missing_path, token_usage_report.CLAUDE_RECORD_TYPES, {"skipped_record_count": 0}))
@@ -237,6 +267,7 @@ with tempfile.TemporaryDirectory() as temporary_directory:
 		raise AssertionError("missing transcript reads must raise FileNotFoundError")
 
 
+# The usage record containing finite and non-finite token counts.
 parsed_usage = json.loads(
 	'{"input_tokens": 3.9, "cached_input_tokens": NaN, '
 	'"reasoning_output_tokens": Infinity, "output_tokens": -Infinity, '
@@ -261,7 +292,9 @@ class FakeQuery:
 
 class FakeConnection:
 	def __init__(self, query_error=False):
+		# Whether the fake database query should fail.
 		self.query_error = query_error
+		# Whether the fake database connection has been closed.
 		self.closed = False
 
 	def execute(self, query):
@@ -275,16 +308,20 @@ class FakeConnection:
 
 
 with tempfile.TemporaryDirectory() as temporary_directory:
+	# The temporary database file used to load HCOM labels.
 	database_path = Path(temporary_directory) / "hcom.db"
 	database_path.touch()
+	# The real HCOM database path restored after the test.
 	previous_database = token_usage_report.HCOM_DATABASE
 	token_usage_report.HCOM_DATABASE = database_path
 	try:
+		# The fake connection used for a successful label lookup.
 		success_connection = FakeConnection()
 		with patch.object(token_usage_report.sqlite3, "connect", return_value=success_connection):
 			assert token_usage_report.load_hcom_labels() == ({}, {})
 		assert success_connection.closed
 
+		# The fake connection used for a failed label lookup.
 		error_connection = FakeConnection(query_error=True)
 		with patch.object(token_usage_report.sqlite3, "connect", return_value=error_connection):
 			assert token_usage_report.load_hcom_labels() == ({}, {})
@@ -292,9 +329,13 @@ with tempfile.TemporaryDirectory() as temporary_directory:
 	finally:
 		token_usage_report.HCOM_DATABASE = previous_database
 
+# The folder containing the generated usage reports.
 report_directory = Path(".agent/audits/usage")
+# The generated usage report used for rendering checks.
 report = json.loads((report_directory / "latest.json").read_text(encoding="utf-8"))
+# A copy of the report holding only a session with tokens but no driver calls.
 no_driver_report = deepcopy(report)
+# A copy of a session given tokens but no driver calls.
 no_driver_session = deepcopy(report["sessions"][0])
 no_driver_session["session_id"] = "codex-no-driver"
 no_driver_session["tool"] = "Codex"
@@ -309,8 +350,11 @@ no_driver_session["unattributed"] = {
 no_driver_session["driver_ledger"] = []
 no_driver_report["sessions"] = [no_driver_session]
 
+# The summary rendered for the session without drivers.
 summary = render_markdown(no_driver_report)
+# The detail rendered for the session without drivers.
 detail = render_detail_markdown(no_driver_report)
+# The detail line expected for tokens without a driver.
 expected_no_driver_line = (
 	"Codex `codex-no-driver`: 123 tokens, no attributed tool-call driver."
 )
@@ -318,7 +362,9 @@ assert expected_no_driver_line not in summary
 assert expected_no_driver_line in detail
 assert "### Codex `codex-no-driver`" not in detail
 
+# A copy of the report that adds a session with no activity.
 zero_activity_report = deepcopy(no_driver_report)
+# A copy of a session with no tokens or driver calls.
 zero_activity_session = deepcopy(report["sessions"][0])
 zero_activity_session["session_id"] = "codex-zero-activity"
 zero_activity_session["tool"] = "Codex"
@@ -334,8 +380,11 @@ zero_activity_session["driver_ledger"] = []
 zero_activity_report["sessions"] = [no_driver_session, zero_activity_session]
 zero_activity_report["top_sessions"] = []
 
+# The summary rendered with a zero activity session.
 zero_activity_summary = render_markdown(zero_activity_report)
+# The detail rendered with a zero activity session.
 zero_activity_detail = render_detail_markdown(zero_activity_report)
+# The explanation expected when an inactive session is omitted.
 expected_omitted_line = (
 	"1 session had no attributable activity in the selected window and is omitted."
 )
@@ -344,7 +393,9 @@ assert "### Codex `codex-zero-activity`" not in zero_activity_detail
 assert expected_omitted_line in zero_activity_summary
 assert expected_omitted_line in zero_activity_detail
 
+# A copy of the report used to check the order of visible sessions.
 ordered_report = deepcopy(zero_activity_report)
+# The session with activity that should remain visible.
 ordered_visible_session = deepcopy(report["sessions"][0])
 ordered_visible_session["session_id"] = "claude-visible"
 ordered_visible_session["tool"] = "Claude"
@@ -363,7 +414,9 @@ ordered_report["sessions"] = [
 	zero_activity_session,
 ]
 
+# The summary rendered for the session ordering check.
 ordered_summary = render_markdown(ordered_report)
+# The detail rendered for the session ordering check.
 ordered_detail = render_detail_markdown(ordered_report)
 assert ordered_summary.index("| Codex `codex-no-driver` |") < ordered_summary.index(
 	"| Claude `claude-visible` |"

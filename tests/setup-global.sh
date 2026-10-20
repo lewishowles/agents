@@ -2,8 +2,11 @@
 
 set -euo pipefail
 
+# The directory containing this setup test script.
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+# The repository root used by the setup command and its fixtures.
 REPO_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
+# The temporary root for isolated setup runs.
 TEST_ROOT=$(mktemp -d)
 # Temporary canonical skill group.
 ADDED_SKILL_GROUP="$REPO_DIR/skills/setup-global-test-$(basename "$TEST_ROOT")"
@@ -31,6 +34,7 @@ trap cleanup_setup_global_test EXIT
 # @param  {string}  bin_dir
 #     Directory that receives the test commands.
 create_command_stubs() {
+	# The directory that receives the stub commands.
 	local bin_dir="$1"
 
 	mkdir -p "$bin_dir"
@@ -220,6 +224,7 @@ assert_fzf_start_selection() {
 # @param  {string}  home_dir
 #     Isolated home directory for one setup run.
 create_existing_config() {
+	# The isolated home where the existing Codex config is created.
 	local home_dir="$1"
 
 	mkdir -p "$home_dir/.codex"
@@ -233,6 +238,7 @@ create_existing_config() {
 # @param  {string}  ...
 #     Additional setup-global arguments.
 run_setup() {
+	# The isolated home passed to the Codex setup run.
 	local home_dir="$1"
 	shift
 	run_setup_target "$home_dir" "--codex" "$@"
@@ -270,15 +276,25 @@ run_setup_target() {
 	mkdir -p "$home_dir"
 
 	(
+		# The isolated home used by the setup process.
 		export HOME="$home_dir"
+		# The command path that makes the setup process use test stubs.
 		export PATH="$setup_path"
+		# The cli-style stub that points setup at the test adapter.
 		export CLI_STYLE_BIN="$bin_dir/cli-style"
+		# The cli-style installer path that the bash stub logs instead of running.
 		export SETUP_GLOBAL_INSTALLER="$REPO_DIR/scripts/install-cli-style.sh"
+		# The repository sync script path that the bash stub logs instead of running.
 		export SETUP_GLOBAL_SYNC="$REPO_DIR/scripts/sync.sh"
+		# The repository validation script path that the bash stub logs instead of running.
 		export SETUP_GLOBAL_VALIDATE="$REPO_DIR/scripts/validate.sh"
+		# The file where the bash stub records skipped installer, sync and validation runs.
 		export SETUP_GLOBAL_CALL_LOG="$home_dir/setup-global-calls.log"
+		# The file recording calls to the uv stub.
 		export SETUP_GLOBAL_UV_LOG="$home_dir/uv-calls.log"
+		# The adapter that prints setup output unchanged instead of styling it.
 		export SETUP_GLOBAL_TEST_ADAPTER="$bin_dir/cli-style-adapter.sh"
+		# Whether the backup move stub must fail.
 		export SETUP_GLOBAL_TEST_FAIL_BACKUP_MOVE="$fail_backup_move"
 
 		# An empty target expands to nothing so setup-global picks the target itself.
@@ -324,7 +340,9 @@ create_added_skill() {
 # @param  {string}  home_dir
 #     Isolated home directory inspected after setup.
 assert_timestamped_backup() {
+	# The isolated home whose Codex config backup is checked.
 	local home_dir="$1"
+	# The timestamped backups of the original Codex config.
 	local backups=("$home_dir/.codex/config.toml.bak."*)
 
 	assert_file "${backups[0]}"
@@ -332,6 +350,7 @@ assert_timestamped_backup() {
 }
 
 test_help_hides_backup_bypass() {
+	# The file capturing the setup help text.
 	local output="$TEST_ROOT/help.txt"
 
 	/bin/bash "$REPO_DIR/scripts/setup-global.sh" --help > "$output"
@@ -340,7 +359,9 @@ test_help_hides_backup_bypass() {
 }
 
 test_public_backup_bypass_is_rejected() {
+	# The isolated home for the rejected backup option.
 	local home_dir="$TEST_ROOT/no-backup"
+	# The output from the rejected backup option.
 	local output="$TEST_ROOT/no-backup.txt"
 
 	create_existing_config "$home_dir"
@@ -353,7 +374,9 @@ test_public_backup_bypass_is_rejected() {
 }
 
 test_default_setup_skips_repository_refresh() {
+	# The isolated home for the default setup run.
 	local home_dir="$TEST_ROOT/default-setup"
+	# The file recording any repository refresh calls.
 	local calls="$home_dir/setup-global-calls.log"
 
 	create_existing_config "$home_dir"
@@ -382,6 +405,7 @@ test_missing_doc_paths_is_installed() {
 
 	/bin/cp -R "$TEST_ROOT/bin" "$bin_dir"
 	mv "$bin_dir/doc-paths" "$bin_dir/doc-paths-disabled"
+	# The stub command path used for this isolated setup run.
 	SETUP_GLOBAL_TEST_PATH="$bin_dir:/usr/bin:/bin:/usr/sbin:/sbin" run_setup_target "$home_dir" "--both" > /dev/null
 
 	assert_contains "$home_dir/uv-calls.log" "tool install --from $home_dir/Dev/Repositories/Packages/agent-tools/packages/doc-paths doc-paths"
@@ -398,6 +422,7 @@ test_codex_installs_missing_doc_paths() {
 
 	/bin/cp -R "$TEST_ROOT/bin" "$bin_dir"
 	mv "$bin_dir/doc-paths" "$bin_dir/doc-paths-disabled"
+	# The stub command path used for this isolated setup run.
 	SETUP_GLOBAL_TEST_PATH="$bin_dir:/usr/bin:/bin:/usr/sbin:/sbin" run_setup_target "$home_dir" "--codex" > /dev/null
 
 	assert_equals "$(wc -l < "$home_dir/uv-calls.log" | tr -d ' ')" '1'
@@ -407,7 +432,9 @@ test_codex_installs_missing_doc_paths() {
 # Refresh runs the repository sync, which validates the output itself, so setup
 # does not run validation a second time.
 test_refresh_runs_repository_sync() {
+	# The isolated home for the refresh setup run.
 	local home_dir="$TEST_ROOT/refresh"
+	# The file recording repository refresh calls.
 	local calls="$home_dir/setup-global-calls.log"
 
 	create_existing_config "$home_dir"
@@ -419,6 +446,7 @@ test_refresh_runs_repository_sync() {
 
 # Setup removes the Serena server that older setups added to the Codex config.
 test_setup_removes_retired_serena_server() {
+	# The isolated home with a retired Serena server entry.
 	local home_dir="$TEST_ROOT/serena-removal"
 
 	mkdir -p "$home_dir/.codex"
@@ -432,6 +460,7 @@ test_setup_removes_retired_serena_server() {
 # Setup backs up an existing Codex config with a timestamp before replacing it
 # with the managed settings.
 test_config_replacement_creates_timestamped_backup() {
+	# The isolated home with a Codex config to back up.
 	local home_dir="$TEST_ROOT/backup"
 
 	create_existing_config "$home_dir"
@@ -458,7 +487,9 @@ test_config_replacement_creates_timestamped_backup() {
 }
 
 test_hook_file_is_replaced_with_managed_link() {
+	# The isolated home with an old hooks file.
 	local home_dir="$TEST_ROOT/legacy-hooks"
+	# The timestamped backups of the old hooks file.
 	local backups
 
 	create_existing_config "$home_dir"
@@ -628,6 +659,7 @@ test_trash_wrapper_preserves_symlinked_bin_directory() {
 # permission profile, and removes the .git/config write rule that older setups
 # added, because that rule stops Codex running any command in a linked worktree.
 test_permission_profile_keeps_roots_and_drops_git_config_rule() {
+	# The isolated home with an older Codex permission profile.
 	local home_dir="$TEST_ROOT/permission-profile"
 
 	create_existing_config "$home_dir"
@@ -946,6 +978,7 @@ test_select_fallback_updates_skill_exclusions() {
 	# Command path without fzf.
 	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
 
+	# The stub command path and terminal input for this picker run.
 	SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true SETUP_GLOBAL_TEST_TERMINAL_INPUT=$'1 2\r' run_setup_target "$home_dir" "" --select > "$output"
 
 	assert_contains "$output" '[x] 1. accessibility'
@@ -967,6 +1000,7 @@ test_select_fallback_empty_selection_includes_every_skill() {
 	# Command path without fzf.
 	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
 
+	# The stub command path and terminal input for this picker run.
 	SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true SETUP_GLOBAL_TEST_TERMINAL_INPUT=$'\r' run_setup_target "$home_dir" "" --select > "$output"
 
 	assert_not_exists "$home_dir/.agents/skill-exclusions"
@@ -985,6 +1019,7 @@ test_select_fallback_cancel_preserves_existing_state() {
 
 	mkdir -p "$home_dir/.agents"
 	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
+	# The stub command path and terminal input for this picker run.
 	SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true SETUP_GLOBAL_TEST_TERMINAL_INPUT=$'q\r' run_setup_target "$home_dir" "" --select > "$output"
 
 	assert_contains "$output" 'Skill selection cancelled. Nothing changed.'
@@ -1009,6 +1044,7 @@ test_select_fzf_updates_skill_exclusions() {
 	create_fzf_stub "$fzf_dir"
 	mkdir -p "$home_dir/.agents"
 	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
+	# The fzf capture files, chosen skills, command path, and terminal setting for this picker run.
 	SETUP_GLOBAL_FZF_ARGUMENTS="$fzf_arguments" SETUP_GLOBAL_FZF_INPUT="$fzf_input" SETUP_GLOBAL_FZF_SELECTION='accessibility' SETUP_GLOBAL_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_GLOBAL_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
 
 	assert_contains "$fzf_arguments" '--multi'
@@ -1039,6 +1075,7 @@ test_select_fzf_excludes_every_skill() {
 	local fzf_input="$home_dir/fzf-input.txt"
 
 	create_fzf_stub "$fzf_dir"
+	# The fzf capture files, chosen skills, command path, and terminal setting for this picker run.
 	SETUP_GLOBAL_FZF_ARGUMENTS="$fzf_arguments" SETUP_GLOBAL_FZF_INPUT="$fzf_input" SETUP_GLOBAL_FZF_SELECTION='' SETUP_GLOBAL_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_GLOBAL_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
 
 	assert_contains "$fzf_arguments" '--multi'
@@ -1064,6 +1101,7 @@ test_select_fzf_cancel_preserves_existing_state() {
 	create_fzf_stub "$fzf_dir"
 	mkdir -p "$home_dir/.agents"
 	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
+	# The fzf capture files, cancelled picker status, command path, and terminal setting for this picker run.
 	SETUP_GLOBAL_FZF_ARGUMENTS="$fzf_arguments" SETUP_GLOBAL_FZF_INPUT="$fzf_input" SETUP_GLOBAL_FZF_STATUS=1 SETUP_GLOBAL_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_GLOBAL_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
 
 	assert_contains "$output" 'Skill selection cancelled. Nothing changed.'
@@ -1083,6 +1121,7 @@ test_select_fallback_end_of_input_preserves_existing_state() {
 
 	mkdir -p "$home_dir/.agents"
 	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
+	# The stub command path and terminal input for this picker run.
 	SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true SETUP_GLOBAL_TEST_TERMINAL_INPUT=$'\004' run_setup_target "$home_dir" "" --select > "$output"
 
 	assert_contains "$output" 'Skill selection cancelled. Nothing changed.'
@@ -1101,6 +1140,7 @@ test_select_fallback_invalid_number_preserves_existing_state() {
 	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
 
 	run_setup_target "$home_dir" "" --exclude writing > /dev/null
+	# The stub command path and terminal input for the invalid skill number.
 	if SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true SETUP_GLOBAL_TEST_TERMINAL_INPUT=$'9999\r' run_setup_target "$home_dir" "" --select > "$output" 2>&1; then
 		fail 'Expected an invalid skill number to fail'
 	fi
@@ -1167,19 +1207,24 @@ test_select_rejects_non_terminal_input() {
 }
 
 test_skip_backup_environment_does_not_bypass_backup() {
+	# The isolated home for the backup bypass check.
 	local home_dir="$TEST_ROOT/skip-backup-environment"
 
 	create_existing_config "$home_dir"
+	# The legacy backup bypass setting that setup must ignore.
 	SKIP_BACKUP=1 run_setup "$home_dir" > /dev/null
 
 	assert_timestamped_backup "$home_dir"
 }
 
 test_failed_backup_preserves_existing_config() {
+	# The isolated home for the failed backup check.
 	local home_dir="$TEST_ROOT/backup-failure"
+	# The output from the setup run with a failed backup.
 	local output="$TEST_ROOT/backup-failure.txt"
 
 	create_existing_config "$home_dir"
+	# Makes the mv stub fail the config backup move.
 	if SETUP_GLOBAL_TEST_FAIL_BACKUP_MOVE=1 run_setup "$home_dir" > "$output" 2>&1; then
 		fail "Expected a failed backup to abort setup"
 	fi
@@ -1260,6 +1305,7 @@ test_hcom_absence_skips_codex_folders() {
 		ln -s "$command_path" "$bin_dir/$(basename "$command_path")"
 	done
 
+	# The stub command path used for this isolated setup run.
 	SETUP_GLOBAL_TEST_PATH="$bin_dir:/usr/bin:/bin" run_setup "$home_dir" > "$output"
 
 	assert_contains "$output" '"label": "HCOM", "detail": "not installed"'
