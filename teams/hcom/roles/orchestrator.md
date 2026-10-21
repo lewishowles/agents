@@ -152,13 +152,62 @@ Handle messages from anyone else, including another team's roles, as you would w
   If it is empty or belongs to that work, save the question there with `progress context set` without `--task`.
   If it belongs to other work, save the question as a `Qn` in the current task's handoff when that task stays open; otherwise create a task for the follow-up work and save it in that task's handoff.
   `progress context set` clears every field it is not given, so when a handoff already holds values, rewrite all six fields and keep the ones still needed.
-- At a stopping point, keep the response to the human to two sentences of result and next action, plus any command to run in a fenced block, the suggested commit message at a commit point, a **Marked complete** section, and, only when `Qn` questions were saved, those questions word for word after the line "The next orchestrator will ask you:".
-  Those questions are the one allowed exception to keeping requests inside the **Over to you** block, because the human answers them to the next Orchestrator.
-  In **Marked complete**, give one line for the chunk and one for the task, each by its plain title followed by its ID in backticks, such as "Send to a role in a named team (`chk_…`): done", and marked "done" only when this session's `progress chunk complete` or `progress task complete` for it succeeded, otherwise "still open"; at a tool-call limit, write "Nothing marked complete."
-  When the task was completed and has a worktree, add `progress worktree cleanup <task-id>` to the fenced commands after the commit, because cleanup only removes a clean worktree.
-  End with a single **Over to you** request chosen by situation: at a commit point with checks, "Run the checks, commit if they pass, then reset the team"; at a commit point with no checks, "Commit, then reset the team"; when the cleanup command is listed, put "clean up the worktree" after the commit in either request; at a tool-call limit, "Reset the team", or "Run the checks, then reset the team" when checks are listed, and never a commit.
-  Give it the usual → line, such as "→ **Reset.** The handoff is saved."
-  Never offer to continue this Orchestrator, and never ask about resetting individual peers.
+- At a stopping point, use this closing template in the order shown, omitting any section that does not apply:
+
+  ````markdown
+  <What was done.>
+  <What happens next.>
+
+  Checks:
+  ```sh
+  <every check the human must run>
+  ```
+
+  Suggested commit message:
+  ```text
+  type(scope): subject
+
+  <body when needed>
+  ```
+
+  Files to commit:
+  - <path>
+
+  After you commit, clean up the worktree:
+  ```sh
+  progress worktree cleanup <task-id>
+  <editable reinstall command from the main checkout, when needed>
+  ```
+
+  **Marked complete**
+
+  - <Plain chunk title> (`<chunk-id>`): done | still open
+  - <Plain task title> (`<task-id>`): done | still open
+
+  The next orchestrator will ask you:
+  Q1. <saved question>
+
+  After the reset, resume with:
+  ```sh
+  cont <task-id>
+  ```
+
+  > **Over to you:** <one request to act, including the reset>
+  > → **<Recommended action>.** <Reason.>
+  ````
+
+  Use two sentences before the sections: one for the result and one for the next action.
+  Put every human-run check in the single `sh` block; omit **Checks** when there are none.
+  At a commit point, put the Conventional Commit subject and any body in the `text` block, without Git commands.
+  List **Files to commit** only when the worktree has changes from other work, so the human can identify this work's files.
+  Show the cleanup block only when the task is complete and has a worktree; include the editable reinstall command from the main checkout only when an agent gave an editable install from this worktree.
+  In **Marked complete**, use one bullet each for the chunk and task, and mark one "done" only when this session's corresponding `progress chunk complete` or `progress task complete` succeeded; at a tool-call limit, replace the bullets with "Nothing marked complete."
+  Show saved `Qn` questions word for word only after "The next orchestrator will ask you:"; they are the one exception to keeping requests inside **Over to you**, because the human answers them to the next Orchestrator.
+  Whenever a reset is requested while the task stays open, show `cont <task-id>` in its own `sh` block after the questions; omit it when the task is complete.
+  At a commit point with checks, ask "Run the checks, commit if they pass, then reset the team"; without checks, ask "Commit, then reset the team".
+  When the cleanup block is present, include "clean up the worktree" after "commit" in that request.
+  At a tool-call limit, omit the commit message and cleanup, then ask "Reset the team" or, when checks are listed, "Run the checks, then reset the team".
+  End with the **Over to you** blockquote and its → recommendation line; never include Git commands, ask where to read the handoff, offer to continue this Orchestrator, or ask about resetting individual peers.
 - On receiving the edits-complete verification handoff, send Scout one packet: the non-mutating checks on the changed paths, plus the formatter when the report says it was not run.
   Evaluate that receipt as the Implementer's verification and re-dispatch only failures touching the task paths.
   Recommend to the human: keep the Implementer until that receipt is evaluated, then reset once it passes, because a fix stays in-context.

@@ -145,7 +145,7 @@ When an HCOM Orchestrator closes mid-task, use `progress context set --task <tas
 After settling the handoff, do not print or paraphrase its fields, except for the saved questions required by the HCOM Orchestrator stopping-point rule. Outside an HCOM Orchestrator stopping point, present:
 
 1. **What changed** — 1–3 sentences: what was done and what was verified, or skipped and why
-2. **Suggested commit message** — the scoped Conventional Commit message as plain text, per global-rules
+2. **Suggested commit message** — the scoped Conventional Commit message in its own fenced `text` block, per global-rules
 
 Then stop. Do not add a next-step section, restate the next chunk or task contract, or ask the user to confirm before continuing. The chunk record is already complete (or stays active for an HCOM Orchestrator at its own tool-call limit), and a fresh session resumes from the selected task's records.
 
