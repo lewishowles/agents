@@ -2,7 +2,7 @@
 
 Use the scripts for normal installs, and add a shell alias if you run them often. The manual steps after that are a fallback for when you need to inspect or repair the wiring.
 
-`scripts/sync.sh` and `scripts/validate.sh` need Bash 4 or newer. macOS ships Bash 3.2, so install a newer one with `brew install bash`.
+`scripts/sync.sh` and `scripts/validate.sh` need Bash 4 or newer, and validation also needs coreutils for `timeout`. macOS ships Bash 3.2, so install both with `brew install bash coreutils`.
 
 ## Shell aliases
 

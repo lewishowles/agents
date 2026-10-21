@@ -34,14 +34,23 @@ NEW_BASH_MAJOR=$("$NEW_BASH" -c 'printf "%s" "${BASH_VERSINFO[0]}"')
 TIMEOUT_BIN=$(command -v timeout || true)
 [ -n "$TIMEOUT_BIN" ] || fail "The Bash guard test needs timeout; install it with brew install coreutils"
 
-# The probe prints the interpreter version and the version seen by a child script.
+# The probe prints the interpreter version and the versions seen by child scripts.
 cat > "$TEST_ROOT/probe.sh" <<'PROBE'
 #!/usr/bin/env bash
 set -euo pipefail
 source "$GUARD_HELPER"
 printf 'parent=%s\n' "${BASH_VERSINFO[0]}"
 bash -c 'printf "child=%s\n" "${BASH_VERSINFO[0]}"'
+/bin/bash "$GUARD_CHILD"
 PROBE
+
+# The probe runs this child under old Bash after its own restart, to check that the guard can restart the child too.
+cat > "$TEST_ROOT/guard-child.sh" <<'CHILD'
+#!/bin/bash
+set -euo pipefail
+source "$GUARD_HELPER"
+printf 'guarded=%s\n' "${BASH_VERSINFO[0]}"
+CHILD
 
 # The fake candidate passes the version probe but restarts under old Bash.
 cat > "$TEST_ROOT/fake-bash" <<'FAKE'
@@ -77,6 +86,7 @@ run_with_old_bash() {
 	"$TIMEOUT_BIN" 8 env -u REQUIRE_BASH_REEXECUTED \
 		PATH="/usr/bin:/bin" \
 		GUARD_HELPER="$REPO_DIR/scripts/lib/require-bash.sh" \
+		GUARD_CHILD="$TEST_ROOT/guard-child.sh" \
 		REEXEC_CALLS="$TEST_ROOT/reexec-calls.txt" \
 		REQUIRE_BASH_CANDIDATES="$candidates" \
 		/bin/bash "$script" > "$output_file" 2>&1
@@ -90,6 +100,7 @@ run_with_old_bash "$TEST_ROOT/probe.sh" "$NEW_BASH" "$TEST_ROOT/supported.txt"
 assert_equals "$TEST_STATUS" "0"
 assert_contains "$TEST_ROOT/supported.txt" "parent=$NEW_BASH_MAJOR"
 assert_contains "$TEST_ROOT/supported.txt" "child=$NEW_BASH_MAJOR"
+assert_contains "$TEST_ROOT/supported.txt" "guarded=$NEW_BASH_MAJOR"
 
 run_with_old_bash "$TEST_ROOT/probe.sh" "/bin/bash" "$TEST_ROOT/missing.txt"
 [ "$TEST_STATUS" -ne 0 ] || fail "Old Bash unexpectedly passed without a candidate"

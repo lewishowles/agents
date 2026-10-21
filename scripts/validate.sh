@@ -59,7 +59,7 @@ run_check "hook sync"             bash "$REPO_DIR/scripts/validate/check-hook-sy
 run_check "dist sync"             bash "$REPO_DIR/scripts/validate/check-dist-sync.sh"
 run_check "docs tables"           python3 "$REPO_DIR/scripts/build/build-docs.py" --check
 run_check "global setup backup"   bash "$REPO_DIR/tests/setup-global.sh"
-run_check "Bash version guard"     bash "$REPO_DIR/tests/bash-guard.sh"
+run_check "Bash version guard"    bash "$REPO_DIR/tests/bash-guard.sh"
 run_check "HCOM acknowledgement guard" bash "$REPO_DIR/tests/hcom-ack-guard.sh"
 run_check "HCOM recipient guard" bash "$REPO_DIR/tests/hcom-recipient-guard.sh"
 run_check "trash guard"          bash "$REPO_DIR/tests/trash-guard.sh"

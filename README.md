@@ -2,7 +2,7 @@
 
 Shared configuration for Claude Code and Codex, this repository keeps common agent rules, skills, and hooks in one place.
 
-`scripts/sync.sh` and `scripts/validate.sh` need Bash 4 or newer. macOS ships Bash 3.2, so install a newer one with `brew install bash`.
+`scripts/sync.sh` and `scripts/validate.sh` need Bash 4 or newer, and validation also needs coreutils for `timeout`. macOS ships Bash 3.2, so install both with `brew install bash coreutils`.
 
 ## Set up global configuration
 
