@@ -23,6 +23,8 @@ extends = ":workspace"
 "{{HOME}}/.hcom" = true
 # Bun stores downloaded packages here during `bun install`. Only the cache is listed, because ~/.bun also holds the Bun binary.
 "{{HOME}}/.bun/install/cache" = true
+# npm keeps its download cache and logs here. Commands such as `npm view` and `npm pack` fail without write access, even when they only read from the registry.
+"{{HOME}}/.npm" = true
 # Swift and Xcode builds write package caches, package security records, and build output here.
 "{{HOME}}/Library/Caches/org.swift.swiftpm" = true
 "{{HOME}}/Library/org.swift.swiftpm" = true
