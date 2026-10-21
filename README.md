@@ -2,6 +2,8 @@
 
 Shared configuration for Claude Code and Codex, this repository keeps common agent rules, skills, and hooks in one place.
 
+`scripts/sync.sh` and `scripts/validate.sh` need Bash 4 or newer. macOS ships Bash 3.2, so install a newer one with `brew install bash`.
+
 ## Set up global configuration
 
 This links the rules, skills, and hooks in this repo into your Claude and Codex home configuration, so every project you open picks them up automatically. It also links the trash wrapper to `~/.local/bin/trash` for both agents and your shell. The wrapper refuses empty paths, your current folder, and its ancestors, which helps prevent an unset variable from moving a whole project to the Trash. It takes effect only when `~/.local/bin` comes before `/usr/bin` on `PATH`; `type -a trash` shows which command runs first. Run setup from the repository root:

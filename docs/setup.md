@@ -2,6 +2,8 @@
 
 Use the scripts for normal installs, and add a shell alias if you run them often. The manual steps after that are a fallback for when you need to inspect or repair the wiring.
 
+`scripts/sync.sh` and `scripts/validate.sh` need Bash 4 or newer. macOS ships Bash 3.2, so install a newer one with `brew install bash`.
+
 ## Shell aliases
 
 Add this alias to `~/.zshrc`:

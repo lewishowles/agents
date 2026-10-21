@@ -3,22 +3,13 @@
 
 set -euo pipefail
 
-# macOS ships bash 3.2; several validators need bash 4+ (declare -A, mapfile).
-# Re-exec under homebrew bash if the current interpreter is too old.
-if [ "${BASH_VERSINFO[0]}" -lt 4 ]; then
-	export PATH="/opt/homebrew/bin:$PATH"
-	if [ -x /opt/homebrew/bin/bash ]; then
-		exec /opt/homebrew/bin/bash "$0" "$@"
-	else
-		exec "$(command -v bash)" "$0" "$@"
-	fi
-fi
-
 # The folder containing this script, regardless of the caller's location.
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 # The repository whose generated files and configuration are checked.
 REPO_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 
+# shellcheck source=SCRIPTDIR/lib/require-bash.sh
+source "$SCRIPT_DIR/lib/require-bash.sh"
 source "$REPO_DIR/scripts/lib/cli-style-output.sh"
 
 # The number of validation commands that reported a failure.
@@ -68,6 +59,7 @@ run_check "hook sync"             bash "$REPO_DIR/scripts/validate/check-hook-sy
 run_check "dist sync"             bash "$REPO_DIR/scripts/validate/check-dist-sync.sh"
 run_check "docs tables"           python3 "$REPO_DIR/scripts/build/build-docs.py" --check
 run_check "global setup backup"   bash "$REPO_DIR/tests/setup-global.sh"
+run_check "Bash version guard"     bash "$REPO_DIR/tests/bash-guard.sh"
 run_check "HCOM acknowledgement guard" bash "$REPO_DIR/tests/hcom-ack-guard.sh"
 run_check "HCOM recipient guard" bash "$REPO_DIR/tests/hcom-recipient-guard.sh"
 run_check "trash guard"          bash "$REPO_DIR/tests/trash-guard.sh"
