@@ -1232,7 +1232,7 @@ test_select_fallback_updates_skill_exclusions() {
 	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
 
 	# The stub command path and terminal input for this picker run.
-	COLUMNS=80 SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true SETUP_GLOBAL_TEST_TERMINAL_INPUT=$'1 2\r' run_setup_target "$home_dir" "" --select > "$output"
+	NO_COLOR=1 COLUMNS=80 SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true SETUP_GLOBAL_TEST_TERMINAL_INPUT=$'1 2\r' run_setup_target "$home_dir" "" --select > "$output"
 
 	assert_contains "$output" '[x]  1. accessibility'
 	assert_contains "$output" '[x]  2. accessibility-audit'
