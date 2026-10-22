@@ -51,16 +51,16 @@ cli_status() {
 		muted) type="unchanged" ;;
 	esac
 
-	python3 - "$type" "$label" "$detail" <<'PY' | cli_style_render status
-import json
-import sys
-
-print(json.dumps({
-	"type": sys.argv[1],
-	"label": sys.argv[2],
-	"detail": sys.argv[3],
-}))
-PY
+	# The fields as JSON strings. The row matches json.dumps output byte for
+	# byte, including its key order and spacing.
+	local type_json label_json detail_json
+	cli_json_string "$type"
+	type_json="$REPLY"
+	cli_json_string "$label"
+	label_json="$REPLY"
+	cli_json_string "$detail"
+	detail_json="$REPLY"
+	printf '{"type": %s, "label": %s, "detail": %s}\n' "$type_json" "$label_json" "$detail_json" | cli_style_render status
 }
 
 # Renders a reporter-style group summary row.
@@ -95,18 +95,124 @@ cli_section() {
 	local detail="${2:-}"
 
 	printf '\n'
-	python3 - "$title" "$detail" <<'PY' | cli_style_render divider
-import json
-import sys
+	# The divider text: the heading, followed by any supporting text.
+	local label="$title"
+	if [[ -n "$detail" ]]; then
+		label+=" · $detail"
+	fi
 
-# The divider text: the heading, followed by any supporting text.
-label = sys.argv[1] if sys.argv[2] == "" else f"{sys.argv[1]} · {sys.argv[2]}"
-print(json.dumps({
-	"dividerWidth": 64,
-	"label": label,
-	"labelColour": "info",
-}))
-PY
+	# The encoded divider text.
+	local label_json
+	cli_json_string "$label"
+	label_json="$REPLY"
+	printf '{"dividerWidth": 64, "label": %s, "labelColour": "info"}\n' "$label_json" | cli_style_render divider
+}
+
+# Encodes text as a quoted JSON string, exactly as Python's json.dumps writes
+# it, and stores the result in REPLY. The encoding runs in the shell because
+# starting Python for every status line doubled the time of a setup run.
+#
+# Non-ASCII characters become \u escapes. Bytes that are not valid UTF-8 become
+# \udc80 to \udcff, the values Python gives undecodable command-line bytes.
+#
+# @param  {string}  value
+#     The text to encode. Shell arguments cannot contain NUL bytes.
+cli_json_string() {
+	# Treat the text as single bytes whatever the caller's locale is.
+	local LC_ALL=C
+	# The bytes left to encode.
+	local value="$1"
+	# The encoded JSON string, built up one character at a time.
+	local result='"'
+	# The current byte and Unicode code point.
+	local byte code_point
+	# The current byte as text and the candidate UTF-8 continuation bytes.
+	local character sequence
+	# The number of continuation bytes and their index.
+	local count index
+	# A continuation byte being checked before it is consumed.
+	local next_byte
+	# The smallest valid code point for the current UTF-8 sequence.
+	local minimum
+	# One escaped code point or surrogate.
+	local escaped
+
+	while [[ -n "$value" ]]; do
+		character="${value:0:1}"
+		printf -v byte '%d' "'$character"
+		value="${value:1}"
+
+		case "$byte" in
+			8) result+='\b'; continue ;;
+			9) result+='\t'; continue ;;
+			10) result+='\n'; continue ;;
+			12) result+='\f'; continue ;;
+			13) result+='\r'; continue ;;
+			34) result+='\"'; continue ;;
+			92) result+="\\\\"; continue ;;
+		esac
+
+		if (( byte < 32 || byte == 127 )); then
+			printf -v escaped '\\u%04x' "$byte"
+			result+="$escaped"
+			continue
+		fi
+		if (( byte < 128 )); then
+			result+="$character"
+			continue
+		fi
+
+		# Work out the length of a multi-byte UTF-8 character from its first byte.
+		if (( byte >= 0xC2 && byte <= 0xDF )); then
+			code_point=$((byte & 31))
+			count=1
+			minimum=0x80
+		elif (( byte >= 0xE0 && byte <= 0xEF )); then
+			code_point=$((byte & 15))
+			count=2
+			minimum=0x800
+		elif (( byte >= 0xF0 && byte <= 0xF4 )); then
+			code_point=$((byte & 7))
+			count=3
+			minimum=0x10000
+		else
+			printf -v escaped '\\udc%02x' "$byte"
+			result+="$escaped"
+			continue
+		fi
+
+		sequence="${value:0:count}"
+		for ((index = 0; index < ${#sequence}; index++)); do
+			printf -v next_byte '%d' "'${sequence:index:1}"
+			if (( next_byte < 0x80 || next_byte > 0xBF )); then
+				break
+			fi
+			code_point=$((code_point << 6 | next_byte & 63))
+		done
+
+		# A short, overlong or out-of-range character escapes only its first byte,
+		# and the bytes after it are encoded on the following passes.
+		if (( index != count || code_point < minimum || code_point > 0x10FFFF || (code_point >= 0xD800 && code_point <= 0xDFFF) )); then
+			printf -v escaped '\\udc%02x' "$byte"
+			result+="$escaped"
+			continue
+		fi
+		value="${value:count}"
+
+		# Characters above U+FFFF are written as a UTF-16 surrogate pair, as json.dumps does.
+		if (( code_point <= 0xFFFF )); then
+			printf -v escaped '\\u%04x' "$code_point"
+			result+="$escaped"
+		else
+			code_point=$((code_point - 0x10000))
+			printf -v escaped '\\u%04x' "$((0xD800 + (code_point >> 10)))"
+			result+="$escaped"
+			printf -v escaped '\\u%04x' "$((0xDC00 + (code_point & 0x3FF)))"
+			result+="$escaped"
+		fi
+	done
+
+	REPLY="$result\""
 }
 
 # Starts collecting status rows for one grouped summary.
