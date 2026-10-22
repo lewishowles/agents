@@ -113,7 +113,22 @@ main() {
 			exit 1
 		fi
 
+		# The installed fzf version, when fzf is available.
+		local fzf_version=''
+		# Whether the picker opens in fzf rather than the numbered list.
+		local use_fzf=false
 		if command -v fzf >/dev/null 2>&1; then
+			fzf_version=$(fzf --version 2>/dev/null) || fzf_version=''
+			if fzf_supports_picker_actions "$fzf_version"; then
+				use_fzf=true
+			elif [ -n "$fzf_version" ]; then
+				printf 'fzf %s cannot run this picker (it needs 0.74 or newer), so using the numbered list.\n' "$fzf_version" >&2
+			else
+				printf '%s\n' 'fzf version could not be read, so using the numbered list.' >&2
+			fi
+		fi
+
+		if [ "$use_fzf" = true ]; then
 			if ! select_skills_with_fzf; then
 				printf '%s\n' 'Skill selection cancelled. Nothing changed.'
 				exit 0
@@ -370,6 +385,29 @@ canonical_skill_exists() {
 	return 1
 }
 
+# Returns success when fzf is 0.74 or newer, the first release with the Tab
+# actions the picker uses. fzf prints build details after the version, such as
+# "0.74.5 (Homebrew)", so only the leading version number is read.
+#
+# @param  {string}  version
+#     The output of fzf --version.
+fzf_supports_picker_actions() {
+	# The version reported by fzf.
+	local version="$1"
+	# The major version number.
+	local major
+	# The minor version number.
+	local minor
+
+	if [[ ! $version =~ ^([0-9]+)\.([0-9]+)\.[0-9]+($|[[:space:]]|-) ]]; then
+		return 1
+	fi
+
+	major="${BASH_REMATCH[1]}"
+	minor="${BASH_REMATCH[2]}"
+	[ "$major" -gt 0 ] || [ "$minor" -ge 74 ]
+}
+
 # Selects included skills with fzf and updates the exclusions from its output.
 #
 # @return  {integer}
@@ -379,19 +417,46 @@ select_skills_with_fzf() {
 	# walk down the list once, ticking each included skill, then return to the top.
 	local fzf_bind='load:'
 	# The selection instructions displayed above the fzf skill list.
-	local fzf_header='Tab toggles a skill, Enter confirms, Esc cancels. Ticked skills are installed.'
-	# The selected skill names returned by fzf, one per line.
+	local fzf_header='Tab toggles a skill or collection, Enter confirms, Esc cancels. Ticked skills are installed.'
+	# The ticked rows returned by fzf.
 	local selected_output
+	# The temporary script fzf runs when Tab is pressed.
+	local picker_script
+	# The temporary file containing every picker row, including rows hidden by a search.
+	local picker_rows
+	# Whether fzf returned a selection or was cancelled.
+	local fzf_status=0
 	# The canonical skill folder currently added to the fzf list.
 	local skill_path
-	# The current skill name, used first to preselect its fzf row and then to read
-	# back fzf's selection.
+	# The current skill name, used to preselect its row and recover each selection.
 	local skill_name
+	# Whether a row returned by fzf is a heading or a skill.
+	local row_kind
+	# The collection the current skill belongs to.
+	local collection_name=''
+	# The number of skills in the current collection.
+	local collection_count=0
+	# The previous collection, used to insert one heading per collection.
+	local previous_collection=''
+	# The width of the longest skill name, used to align descriptions.
+	local name_width
+	# The rows shown in fzf: a heading for each collection, followed by its skills.
+	local -a skill_entries=()
 	# The canonical skill names left selected after the fzf prompt closes.
 	local -a selected_skills=()
 
+	name_width=$(picker_name_width)
 	for skill_path in "${skill_paths[@]}"; do
+		collection_name=$(picker_collection_of "$skill_path")
+		if [ "$collection_name" != "$previous_collection" ]; then
+			collection_count=$(picker_collection_count "$collection_name")
+			skill_entries+=("heading"$'\t'"$collection_name"$'\t'"$collection_name ($collection_count)")
+			fzf_bind="${fzf_bind}down+"
+			previous_collection="$collection_name"
+		fi
+
 		skill_name=$(basename "$skill_path")
+		skill_entries+=("skill"$'\t'"$skill_name"$'\t'"$(picker_entry "$skill_path" '  ' 0 "$name_width" true)")
 		if ! excluded_skill_exists "$skill_name"; then
 			fzf_bind="${fzf_bind}toggle+"
 		fi
@@ -399,13 +464,31 @@ select_skills_with_fzf() {
 	done
 	fzf_bind="${fzf_bind}first"
 
-	if ! selected_output=$(printf '%s\n' "${skill_paths[@]##*/}" | fzf --layout=reverse --multi --header "$fzf_header" --bind "$fzf_bind"); then
+	# fzf runs the Tab command in a fresh shell that cannot see this script's
+	# functions, so the handler and every row go in files that last until the
+	# picker closes.
+	picker_script=$(mktemp)
+	picker_rows=$(mktemp)
+	{
+		declare -f picker_tab_actions
+		# The arguments belong to the Tab script, so they must stay unexpanded here.
+		# shellcheck disable=SC2016
+		printf '%s\n' 'picker_tab_actions "$1" "$2" "$3"'
+	} > "$picker_script"
+	printf '%s\n' "${skill_entries[@]}" > "$picker_rows"
+
+	# fzf fills in {} with the current row and {+f} with the ticked rows when
+	# Tab is pressed. The handler runs under this script's Bash interpreter.
+	selected_output=$(printf '%s\n' "${skill_entries[@]}" | fzf --ansi --layout=reverse --multi --delimiter=$'\t' --with-nth=3 --header "$fzf_header" --bind "$fzf_bind" --bind "tab:transform('$BASH' '$picker_script' '$picker_rows' {} {+f})") || fzf_status=$?
+	trash "$picker_script" "$picker_rows"
+	if [ "$fzf_status" -ne 0 ]; then
 		return 1
 	fi
 
-	while IFS= read -r skill_name; do
-		[ -n "$skill_name" ] || continue
-		selected_skills+=("$skill_name")
+	while IFS=$'\t' read -r row_kind skill_name _; do
+		if [ "$row_kind" = skill ]; then
+			selected_skills+=("$skill_name")
+		fi
 	done <<< "$selected_output"
 
 	# macOS Bash 3.2 treats an empty array expansion as unset under set -u.
@@ -414,6 +497,224 @@ select_skills_with_fzf() {
 	else
 		set_exclusions_from_selected_skills
 	fi
+}
+
+# Prints the fzf actions for a Tab press. On a skill row, Tab toggles that skill
+# and moves down. On a collection heading, Tab ticks every skill in the
+# collection, or unticks them all when all are already ticked. It clears the
+# search first so skills the search hides are included, then returns the cursor
+# to the heading.
+#
+# @param  {string}  rows_file
+#     The file containing every picker row.
+# @param  {string}  current_row
+#     The row under the cursor.
+# @param  {string}  selected_file
+#     A file from fzf listing ticked rows, or the current row when none is ticked.
+picker_tab_actions() {
+	# The file containing every picker row, including rows hidden by a search.
+	local rows_file="$1"
+	# The row under the cursor, which may be a collection heading.
+	local current_row="$2"
+	# The file listing the ticked rows.
+	local selected_file="$3"
+	# The kind of the row under the cursor.
+	local current_kind="${current_row%%$'\t'*}"
+	# The picker row being read.
+	local row
+	# The kind of the row being read.
+	local row_kind
+	# The skill name in the row's second field.
+	local skill_name
+	# The position of the row being read, counted from 1 as fzf's pos action does.
+	local position=0
+	# The position of the heading to restore after changing its skills.
+	local heading_position=0
+	# Whether a skill in the collection is currently unticked.
+	local any_unticked=false
+	# The positions of skills under the heading.
+	local -a positions=()
+
+	if [ "$current_kind" != heading ]; then
+		printf 'toggle+down\n'
+		return
+	fi
+
+	while IFS= read -r row; do
+		position=$((position + 1))
+		row_kind="${row%%$'\t'*}"
+		if [ "$row" = "$current_row" ]; then
+			heading_position=$position
+			continue
+		fi
+		if [ "$heading_position" -eq 0 ]; then
+			continue
+		fi
+		if [ "$row_kind" = heading ]; then
+			break
+		fi
+		positions+=("$position")
+		skill_name="${row#*$'\t'}"
+		skill_name="${skill_name%%$'\t'*}"
+		if ! grep -Fq $'skill\t'"$skill_name"$'\t' "$selected_file"; then
+			any_unticked=true
+		fi
+	done < "$rows_file"
+
+	printf 'clear-query+wait'
+	for position in "${positions[@]}"; do
+		if [ "$any_unticked" = true ]; then
+			printf '+pos(%s)+select' "$position"
+		else
+			printf '+pos(%s)+deselect' "$position"
+		fi
+	done
+	printf '+pos(%s)\n' "$heading_position"
+}
+
+# Prints the collection name for a canonical skill folder.
+#
+# @param  {string}  skill_path
+#     The canonical skill folder.
+picker_collection_of() {
+	# The canonical skill folder.
+	local skill_path="$1"
+	# The parent collection folder.
+	local collection_path="${skill_path%/*}"
+
+	printf '%s\n' "${collection_path##*/}"
+}
+
+# Prints the number of canonical skills in a collection.
+#
+# @param  {string}  collection_name
+#     The collection folder name.
+picker_collection_count() {
+	# The collection being counted.
+	local collection_name="$1"
+	# The skill path inspected for the collection.
+	local skill_path
+	# The count of skills in the collection.
+	local count=0
+
+	for skill_path in "${skill_paths[@]}"; do
+		if [ "${skill_path%/*}" = "$REPO_DIR/skills/$collection_name" ]; then
+			count=$((count + 1))
+		fi
+	done
+	printf '%s\n' "$count"
+}
+
+# Prints the length of the longest skill name in the picker.
+picker_name_width() {
+	# The canonical skill path currently measured.
+	local skill_path
+	# The current skill name.
+	local skill_name
+	# The longest name length found so far.
+	local name_width=0
+
+	for skill_path in "${skill_paths[@]}"; do
+		skill_name="${skill_path##*/}"
+		if [ "${#skill_name}" -gt "$name_width" ]; then
+			name_width=${#skill_name}
+		fi
+	done
+	printf '%s\n' "$name_width"
+}
+
+# Prints one picker row with an aligned name and its description, dimmed on request.
+# The numbered list shortens or drops the description to fit the terminal.
+#
+# @param  {string}  skill_path
+#     The canonical skill folder to display.
+# @param  {string}  prefix
+#     The tick box and number in the numbered picker, or the gap after fzf's marker.
+# @param  {integer}  width
+#     The numbered row width, or zero to leave truncation to fzf.
+# @param  {integer}  name_width
+#     The width of the longest skill name.
+# @param  {boolean}  dim_description
+#     Whether to dim the description.
+picker_entry() {
+	# The skill folder shown in the picker.
+	local skill_path="$1"
+	# The text printed before the skill name.
+	local prefix="$2"
+	# The maximum number of columns available.
+	local width="$3"
+	# The width reserved for the skill name.
+	local name_width="$4"
+	# Whether the description should use dim text.
+	local dim_description="$5"
+	# The skill name shown in the picker.
+	local skill_name
+	# The description shown beside the skill name.
+	local description
+	# The full row before it is shortened.
+	local entry
+
+	skill_name=$(basename "$skill_path")
+	description=$(picker_description "$skill_path")
+	entry="$prefix$skill_name"
+	if [ -n "$description" ]; then
+		printf -v entry '%s%-*s  ' "$prefix" "$name_width" "$skill_name"
+		if [ "$width" -gt 0 ] && [ "$(( ${#entry} + 1 ))" -ge "$width" ]; then
+			printf '%s\n' "$prefix$skill_name"
+			return
+		fi
+		if [ "$width" -gt 0 ] && [ "$(( ${#entry} + ${#description} ))" -gt "$width" ]; then
+			# A byte locale can cut a UTF-8 character in half. Drop any incomplete
+			# trailing character before adding the ellipsis.
+			description=$(printf '%s' "${description:0:$((width - ${#entry} - 1))}" | iconv -f UTF-8 -t UTF-8 -c 2>/dev/null || true)
+			description="${description}…"
+		fi
+		if [ "$dim_description" = true ] && [ -z "${NO_COLOR+x}" ]; then
+			entry="${entry}"$'\033[2m'"${description}"$'\033[22m'
+		else
+			entry="$entry$description"
+		fi
+	fi
+	printf '%s\n' "$entry"
+}
+
+# Prints a skill's frontmatter description on one line, without surrounding
+# quotes or a leading "Use this skill", and with the first letter capitalised.
+# Prints nothing when the skill has no SKILL.md or description. Handles
+# single-line values and folded blocks
+# (`description: >` followed by indented lines), the same format that
+# scripts/build/build-docs.py reads, without making setup depend on Python.
+#
+# @param  {string}  skill_path
+#     The canonical skill folder whose SKILL.md is read.
+picker_description() {
+	# The skill folder whose description is read.
+	local skill_path="$1"
+	# The frontmatter description after joining its lines.
+	local description
+
+	[ -f "$skill_path/SKILL.md" ] || return 0
+
+	# Reads only the frontmatter between the opening and closing --- lines, and
+	# joins the indented lines of a folded description with single spaces.
+	description=$(awk '
+		NR == 1 { if ($0 != "---") exit; next }
+		$0 == "---" { exit }
+		/^description:[[:space:]]*/ {
+			sub(/^description:[[:space:]]*/, "")
+			if ($0 ~ /^[>|][-+]?[[:space:]]*$/) { folded = 1; next }
+			print
+			exit
+		}
+		folded && (/^[[:space:]]/ || $0 == "") {
+			gsub(/^[[:space:]]+|[[:space:]]+$/, "")
+			if ($0 != "") printf "%s%s", separator, $0
+			if ($0 != "") separator = " "
+			next
+		}
+		folded { exit }
+	' "$skill_path/SKILL.md" | sed -E "s/^'(.*)'$/\1/; s/^\"(.*)\"$/\1/; s/^Use this skill[[:space:]]+//; s/[[:space:]]+/ /g; s/[[:space:]]+$//" | awk '{ print toupper(substr($0, 1, 1)) substr($0, 2) }')
+	printf '%s\n' "$description"
 }
 
 # Replaces exclusions with every canonical skill omitted from the selection.
@@ -451,7 +752,7 @@ set_exclusions_from_selected_skills() {
 # Selects included skills from a numbered terminal list and updates exclusions.
 #
 # @return  {integer}
-#     0 when numbers are accepted, 1 when cancelled, or 2 for an invalid number.
+#     0 when entries are accepted, 1 when cancelled, or 2 for an invalid entry.
 select_skills_with_numbered_list() {
 	# The user's response to the numbered skill selector.
 	local selection
@@ -463,21 +764,50 @@ select_skills_with_numbered_list() {
 	local keep_skill=false
 	# The current skill name displayed in the numbered list.
 	local skill_name
+	# The collection of the current skill.
+	local collection_name
+	# The collection displayed on the previous row.
+	local previous_collection=''
+	# The terminal width used to shorten each displayed entry.
+	local picker_width
+	# The width of the longest skill name, used to align descriptions.
+	local name_width
+	# The number of canonical skills in the picker.
+	local skill_count
+	# The number of digits in the final skill number.
+	local number_width
+	# Whether descriptions may be dimmed in this output.
+	local dim_description=false
+	# The selection marker and number printed before a skill name.
+	local prefix
 	# The entry numbers the user chose to leave out.
 	local -a excluded_indexes=()
 	# The canonical skill names retained by the numbered selector.
 	local -a selected_skills=()
 
+	picker_width=$(picker_terminal_width)
+	name_width=$(picker_name_width)
+	skill_count=${#skill_paths[@]}
+	number_width=${#skill_count}
+	if [ -t 1 ]; then
+		dim_description=true
+	fi
 	for index in "${!skill_paths[@]}"; do
+		collection_name=$(picker_collection_of "${skill_paths[$index]}")
+		if [ "$collection_name" != "$previous_collection" ]; then
+			printf '\n%s (%s)\n' "$collection_name" "$(picker_collection_count "$collection_name")"
+			previous_collection="$collection_name"
+		fi
 		skill_name=$(basename "${skill_paths[$index]}")
 		if excluded_skill_exists "$skill_name"; then
-			printf '[ ] %s. %s\n' "$((index + 1))" "$skill_name"
+			printf -v prefix '[ ] %*d. ' "$number_width" "$((index + 1))"
 		else
-			printf '[x] %s. %s\n' "$((index + 1))" "$skill_name"
+			printf -v prefix '[x] %*d. ' "$number_width" "$((index + 1))"
 		fi
+		picker_entry "${skill_paths[$index]}" "$prefix" "$picker_width" "$name_width" "$dim_description"
 	done
 
-	printf 'Enter the numbers to leave out, separated by spaces (or q to cancel): '
+	printf 'Enter skill numbers or collection names to leave out, separated by spaces (or q to cancel): '
 	if ! read -r selection; then
 		return 1
 	fi
@@ -489,8 +819,13 @@ select_skills_with_numbered_list() {
 	read -r -a excluded_indexes <<< "$selection"
 	if [ "${#excluded_indexes[@]}" -gt 0 ]; then
 		for excluded_index in "${excluded_indexes[@]}"; do
-			if ! [[ "$excluded_index" =~ ^[1-9][0-9]*$ ]] || [ "$excluded_index" -gt "${#skill_paths[@]}" ]; then
-				printf 'Invalid skill number: %s\n' "$excluded_index" >&2
+			if [[ "$excluded_index" =~ ^[1-9][0-9]*$ ]]; then
+				if [ "$excluded_index" -gt "${#skill_paths[@]}" ]; then
+					printf 'Invalid skill number: %s\n' "$excluded_index" >&2
+					return 2
+				fi
+			elif [ "$(picker_collection_count "$excluded_index")" -eq 0 ]; then
+				printf 'Invalid skill number or collection: %s\n' "$excluded_index" >&2
 				return 2
 			fi
 		done
@@ -498,9 +833,10 @@ select_skills_with_numbered_list() {
 
 	for index in "${!skill_paths[@]}"; do
 		keep_skill=true
+		collection_name=$(picker_collection_of "${skill_paths[$index]}")
 		if [ "${#excluded_indexes[@]}" -gt 0 ]; then
 			for excluded_index in "${excluded_indexes[@]}"; do
-				if [ "$excluded_index" -eq "$((index + 1))" ]; then
+				if [ "$excluded_index" = "$collection_name" ] || [ "$excluded_index" = "$((index + 1))" ]; then
 					keep_skill=false
 					break
 				fi
@@ -518,6 +854,29 @@ select_skills_with_numbered_list() {
 	else
 		set_exclusions_from_selected_skills
 	fi
+}
+
+# Prints the terminal width, using COLUMNS, /dev/tty, then 80.
+picker_terminal_width() {
+	# The terminal dimensions reported directly by stty.
+	local terminal_size
+	# The column count extracted from the terminal dimensions.
+	local terminal_width
+
+	if [[ ${COLUMNS:-} =~ ^[0-9]+$ ]] && [ "$COLUMNS" -gt 0 ]; then
+		printf '%s\n' "$COLUMNS"
+		return
+	fi
+
+	if terminal_size=$(stty size 2>/dev/null < /dev/tty); then
+		terminal_width="${terminal_size##* }"
+		if [[ $terminal_width =~ ^[0-9]+$ ]] && [ "$terminal_width" -gt 0 ]; then
+			printf '%s\n' "$terminal_width"
+			return
+		fi
+	fi
+
+	printf '80\n'
 }
 
 # Writes the current exclusions, removing the file when no exclusions remain.
