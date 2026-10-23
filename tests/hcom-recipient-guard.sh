@@ -68,6 +68,8 @@ assert_allowed() {
 }
 
 assert_blocked 'hcom send --intent inform --file /tmp/report.txt'
+# The guard must see the command exactly as typed, so ${#items[@]} stays unexpanded.
+# shellcheck disable=SC2016
 assert_blocked 'n=${#items[@]}; hcom send --intent inform --file /tmp/r.txt'
 assert_blocked 'hcom send -- --help'
 assert_blocked 'hcom send -- -h'
@@ -91,6 +93,8 @@ assert_allowed 'hcom send -h -- --file /tmp/report.txt'
 assert_allowed '/opt/homebrew/bin/hcom --name leti send @agent-tools-orchestrator- --file /tmp/report.txt'
 assert_allowed "hcom send @agent-tools-orchestrator- --intent inform -- 'Done'"
 assert_allowed 'hcom send @agent-tools-orchestrator- --intent inform --reply-to 123 --file /tmp/report.txt'
+# The guard must see the command exactly as typed, so $(mktemp) and $receipt_file stay unexpanded.
+# shellcheck disable=SC2016
 assert_allowed 'receipt_file=$(mktemp); hcom send @agent-tools-orchestrator- --intent inform --file "$receipt_file"'
 assert_allowed 'hcom list --json'
 assert_allowed 'hcom events --last 1'
