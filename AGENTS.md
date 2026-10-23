@@ -52,7 +52,7 @@ Configuration/Agents/
 │   ├── audit/               # tracked transcript and usage analysis tools
 │   ├── sync.sh               # full regeneration of target outputs and docs
 │   ├── validate.sh           # checks dist/ consistency; exits 0 on pass
-│   ├── setup-global.sh      # --claude|--codex|--both
+│   ├── setup.sh              # --claude|--codex|--both
 │   ├── build/                # build-docs.py, build-settings.py
 │   ├── validate/              # per-check scripts run by validate.sh
 │   └── lib/                   # dist-targets.sh, cli-style-output.sh, setup-links.sh, ...
@@ -63,7 +63,7 @@ Root holds human-facing contracts that tools auto-discover and the user reads ea
 
 Durable scripts live under tracked `scripts/`, never under `.agent/`. Global setup installs the `friction`, `team-send`, and `doc-paths` commands.
 
-## Symlink topology (after `setup-global.sh --both`)
+## Symlink topology (after `setup.sh --both`)
 
 ```
 ~/.claude/CLAUDE.md         → repo/dist/claude/CLAUDE.md
@@ -84,7 +84,7 @@ repo/.agents/skills/agent-config → repo/.claude/skills/agent-config (repo-loca
 - Regenerating `CLAUDE.md`/`AGENTS.md` from source → `scripts/sync.sh`
 - A shared skill → `skills/<group>/<name>/SKILL.md` plus any support files
 - This repo's own maintenance skill → `.claude/skills/agent-config/SKILL.md`
-- Global symlink wiring → `scripts/setup-global.sh`
+- Global symlink wiring → `scripts/setup.sh`
 - Transcript and usage analysis → `scripts/audit/`; generated reports stay under `.agent/audits/`
 
 **Skill vs. rule boundary:** if guidance should apply on every turn regardless of task, it belongs in `rules/`. If it is triggered by a specific task type or file context, it belongs in `skills/`. Do not add always-on conventions to a skill, and do not put task-specific workflows in a rule. Record lasting ownership splits between two skills in those skills' own files.
@@ -99,7 +99,7 @@ repo/.agents/skills/agent-config → repo/.claude/skills/agent-config (repo-loca
 
 ## Edit workflow
 
-Edit canonical skills in `skills/<group>/<name>/SKILL.md`; installed per-skill symlinks reflect those edits immediately. When adding or removing a skill, rerun `scripts/setup-global.sh` to refresh the selected links. After editing `src/rules/` or `src/fragments/<agent>/` content, run `scripts/sync.sh` to regenerate `dist/claude/CLAUDE.md` and `dist/codex/AGENTS.md`. Commit changes here.
+Edit canonical skills in `skills/<group>/<name>/SKILL.md`; installed per-skill symlinks reflect those edits immediately. When adding or removing a skill, rerun `scripts/setup.sh` to refresh the selected links. After editing `src/rules/` or `src/fragments/<agent>/` content, run `scripts/sync.sh` to regenerate `dist/claude/CLAUDE.md` and `dist/codex/AGENTS.md`. Commit changes here.
 
 Don't edit `~/.claude/` or `~/.agents/` directly — changes won't persist.
 
@@ -115,9 +115,9 @@ Shared global skills: `skills/<group>/<name>/` — groups such as `vue/`, `swift
 1. Create `skills/<group>/<name>/SKILL.md` with `name` and `description` front matter, then add any support files beside it
 2. Run `bash scripts/sync.sh` to refresh generated docs and the Claude/Codex outputs
 3. Check `bash scripts/validate.sh` exits 0
-4. Rerun `setup-global.sh` after adding or removing a skill to refresh its symlinks; editing an installed skill needs no rebuild or setup
+4. Rerun `setup.sh` after adding or removing a skill to refresh its symlinks; editing an installed skill needs no rebuild or setup
 
-After pulling changes that remove or move skills, rerun `scripts/setup-global.sh --both` so installed links no longer point at removed output.
+After pulling changes that remove or move skills, rerun `scripts/setup.sh --both` so installed links no longer point at removed output.
 
 ### Standing context
 

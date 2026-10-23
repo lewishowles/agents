@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Pre-push hook: runs validate.sh (including trigger tests) before pushing.
-# Installed via: scripts/setup-global.sh --claude|--both
+# Installed via: scripts/setup.sh --claude|--both
 
 set -euo pipefail
 

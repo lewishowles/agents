@@ -13,7 +13,7 @@ SOURCE_REPO_DIR="$REPO_DIR"
 # Temporary canonical skill group, set by each case that creates a skill.
 ADDED_SKILL_GROUP=""
 # Temporary canonical skill name.
-ADDED_SKILL_NAME="setup-global-test-skill-$(basename "$TEST_ROOT")"
+ADDED_SKILL_NAME="setup-test-skill-$(basename "$TEST_ROOT")"
 # Temporary canonical skill directory, set by each case that creates a skill.
 ADDED_SKILL_DIR=""
 
@@ -21,7 +21,7 @@ ADDED_SKILL_DIR=""
 source "$SCRIPT_DIR/lib/test-helpers.sh"
 
 # Stops any cases still running, then removes the temporary test folder.
-cleanup_setup_global_test() {
+cleanup_setup_test() {
 	# A case process still running because the suite is exiting early.
 	local child_pid
 
@@ -35,7 +35,7 @@ cleanup_setup_global_test() {
 	cleanup
 }
 
-trap cleanup_setup_global_test EXIT
+trap cleanup_setup_test EXIT
 # Turns Ctrl-C and termination into a normal exit, so the EXIT trap stops any
 # cases still running.
 trap 'exit 130' INT
@@ -66,11 +66,11 @@ create_test_repo_copy() {
 	done
 
 	REPO_DIR="$copy_dir"
-	ADDED_SKILL_GROUP="$REPO_DIR/skills/setup-global-test-$(basename "$TEST_ROOT")"
+	ADDED_SKILL_GROUP="$REPO_DIR/skills/setup-test-$(basename "$TEST_ROOT")"
 	ADDED_SKILL_DIR="$ADDED_SKILL_GROUP/$ADDED_SKILL_NAME"
 }
 
-# Creates command stubs so setup-global can run against an isolated home
+# Creates command stubs so setup can run against an isolated home.
 # without installing dependencies, synchronising output, or changing Git.
 #
 # @param  {string}  bin_dir
@@ -84,8 +84,8 @@ create_command_stubs() {
 cat > "$bin_dir/bash" <<'EOF'
 #!/bin/sh
 case "$1" in
-	"$SETUP_GLOBAL_INSTALLER"|"$SETUP_GLOBAL_SYNC"|"$SETUP_GLOBAL_VALIDATE")
-		printf '%s\n' "$1" >> "$SETUP_GLOBAL_CALL_LOG"
+	"$SETUP_INSTALLER"|"$SETUP_SYNC"|"$SETUP_VALIDATE")
+		printf '%s\n' "$1" >> "$SETUP_CALL_LOG"
 		exit 0
 		;;
 esac
@@ -95,7 +95,7 @@ EOF
 	cat > "$bin_dir/cli-style" <<'EOF'
 #!/bin/sh
 if [ "$1" = "adapter-path" ]; then
-	printf '%s\n' "$SETUP_GLOBAL_TEST_ADAPTER"
+	printf '%s\n' "$SETUP_TEST_ADAPTER"
 	fi
 EOF
 
@@ -110,7 +110,7 @@ EOF
 
 	cat > "$bin_dir/mv" <<'EOF'
 #!/bin/sh
-if [ "${SETUP_GLOBAL_TEST_FAIL_BACKUP_MOVE:-0}" = "1" ]; then
+if [ "${SETUP_TEST_FAIL_BACKUP_MOVE:-0}" = "1" ]; then
 	printf 'backup move failed\n' >&2
 	exit 1
 fi
@@ -148,7 +148,7 @@ EOF
 
 	cat > "$bin_dir/uv" <<'EOF'
 #!/bin/sh
-printf '%s\n' "$*" >> "$SETUP_GLOBAL_UV_LOG"
+printf '%s\n' "$*" >> "$SETUP_UV_LOG"
 if [ "$1" != "tool" ] || [ "$2" != "install" ] || [ "$3" != "--from" ] || [ "$5" != "doc-paths" ]; then
 	exit 1
 fi
@@ -203,7 +203,7 @@ EOF
 	chmod +x "$bin_dir/bash" "$bin_dir/cli-style" "$bin_dir/cp" "$bin_dir/mv" "$bin_dir/git" "$bin_dir/friction" "$bin_dir/team-send" "$bin_dir/doc-paths" "$bin_dir/uv" "$bin_dir/hcom" "$bin_dir/cli-style-adapter.sh"
 }
 
-# Creates an fzf stand-in that reports SETUP_GLOBAL_FZF_VERSION (default:
+# Creates an fzf stand-in that reports SETUP_FZF_VERSION (default:
 # "0.74.5 (Homebrew)") for --version, otherwise records the arguments and skill list it
 # receives, then prints a chosen set of skills.
 #
@@ -218,13 +218,13 @@ create_fzf_stub() {
 	cat > "$bin_dir/fzf" <<'EOF'
 #!/bin/bash
 if [ "${1:-}" = '--version' ]; then
-	printf '%s\n' "${SETUP_GLOBAL_FZF_VERSION-0.74.5 (Homebrew)}"
+	printf '%s\n' "${SETUP_FZF_VERSION-0.74.5 (Homebrew)}"
 	exit 0
 fi
-printf '%s\n' "$@" > "$SETUP_GLOBAL_FZF_ARGUMENTS"
-cat > "$SETUP_GLOBAL_FZF_INPUT"
+printf '%s\n' "$@" > "$SETUP_FZF_ARGUMENTS"
+cat > "$SETUP_FZF_INPUT"
 # Records what Tab on the first heading does with one, then both, of its skills ticked.
-if [ -n "${SETUP_GLOBAL_FZF_ACTIONS:-}" ]; then
+if [ -n "${SETUP_FZF_ACTIONS:-}" ]; then
 	# The Tab command received from setup, before fzf fills in its placeholders.
 	tab_command=''
 	for argument in "$@"; do
@@ -234,21 +234,21 @@ if [ -n "${SETUP_GLOBAL_FZF_ACTIONS:-}" ]; then
 	done
 	[ -n "$tab_command" ] || exit 1
 	# The row under the cursor, passed by fzf as {}.
-	current_row=$(sed -n '1p' "$SETUP_GLOBAL_FZF_INPUT")
-	sed -n '2p' "$SETUP_GLOBAL_FZF_INPUT" > "$SETUP_GLOBAL_FZF_ACTIONS.selected"
+	current_row=$(sed -n '1p' "$SETUP_FZF_INPUT")
+	sed -n '2p' "$SETUP_FZF_INPUT" > "$SETUP_FZF_ACTIONS.selected"
 	# The ticked-rows file and current row wrapped in single quotes, as fzf passes them.
 	# Kept in variables because Bash 3.2 keeps quotes written inside a replacement.
-	quoted_selected="'$SETUP_GLOBAL_FZF_ACTIONS.selected'"
+	quoted_selected="'$SETUP_FZF_ACTIONS.selected'"
 	quoted_row="'$current_row'"
 	# Substitute the two placeholders as fzf does, then cross a clean shell boundary.
 	action="${tab_command//\{+f\}/$quoted_selected}"
 	action="${action//\{\}/$quoted_row}"
-	env -i PATH="$PATH" sh -c "$action" > "$SETUP_GLOBAL_FZF_ACTIONS" || exit 1
-	sed -n '2,3p' "$SETUP_GLOBAL_FZF_INPUT" > "$SETUP_GLOBAL_FZF_ACTIONS.selected"
-	env -i PATH="$PATH" sh -c "$action" >> "$SETUP_GLOBAL_FZF_ACTIONS" || exit 1
+	env -i PATH="$PATH" sh -c "$action" > "$SETUP_FZF_ACTIONS" || exit 1
+	sed -n '2,3p' "$SETUP_FZF_INPUT" > "$SETUP_FZF_ACTIONS.selected"
+	env -i PATH="$PATH" sh -c "$action" >> "$SETUP_FZF_ACTIONS" || exit 1
 fi
-printf '%s\n' "${SETUP_GLOBAL_FZF_SELECTION:-}"
-exit "${SETUP_GLOBAL_FZF_STATUS:-0}"
+printf '%s\n' "${SETUP_FZF_SELECTION:-}"
+exit "${SETUP_FZF_STATUS:-0}"
 EOF
 
 	chmod +x "$bin_dir/fzf"
@@ -351,7 +351,7 @@ PY
 	fi
 }
 
-# Creates a Codex configuration that setup-global must replace.
+# Creates a Codex configuration that setup must replace.
 #
 # @param  {string}  home_dir
 #     Isolated home directory for one setup run.
@@ -380,7 +380,7 @@ create_agent_tools_checkout() {
 # @param  {string}  home_dir
 #     Isolated home directory for the setup run.
 # @param  {string}  ...
-#     Additional setup-global arguments.
+#     Additional setup arguments.
 run_setup() {
 	# The isolated home passed to the Codex setup run.
 	local home_dir="$1"
@@ -388,10 +388,10 @@ run_setup() {
 	run_setup_target "$home_dir" "--codex" "$@"
 }
 
-# Runs setup-global with a selected target or without an explicit target.
+# Runs setup with a selected target or without an explicit target.
 #
-# When SETUP_GLOBAL_TEST_TERMINAL is true, setup runs in a terminal driven by
-# expect. If SETUP_GLOBAL_TEST_TERMINAL_INPUT is set, its value is typed exactly
+# When SETUP_TEST_TERMINAL is true, setup runs in a terminal driven by
+# expect. If SETUP_TEST_TERMINAL_INPUT is set, its value is typed exactly
 # as given once the numbered picker asks its question, so a test includes its
 # own carriage return or Ctrl-D. Without it, nothing is typed. Either way the
 # run waits for setup to exit and returns setup's exit status. The run fails if
@@ -403,7 +403,7 @@ run_setup() {
 # @param  {string}  target
 #     Setup target option, or an empty string to exercise automatic targeting.
 # @param  {string}  ...
-#     Additional setup-global arguments.
+#     Additional setup arguments.
 run_setup_target() {
 	# Isolated home directory for the setup run.
 	local home_dir="$1"
@@ -412,13 +412,13 @@ run_setup_target() {
 	# Directory containing test-only command stubs.
 	local bin_dir="$TEST_ROOT/bin"
 	# Whether backup moves should fail.
-	local fail_backup_move="${SETUP_GLOBAL_TEST_FAIL_BACKUP_MOVE:-0}"
+	local fail_backup_move="${SETUP_TEST_FAIL_BACKUP_MOVE:-0}"
 	# Command path used by the setup process.
-	local setup_path="${SETUP_GLOBAL_TEST_PATH:-$bin_dir:$PATH}"
+	local setup_path="${SETUP_TEST_PATH:-$bin_dir:$PATH}"
 	shift 2
 	# Most cases accept the setup plan with --yes. The confirmation cases set
-	# SETUP_GLOBAL_TEST_WITHOUT_YES so they can see the prompt or the refusal.
-	if [ "${SETUP_GLOBAL_TEST_WITHOUT_YES:-false}" != true ]; then
+	# SETUP_TEST_WITHOUT_YES so they can see the prompt or the refusal.
+	if [ "${SETUP_TEST_WITHOUT_YES:-false}" != true ]; then
 		set -- "$@" --yes
 	fi
 
@@ -432,69 +432,69 @@ run_setup_target() {
 		# shellcheck disable=SC2030
 		export PATH="$setup_path"
 		# The cli-style stub that points setup at the test adapter. A test can set
-		# SETUP_GLOBAL_TEST_CLI_STYLE_BIN to a missing path to run setup without it.
-		export CLI_STYLE_BIN="${SETUP_GLOBAL_TEST_CLI_STYLE_BIN:-$bin_dir/cli-style}"
+		# SETUP_TEST_CLI_STYLE_BIN to a missing path to run setup without it.
+		export CLI_STYLE_BIN="${SETUP_TEST_CLI_STYLE_BIN:-$bin_dir/cli-style}"
 		# The cli-style installer path that the bash stub logs instead of running.
-		export SETUP_GLOBAL_INSTALLER="$REPO_DIR/scripts/install-cli-style.sh"
+		export SETUP_INSTALLER="$REPO_DIR/scripts/install-cli-style.sh"
 		# The repository sync script path that the bash stub logs instead of running.
-		export SETUP_GLOBAL_SYNC="$REPO_DIR/scripts/sync.sh"
+		export SETUP_SYNC="$REPO_DIR/scripts/sync.sh"
 		# The repository validation script path that the bash stub logs instead of running.
-		export SETUP_GLOBAL_VALIDATE="$REPO_DIR/scripts/validate.sh"
+		export SETUP_VALIDATE="$REPO_DIR/scripts/validate.sh"
 		# The file where the bash stub records skipped installer, sync and validation runs.
-		export SETUP_GLOBAL_CALL_LOG="$home_dir/setup-global-calls.log"
+		export SETUP_CALL_LOG="$home_dir/setup-calls.log"
 		# The file recording calls to the uv stub.
-		export SETUP_GLOBAL_UV_LOG="$home_dir/uv-calls.log"
+		export SETUP_UV_LOG="$home_dir/uv-calls.log"
 		# The adapter that prints setup output unchanged instead of styling it.
-		export SETUP_GLOBAL_TEST_ADAPTER="$bin_dir/cli-style-adapter.sh"
+		export SETUP_TEST_ADAPTER="$bin_dir/cli-style-adapter.sh"
 		# Whether the backup move stub must fail.
-		export SETUP_GLOBAL_TEST_FAIL_BACKUP_MOVE="$fail_backup_move"
+		export SETUP_TEST_FAIL_BACKUP_MOVE="$fail_backup_move"
 
-		# An empty target expands to nothing so setup-global picks the target itself.
-		if [ "${SETUP_GLOBAL_TEST_TERMINAL:-false}" = true ]; then
+		# An empty target expands to nothing so setup picks the target itself.
+		if [ "${SETUP_TEST_TERMINAL:-false}" = true ]; then
 			# The expect script is read from standard input because expect 5.45
 			# does not set argv for a script passed with -c.
-			/usr/bin/expect -f - bash "$REPO_DIR/scripts/setup-global.sh" ${target:+"$target"} "$@" <<'EXPECT'
+			/usr/bin/expect -f - bash "$REPO_DIR/scripts/setup.sh" ${target:+"$target"} "$@" <<'EXPECT'
 set timeout 20
 spawn {*}$argv
-if {[info exists env(SETUP_GLOBAL_TEST_PRESET_INPUT)]} {
+if {[info exists env(SETUP_TEST_PRESET_INPUT)]} {
 	expect {
 		-exact "Choose a setup preset: \[1\] Skills only  \[2\] Pick features  \[3\] Everything (or q to cancel): " {}
 		timeout { puts stderr "Preset prompt did not appear within 20 seconds"; exit 1 }
 		eof { puts stderr "Preset prompt did not appear before setup exited"; exit 1 }
 	}
-	send -- $env(SETUP_GLOBAL_TEST_PRESET_INPUT)
+	send -- $env(SETUP_TEST_PRESET_INPUT)
 }
-if {[info exists env(SETUP_GLOBAL_TEST_TARGET_INPUT)]} {
+if {[info exists env(SETUP_TEST_TARGET_INPUT)]} {
 	expect {
 		-exact "Which agent(s)? \[1\] Claude  \[2\] Codex  \[3\] Both: " {}
 		timeout { puts stderr "Target prompt did not appear within 20 seconds"; exit 1 }
 		eof { puts stderr "Target prompt did not appear before setup exited"; exit 1 }
 	}
-	send -- $env(SETUP_GLOBAL_TEST_TARGET_INPUT)
+	send -- $env(SETUP_TEST_TARGET_INPUT)
 }
-if {[info exists env(SETUP_GLOBAL_TEST_FEATURE_INPUT)]} {
+if {[info exists env(SETUP_TEST_FEATURE_INPUT)]} {
 	expect {
 		-exact "Enter feature numbers separated by spaces (all for everything, q to cancel): " {}
 		timeout { puts stderr "Feature prompt did not appear within 20 seconds"; exit 1 }
 		eof { puts stderr "Feature prompt did not appear before setup exited"; exit 1 }
 	}
-	send -- $env(SETUP_GLOBAL_TEST_FEATURE_INPUT)
+	send -- $env(SETUP_TEST_FEATURE_INPUT)
 }
-if {[info exists env(SETUP_GLOBAL_TEST_TERMINAL_INPUT)]} {
+if {[info exists env(SETUP_TEST_TERMINAL_INPUT)]} {
 	expect {
 		-exact "Enter skill numbers or collection names to leave out, separated by spaces (or q to cancel): " {}
 		timeout { puts stderr "Picker prompt did not appear within 20 seconds"; exit 1 }
 		eof { puts stderr "Picker prompt did not appear before setup exited"; exit 1 }
 	}
-	send -- $env(SETUP_GLOBAL_TEST_TERMINAL_INPUT)
+	send -- $env(SETUP_TEST_TERMINAL_INPUT)
 }
-if {[info exists env(SETUP_GLOBAL_TEST_CONFIRMATION_INPUT)]} {
+if {[info exists env(SETUP_TEST_CONFIRMATION_INPUT)]} {
 	expect {
 		-exact "Apply these changes? \[y/N\] " {}
 		timeout { puts stderr "Confirmation prompt did not appear within 20 seconds"; exit 1 }
 		eof { puts stderr "Confirmation prompt did not appear before setup exited"; exit 1 }
 	}
-	send -- $env(SETUP_GLOBAL_TEST_CONFIRMATION_INPUT)
+	send -- $env(SETUP_TEST_CONFIRMATION_INPUT)
 }
 expect {
 	eof {}
@@ -508,7 +508,7 @@ if {[lindex $status 4] eq "CHILDKILLED"} {
 exit [lindex $status 3]
 EXPECT
 		else
-			bash "$REPO_DIR/scripts/setup-global.sh" ${target:+"$target"} "$@"
+			bash "$REPO_DIR/scripts/setup.sh" ${target:+"$target"} "$@"
 		fi
 	)
 }
@@ -541,7 +541,7 @@ create_added_skill() {
 	printf -- '---\nname: %s\ndescription: Temporary setup test skill.\n---\n' "$ADDED_SKILL_NAME" > "$ADDED_SKILL_DIR/SKILL.md"
 }
 
-# Asserts that setup-global preserved the old configuration in a timestamped backup.
+# Asserts that setup preserved the old configuration in a timestamped backup.
 #
 # @param  {string}  home_dir
 #     Isolated home directory inspected after setup.
@@ -559,7 +559,7 @@ test_help_hides_backup_bypass() {
 	# The file capturing the setup help text.
 	local output="$TEST_ROOT/help.txt"
 
-	/bin/bash "$REPO_DIR/scripts/setup-global.sh" --help > "$output"
+	/bin/bash "$REPO_DIR/scripts/setup.sh" --help > "$output"
 
 	assert_not_contains "$output" "--no-backup"
 }
@@ -583,7 +583,7 @@ test_default_setup_skips_repository_refresh() {
 	# The isolated home for the default setup run.
 	local home_dir="$TEST_ROOT/default-setup"
 	# The file recording any repository refresh calls.
-	local calls="$home_dir/setup-global-calls.log"
+	local calls="$home_dir/setup-calls.log"
 
 	create_existing_config "$home_dir"
 	run_setup "$home_dir" > /dev/null
@@ -620,7 +620,7 @@ test_preflight_reports_missing_uv_without_changes() {
 	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
 	before=$(snapshot_test_directory "$home_dir")
 
-	if SETUP_GLOBAL_TEST_PATH="$bin_dir:/usr/bin:/bin:/usr/sbin:/sbin" run_setup_target "$home_dir" "--both" --exclude accessibility > "$output" 2>&1; then
+	if SETUP_TEST_PATH="$bin_dir:/usr/bin:/bin:/usr/sbin:/sbin" run_setup_target "$home_dir" "--both" --exclude accessibility > "$output" 2>&1; then
 		fail 'Expected setup to stop when uv is missing'
 	fi
 
@@ -630,7 +630,7 @@ test_preflight_reports_missing_uv_without_changes() {
 	assert_not_contains "$output" 'Clone agent-tools'
 	assert_contains "$output" 'Setup stopped before changing anything.'
 	assert_equals "$(snapshot_test_directory "$home_dir")" "$before"
-	assert_not_exists "$home_dir/setup-global-calls.log"
+	assert_not_exists "$home_dir/setup-calls.log"
 }
 
 # A missing package checkout must be reported before setup saves skill choices.
@@ -651,7 +651,7 @@ test_preflight_reports_missing_checkout_without_changes() {
 	mkdir -p "$home_dir"
 	before=$(snapshot_test_directory "$home_dir")
 
-	if SETUP_GLOBAL_TEST_PATH="$bin_dir:/usr/bin:/bin:/usr/sbin:/sbin" run_setup_target "$home_dir" "--both" --include-all > "$output" 2>&1; then
+	if SETUP_TEST_PATH="$bin_dir:/usr/bin:/bin:/usr/sbin:/sbin" run_setup_target "$home_dir" "--both" --include-all > "$output" 2>&1; then
 		fail 'Expected setup to stop when the agent-tools checkout is missing'
 	fi
 
@@ -672,7 +672,7 @@ test_preflight_accepts_installed_commands_without_installer() {
 
 	/bin/cp -R "$TEST_ROOT/bin" "$bin_dir"
 	trash "$bin_dir/uv"
-	SETUP_GLOBAL_TEST_PATH="$bin_dir:/usr/bin:/bin:/usr/sbin:/sbin" run_setup_target "$home_dir" "--both" > /dev/null
+	SETUP_TEST_PATH="$bin_dir:/usr/bin:/bin:/usr/sbin:/sbin" run_setup_target "$home_dir" "--both" > /dev/null
 
 	assert_not_exists "$home_dir/uv-calls.log"
 	assert_link "$home_dir/.agents/AGENTS.md"
@@ -687,7 +687,7 @@ test_preflight_checks_only_codex_commands() {
 
 	/bin/cp -R "$TEST_ROOT/bin" "$bin_dir"
 	trash "$bin_dir/friction" "$bin_dir/uv"
-	SETUP_GLOBAL_TEST_PATH="$bin_dir:/usr/bin:/bin:/usr/sbin:/sbin" run_setup_target "$home_dir" "--codex" > /dev/null
+	SETUP_TEST_PATH="$bin_dir:/usr/bin:/bin:/usr/sbin:/sbin" run_setup_target "$home_dir" "--codex" > /dev/null
 
 	assert_not_exists "$home_dir/uv-calls.log"
 	assert_link "$home_dir/.agents/AGENTS.md"
@@ -704,11 +704,11 @@ test_status_skips_agent_tools_preflight() {
 
 	/bin/cp -R "$TEST_ROOT/bin" "$bin_dir"
 	trash "$bin_dir/friction" "$bin_dir/team-send" "$bin_dir/doc-paths" "$bin_dir/uv"
-	SETUP_GLOBAL_TEST_PATH="$bin_dir:/usr/bin:/bin:/usr/sbin:/sbin" run_setup_target "$home_dir" "--both" --status > "$output"
+	SETUP_TEST_PATH="$bin_dir:/usr/bin:/bin:/usr/sbin:/sbin" run_setup_target "$home_dir" "--both" --status > "$output"
 
 	assert_not_contains "$output" 'is not installed'
 	assert_not_contains "$output" 'Setup stopped before changing anything.'
-	assert_not_exists "$home_dir/setup-global-calls.log"
+	assert_not_exists "$home_dir/setup-calls.log"
 }
 
 # Checks that global setup installs a missing doc-paths command once for both targets.
@@ -722,7 +722,7 @@ test_missing_doc_paths_is_installed() {
 	mv "$bin_dir/doc-paths" "$bin_dir/doc-paths-disabled"
 	create_agent_tools_checkout "$home_dir"
 	# The stub command path used for this isolated setup run.
-	SETUP_GLOBAL_TEST_PATH="$bin_dir:/usr/bin:/bin:/usr/sbin:/sbin" run_setup_target "$home_dir" "--both" > /dev/null
+	SETUP_TEST_PATH="$bin_dir:/usr/bin:/bin:/usr/sbin:/sbin" run_setup_target "$home_dir" "--both" > /dev/null
 
 	assert_contains "$home_dir/uv-calls.log" "tool install --from $home_dir/Dev/Repositories/Packages/agent-tools/packages/doc-paths doc-paths"
 	assert_equals "$(wc -l < "$home_dir/uv-calls.log" | tr -d ' ')" '1'
@@ -740,7 +740,7 @@ test_codex_installs_missing_doc_paths() {
 	mv "$bin_dir/doc-paths" "$bin_dir/doc-paths-disabled"
 	create_agent_tools_checkout "$home_dir"
 	# The stub command path used for this isolated setup run.
-	SETUP_GLOBAL_TEST_PATH="$bin_dir:/usr/bin:/bin:/usr/sbin:/sbin" run_setup_target "$home_dir" "--codex" > /dev/null
+	SETUP_TEST_PATH="$bin_dir:/usr/bin:/bin:/usr/sbin:/sbin" run_setup_target "$home_dir" "--codex" > /dev/null
 
 	assert_equals "$(wc -l < "$home_dir/uv-calls.log" | tr -d ' ')" '1'
 	assert_file "$bin_dir/doc-paths"
@@ -752,7 +752,7 @@ test_refresh_runs_repository_sync() {
 	# The isolated home for the refresh setup run.
 	local home_dir="$TEST_ROOT/refresh"
 	# The file recording repository refresh calls.
-	local calls="$home_dir/setup-global-calls.log"
+	local calls="$home_dir/setup-calls.log"
 
 	create_existing_config "$home_dir"
 	run_setup "$home_dir" --refresh > /dev/null
@@ -769,7 +769,7 @@ test_non_terminal_plan_requires_yes() {
 	local before
 	create_existing_config "$home_dir"
 	before=$(snapshot_test_directory "$home_dir")
-	if SETUP_GLOBAL_TEST_WITHOUT_YES=true run_setup_target "$home_dir" --codex --exclude accessibility > "$output" 2>&1; then
+	if SETUP_TEST_WITHOUT_YES=true run_setup_target "$home_dir" --codex --exclude accessibility > "$output" 2>&1; then
 		fail 'Setup applied without --yes in a non-terminal'
 	fi
 	assert_contains "$output" 'Codex settings:'
@@ -777,7 +777,7 @@ test_non_terminal_plan_requires_yes() {
 	assert_contains "$output" 'Selection:'
 	assert_contains "$output" 'Setup needs --yes'
 	assert_equals "$(snapshot_test_directory "$home_dir")" "$before"
-	assert_not_exists "$home_dir/setup-global-calls.log"
+	assert_not_exists "$home_dir/setup-calls.log"
 }
 
 # Declining at the final terminal question leaves the selection and links untouched.
@@ -788,11 +788,11 @@ test_terminal_decline_preserves_home() {
 	local before
 	create_existing_config "$home_dir"
 	before=$(snapshot_test_directory "$home_dir")
-	SETUP_GLOBAL_TEST_WITHOUT_YES=true SETUP_GLOBAL_TEST_TERMINAL=true SETUP_GLOBAL_TEST_CONFIRMATION_INPUT=$'n\r' run_setup_target "$home_dir" --codex --exclude accessibility > "$output"
+	SETUP_TEST_WITHOUT_YES=true SETUP_TEST_TERMINAL=true SETUP_TEST_CONFIRMATION_INPUT=$'n\r' run_setup_target "$home_dir" --codex --exclude accessibility > "$output"
 	assert_contains "$output" 'Apply these changes?'
 	assert_contains "$output" 'Setup cancelled. Nothing changed.'
 	assert_equals "$(snapshot_test_directory "$home_dir")" "$before"
-	assert_not_exists "$home_dir/setup-global-calls.log"
+	assert_not_exists "$home_dir/setup-calls.log"
 }
 
 # Accepting the terminal confirmation creates the planned links.
@@ -800,7 +800,7 @@ test_terminal_accept_creates_links() {
 	# The isolated home and captured terminal output.
 	local home_dir="$TEST_ROOT/preview-accept" output="$TEST_ROOT/preview-accept.txt"
 
-	SETUP_GLOBAL_TEST_WITHOUT_YES=true SETUP_GLOBAL_TEST_TERMINAL=true SETUP_GLOBAL_TEST_CONFIRMATION_INPUT=$'y\r' run_setup_target "$home_dir" --codex > "$output"
+	SETUP_TEST_WITHOUT_YES=true SETUP_TEST_TERMINAL=true SETUP_TEST_CONFIRMATION_INPUT=$'y\r' run_setup_target "$home_dir" --codex > "$output"
 
 	assert_contains "$output" 'Apply these changes?'
 	assert_link "$home_dir/.agents/AGENTS.md"
@@ -816,7 +816,7 @@ test_nothing_to_change_exits_without_yes() {
 	local before
 	run_setup "$home_dir" > /dev/null
 	before=$(snapshot_test_directory "$home_dir")
-	if ! SETUP_GLOBAL_TEST_WITHOUT_YES=true run_setup "$home_dir" > "$output"; then
+	if ! SETUP_TEST_WITHOUT_YES=true run_setup "$home_dir" > "$output"; then
 		cat "$output"
 		fail 'A completed setup still has a planned change'
 	fi
@@ -853,7 +853,7 @@ test_skills_only_without_cli_style() {
 	# The plain setup preview and status messages.
 	local output="$TEST_ROOT/preset-skills-no-cli-style.txt"
 
-	SETUP_GLOBAL_TEST_CLI_STYLE_BIN="$TEST_ROOT/missing-cli-style" \
+	SETUP_TEST_CLI_STYLE_BIN="$TEST_ROOT/missing-cli-style" \
 		run_setup_target "$home_dir" --both --preset skills-only > "$output" 2>&1
 
 	assert_dir_link "$home_dir/.claude/skills/accessibility"
@@ -861,7 +861,7 @@ test_skills_only_without_cli_style() {
 	assert_contains "$output" 'linked: skills/accessibility'
 	assert_contains "$output" 'Done.'
 	assert_not_contains "$output" 'Done.: success'
-	assert_not_exists "$home_dir/setup-global-calls.log"
+	assert_not_exists "$home_dir/setup-calls.log"
 }
 
 # Pick features uses the existing skill picker and installs only selected extras.
@@ -873,8 +873,8 @@ test_pick_preset_installs_selected_features() {
 	# The command path that keeps fzf out of this numbered-picker test.
 	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
 
-	SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true \
-		SETUP_GLOBAL_TEST_FEATURE_INPUT=$'1 5\r' SETUP_GLOBAL_TEST_TERMINAL_INPUT=$'accessibility\r' \
+	SETUP_TEST_PATH="$fallback_path" SETUP_TEST_TERMINAL=true \
+		SETUP_TEST_FEATURE_INPUT=$'1 5\r' SETUP_TEST_TERMINAL_INPUT=$'accessibility\r' \
 		run_setup_target "$home_dir" --codex --preset pick > "$output"
 
 	assert_contains "$output" 'Enter skill numbers or collection names to leave out'
@@ -902,8 +902,8 @@ test_pick_preset_without_hooks_preserves_user_settings() {
 	printf '%s\n' '{"user_setting":"keep"}' > "$home_dir/.claude/settings.json"
 	printf 'custom_setting = "keep"\n\n[features]\nhooks = false\n' > "$home_dir/.codex/config.toml"
 
-	SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true \
-		SETUP_GLOBAL_TEST_FEATURE_INPUT=$'4\r' SETUP_GLOBAL_TEST_TERMINAL_INPUT=$'accessibility\r' \
+	SETUP_TEST_PATH="$fallback_path" SETUP_TEST_TERMINAL=true \
+		SETUP_TEST_FEATURE_INPUT=$'4\r' SETUP_TEST_TERMINAL_INPUT=$'accessibility\r' \
 		run_setup_target "$home_dir" --both --preset pick > "$output"
 
 	assert_equals "$(cat "$home_dir/.claude/settings.json")" '{"user_setting":"keep"}'
@@ -924,8 +924,8 @@ test_pick_preset_claude_features_hide_codex_choices() {
 	# The command path that uses the numbered skill picker.
 	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
 
-	SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true \
-		SETUP_GLOBAL_TEST_FEATURE_INPUT=$'2\r' SETUP_GLOBAL_TEST_TERMINAL_INPUT=$'accessibility\r' \
+	SETUP_TEST_PATH="$fallback_path" SETUP_TEST_TERMINAL=true \
+		SETUP_TEST_FEATURE_INPUT=$'2\r' SETUP_TEST_TERMINAL_INPUT=$'accessibility\r' \
 		run_setup_target "$home_dir" --claude --preset pick > "$output"
 
 	assert_contains "$output" 'Choose features: [1] Hooks  [2] Themes  [3] Trash wrapper  [4] Helper commands'
@@ -957,8 +957,8 @@ test_pick_preset_claude_rejects_unknown_features() {
 		mkdir -p "$home_dir"
 		before=$(snapshot_test_directory "$home_dir")
 
-		if SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true \
-			SETUP_GLOBAL_TEST_FEATURE_INPUT="${choice}"$'\r' run_setup_target "$home_dir" --claude --preset pick > "$output" 2>&1; then
+		if SETUP_TEST_PATH="$fallback_path" SETUP_TEST_TERMINAL=true \
+			SETUP_TEST_FEATURE_INPUT="${choice}"$'\r' run_setup_target "$home_dir" --claude --preset pick > "$output" 2>&1; then
 			fail "Expected feature choice $choice to fail"
 		fi
 
@@ -992,8 +992,8 @@ test_interactive_setup_asks_for_preset() {
 	# The preset prompt and setup status messages.
 	local output="$TEST_ROOT/preset-prompt.txt"
 
-	SETUP_GLOBAL_TEST_TERMINAL=true SETUP_GLOBAL_TEST_PRESET_INPUT=$'1\r' \
-		SETUP_GLOBAL_TEST_TARGET_INPUT=$'2\r' run_setup_target "$home_dir" "" > "$output"
+	SETUP_TEST_TERMINAL=true SETUP_TEST_PRESET_INPUT=$'1\r' \
+		SETUP_TEST_TARGET_INPUT=$'2\r' run_setup_target "$home_dir" "" > "$output"
 
 	assert_contains "$output" 'Choose a setup preset:'
 	assert_dir_link "$home_dir/.agents/skills/accessibility"
@@ -1007,7 +1007,7 @@ test_interactive_preset_cancel_reports_no_changes() {
 	# The prompt and cancellation message.
 	local output="$TEST_ROOT/preset-cancel.txt"
 
-	SETUP_GLOBAL_TEST_TERMINAL=true SETUP_GLOBAL_TEST_PRESET_INPUT=$'q\r' \
+	SETUP_TEST_TERMINAL=true SETUP_TEST_PRESET_INPUT=$'q\r' \
 		run_setup_target "$home_dir" "" > "$output"
 
 	assert_contains "$output" 'Setup cancelled. Nothing changed.'
@@ -1089,7 +1089,7 @@ CONFIG
 	assert_contains "$home_dir/.codex/config.toml" '[profiles.work]'
 	assert_contains "$home_dir/.codex/config.toml" 'model = "keep"'
 	assert_not_contains "$home_dir/.codex/config.toml" 'command = "old-mdn"'
-	if ! SETUP_GLOBAL_TEST_WITHOUT_YES=true run_setup "$home_dir" > "$output"; then
+	if ! SETUP_TEST_WITHOUT_YES=true run_setup "$home_dir" > "$output"; then
 		cat "$output"
 		fail 'The rewritten Codex config changed again on the second run'
 	fi
@@ -1330,7 +1330,7 @@ test_skills_are_installed_and_editable() {
 	local home_dir="$TEST_ROOT/skills-installed"
 	# Temporary source marker name.
 	local marker_name
-	marker_name="setup-global-test-marker-$(basename "$TEST_ROOT")"
+	marker_name="setup-test-marker-$(basename "$TEST_ROOT")"
 	# Marker path in the temporary canonical skill.
 	local source_marker="$ADDED_SKILL_DIR/$marker_name"
 
@@ -1420,11 +1420,11 @@ test_unknown_skill_fails_without_changes() {
 
 	mkdir -p "$home_dir/.agents"
 	printf 'accessibility\n' > "$home_dir/.agents/skill-exclusions"
-	if run_setup "$home_dir" --exclude missing-setup-global-skill > "$output" 2>&1; then
+	if run_setup "$home_dir" --exclude missing-setup-skill > "$output" 2>&1; then
 		fail 'Expected an unknown skill to be rejected'
 	fi
 
-	assert_contains "$output" 'Unknown skill: missing-setup-global-skill'
+	assert_contains "$output" 'Unknown skill: missing-setup-skill'
 	assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'accessibility'
 	assert_not_exists "$home_dir/.codex"
 	assert_not_exists "$home_dir/.claude"
@@ -1434,7 +1434,7 @@ test_removed_skill_can_be_included() {
 	# Isolated home directory for the setup run.
 	local home_dir="$TEST_ROOT/removed-skill"
 	# Saved exclusion with no canonical skill folder.
-	local removed_skill='removed-setup-global-skill'
+	local removed_skill='removed-setup-skill'
 
 	mkdir -p "$home_dir/.agents"
 	printf '%s\n' "$removed_skill" > "$home_dir/.agents/skill-exclusions"
@@ -1530,7 +1530,7 @@ test_status_reports_an_excluded_skill_with_a_lingering_link() {
 	run_setup_target "$home_dir" "--claude" --status > "$output"
 
 	assert_contains "$output" 'excluded writing'
-	assert_contains "$output" 'link still present; run: scripts/setup-global.sh --claude --exclude writing'
+	assert_contains "$output" 'link still present; run: scripts/setup.sh --claude --exclude writing'
 	assert_equals "$(readlink "$lingering_link")" "$REPO_DIR/skills/writing/writing"
 }
 
@@ -1548,7 +1548,7 @@ test_status_reports_conflicting_included_content() {
 	run_setup_target "$home_dir" "--claude" --status > "$output"
 
 	assert_contains "$output" 'conflicting code-style'
-	assert_contains "$output" 'run: scripts/setup-global.sh --claude --include code-style'
+	assert_contains "$output" 'run: scripts/setup.sh --claude --include code-style'
 	assert_equals "$(cat "$conflict_file")" 'keep this content'
 }
 
@@ -1594,7 +1594,7 @@ test_status_does_not_change_files() {
 
 	run_setup_target "$home_dir" "" --status > "$output"
 
-	assert_not_exists "$home_dir/setup-global-calls.log"
+	assert_not_exists "$home_dir/setup-calls.log"
 	assert_equals "$(snapshot_test_directory "$home_dir")" "$home_before"
 	assert_equals "$(git -C "$REPO_DIR" status --porcelain --untracked-files=all)" "$repo_before"
 	assert_contains "$output" 'Claude skills'
@@ -1620,12 +1620,12 @@ test_status_requires_cli_style_without_changes() {
 	home_before=$(snapshot_test_directory "$home_dir")
 	repo_before=$(git -C "$REPO_DIR" status --porcelain --untracked-files=all)
 
-	if SETUP_GLOBAL_TEST_CLI_STYLE_BIN="$TEST_ROOT/missing-cli-style" run_setup_target "$home_dir" "--claude" --status > "$output" 2>&1; then
+	if SETUP_TEST_CLI_STYLE_BIN="$TEST_ROOT/missing-cli-style" run_setup_target "$home_dir" "--claude" --status > "$output" 2>&1; then
 		fail '--status succeeded without cli-style'
 	fi
 
 	assert_contains "$output" 'cli-style is not installed. Run: scripts/install-cli-style.sh'
-	assert_not_exists "$home_dir/setup-global-calls.log"
+	assert_not_exists "$home_dir/setup-calls.log"
 	assert_equals "$(snapshot_test_directory "$home_dir")" "$home_before"
 	assert_equals "$(git -C "$REPO_DIR" status --porcelain --untracked-files=all)" "$repo_before"
 }
@@ -1647,7 +1647,7 @@ test_status_rejects_skill_options_without_changes() {
 	assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'writing'
 	assert_not_exists "$home_dir/.claude"
 	assert_not_exists "$home_dir/.codex"
-	assert_not_exists "$home_dir/setup-global-calls.log"
+	assert_not_exists "$home_dir/setup-calls.log"
 }
 
 # Ensures the numbered selector defaults to both agents and saves its changes.
@@ -1660,7 +1660,7 @@ test_select_fallback_updates_skill_exclusions() {
 	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
 
 	# The stub command path and terminal input for this picker run.
-	NO_COLOR=1 COLUMNS=80 SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true SETUP_GLOBAL_TEST_TERMINAL_INPUT=$'1 2\r' run_setup_target "$home_dir" "" --select > "$output"
+	NO_COLOR=1 COLUMNS=80 SETUP_TEST_PATH="$fallback_path" SETUP_TEST_TERMINAL=true SETUP_TEST_TERMINAL_INPUT=$'1 2\r' run_setup_target "$home_dir" "" --select > "$output"
 
 	assert_contains "$output" '[x]  1. accessibility'
 	assert_contains "$output" '[x]  2. accessibility-audit'
@@ -1698,7 +1698,7 @@ test_select_fallback_excludes_collection_and_skill() {
 	# Command path without fzf.
 	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
 
-	SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true SETUP_GLOBAL_TEST_TERMINAL_INPUT=$'accessibility 3\r' run_setup_target "$home_dir" "" --select > "$output"
+	SETUP_TEST_PATH="$fallback_path" SETUP_TEST_TERMINAL=true SETUP_TEST_TERMINAL_INPUT=$'accessibility 3\r' run_setup_target "$home_dir" "" --select > "$output"
 
 	assert_contains "$home_dir/.agents/skill-exclusions" 'accessibility'
 	assert_contains "$home_dir/.agents/skill-exclusions" 'accessibility-audit'
@@ -1717,7 +1717,7 @@ test_select_fallback_empty_selection_includes_every_skill() {
 	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
 
 	# The stub command path and terminal input for this picker run.
-	SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true SETUP_GLOBAL_TEST_TERMINAL_INPUT=$'\r' run_setup_target "$home_dir" "" --select > "$output"
+	SETUP_TEST_PATH="$fallback_path" SETUP_TEST_TERMINAL=true SETUP_TEST_TERMINAL_INPUT=$'\r' run_setup_target "$home_dir" "" --select > "$output"
 
 	assert_not_exists "$home_dir/.agents/skill-exclusions"
 	assert_dir_link "$home_dir/.agents/skills/accessibility"
@@ -1736,7 +1736,7 @@ test_select_fallback_cancel_preserves_existing_state() {
 	mkdir -p "$home_dir/.agents"
 	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
 	# The stub command path and terminal input for this picker run.
-	SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true SETUP_GLOBAL_TEST_TERMINAL_INPUT=$'q\r' run_setup_target "$home_dir" "" --select > "$output"
+	SETUP_TEST_PATH="$fallback_path" SETUP_TEST_TERMINAL=true SETUP_TEST_TERMINAL_INPUT=$'q\r' run_setup_target "$home_dir" "" --select > "$output"
 
 	assert_contains "$output" 'Skill selection cancelled. Nothing changed.'
 	assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'writing'
@@ -1774,7 +1774,7 @@ assert_fzf_version_opens_picker() {
 	create_fzf_stub "$fzf_dir"
 	# PATH here is this test's own value; ShellCheck confuses it with the copy run_setup_target changes in its subshell.
 	# shellcheck disable=SC2031
-	SETUP_GLOBAL_FZF_VERSION="$version" SETUP_GLOBAL_FZF_ARGUMENTS="$fzf_arguments" SETUP_GLOBAL_FZF_INPUT="$fzf_input" SETUP_GLOBAL_FZF_STATUS=1 SETUP_GLOBAL_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_GLOBAL_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output" 2>&1
+	SETUP_FZF_VERSION="$version" SETUP_FZF_ARGUMENTS="$fzf_arguments" SETUP_FZF_INPUT="$fzf_input" SETUP_FZF_STATUS=1 SETUP_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output" 2>&1
 
 	assert_contains "$fzf_arguments" '--multi'
 	assert_contains "$output" 'Skill selection cancelled. Nothing changed.'
@@ -1808,7 +1808,7 @@ assert_fzf_version_uses_numbered_list() {
 	create_fzf_stub "$fzf_dir"
 	# PATH here is this test's own value; ShellCheck confuses it with the copy run_setup_target changes in its subshell.
 	# shellcheck disable=SC2031
-	SETUP_GLOBAL_FZF_VERSION="$version" SETUP_GLOBAL_FZF_ARGUMENTS="$fzf_arguments" SETUP_GLOBAL_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_GLOBAL_TEST_TERMINAL=true SETUP_GLOBAL_TEST_TERMINAL_INPUT=$'q\r' run_setup_target "$home_dir" "" --select > "$output" 2>&1
+	SETUP_FZF_VERSION="$version" SETUP_FZF_ARGUMENTS="$fzf_arguments" SETUP_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_TEST_TERMINAL=true SETUP_TEST_TERMINAL_INPUT=$'q\r' run_setup_target "$home_dir" "" --select > "$output" 2>&1
 
 	assert_contains "$output" "$notice"
 	assert_contains "$output" 'Enter skill numbers or collection names to leave out'
@@ -1860,7 +1860,7 @@ test_select_fzf_updates_skill_exclusions() {
 	# A skill fixture with a quoted single-line description.
 	local single_line_skill="$ADDED_SKILL_GROUP/single-picker"
 	# A skill fixture with no description in its frontmatter.
-	local no_description_skill="$ADDED_SKILL_GROUP/setup-global-no-description"
+	local no_description_skill="$ADDED_SKILL_GROUP/setup-no-description"
 
 	create_fzf_stub "$fzf_dir"
 	mkdir -p "$temp_dir"
@@ -1876,7 +1876,7 @@ EOF
 	mkdir -p "$single_line_skill"
 	printf -- '---\nname: single-picker\ndescription: "Use this skill when reading a single-line description."\n---\n' > "$single_line_skill/SKILL.md"
 	mkdir -p "$no_description_skill"
-	printf -- '---\nname: setup-global-no-description\n---\n' > "$no_description_skill/SKILL.md"
+	printf -- '---\nname: setup-no-description\n---\n' > "$no_description_skill/SKILL.md"
 	mkdir -p "$home_dir/.agents"
 	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
 	(
@@ -1886,7 +1886,7 @@ EOF
 		# The fzf capture files, chosen skills, command path, and terminal setting for this picker run.
 		# PATH here is this test's own value; ShellCheck confuses it with the copy run_setup_target changes in its subshell.
 		# shellcheck disable=SC2031
-		COLUMNS=48 TMPDIR="$temp_dir" SETUP_GLOBAL_FZF_ARGUMENTS="$fzf_arguments" SETUP_GLOBAL_FZF_INPUT="$fzf_input" SETUP_GLOBAL_FZF_ACTIONS="$fzf_actions" SETUP_GLOBAL_FZF_SELECTION=$'skill\taccessibility\t  accessibility  When editing HTML' SETUP_GLOBAL_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_GLOBAL_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
+		COLUMNS=48 TMPDIR="$temp_dir" SETUP_FZF_ARGUMENTS="$fzf_arguments" SETUP_FZF_INPUT="$fzf_input" SETUP_FZF_ACTIONS="$fzf_actions" SETUP_FZF_SELECTION=$'skill\taccessibility\t  accessibility  When editing HTML' SETUP_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
 	)
 
 	assert_equals "$(ls -A "$temp_dir")" ''
@@ -1907,7 +1907,7 @@ EOF
 	assert_contains "$fzf_input" $'\033[2mWhen editing HTML'
 	assert_contains "$fzf_input" $'\033[2mTo inspect a folded description that spans two lines in the skill picker.'
 	assert_contains "$fzf_input" $'\033[2mWhen reading a single-line description.'
-	if ! grep -Fxq $'skill\tsetup-global-no-description\t  setup-global-no-description' "$fzf_input"; then
+	if ! grep -Fxq $'skill\tsetup-no-description\t  setup-no-description' "$fzf_input"; then
 		fail 'Expected a skill without a description to show its name alone'
 	fi
 	assert_not_contains "$fzf_input" 'Use this skill to inspect'
@@ -1939,7 +1939,7 @@ test_select_fzf_excludes_every_skill() {
 	# The fzf capture files, chosen skills, command path, and terminal setting for this picker run.
 	# PATH here is this test's own value; ShellCheck confuses it with the copy run_setup_target changes in its subshell.
 	# shellcheck disable=SC2031
-	SETUP_GLOBAL_FZF_ARGUMENTS="$fzf_arguments" SETUP_GLOBAL_FZF_INPUT="$fzf_input" SETUP_GLOBAL_FZF_SELECTION=$'heading\taccessibility\taccessibility (2)' SETUP_GLOBAL_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_GLOBAL_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
+	SETUP_FZF_ARGUMENTS="$fzf_arguments" SETUP_FZF_INPUT="$fzf_input" SETUP_FZF_SELECTION=$'heading\taccessibility\taccessibility (2)' SETUP_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
 
 	assert_contains "$fzf_arguments" '--multi'
 	assert_contains "$home_dir/.agents/skill-exclusions" 'accessibility'
@@ -1971,7 +1971,7 @@ test_select_fzf_cancel_preserves_existing_state() {
 	# The fzf capture files, cancelled picker status, command path, and terminal setting for this picker run.
 	# PATH here is this test's own value; ShellCheck confuses it with the copy run_setup_target changes in its subshell.
 	# shellcheck disable=SC2031
-	TMPDIR="$temp_dir" SETUP_GLOBAL_FZF_ARGUMENTS="$fzf_arguments" SETUP_GLOBAL_FZF_INPUT="$fzf_input" SETUP_GLOBAL_FZF_STATUS=1 SETUP_GLOBAL_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_GLOBAL_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
+	TMPDIR="$temp_dir" SETUP_FZF_ARGUMENTS="$fzf_arguments" SETUP_FZF_INPUT="$fzf_input" SETUP_FZF_STATUS=1 SETUP_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
 
 	assert_equals "$(ls -A "$temp_dir")" ''
 	assert_contains "$output" 'Skill selection cancelled. Nothing changed.'
@@ -1992,7 +1992,7 @@ test_select_fallback_end_of_input_preserves_existing_state() {
 	mkdir -p "$home_dir/.agents"
 	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
 	# The stub command path and terminal input for this picker run.
-	SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true SETUP_GLOBAL_TEST_TERMINAL_INPUT=$'\004' run_setup_target "$home_dir" "" --select > "$output"
+	SETUP_TEST_PATH="$fallback_path" SETUP_TEST_TERMINAL=true SETUP_TEST_TERMINAL_INPUT=$'\004' run_setup_target "$home_dir" "" --select > "$output"
 
 	assert_contains "$output" 'Skill selection cancelled. Nothing changed.'
 	assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'writing'
@@ -2011,7 +2011,7 @@ test_select_fallback_invalid_number_preserves_existing_state() {
 
 	run_setup_target "$home_dir" "" --exclude writing > /dev/null
 	# The stub command path and terminal input for the invalid skill number.
-	if SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true SETUP_GLOBAL_TEST_TERMINAL_INPUT=$'9999\r' run_setup_target "$home_dir" "" --select > "$output" 2>&1; then
+	if SETUP_TEST_PATH="$fallback_path" SETUP_TEST_TERMINAL=true SETUP_TEST_TERMINAL_INPUT=$'9999\r' run_setup_target "$home_dir" "" --select > "$output" 2>&1; then
 		fail 'Expected an invalid skill number to fail'
 	fi
 
@@ -2095,7 +2095,7 @@ test_failed_backup_preserves_existing_config() {
 
 	create_existing_config "$home_dir"
 	# Makes the mv stub fail the config backup move.
-	if SETUP_GLOBAL_TEST_FAIL_BACKUP_MOVE=1 run_setup "$home_dir" > "$output" 2>&1; then
+	if SETUP_TEST_FAIL_BACKUP_MOVE=1 run_setup "$home_dir" > "$output" 2>&1; then
 		fail "Expected a failed backup to abort setup"
 	fi
 
@@ -2176,7 +2176,7 @@ test_hcom_absence_skips_codex_folders() {
 	done
 
 	# The stub command path used for this isolated setup run.
-	SETUP_GLOBAL_TEST_PATH="$bin_dir:/usr/bin:/bin" run_setup "$home_dir" > "$output"
+	SETUP_TEST_PATH="$bin_dir:/usr/bin:/bin" run_setup "$home_dir" > "$output"
 
 	assert_contains "$output" '"label": "HCOM", "detail": "not installed"'
 	assert_not_exists "$home_dir/hcom-codex-args"
@@ -2357,7 +2357,7 @@ run_setup_cases() {
 	done
 
 	if [ "$failed" -eq 0 ]; then
-		printf '✓ setup-global backup tests passed\n'
+		printf '✓ setup backup tests passed\n'
 	fi
 	return "$failed"
 }

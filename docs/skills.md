@@ -139,5 +139,5 @@ Nothing creates a local `.claude/settings.json` by default. Prefer `AGENTS.md` a
 
 The skill-manifest check also rejects front-matter keys outside the Agent Skills standard list and the allowed `disable-model-invocation` runtime extension.
 
-After `scripts/setup-global.sh`, shared skills are available to Claude via `~/.claude/skills/` and to Codex via `~/.agents/skills/`.
+After `scripts/setup.sh`, shared skills are available to Claude via `~/.claude/skills/` and to Codex via `~/.agents/skills/`.
 See [choose which skills to install](setup.md#choose-which-skills-to-install) to leave skills out, add them back, or check what is installed.

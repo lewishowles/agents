@@ -9,7 +9,7 @@ Use the scripts for normal installs, and add a shell alias if you run them often
 Add this alias to `~/.zshrc`:
 
 ```bash
-alias setup:agents:global="/path/to/repository/scripts/setup-global.sh --both"
+alias setup:agents="/path/to/repository/scripts/setup.sh --both"
 ```
 
 ## Global Claude setup
@@ -124,11 +124,11 @@ ln -s /path/to/repository/skills/vue/vue ~/.agents/skills/vue
 
 This keeps Codex skill discovery under `~/.agents` while `~/.codex` holds app config and hooks.
 
-When `hcom` is installed, `scripts/setup-global.sh --codex` (or `--both`) also adds folders to the list HCOM passes to the Codex agents it starts (`hcom config codex_args`). Those agents can then write to this repository, `~/.agents`, `~/.Trash`, and the SwiftPM cache and settings folders (`~/Library/Caches/org.swift.swiftpm` and `~/Library/org.swift.swiftpm`) from inside the sandbox. Setup only adds folders that exist on this machine, and it keeps any folders you added yourself. Running agents keep the list they started with, so relaunch them from a fresh terminal after the list changes.
+When `hcom` is installed, `scripts/setup.sh --codex` (or `--both`) also adds folders to the list HCOM passes to the Codex agents it starts (`hcom config codex_args`). Those agents can then write to this repository, `~/.agents`, `~/.Trash`, and the SwiftPM cache and settings folders (`~/Library/Caches/org.swift.swiftpm` and `~/Library/org.swift.swiftpm`) from inside the sandbox. Setup only adds folders that exist on this machine, and it keeps any folders you added yourself. Running agents keep the list they started with, so relaunch them from a fresh terminal after the list changes.
 
 ## Choose which skills to install
 
-Run `scripts/setup-global.sh` in a terminal to choose a preset before setup shows its plan:
+Run `scripts/setup.sh` in a terminal to choose a preset before setup shows its plan:
 
 - **Skills only** links the chosen tools' skills and creates their skill folders. It does not install configuration files, hooks, themes, helper commands, the trash wrapper, the Codex permission profile or HCOM additions.
 - **Pick features** asks which tools and extras to install, then opens the existing skill picker. The extras are agent hooks, the Codex permission profile, HCOM additions, themes, the trash wrapper and helper commands. For a Claude-only setup, the question leaves out the Codex permission profile and HCOM additions. The chosen tools also receive their core configuration, skill links and this repository's Git hook setting. Claude's `settings.json` is installed with agent hooks because it registers them.
@@ -139,16 +139,16 @@ Use `--preset skills-only`, `--preset pick` or `--preset everything` to choose a
 Each skill has its own symlink, so edits to the skill in this repository take effect without rebuilding. To leave skills out or add them back, pass comma-separated names to `--exclude` or `--include`:
 
 ```bash
-scripts/setup-global.sh --exclude accessibility,swift
-scripts/setup-global.sh --include accessibility
-scripts/setup-global.sh --include-all
+scripts/setup.sh --exclude accessibility,swift
+scripts/setup.sh --include accessibility
+scripts/setup.sh --include-all
 ```
 
 These options apply to both agents unless you pass `--claude` or `--codex`. Excluded names are saved in `~/.agents/skill-exclusions`, which both agents share. The file lists only exclusions, so new skills added to this repository are installed on later setup runs. `--include-all` clears the exclusions and restores the full set.
 
-Run `scripts/setup-global.sh --status` to see whether each skill is installed, excluded, missing, or conflicting in each agent's skill directory. An excluded skill can also show `link still present`. Status prints a command to fix each missing or conflicting skill and each leftover link and makes no changes. It needs an installed cli-style renderer but does not install one or use the network. If cli-style is missing, status exits with a hint to run `scripts/install-cli-style.sh`.
+Run `scripts/setup.sh --status` to see whether each skill is installed, excluded, missing, or conflicting in each agent's skill directory. An excluded skill can also show `link still present`. Status prints a command to fix each missing or conflicting skill and each leftover link and makes no changes. It needs an installed cli-style renderer but does not install one or use the network. If cli-style is missing, status exits with a hint to run `scripts/install-cli-style.sh`.
 
-Run `scripts/setup-global.sh --select` to choose skills in a terminal. Skills are grouped by collection (the folder under `skills/`), with collections and their skills sorted alphabetically. Each collection heading shows its skill count. Names are aligned and short descriptions appear in dim text unless `NO_COLOR` is set; skills without a description show only their name. The numbered list also uses plain text when output is redirected. Setup uses `fzf` 0.74 or newer when available and falls back to the numbered list with a notice for older or unreadable versions. With `fzf`, Tab toggles one skill or every skill under a collection heading. Tab on a heading also clears any typed search so the whole collection is included. A partly selected collection becomes fully selected; Tab again clears it. In the numbered list, enter skill numbers, collection names such as `vue`, or both to leave them out. Long descriptions are shortened to fit the terminal. Cancelling leaves the selection unchanged. The picker requires a terminal; use `--exclude` and `--include` in scripts.
+Run `scripts/setup.sh --select` to choose skills in a terminal. Skills are grouped by collection (the folder under `skills/`), with collections and their skills sorted alphabetically. Each collection heading shows its skill count. Names are aligned and short descriptions appear in dim text unless `NO_COLOR` is set; skills without a description show only their name. The numbered list also uses plain text when output is redirected. Setup uses `fzf` 0.74 or newer when available and falls back to the numbered list with a notice for older or unreadable versions. With `fzf`, Tab toggles one skill or every skill under a collection heading. Tab on a heading also clears any typed search so the whole collection is included. A partly selected collection becomes fully selected; Tab again clears it. In the numbered list, enter skill numbers, collection names such as `vue`, or both to leave them out. Long descriptions are shortened to fit the terminal. Cancelling leaves the selection unchanged. The picker requires a terminal; use `--exclude` and `--include` in scripts.
 
 If a file or folder that setup did not create already sits where an included skill's link belongs, setup moves it to a timestamped `.bak` backup under `~/.claude/backups/skills/` or `~/.agents/backups/skills/` and prints `backup at <path>`. Content at an excluded skill's name is left untouched.
 

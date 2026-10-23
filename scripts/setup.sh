@@ -1694,18 +1694,18 @@ report_skill_status() {
 					if excluded_skill_exists "$status_name"; then
 						cli_status warning "conflicting $status_name" "run: trash $(display_path "$status_link")"
 					else
-						cli_status warning "conflicting $status_name" "run: scripts/setup-global.sh --$status_agent --include $status_name"
+						cli_status warning "conflicting $status_name" "run: scripts/setup.sh --$status_agent --include $status_name"
 					fi
 				elif excluded_skill_exists "$status_name"; then
 					if is_repo_owned_link "$status_skill" "$status_link"; then
-						cli_status skipped "excluded $status_name" "link still present; run: scripts/setup-global.sh --$status_agent --exclude $status_name"
+						cli_status skipped "excluded $status_name" "link still present; run: scripts/setup.sh --$status_agent --exclude $status_name"
 					else
 						cli_status skipped "excluded $status_name" "saved in ~/.agents/skill-exclusions"
 					fi
 				elif is_repo_owned_link "$status_skill" "$status_link"; then
 					cli_status success "installed $status_name" "skills/$status_name"
 				else
-					cli_status warning "missing $status_name" "run: scripts/setup-global.sh --$status_agent --include $status_name"
+					cli_status warning "missing $status_name" "run: scripts/setup.sh --$status_agent --include $status_name"
 				fi
 			done
 		fi
