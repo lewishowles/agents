@@ -146,6 +146,17 @@ After settling the handoff, do not print or paraphrase its fields, except for th
 
 1. **What changed** — 1–3 sentences: what was done and what was verified, or skipped and why
 2. **Suggested commit message** — the scoped Conventional Commit message in its own fenced `text` block, per global-rules
+3. **Worktree cleanup** — only when the task is complete and has a worktree: the line "After you commit, clean up the worktree:" and an `sh` block with `progress worktree cleanup <task-id>`. Add the editable reinstall command from the main checkout only when this session gave an editable install from the worktree.
+4. **Marked complete** — one bullet each for the chunk and the task, in the layout below. Mark one "done" only when this session's `progress chunk complete` or `progress task complete` for it succeeded. When the task was finished in one pass with no chunks, list only the task.
+
+```markdown
+**Marked complete**
+
+- <Plain chunk title> (`<chunk-id>`): done | still open
+- <Plain task title> (`<task-id>`): done | still open
+```
+
+When the cleanup block is present, end with an **Over to you** request to commit, then clean up the worktree.
 
 Then stop. Do not add a next-step section, restate the next chunk or task contract, or ask the user to confirm before continuing. The chunk record is already complete (or stays active for an HCOM Orchestrator at its own tool-call limit), and a fresh session resumes from the selected task's records.
 
