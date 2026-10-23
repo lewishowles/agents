@@ -119,6 +119,15 @@ EOF
 
 	cat > "$bin_dir/git" <<'EOF'
 #!/bin/sh
+if [ "$3" = config ] && [ "$4" = --get ]; then
+	if [ -f "$HOME/git-hooks-path" ]; then
+		cat "$HOME/git-hooks-path"
+	fi
+	exit 0
+fi
+if [ "$3" = config ] && [ "$4" = core.hooksPath ]; then
+	printf '%s\n' "$5" > "$HOME/git-hooks-path"
+fi
 exit 0
 EOF
 
@@ -407,6 +416,11 @@ run_setup_target() {
 	# Command path used by the setup process.
 	local setup_path="${SETUP_GLOBAL_TEST_PATH:-$bin_dir:$PATH}"
 	shift 2
+	# Most cases accept the setup plan with --yes. The confirmation cases set
+	# SETUP_GLOBAL_TEST_WITHOUT_YES so they can see the prompt or the refusal.
+	if [ "${SETUP_GLOBAL_TEST_WITHOUT_YES:-false}" != true ]; then
+		set -- "$@" --yes
+	fi
 
 	mkdir -p "$home_dir"
 
@@ -449,6 +463,14 @@ if {[info exists env(SETUP_GLOBAL_TEST_TERMINAL_INPUT)]} {
 		eof { puts stderr "Picker prompt did not appear before setup exited"; exit 1 }
 	}
 	send -- $env(SETUP_GLOBAL_TEST_TERMINAL_INPUT)
+}
+if {[info exists env(SETUP_GLOBAL_TEST_CONFIRMATION_INPUT)]} {
+	expect {
+		-exact "Apply these changes? \[y/N\] " {}
+		timeout { puts stderr "Confirmation prompt did not appear within 20 seconds"; exit 1 }
+		eof { puts stderr "Confirmation prompt did not appear before setup exited"; exit 1 }
+	}
+	send -- $env(SETUP_GLOBAL_TEST_CONFIRMATION_INPUT)
 }
 expect {
 	eof {}
@@ -715,6 +737,69 @@ test_refresh_runs_repository_sync() {
 	assert_not_contains "$calls" "$REPO_DIR/scripts/validate.sh"
 }
 
+# A script without --yes sees the whole plan and leaves its home untouched.
+test_non_terminal_plan_requires_yes() {
+	# The isolated home and captured preview for this run.
+	local home_dir="$TEST_ROOT/preview-without-yes" output="$TEST_ROOT/preview-without-yes.txt"
+	# The home state before setup is offered.
+	local before
+	create_existing_config "$home_dir"
+	before=$(snapshot_test_directory "$home_dir")
+	if SETUP_GLOBAL_TEST_WITHOUT_YES=true run_setup_target "$home_dir" --codex --exclude accessibility > "$output" 2>&1; then
+		fail 'Setup applied without --yes in a non-terminal'
+	fi
+	assert_contains "$output" 'Codex settings:'
+	assert_contains "$output" 'Links:'
+	assert_contains "$output" 'Selection:'
+	assert_contains "$output" 'Setup needs --yes'
+	assert_equals "$(snapshot_test_directory "$home_dir")" "$before"
+	assert_not_exists "$home_dir/setup-global-calls.log"
+}
+
+# Declining at the final terminal question leaves the selection and links untouched.
+test_terminal_decline_preserves_home() {
+	# The isolated home and captured terminal output.
+	local home_dir="$TEST_ROOT/preview-decline" output="$TEST_ROOT/preview-decline.txt"
+	# The home state before the plan is printed.
+	local before
+	create_existing_config "$home_dir"
+	before=$(snapshot_test_directory "$home_dir")
+	SETUP_GLOBAL_TEST_WITHOUT_YES=true SETUP_GLOBAL_TEST_TERMINAL=true SETUP_GLOBAL_TEST_CONFIRMATION_INPUT=$'n\r' run_setup_target "$home_dir" --codex --exclude accessibility > "$output"
+	assert_contains "$output" 'Apply these changes?'
+	assert_contains "$output" 'Setup cancelled. Nothing changed.'
+	assert_equals "$(snapshot_test_directory "$home_dir")" "$before"
+	assert_not_exists "$home_dir/setup-global-calls.log"
+}
+
+# Accepting the terminal confirmation creates the planned links.
+test_terminal_accept_creates_links() {
+	# The isolated home and captured terminal output.
+	local home_dir="$TEST_ROOT/preview-accept" output="$TEST_ROOT/preview-accept.txt"
+
+	SETUP_GLOBAL_TEST_WITHOUT_YES=true SETUP_GLOBAL_TEST_TERMINAL=true SETUP_GLOBAL_TEST_CONFIRMATION_INPUT=$'y\r' run_setup_target "$home_dir" --codex > "$output"
+
+	assert_contains "$output" 'Apply these changes?'
+	assert_link "$home_dir/.agents/AGENTS.md"
+	assert_link "$home_dir/.codex/hooks.json"
+	assert_link "$home_dir/.local/bin/trash"
+}
+
+# A second run against a completed install exits cleanly without confirmation.
+test_nothing_to_change_exits_without_yes() {
+	# The isolated home and captured second-run output.
+	local home_dir="$TEST_ROOT/preview-no-change" output="$TEST_ROOT/preview-no-change.txt"
+	# The home state after the first setup run.
+	local before
+	run_setup "$home_dir" > /dev/null
+	before=$(snapshot_test_directory "$home_dir")
+	if ! SETUP_GLOBAL_TEST_WITHOUT_YES=true run_setup "$home_dir" > "$output"; then
+		cat "$output"
+		fail 'A completed setup still has a planned change'
+	fi
+	assert_contains "$output" 'Nothing to change.'
+	assert_equals "$(snapshot_test_directory "$home_dir")" "$before"
+}
+
 # Setup backs up an existing Codex config with a timestamp before replacing it
 # with the managed settings.
 test_config_replacement_creates_timestamped_backup() {
@@ -742,6 +827,44 @@ test_config_replacement_creates_timestamped_backup() {
 	assert_link "$home_dir/.codex/hooks.json"
 	assert_link "$home_dir/.codex/hooks/tool-call-checkpoint.sh"
 	assert_link "$home_dir/.codex/hooks/guard-hcom-ack.sh"
+}
+
+# A hand-edited Codex config is backed up and rewritten once, then setup finds nothing to change.
+test_user_config_is_rewritten_once() {
+	# The isolated home and output from setup's second run.
+	local home_dir="$TEST_ROOT/user-config-once" output="$TEST_ROOT/user-config-once.txt"
+	# The timestamped backup of the original config.
+	local backups
+
+	mkdir -p "$home_dir/.codex"
+	cat > "$home_dir/.codex/config.toml" <<'CONFIG'
+custom_setting = "keep"
+
+
+[tui]
+alternate_screen = "never"
+
+[profiles.work]
+model = "keep"
+
+[mcp_servers.mdn]
+command = "old-mdn"
+CONFIG
+	run_setup "$home_dir" > /dev/null
+
+	backups=("$home_dir/.codex/config.toml.bak."*)
+	assert_file "${backups[0]}"
+	assert_contains "${backups[0]}" 'command = "old-mdn"'
+	assert_contains "$home_dir/.codex/config.toml" 'custom_setting = "keep"'
+	assert_contains "$home_dir/.codex/config.toml" '[profiles.work]'
+	assert_contains "$home_dir/.codex/config.toml" 'model = "keep"'
+	assert_not_contains "$home_dir/.codex/config.toml" 'command = "old-mdn"'
+	if ! SETUP_GLOBAL_TEST_WITHOUT_YES=true run_setup "$home_dir" > "$output"; then
+		cat "$output"
+		fail 'The rewritten Codex config changed again on the second run'
+	fi
+	assert_contains "$output" 'Nothing to change.'
+	assert_equals "$(printf '%s\n' "$home_dir/.codex/config.toml.bak."*)" "${backups[0]}"
 }
 
 test_hook_file_is_replaced_with_managed_link() {
@@ -859,7 +982,7 @@ test_trash_wrapper_links_once_for_each_mode() {
 
 		assert_link "$link"
 		assert_equals "$(readlink "$link")" "$REPO_DIR/src/bin/trash"
-		assert_equals "$(grep -Fc '"label": "Trash wrapper"' "$output")" '1'
+		assert_contains "$output" 'Nothing to change.'
 		backups=("$home_dir/.local/bin/trash.bak."*)
 		assert_not_exists "${backups[0]}"
 	done
@@ -899,18 +1022,49 @@ test_trash_wrapper_preserves_symlinked_bin_directory() {
 	local bin_link="$home_dir/.local/bin"
 	# Any backup of the bin directory made by setup.
 	local backups
+	# The setup preview printed before it applies the links.
+	local output="$TEST_ROOT/trash-symlinked-bin.txt"
 
 	mkdir -p "$home_dir/.local" "$bin_dir"
 	ln -s "$bin_dir" "$bin_link"
 
-	run_setup_target "$home_dir" "--both" > /dev/null
+	run_setup_target "$home_dir" "--both" > "$output"
 
+	assert_not_contains "$output" 'Replace ~/.local/bin with a directory'
+	assert_not_contains "$output" 'Save ~/.local/bin in'
+	assert_not_contains "$output" 'Remove older backup ~/.local/bin.bak.'
 	assert_dir_link "$bin_link"
 	assert_equals "$(readlink "$bin_link")" "$bin_dir"
 	backups=("$home_dir/.local/bin.bak."*)
 	assert_not_exists "${backups[0]}"
 	assert_link "$bin_dir/trash"
 	assert_equals "$(readlink "$bin_dir/trash")" "$REPO_DIR/src/bin/trash"
+}
+
+# A broken repository link is removed before setup links its replacement, so the
+# preview lists no backup for it.
+test_stale_repo_link_has_no_backup_in_plan() {
+	# The isolated home and captured setup preview.
+	local home_dir="$TEST_ROOT/stale-link-plan" output="$TEST_ROOT/stale-link-plan.txt"
+	# The managed hook path occupied by a broken repository link.
+	local link="$home_dir/.codex/hooks/tool-call-checkpoint.sh"
+	# Any backup of the broken link.
+	local backups
+
+	mkdir -p "$home_dir/.codex/hooks"
+	ln -s "$REPO_DIR/dist/codex/hooks/missing-tool-call-checkpoint.sh" "$link"
+	printf 'keep an older backup\n' > "$link.bak.20200101-000000"
+	run_setup "$home_dir" > "$output"
+
+	assert_contains "$output" 'Remove ~/.codex/hooks/tool-call-checkpoint.sh'
+	assert_contains "$output" 'Link ~/.codex/hooks/tool-call-checkpoint.sh to'
+	assert_not_contains "$output" 'Save ~/.codex/hooks/tool-call-checkpoint.sh in'
+	assert_not_contains "$output" 'Remove older backup ~/.codex/hooks/tool-call-checkpoint.sh.bak.'
+	assert_link "$link"
+	assert_equals "$(readlink "$link")" "$REPO_DIR/dist/codex/hooks/tool-call-checkpoint.sh"
+	backups=("$home_dir/.codex/hooks/tool-call-checkpoint.sh.bak."*)
+	assert_equals "${backups[0]}" "$link.bak.20200101-000000"
+	assert_equals "$(cat "${backups[0]}")" 'keep an older backup'
 }
 
 # Setup keeps the workspace roots a user already has when it rewrites the Codex
@@ -1847,7 +2001,12 @@ run_setup_cases() {
 		test_missing_doc_paths_is_installed
 		test_codex_installs_missing_doc_paths
 		test_refresh_runs_repository_sync
+		test_non_terminal_plan_requires_yes
+		test_terminal_decline_preserves_home
+		test_terminal_accept_creates_links
+		test_nothing_to_change_exits_without_yes
 		test_config_replacement_creates_timestamped_backup
+		test_user_config_is_rewritten_once
 		test_hook_file_is_replaced_with_managed_link
 		test_claude_themes_are_linked_in_each_config_dir
 		test_claude_setup_preserves_user_theme
@@ -1855,6 +2014,7 @@ run_setup_cases() {
 		test_trash_wrapper_links_once_for_each_mode
 		test_trash_wrapper_backs_up_existing_file
 		test_trash_wrapper_preserves_symlinked_bin_directory
+		test_stale_repo_link_has_no_backup_in_plan
 		test_permission_profile_keeps_roots_and_drops_git_config_rule
 		test_skills_are_installed_and_editable
 		test_exclusions_persist_and_report

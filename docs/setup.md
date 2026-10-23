@@ -146,6 +146,10 @@ If a file or folder that setup did not create already sits where an included ski
 
 Repository refresh is optional during global setup. Pass `--refresh` to regenerate local repository output and validate it before linking.
 
+Setup prints a grouped plan before changing installed files. It lists directories and links it will create or replace, the backups it will make and the older backups it will remove, helper commands it will install, Codex settings, HCOM folder additions, saved skill exclusions, and this repository's Git hook setting. On a terminal, answer `y` to **Apply these changes?**; pressing Enter or answering `n` leaves installed files unchanged. In a script or other non-terminal session, pass `--yes` to apply the plan. Without `--yes`, setup prints the plan and exits with an error. If everything is already set up, it prints `Nothing to change.` and exits successfully without asking. `--status` and `--help` never ask for confirmation. With `--refresh`, repository output is regenerated before setup builds the plan; regeneration itself is not an item in the plan.
+
+Setup writes `~/.codex/config.toml` in a fixed layout. If your copy uses different spacing or section order, the next run rewrites it once and saves a backup first.
+
 Before changing files, global setup checks that the selected agent's helper commands are installed or can be installed from the local agent-tools checkout with `uv`. Claude needs `friction`, `team-send`, and `doc-paths`; Codex needs `team-send` and `doc-paths`. If a required command is missing and `uv` or its source package under `~/Dev/Repositories/Packages/agent-tools` is unavailable, setup lists each missing command and the fix, then stops without saving skill choices. `--status` skips this check.
 
 ## Register project commands

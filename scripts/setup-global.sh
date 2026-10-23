@@ -29,6 +29,8 @@ main() {
 	select_requested=false
 	# Whether to report skill link states without changing skill links.
 	status_requested=false
+	# Whether a scripted run may apply its printed plan without a terminal.
+	yes_requested=false
 	# The file that stores excluded skill names between setup runs.
 	skill_exclusions_file="$HOME/.agents/skill-exclusions"
 	# The skill names excluded from the selected setup targets.
@@ -80,6 +82,7 @@ main() {
 				;;
 			--status)        status_requested=true ;;
 			--refresh)       refresh=true ;;
+			--yes)           yes_requested=true ;;
 			--help)          usage; exit 0 ;;
 			*)               usage >&2; exit 1 ;;
 		esac
@@ -157,26 +160,20 @@ main() {
 		fi
 	fi
 
+	load_managed_paths
+
 	if [ "$status_requested" != true ]; then
 		preflight_agent_tools "$target" || exit 1
-		if [ "$skill_options_requested" = true ]; then
-			save_skill_exclusions
-		fi
 	fi
 
 	report_excluded_skills
 
-	if [ "$status_requested" != true ]; then
-		bash "$REPO_DIR/scripts/install-cli-style.sh"
-	else
+	if [ "$status_requested" = true ]; then
 		# The python3 calls in the status helpers would otherwise cache bytecode
 		# in the user's home, and status must leave the home unchanged.
 		export PYTHONDONTWRITEBYTECODE=1
-	fi
-	# shellcheck source=scripts/lib/cli-style-output.sh
-	source "$REPO_DIR/scripts/lib/cli-style-output.sh"
-
-	if [ "$status_requested" = true ]; then
+		# shellcheck source=scripts/lib/cli-style-output.sh
+		source "$REPO_DIR/scripts/lib/cli-style-output.sh"
 		report_skill_status "$target"
 		exit 0
 	fi
@@ -184,6 +181,38 @@ main() {
 	if [ "$refresh" = true ]; then
 		bash "$REPO_DIR/scripts/sync.sh"
 	fi
+
+	build_setup_plan "$target"
+	print_setup_plan
+	if [ "$plan_count" -eq 0 ]; then
+		printf '%s\n' 'Nothing to change.'
+		exit 0
+	fi
+
+	if [ "$yes_requested" != true ]; then
+		if ! [ -t 0 ]; then
+			printf '%s\n' 'Setup needs --yes when standard input is not a terminal.' >&2
+			exit 1
+		fi
+
+		printf 'Apply these changes? [y/N] '
+		# The answer to the final setup confirmation.
+		local answer
+		IFS= read -r answer || answer=''
+		case "$answer" in
+			y|Y|yes|YES) ;;
+			*) printf '%s\n' 'Setup cancelled. Nothing changed.'; exit 0 ;;
+		esac
+	fi
+
+	if [ "$skill_options_requested" = true ] && skill_exclusions_changed; then
+		save_skill_exclusions
+	fi
+	if cli_style_install_needed; then
+		bash "$REPO_DIR/scripts/install-cli-style.sh"
+	fi
+	# shellcheck source=scripts/lib/cli-style-output.sh
+	source "$REPO_DIR/scripts/lib/cli-style-output.sh"
 
 	case "$target" in
 		claude) setup_claude ;;
@@ -204,6 +233,373 @@ main() {
 
 	printf '\n'
 	cli_status success "Done."
+}
+
+# Sets the folders, files and links that both the preview and the installer
+# manage, so the preview and the installer read the same lists. Call it after
+# the agent folders are known.
+load_managed_paths() {
+	# The Claude folders setup creates.
+	CLAUDE_CONTAINERS=("$CLAUDE_DIR" "$CLAUDE_DIR/skills" "$CLAUDE_DIR/hooks" "$CLAUDE_DIR/themes" "$CLAUDE_DIR/rules" "$CLAUDE_DIR/commands")
+	# The generated files linked from dist/claude into the Claude folder.
+	CLAUDE_FILES=(CLAUDE.md settings.json .mcp.json statusline.sh)
+	# The Codex folders setup creates.
+	CODEX_CONTAINERS=("$HOME/.agents" "$HOME/.agents/skills" "$CODEX_DIR" "$CODEX_DIR/hooks")
+	# The generated files each Codex link points at, in the same order as the
+	# installed paths and labels below.
+	CODEX_LINK_SOURCES=("$REPO_DIR/dist/codex/AGENTS.md" "$REPO_DIR/dist/codex/AGENTS.md" "$REPO_DIR/dist/codex/hooks.json")
+	# The installed path of each Codex link.
+	CODEX_LINK_TARGETS=("$HOME/.agents/AGENTS.md" "$CODEX_DIR/AGENTS.md" "$CODEX_DIR/hooks.json")
+	# The name shown for each Codex link in the setup output.
+	CODEX_LINK_LABELS=(AGENTS.md 'Codex AGENTS.md' 'Codex hooks')
+	# Folders HCOM grants to the Codex agents it starts.
+	HCOM_FOLDERS=("$REPO_DIR" "$HOME/.agents" "$HOME/.Trash" "$HOME/Library/Caches/org.swift.swiftpm" "$HOME/Library/org.swift.swiftpm")
+}
+
+# Prints a plain skill problem, such as a duplicate skill name, while the plan is
+# built and before cli-style may be installed. Loading the cli-style output
+# library after confirmation replaces this with styled output.
+#
+# @param  {string}  result
+#     The kind of result, such as warning or error.
+# @param  {string}  label
+#     What the message is about.
+# @param  {string}  detail
+#     Further explanation, if any.
+cli_group_status() {
+	# The kind of result.
+	local result="$1"
+	# What the message is about.
+	local label="$2"
+	# Further explanation, if any.
+	local detail="${3:-}"
+
+	printf '%s: %s (%s)\n' "$label" "$detail" "$result" >&2
+}
+
+# Returns success when saving the requested skill exclusions would change the
+# saved file: when the list differs, when there is no file yet, or when every
+# skill is now included and the file should be removed.
+skill_exclusions_changed() {
+	if [ "${#excluded_skills[@]}" -eq 0 ]; then
+		[ -e "$skill_exclusions_file" ] || [ -L "$skill_exclusions_file" ]
+	elif [ ! -f "$skill_exclusions_file" ]; then
+		return 0
+	else
+		if ! cmp -s "$skill_exclusions_file" <(printf '%s\n' "${excluded_skills[@]}"); then
+			return 0
+		fi
+		return 1
+	fi
+}
+
+# Returns success when setup must install cli-style, the tool that styles setup
+# output: it is missing, or its saved version differs from the installer's. When
+# CLI_STYLE_BIN names another copy, that copy only needs to be executable.
+# Call load_cli_style_install_details first.
+cli_style_install_needed() {
+	# The cli-style program installed in this repository.
+	local installed="$cli_style_install_dir/bin/cli-style"
+
+	if [ -n "${CLI_STYLE_BIN:-}" ]; then
+		[ ! -x "$CLI_STYLE_BIN" ]
+	else
+		[ ! -x "$installed" ] || [ ! -f "$cli_style_install_dir/VERSION" ] ||
+			[ "$(cat "$cli_style_install_dir/VERSION")" != "$cli_style_version" ]
+	fi
+}
+
+# Reads the cli-style version and install folder from the installer script
+# without running it, so the preview names the same version the installer
+# fetches. Sets cli_style_version and cli_style_install_dir, and returns 1 with
+# a message when either cannot be read.
+load_cli_style_install_details() {
+	# The script that installs cli-style.
+	local installer="$REPO_DIR/scripts/install-cli-style.sh"
+	# The install folder relative to this repository.
+	local relative_dir
+
+	cli_style_version=$(sed -n 's/^VERSION="\([^"]*\)"$/\1/p' "$installer")
+	# The dollar sign matches the installer's literal REPO_DIR variable reference.
+	# shellcheck disable=SC2016
+	relative_dir=$(sed -n 's|^INSTALL_DIR="$REPO_DIR/\([^"]*\)"$|\1|p' "$installer")
+
+	if [ -z "$cli_style_version" ] || [ -z "$relative_dir" ]; then
+		printf '%s\n' 'Could not read the cli-style version and install location from scripts/install-cli-style.sh.' >&2
+		return 1
+	fi
+
+	cli_style_install_dir="$REPO_DIR/$relative_dir"
+}
+
+# Gathers every change setup would make for the chosen agents into plan_items
+# and plan_count, without changing installed files. Also fills
+# planned_pruned_links with the stale links the preview lists for removal, so
+# the same paths are not listed for backup too. Returns 1 when the skills or the
+# cli-style installer cannot be read.
+#
+# @param  {string}  target
+#     The agents to set up: claude, codex or both.
+build_setup_plan() {
+	# The agents to set up.
+	local target="$1"
+	# The Git hook setting currently used by this checkout.
+	local hooks_path
+
+	plan_items=()
+	plan_count=0
+	planned_commands=()
+	planned_pruned_links=()
+
+	if ! load_cli_style_install_details || ! collect_canonical_skills; then
+		return 1
+	fi
+
+	if [ "$skill_options_requested" = true ] && skill_exclusions_changed; then
+		if [ "${#excluded_skills[@]}" -eq 0 ]; then
+			plan_change "Selection" "Remove $(display_path "$skill_exclusions_file")"
+		else
+			plan_change "Selection" "Write $(display_path "$skill_exclusions_file") with the selected exclusions"
+		fi
+	fi
+
+	if cli_style_install_needed; then
+		plan_change "Helper commands" "Download and install cli-style $cli_style_version in $(display_path "$cli_style_install_dir")"
+	fi
+
+	if [ "$target" = claude ] || [ "$target" = both ]; then
+		plan_claude_setup
+	fi
+
+	if [ "$target" = codex ] || [ "$target" = both ]; then
+		plan_codex_setup
+	fi
+
+	if [ ! -e "$HOME/.local/bin" ] && [ ! -L "$HOME/.local/bin" ]; then
+		plan_change "Directories" "Create $(display_path "$HOME/.local/bin")"
+	fi
+	plan_link_path "$REPO_DIR/src/bin/trash" "$HOME/.local/bin/trash"
+	hooks_path=$(git -C "$REPO_DIR" config --get core.hooksPath 2>/dev/null || true)
+
+	if [ "$hooks_path" != src/hooks/git ]; then
+		plan_change "Git hooks" "Set core.hooksPath to src/hooks/git in this checkout"
+	fi
+}
+
+# Records one change under the kind printed in the preview.
+#
+# @param  {string}  kind
+#     The section that owns the change.
+# @param  {string}  description
+#     The path or setting setup will change.
+plan_change() {
+	# Each change is stored as "kind|description" so it can be grouped later.
+	plan_items+=("$1|$2")
+	plan_count=$((plan_count + 1))
+}
+
+# Prints the collected changes grouped by the part of setup they affect, in a
+# fixed section order. Prints nothing when there are no changes.
+print_setup_plan() {
+	# The section currently being printed.
+	local kind
+	# One recorded change, stored as "kind|description".
+	local item
+
+	if [ "$plan_count" -eq 0 ]; then
+		return
+	fi
+
+	for kind in "Directories" "Backups" "Links" "Helper commands" "Codex settings" "HCOM" "Selection" "Git hooks"; do
+		# Whether this section contains at least one planned change.
+		local shown=false
+		for item in "${plan_items[@]}"; do
+			if [ "${item%%|*}" != "$kind" ]; then
+				continue
+			fi
+
+			if [ "$shown" = false ]; then
+				printf '\n%s:\n' "$kind"
+				shown=true
+			fi
+
+			printf '  - %s\n' "${item#*|}"
+		done
+	done
+}
+
+# Adds the Claude folders, links, stale links and missing helper commands to the
+# setup preview.
+plan_claude_setup() {
+	# The managed folder or generated file currently being checked.
+	local file
+	# The helper command currently being checked.
+	local command_name
+
+	for file in "${CLAUDE_CONTAINERS[@]}"; do
+		plan_container_dir "$file"
+	done
+
+	for command_name in friction team-send doc-paths; do
+		plan_helper_command "$command_name"
+	done
+
+	for file in "${CLAUDE_FILES[@]}"; do
+		plan_link_path "$REPO_DIR/dist/claude/$file" "$CLAUDE_DIR/$file"
+	done
+
+	plan_prune_stale_repo_links "$CLAUDE_DIR/skills" "$REPO_DIR"
+	if [ "${#excluded_skills[@]}" -gt 0 ]; then
+		plan_skill_links "$CLAUDE_DIR/skills" "${excluded_skills[@]}"
+	else
+		plan_skill_links "$CLAUDE_DIR/skills"
+	fi
+
+	plan_prune_stale_repo_links "$CLAUDE_DIR/hooks" "$REPO_DIR/dist/claude/hooks"
+	for file in "$REPO_DIR"/dist/claude/hooks/*; do
+		[ -f "$file" ] || continue
+		plan_link_path "$file" "$CLAUDE_DIR/hooks/${file##*/}"
+	done
+
+	plan_prune_stale_repo_links "$CLAUDE_DIR/themes" "$REPO_DIR/dist/claude/themes"
+	for file in "$REPO_DIR"/dist/claude/themes/*.json; do
+		[ -f "$file" ] || continue
+		plan_link_path "$file" "$CLAUDE_DIR/themes/${file##*/}"
+	done
+
+	plan_prune_stale_repo_links "$CLAUDE_DIR/rules" "$REPO_DIR/dist/claude/rules"
+	for file in "$REPO_DIR"/dist/claude/rules/*.md; do
+		[ -f "$file" ] || continue
+		plan_link_path "$file" "$CLAUDE_DIR/rules/${file##*/}"
+	done
+
+	for file in "$REPO_DIR"/dist/claude/commands/*; do
+		[ -f "$file" ] || continue
+		plan_link_path "$file" "$CLAUDE_DIR/commands/${file##*/}"
+	done
+}
+
+# Adds the install of a missing agent-tools command to the setup preview. A
+# command both agents need is listed once.
+#
+# @param  {string}  command_name
+#     The command setup installs with uv when it is missing.
+plan_helper_command() {
+	# The command needed by this agent setup.
+	local command_name="$1"
+	# A command already listed for the other agent.
+	local planned
+
+	if [ "${#planned_commands[@]}" -gt 0 ]; then
+		for planned in "${planned_commands[@]}"; do
+			[ "$planned" = "$command_name" ] && return
+		done
+	fi
+
+	if ! command -v "$command_name" >/dev/null 2>&1; then
+		plan_change "Helper commands" "Install $command_name with uv from $(display_path "$AGENT_TOOLS_DIR/packages/$command_name")"
+		planned_commands+=("$command_name")
+	fi
+}
+
+# Adds the Codex folders, links, config changes, HCOM folder additions and
+# missing helper commands to the setup preview.
+plan_codex_setup() {
+	# The managed folder or generated file currently being checked.
+	local file
+	# The helper command currently being checked.
+	local command_name
+	# The position of the current managed Codex link.
+	local index
+	# The Codex config setup would write, compared with the user's current file.
+	local config_temp
+
+	for file in "${CODEX_CONTAINERS[@]}"; do
+		plan_container_dir "$file"
+	done
+
+	for command_name in team-send doc-paths; do
+		plan_helper_command "$command_name"
+	done
+
+	for index in "${!CODEX_LINK_SOURCES[@]}"; do
+		plan_link_path "${CODEX_LINK_SOURCES[$index]}" "${CODEX_LINK_TARGETS[$index]}"
+	done
+
+	plan_prune_stale_repo_links "$CODEX_DIR/hooks" "$REPO_DIR/dist/codex/hooks"
+	for file in "$REPO_DIR"/dist/codex/hooks/*; do
+		[ -f "$file" ] || continue
+		plan_link_path "$file" "$CODEX_DIR/hooks/${file##*/}"
+	done
+
+	config_temp=$(mktemp)
+	prepare_codex_config "$CODEX_DIR/config.toml" "$config_temp"
+	if [ ! -f "$CODEX_DIR/config.toml" ] || ! cmp -s "$CODEX_DIR/config.toml" "$config_temp"; then
+		if [ -e "$CODEX_DIR/config.toml" ] || [ -L "$CODEX_DIR/config.toml" ]; then
+			plan_backup "$CODEX_DIR/config.toml"
+		fi
+		plan_change "Codex settings" "Write $(display_path "$CODEX_DIR/config.toml") with managed defaults, permission profile, MCP servers, hooks and TUI settings"
+	fi
+	rm "$config_temp"
+
+	plan_prune_stale_repo_links "$HOME/.agents/skills" "$REPO_DIR"
+	plan_prune_stale_repo_links "$CODEX_DIR/skills" "$REPO_DIR" 1
+	if [ "${#excluded_skills[@]}" -gt 0 ]; then
+		plan_skill_links "$HOME/.agents/skills" "${excluded_skills[@]}"
+	else
+		plan_skill_links "$HOME/.agents/skills"
+	fi
+
+	plan_hcom_folders
+}
+
+# Adds the folders that setup will append to HCOM's Codex arguments to the
+# setup preview. ~/.agents is listed even before it exists, because setup
+# creates it before updating HCOM.
+plan_hcom_folders() {
+	# The current HCOM argument string for Codex agents.
+	local codex_args
+	# The current HCOM arguments split into option and value tokens.
+	local -a existing_args=()
+	# The folder HCOM should grant to Codex agents.
+	local folder
+	# The position of one token in the current arguments.
+	local argument_index
+	# The folder that follows an --add-dir option, with ~ expanded.
+	local existing_folder
+	# Whether the folder already appears after an --add-dir option.
+	local folder_present
+
+	if ! command -v hcom >/dev/null 2>&1; then
+		return
+	fi
+
+	if ! codex_args=$(hcom config codex_args); then
+		printf '%s\n' 'HCOM arguments could not be read; setup will skip HCOM additions.' >&2
+		return
+	fi
+
+	read -r -a existing_args <<< "$codex_args"
+	for folder in "${HCOM_FOLDERS[@]}"; do
+		if [ ! -d "$folder" ] && [ "$folder" != "$HOME/.agents" ]; then
+			continue
+		fi
+
+		folder_present=false
+		for argument_index in "${!existing_args[@]}"; do
+			[ "${existing_args[$argument_index]}" = --add-dir ] || continue
+			existing_folder="${existing_args[$((argument_index + 1))]:-}"
+			existing_folder="${existing_folder/#\~\//$HOME/}"
+			if [ "$existing_folder" = "$folder" ]; then
+				folder_present=true
+				break
+			fi
+		done
+
+		if [ "$folder_present" = false ]; then
+			plan_change "HCOM" "Add --add-dir $(display_path "$folder") to hcom config codex_args"
+		fi
+	done
 }
 
 # Checks that setup can provide every agent-tools command the chosen target
@@ -294,7 +690,7 @@ parse_skill_list() {
 
 # Prints the options this script accepts.
 usage() {
-	printf 'Usage: %s [--claude|--codex|--both] [--claude-dir <path>] [--codex-dir <path>] [--select] [--exclude <skill>[,<skill>...]] [--include <skill>[,<skill>...]] [--include-all] [--status] [--refresh]\n' "$(basename "$0")"
+	printf 'Usage: %s [--claude|--codex|--both] [--claude-dir <path>] [--codex-dir <path>] [--select] [--exclude <skill>[,<skill>...]] [--include <skill>[,<skill>...]] [--include-all] [--status] [--refresh] [--yes]\n' "$(basename "$0")"
 }
 
 # Reads persisted skill exclusions without creating the exclusions file.
@@ -1085,15 +1481,21 @@ report_skill_status() {
 }
 
 setup_claude() {
+	# The managed folder or generated file currently installed for Claude.
+	local file
+	# The display label used for a managed Claude folder.
+	local label
+
 	cli_section "Claude global setup ($(display_path "$CLAUDE_DIR"))"
 
 	cli_group_begin "Claude directories"
-	ensure_container_dir "$CLAUDE_DIR" "$(display_path "$CLAUDE_DIR")"
-	ensure_container_dir "$CLAUDE_DIR/skills" "skills"
-	ensure_container_dir "$CLAUDE_DIR/hooks" "hooks"
-	ensure_container_dir "$CLAUDE_DIR/themes" "themes"
-	ensure_container_dir "$CLAUDE_DIR/rules" "rules"
-	ensure_container_dir "$CLAUDE_DIR/commands" "commands"
+	for file in "${CLAUDE_CONTAINERS[@]}"; do
+		label="${file##*/}"
+		if [ "$file" = "$CLAUDE_DIR" ]; then
+			label=$(display_path "$file")
+		fi
+		ensure_container_dir "$file" "$label"
+	done
 	cli_group_end
 
 	cli_group_begin "Claude command-line tools"
@@ -1103,10 +1505,9 @@ setup_claude() {
 	cli_group_end
 
 	cli_group_begin "Claude files"
-	link_path "$REPO_DIR/dist/claude/CLAUDE.md" "$CLAUDE_DIR/CLAUDE.md" "CLAUDE.md"
-	link_path "$REPO_DIR/dist/claude/settings.json" "$CLAUDE_DIR/settings.json" "settings.json"
-	link_path "$REPO_DIR/dist/claude/.mcp.json" "$CLAUDE_DIR/.mcp.json" ".mcp.json"
-	link_path "$REPO_DIR/dist/claude/statusline.sh" "$CLAUDE_DIR/statusline.sh" "statusline.sh"
+	for file in "${CLAUDE_FILES[@]}"; do
+		link_path "$REPO_DIR/dist/claude/$file" "$CLAUDE_DIR/$file" "$file"
+	done
 	cli_group_end
 
 	cli_group_begin "Claude skills"
@@ -1250,13 +1651,23 @@ link_configured_skills() {
 }
 
 setup_codex() {
+	# The managed Codex folder currently ensured by setup.
+	local folder
+	# The label displayed when a Codex folder needs replacement.
+	local label
+	# The position of the current managed Codex link.
+	local index
+
 	cli_section "Codex global setup ($(display_path "$CODEX_DIR"))"
 
 	cli_group_begin "Codex directories"
-	ensure_container_dir "$HOME/.agents" "$(display_path "$HOME/.agents")"
-	ensure_container_dir "$HOME/.agents/skills" "$(display_path "$HOME/.agents/skills")"
-	ensure_container_dir "$CODEX_DIR" "$(display_path "$CODEX_DIR")"
-	ensure_container_dir "$CODEX_DIR/hooks" "hooks"
+	for folder in "${CODEX_CONTAINERS[@]}"; do
+		label=$(display_path "$folder")
+		if [ "$folder" = "$CODEX_DIR/hooks" ]; then
+			label=hooks
+		fi
+		ensure_container_dir "$folder" "$label"
+	done
 	cli_group_end
 
 	cli_group_begin "Codex command-line tools"
@@ -1265,9 +1676,9 @@ setup_codex() {
 	cli_group_end
 
 	cli_group_begin "Codex files"
-	link_path "$REPO_DIR/dist/codex/AGENTS.md" "$HOME/.agents/AGENTS.md" "AGENTS.md"
-	link_path "$REPO_DIR/dist/codex/AGENTS.md" "$CODEX_DIR/AGENTS.md" "Codex AGENTS.md"
-	link_path "$REPO_DIR/dist/codex/hooks.json" "$CODEX_DIR/hooks.json" "Codex hooks"
+	for index in "${!CODEX_LINK_SOURCES[@]}"; do
+		link_path "${CODEX_LINK_SOURCES[$index]}" "${CODEX_LINK_TARGETS[$index]}" "${CODEX_LINK_LABELS[$index]}"
+	done
 	prune_stale_repo_links "$CODEX_DIR/hooks" "$REPO_DIR/dist/codex/hooks" "hooks"
 	# The generated hook file currently being linked into Codex's configuration.
 	local hook
@@ -1293,14 +1704,58 @@ setup_codex() {
 ensure_codex_config() {
 	# The user's Codex configuration file updated by setup.
 	local config="$CODEX_DIR/config.toml"
-	# The working copy with the managed root and section settings applied, then the
-	# final copy with the managed MCP server sections added back.
-	local defaults_temp temp
+	# The completed managed configuration before it replaces the user's file.
+	local temp
 
+	temp=$(mktemp)
+	prepare_codex_config "$config" "$temp"
+
+	if [ -f "$config" ] && cmp -s "$config" "$temp"; then
+		rm "$temp"
+		cli_group_status muted "Codex config" "already configured"
+		return
+	fi
+
+	if [ -e "$config" ] || [ -L "$config" ]; then
+		# The saved copy of the configuration before setup replaces it.
+		local backup
+		backup=$(backup_path "$config")
+		mv "$temp" "$config"
+		cli_group_status success "configured Codex MCP servers and hooks" "backup at $(display_path "$backup")"
+	else
+		mv "$temp" "$config"
+		cli_group_status success "configured Codex MCP servers and hooks"
+	fi
+}
+
+# Writes the Codex config that setup would install to a separate file, leaving
+# the user's file unchanged, so the preview and the installer compare the same
+# result. Unrelated settings in the existing config are kept.
+#
+# @param  {string}  config
+#     The existing Codex configuration, or a missing path on first setup.
+# @param  {string}  output
+#     The file that receives the managed configuration.
+prepare_codex_config() {
+	# The existing Codex configuration.
+	local config="$1"
+	# The file that receives the managed configuration.
+	local output="$2"
+	# The file read as the starting point: the user's config, or an empty file
+	# on first setup.
+	local source="$config"
+	# The starting config with the managed root defaults applied.
+	local defaults_temp
+	# The working copy that collects the managed sections, MCP servers,
+	# permissions and TUI settings.
+	local temp
+
+	if [ ! -f "$source" ]; then
+		source=/dev/null
+	fi
 	defaults_temp=$(mktemp)
 	temp=$(mktemp)
-	touch "$config"
-	ensure_codex_defaults "$config" "$defaults_temp"
+	ensure_codex_defaults "$source" "$defaults_temp"
 
 	# Apply every managed feature flag and memory setting. The deprecated
 	# codex_hooks flag is removed, because the managed hooks flag replaces it.
@@ -1316,9 +1771,14 @@ ensure_codex_config() {
 		/^\[mcp_servers\.mdn(\.|\])/{ skip = 1; next }
 		/^\[mcp_servers\.sketch(\.|\])/{ skip = 1; next }
 		/^\[/{ skip = 0 }
-		!skip { print }
+		!skip && /^[[:space:]]*$/ { blanks++; next }
+		!skip {
+			while (blanks > 0) { print ""; blanks-- }
+			print
+		}
 	' "$defaults_temp" > "$temp"
 	rm "$defaults_temp"
+	ensure_codex_tui_settings "$temp"
 
 	# Re-add repository-managed MCP server configuration.
 	for section in "mcp_servers.codebase-memory-mcp" "mcp_servers.mdn" "mcp_servers.sketch" "mcp_servers.sketch.tools.run_code"; do
@@ -1326,7 +1786,6 @@ ensure_codex_config() {
 		codex_config_section "$section" >> "$temp"
 	done
 	ensure_codex_permission_settings "$temp"
-	ensure_codex_tui_settings "$temp"
 
 	# The temporary config file with legacy inline hooks removed.
 	local hooks_temp
@@ -1334,17 +1793,7 @@ ensure_codex_config() {
 	remove_inline_codex_hooks "$temp" "$hooks_temp"
 	mv "$hooks_temp" "$temp"
 
-	if cmp -s "$config" "$temp"; then
-		rm "$temp"
-		cli_group_status muted "Codex config" "already configured"
-		return
-	fi
-
-	# The saved copy of the configuration before setup replaces it.
-	local backup
-	backup=$(backup_path "$config")
-	mv "$temp" "$config"
-	cli_group_status success "configured Codex MCP servers and hooks" "backup at $(display_path "$backup")"
+	mv "$temp" "$output"
 }
 
 # Sets the root-level Codex defaults while preserving unrelated configuration.
@@ -1387,6 +1836,7 @@ ensure_codex_defaults() {
 		/^\[/ {
 			if (in_root) {
 				print_defaults()
+				print ""
 				defaults_written = 1
 				in_root = 0
 			}
@@ -1394,6 +1844,7 @@ ensure_codex_defaults() {
 			next
 		}
 		in_root && /^(approval_policy|default_permissions|sandbox_mode|model_reasoning_effort|model_verbosity|model_reasoning_summary|hide_agent_reasoning|suppress_unstable_features_warning)[[:space:]]*=/ { next }
+		in_root && /^[[:space:]]*$/ { next }
 		{ print }
 		END {
 			if (!defaults_written) {
@@ -1497,7 +1948,7 @@ ensure_codex_section_settings() {
 		}
 	' "$managed" "$config" > "$temp"
 
-	trash "$managed"
+	rm "$managed"
 	mv "$temp" "$config"
 }
 
@@ -1545,7 +1996,7 @@ ensure_codex_permission_settings() {
 		codex_config_section "permissions.project-edit.network"
 	} >> "$temp"
 
-	trash "$roots_temp"
+	rm "$roots_temp"
 	mv "$temp" "$config"
 }
 
@@ -1657,9 +2108,6 @@ remove_inline_codex_hooks() {
 # Only folders that exist on this machine are added, and entries the user added are
 # kept as written. Agents that are already running keep the list they started with.
 setup_hcom_codex_folders() {
-	# The folders outside the agent's own project that it writes to: this repository,
-	# agent-run logs and progress records, the Trash, and SwiftPM's cache and settings.
-	local -a required_folders=("$REPO_DIR" "$HOME/.agents" "$HOME/.Trash" "$HOME/Library/Caches/org.swift.swiftpm" "$HOME/Library/org.swift.swiftpm")
 	# The current HCOM arguments split into option and value tokens.
 	local -a existing_args=()
 	# The current HCOM argument string. Missing folders are appended to it, so the
@@ -1689,7 +2137,7 @@ setup_hcom_codex_folders() {
 
 	read -r -a existing_args <<< "$codex_args"
 
-	for folder in "${required_folders[@]}"; do
+	for folder in "${HCOM_FOLDERS[@]}"; do
 		if [ ! -d "$folder" ]; then
 			continue
 		fi
@@ -1732,6 +2180,10 @@ setup_hcom_codex_folders() {
 # This installs the pre-push hook without touching ~/.git/hooks directly.
 configure_git_hooks() {
 	cli_section "Git hooks"
+	if [ "$(git -C "$REPO_DIR" config --get core.hooksPath 2>/dev/null || true)" = src/hooks/git ]; then
+		cli_status muted "git hooks path" "already set"
+		return
+	fi
 
 	if ! git -C "$REPO_DIR" config core.hooksPath src/hooks/git &>/dev/null; then
 		cli_status warning "Could not set core.hooksPath" "not a git repo?"

@@ -19,14 +19,7 @@ backup_path() {
 	# The folder that holds backups for this kind of path.
 	local backup_dir
 
-	case "$path" in
-		"$HOME"/.claude*/skills/*)   backup_dir="$(dirname "$(dirname "$path")")/backups/skills" ;;
-		"$HOME"/.claude*/hooks/*)    backup_dir="$(dirname "$(dirname "$path")")/backups/hooks" ;;
-		"$HOME"/.claude*/themes/*)   backup_dir="$(dirname "$(dirname "$path")")/backups/themes" ;;
-		"$HOME"/.claude*/commands/*) backup_dir="$(dirname "$(dirname "$path")")/backups/commands" ;;
-		"$HOME/.agents/skills/"*)    backup_dir="$HOME/.agents/backups/skills" ;;
-		*)                           backup_dir="$(dirname "$path")" ;;
-	esac
+	backup_dir=$(backup_dir_for_path "$path")
 
 	# The original filename, used to find older backups of the same path.
 	local backup_base
@@ -44,6 +37,24 @@ backup_path() {
 	backup="$backup_dir/${backup_base}.bak.$(timestamp)"
 	mv "$path" "$backup"
 	printf '%s' "$backup"
+}
+
+# Prints the folder that holds a path's timestamped backups.
+#
+# @param  {string}  path
+#     The path setup may replace.
+backup_dir_for_path() {
+	# The path whose location decides the backup folder.
+	local path="$1"
+
+	case "$path" in
+		"$HOME"/.claude*/skills/*)   printf '%s' "$(dirname "$(dirname "$path")")/backups/skills" ;;
+		"$HOME"/.claude*/hooks/*)    printf '%s' "$(dirname "$(dirname "$path")")/backups/hooks" ;;
+		"$HOME"/.claude*/themes/*)   printf '%s' "$(dirname "$(dirname "$path")")/backups/themes" ;;
+		"$HOME"/.claude*/commands/*) printf '%s' "$(dirname "$(dirname "$path")")/backups/commands" ;;
+		"$HOME/.agents/skills/"*)    printf '%s' "$HOME/.agents/backups/skills" ;;
+		*)                           dirname "$path" ;;
+	esac
 }
 
 # Prints a path with $HOME replaced by ~ for readable terminal output.
@@ -246,8 +257,6 @@ link_skills() {
 	local slug
 	# Whether the current skill is excluded from this setup run.
 	local excluded
-	# Excluded skill name currently being checked.
-	local excluded_skill
 	# Installed skill path currently being checked or removed.
 	local skill_link
 	# Canonical skill directories that passed duplicate checks.
@@ -261,13 +270,8 @@ link_skills() {
 		for skill in "${skill_paths[@]}"; do
 			slug=$(basename "$skill")
 			excluded=0
-			if [ "${#excluded_skills[@]}" -gt 0 ]; then
-				for excluded_skill in "${excluded_skills[@]}"; do
-					if [ "$excluded_skill" = "$slug" ]; then
-						excluded=1
-						break
-					fi
-				done
+			if [ "${#excluded_skills[@]}" -gt 0 ] && skill_is_excluded "$slug" "${excluded_skills[@]}"; then
+				excluded=1
 			fi
 
 			if [ "$excluded" = "1" ]; then
@@ -282,4 +286,181 @@ link_skills() {
 			link_path "$skill" "$target_dir/$slug" "skills/$slug"
 		done
 	fi
+}
+
+# Returns success when a skill name appears in an exclusion list.
+#
+# @param  {string}  slug
+#     The skill name to check.
+# @param  {string}  ...
+#     Excluded skill names.
+skill_is_excluded() {
+	# The skill name to look for.
+	local slug="$1"
+	# The excluded skill name currently being compared.
+	local excluded_skill
+	shift
+
+	for excluded_skill in "$@"; do
+		if [ "$excluded_skill" = "$slug" ]; then
+			return 0
+		fi
+	done
+	return 1
+}
+
+# Adds a directory creation or replacement to the setup preview.
+#
+# @param  {string}  path
+#     The directory setup will ensure.
+plan_container_dir() {
+	# The directory setup will create, or replace when something else is there.
+	local path="$1"
+
+	if [ -L "$path" ] || { [ -e "$path" ] && [ ! -d "$path" ]; }; then
+		plan_backup "$path"
+		plan_change "Directories" "Replace $(display_path "$path") with a directory"
+	elif [ ! -d "$path" ]; then
+		plan_change "Directories" "Create $(display_path "$path")"
+	fi
+}
+
+# Adds the backup a replacement will save, and the older backups of the same
+# path it will remove, to the setup preview.
+#
+# @param  {string}  path
+#     The existing path that setup will replace.
+plan_backup() {
+	# The existing path setup will back up.
+	local path="$1"
+	# The folder that will hold the new backup.
+	local backup_dir
+	# An older backup of the same path, which backup_path removes.
+	local old
+
+	backup_dir=$(backup_dir_for_path "$path")
+
+	if [ -d "$backup_dir" ]; then
+		while IFS= read -r old; do
+			plan_change "Backups" "Remove older backup $(display_path "$old")"
+		done < <(find "$backup_dir" -maxdepth 1 -name "$(basename "$path").bak.*" 2>/dev/null)
+	fi
+
+	plan_change "Backups" "Save $(display_path "$path") in $(display_path "$backup_dir") with a timestamp"
+}
+
+# Adds a link to the setup preview unless the installed path already points at
+# the repository source. Anything else at that path is listed for backup first,
+# unless the stale-link cleanup will remove it before linking.
+#
+# @param  {string}  source
+#     The repository file or folder to link.
+# @param  {string}  target
+#     The path setup will install.
+plan_link_path() {
+	# The repository file or folder the link should point at.
+	local source="$1"
+	# The installed path setup will link.
+	local target="$2"
+	# A link that stale-link cleanup has already listed for removal.
+	local pruned_link
+	# Whether stale-link cleanup removes the target before it is linked, so
+	# there is nothing left to back up.
+	local already_pruned=false
+
+	if is_repo_owned_link "$source" "$target"; then
+		return
+	fi
+	if [ -e "$target" ] || [ -L "$target" ]; then
+		if [ "${#planned_pruned_links[@]}" -gt 0 ]; then
+			for pruned_link in "${planned_pruned_links[@]}"; do
+				if [ "$pruned_link" = "$target" ]; then
+					already_pruned=true
+					break
+				fi
+			done
+		fi
+		if [ "$already_pruned" = false ]; then
+			plan_backup "$target"
+		fi
+	fi
+
+	plan_change "Links" "Link $(display_path "$target") to $(display_path "$source")"
+}
+
+# Adds the repository links that setup will remove to the setup preview. By
+# default only broken links are listed, matching prune_stale_repo_links. Each
+# listed link is also added to planned_pruned_links, so plan_link_path does not
+# list a backup for it.
+#
+# @param  {string}  dir
+#     The installed link directory to check.
+# @param  {string}  repo_prefix
+#     The path that repository-owned link targets start with.
+# @param  {string}  remove_all
+#     Set to 1 to include working links as well as broken ones.
+plan_prune_stale_repo_links() {
+	# The installed link directory to check.
+	local dir="$1"
+	# The path that repository-owned link targets start with.
+	local repo_prefix="$2"
+	# Whether working repository links are removed as well as broken ones.
+	local remove_all="${3:-0}"
+	# The installed link currently being checked.
+	local link
+	# The path that link points at.
+	local target
+
+	[ -d "$dir" ] || return 0
+
+	for link in "$dir"/*; do
+		[ -L "$link" ] || continue
+		target=$(readlink "$link")
+		if [[ "$target" == "$repo_prefix"* ]] && {
+			[ "$remove_all" = 1 ] || [ ! -e "$link" ]
+		}; then
+			plan_change "Links" "Remove $(display_path "$link")"
+			planned_pruned_links+=("$link")
+		fi
+	done
+}
+
+# Adds the skill links that setup will create, and the links to excluded skills
+# it will remove, to the setup preview.
+#
+# @param  {string}  target_dir
+#     The installed skill directory.
+# @param  {string}  ...
+#     Skill names excluded from this setup run.
+plan_skill_links() {
+	# The installed skill directory.
+	local target_dir="$1"
+	shift
+	# The skill names excluded from this setup run.
+	local -a excluded=("$@")
+	# The repository skill folder currently being checked.
+	local skill
+	# The skill's name, which is also its installed folder name.
+	local slug
+	# The installed path for the current skill.
+	local skill_link
+	# Whether the current skill is excluded.
+	local is_excluded
+
+	for skill in "${skill_paths[@]}"; do
+		slug=${skill##*/}
+		skill_link="$target_dir/$slug"
+		is_excluded=false
+		if [ "${#excluded[@]}" -gt 0 ] && skill_is_excluded "$slug" "${excluded[@]}"; then
+			is_excluded=true
+		fi
+
+		if [ "$is_excluded" = true ]; then
+			if is_repo_owned_link "$skill" "$skill_link"; then
+				plan_change "Links" "Remove excluded skill $(display_path "$skill_link")"
+			fi
+		else
+			plan_link_path "$skill" "$skill_link"
+		fi
+	done
 }
