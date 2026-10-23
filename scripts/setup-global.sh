@@ -31,6 +31,24 @@ main() {
 	status_requested=false
 	# Whether a scripted run may apply its printed plan without a terminal.
 	yes_requested=false
+	# The preset the user chose: skills-only, pick or everything. Empty runs the
+	# full setup, which is what setup did before presets existed.
+	preset=""
+	# Whether to install each agent's main configuration, such as CLAUDE.md and
+	# Codex's config.toml, and set this checkout's Git hooks.
+	setup_core=true
+	# Whether to install the chosen agents' hook files and registrations.
+	setup_hooks=true
+	# Whether to add the managed Codex permission profile.
+	setup_permissions=true
+	# Whether to grant folders to Codex agents started by HCOM.
+	setup_hcom=true
+	# Whether to link the Claude themes.
+	setup_themes=true
+	# Whether to link the shared trash wrapper.
+	setup_trash=true
+	# Whether to install missing helper commands and cli-style.
+	setup_helpers=true
 	# The file that stores excluded skill names between setup runs.
 	skill_exclusions_file="$HOME/.agents/skill-exclusions"
 	# The skill names excluded from the selected setup targets.
@@ -53,6 +71,21 @@ main() {
 			--claude)        target="claude" ;;
 			--codex)         target="codex" ;;
 			--both)          target="both" ;;
+			--preset)
+				if [ "$#" -lt 2 ]; then
+					usage >&2
+					exit 1
+				fi
+				case "$2" in
+					skills-only|pick|everything) preset="$2" ;;
+					*)
+						printf 'Unknown preset: %s\n' "$2" >&2
+						usage >&2
+						exit 1
+						;;
+				esac
+				shift
+				;;
 			--claude-dir)    CLAUDE_DIR="$2"; shift ;;
 			--codex-dir)     CODEX_DIR="$2"; shift ;;
 			--select)
@@ -105,6 +138,45 @@ main() {
 		printf '%s\n' '--select requires a terminal. Use --exclude or --include when standard input is not a terminal.' >&2
 		exit 1
 	fi
+	if [ "$status_requested" = true ] && [ -n "$preset" ]; then
+		printf '%s\n' '--status cannot be combined with --preset.' >&2
+		exit 1
+	fi
+	if [ -z "$preset" ] && [ "$skill_options_requested" = false ] && [ "$status_requested" = false ] && [ -z "$target" ] && [ -t 0 ]; then
+		preset=$(prompt_preset) || exit 1
+		if [ "$preset" = cancelled ]; then
+			printf '%s\n' 'Setup cancelled. Nothing changed.'
+			exit 0
+		fi
+	fi
+	case "$preset" in
+		skills-only)
+			setup_core=false setup_hooks=false setup_permissions=false
+			setup_hcom=false setup_themes=false setup_trash=false setup_helpers=false
+			;;
+		pick)
+			if ! [ -t 0 ]; then
+				printf '%s\n' '--preset pick requires a terminal to choose features.' >&2
+				exit 1
+			fi
+			;;
+	esac
+	if [ -z "$target" ]; then
+		if [ "$skill_options_requested" = true ] || [ "$status_requested" = true ] || ! [ -t 0 ]; then
+			target=both
+		elif [ "$preset" = everything ]; then
+			target=both
+		else
+			target=$(prompt_target)
+		fi
+	fi
+	if [ "$preset" = pick ]; then
+		pick_setup_features || exit 1
+		if [ "$skill_options_requested" = false ]; then
+			select_requested=true
+			skill_options_requested=true
+		fi
+	fi
 
 	load_skill_exclusions
 	if ! validate_skill_operations; then
@@ -152,17 +224,9 @@ main() {
 		apply_skill_operations
 	fi
 
-	if [ -z "$target" ]; then
-		if [ "$skill_options_requested" = true ] || [ "$status_requested" = true ]; then
-			target="both"
-		else
-			target=$(prompt_target)
-		fi
-	fi
-
 	load_managed_paths
 
-	if [ "$status_requested" != true ]; then
+	if [ "$status_requested" != true ] && [ "$setup_helpers" = true ]; then
 		preflight_agent_tools "$target" || exit 1
 	fi
 
@@ -208,11 +272,15 @@ main() {
 	if [ "$skill_options_requested" = true ] && skill_exclusions_changed; then
 		save_skill_exclusions
 	fi
-	if cli_style_install_needed; then
+	if [ "$setup_helpers" = true ] && cli_style_install_needed; then
 		bash "$REPO_DIR/scripts/install-cli-style.sh"
 	fi
-	# shellcheck source=scripts/lib/cli-style-output.sh
-	source "$REPO_DIR/scripts/lib/cli-style-output.sh"
+	if [ -x "${CLI_STYLE_BIN:-$cli_style_install_dir/bin/cli-style}" ]; then
+		# shellcheck source=scripts/lib/cli-style-output.sh
+		source "$REPO_DIR/scripts/lib/cli-style-output.sh"
+	else
+		enable_plain_setup_output
+	fi
 
 	case "$target" in
 		claude) setup_claude ;;
@@ -222,36 +290,58 @@ main() {
 
 	# Link the trash wrapper once, outside the per-agent setup, because ~/.local/bin is shared by
 	# both agents and the user's own shell.
-	cli_section "Shared command-line tools"
-	cli_group_begin "Trash wrapper"
-	# mkdir -p follows a symlinked ~/.local/bin, such as one kept in dotfiles, instead of replacing it.
-	mkdir -p "$HOME/.local/bin"
-	link_path "$REPO_DIR/src/bin/trash" "$HOME/.local/bin/trash" "$(display_path "$HOME/.local/bin/trash")"
-	cli_group_end
+	if [ "$setup_trash" = true ]; then
+		cli_section "Shared command-line tools"
+		cli_group_begin "Trash wrapper"
+		# mkdir -p follows a symlinked ~/.local/bin, such as one kept in dotfiles, instead of replacing it.
+		mkdir -p "$HOME/.local/bin"
+		link_path "$REPO_DIR/src/bin/trash" "$HOME/.local/bin/trash" "$(display_path "$HOME/.local/bin/trash")"
+		cli_group_end
+	fi
 
-	configure_git_hooks
+	if [ "$setup_core" = true ]; then
+		configure_git_hooks
+	fi
 
 	printf '\n'
 	cli_status success "Done."
+}
+
+# Defines plain versions of the cli-style output functions for runs where
+# cli-style is not installed, such as skills only. The plain cli_group_status
+# defined below already covers link results.
+enable_plain_setup_output() {
+	cli_section() { printf '\n%s\n' "$1"; }
+	cli_group_begin() { printf '%s\n' "$1"; }
+	cli_group_end() { :; }
+	cli_status() {
+		printf '%s' "$2"
+		if [ -n "${3:-}" ]; then
+			printf ': %s' "$3"
+		fi
+		printf '\n'
+	}
 }
 
 # Sets the folders, files and links that both the preview and the installer
 # manage, so the preview and the installer read the same lists. Call it after
 # the agent folders are known.
 load_managed_paths() {
-	# The Claude folders setup creates.
-	CLAUDE_CONTAINERS=("$CLAUDE_DIR" "$CLAUDE_DIR/skills" "$CLAUDE_DIR/hooks" "$CLAUDE_DIR/themes" "$CLAUDE_DIR/rules" "$CLAUDE_DIR/commands")
 	# The generated files linked from dist/claude into the Claude folder.
 	CLAUDE_FILES=(CLAUDE.md settings.json .mcp.json statusline.sh)
-	# The Codex folders setup creates.
-	CODEX_CONTAINERS=("$HOME/.agents" "$HOME/.agents/skills" "$CODEX_DIR" "$CODEX_DIR/hooks")
-	# The generated files each Codex link points at, in the same order as the
+	# The generated files linked for Codex core setup, in the same order as the
 	# installed paths and labels below.
-	CODEX_LINK_SOURCES=("$REPO_DIR/dist/codex/AGENTS.md" "$REPO_DIR/dist/codex/AGENTS.md" "$REPO_DIR/dist/codex/hooks.json")
-	# The installed path of each Codex link.
-	CODEX_LINK_TARGETS=("$HOME/.agents/AGENTS.md" "$CODEX_DIR/AGENTS.md" "$CODEX_DIR/hooks.json")
-	# The name shown for each Codex link in the setup output.
-	CODEX_LINK_LABELS=(AGENTS.md 'Codex AGENTS.md' 'Codex hooks')
+	CODEX_LINK_SOURCES=("$REPO_DIR/dist/codex/AGENTS.md" "$REPO_DIR/dist/codex/AGENTS.md")
+	# The installed paths for the Codex core links.
+	CODEX_LINK_TARGETS=("$HOME/.agents/AGENTS.md" "$CODEX_DIR/AGENTS.md")
+	# The names shown for the Codex core links.
+	CODEX_LINK_LABELS=(AGENTS.md 'Codex AGENTS.md')
+	# The generated Codex hook manifest, installed only when hooks are chosen.
+	CODEX_HOOKS_SOURCE="$REPO_DIR/dist/codex/hooks.json"
+	# The installed Codex hook manifest path.
+	CODEX_HOOKS_TARGET="$CODEX_DIR/hooks.json"
+	# The name shown for the Codex hook manifest.
+	CODEX_HOOKS_LABEL='Codex hooks'
 	# Folders HCOM grants to the Codex agents it starts.
 	HCOM_FOLDERS=("$REPO_DIR" "$HOME/.agents" "$HOME/.Trash" "$HOME/Library/Caches/org.swift.swiftpm" "$HOME/Library/org.swift.swiftpm")
 }
@@ -363,7 +453,7 @@ build_setup_plan() {
 		fi
 	fi
 
-	if cli_style_install_needed; then
+	if [ "$setup_helpers" = true ] && cli_style_install_needed; then
 		plan_change "Helper commands" "Download and install cli-style $cli_style_version in $(display_path "$cli_style_install_dir")"
 	fi
 
@@ -375,14 +465,17 @@ build_setup_plan() {
 		plan_codex_setup
 	fi
 
-	if [ ! -e "$HOME/.local/bin" ] && [ ! -L "$HOME/.local/bin" ]; then
-		plan_change "Directories" "Create $(display_path "$HOME/.local/bin")"
+	if [ "$setup_trash" = true ]; then
+		if [ ! -e "$HOME/.local/bin" ] && [ ! -L "$HOME/.local/bin" ]; then
+			plan_change "Directories" "Create $(display_path "$HOME/.local/bin")"
+		fi
+		plan_link_path "$REPO_DIR/src/bin/trash" "$HOME/.local/bin/trash"
 	fi
-	plan_link_path "$REPO_DIR/src/bin/trash" "$HOME/.local/bin/trash"
-	hooks_path=$(git -C "$REPO_DIR" config --get core.hooksPath 2>/dev/null || true)
-
-	if [ "$hooks_path" != src/hooks/git ]; then
-		plan_change "Git hooks" "Set core.hooksPath to src/hooks/git in this checkout"
+	if [ "$setup_core" = true ]; then
+		hooks_path=$(git -C "$REPO_DIR" config --get core.hooksPath 2>/dev/null || true)
+		if [ "$hooks_path" != src/hooks/git ]; then
+			plan_change "Git hooks" "Set core.hooksPath to src/hooks/git in this checkout"
+		fi
 	fi
 }
 
@@ -436,17 +529,33 @@ plan_claude_setup() {
 	# The helper command currently being checked.
 	local command_name
 
-	for file in "${CLAUDE_CONTAINERS[@]}"; do
-		plan_container_dir "$file"
-	done
+	plan_container_dir "$CLAUDE_DIR"
+	plan_container_dir "$CLAUDE_DIR/skills"
+	if [ "$setup_core" = true ]; then
+		plan_container_dir "$CLAUDE_DIR/rules"
+		plan_container_dir "$CLAUDE_DIR/commands"
+	fi
+	if [ "$setup_hooks" = true ]; then
+		plan_container_dir "$CLAUDE_DIR/hooks"
+	fi
+	if [ "$setup_themes" = true ]; then
+		plan_container_dir "$CLAUDE_DIR/themes"
+	fi
 
-	for command_name in friction team-send doc-paths; do
-		plan_helper_command "$command_name"
-	done
+	if [ "$setup_helpers" = true ]; then
+		for command_name in friction team-send doc-paths; do
+			plan_helper_command "$command_name"
+		done
+	fi
 
-	for file in "${CLAUDE_FILES[@]}"; do
-		plan_link_path "$REPO_DIR/dist/claude/$file" "$CLAUDE_DIR/$file"
-	done
+	if [ "$setup_core" = true ]; then
+		for file in "${CLAUDE_FILES[@]}"; do
+			if [ "$file" = settings.json ] && [ "$setup_hooks" = false ]; then
+				continue
+			fi
+			plan_link_path "$REPO_DIR/dist/claude/$file" "$CLAUDE_DIR/$file"
+		done
+	fi
 
 	plan_prune_stale_repo_links "$CLAUDE_DIR/skills" "$REPO_DIR"
 	if [ "${#excluded_skills[@]}" -gt 0 ]; then
@@ -455,28 +564,33 @@ plan_claude_setup() {
 		plan_skill_links "$CLAUDE_DIR/skills"
 	fi
 
-	plan_prune_stale_repo_links "$CLAUDE_DIR/hooks" "$REPO_DIR/dist/claude/hooks"
-	for file in "$REPO_DIR"/dist/claude/hooks/*; do
-		[ -f "$file" ] || continue
-		plan_link_path "$file" "$CLAUDE_DIR/hooks/${file##*/}"
-	done
+	if [ "$setup_hooks" = true ]; then
+		plan_prune_stale_repo_links "$CLAUDE_DIR/hooks" "$REPO_DIR/dist/claude/hooks"
+		for file in "$REPO_DIR"/dist/claude/hooks/*; do
+			[ -f "$file" ] || continue
+			plan_link_path "$file" "$CLAUDE_DIR/hooks/${file##*/}"
+		done
+	fi
 
-	plan_prune_stale_repo_links "$CLAUDE_DIR/themes" "$REPO_DIR/dist/claude/themes"
-	for file in "$REPO_DIR"/dist/claude/themes/*.json; do
-		[ -f "$file" ] || continue
-		plan_link_path "$file" "$CLAUDE_DIR/themes/${file##*/}"
-	done
+	if [ "$setup_themes" = true ]; then
+		plan_prune_stale_repo_links "$CLAUDE_DIR/themes" "$REPO_DIR/dist/claude/themes"
+		for file in "$REPO_DIR"/dist/claude/themes/*.json; do
+			[ -f "$file" ] || continue
+			plan_link_path "$file" "$CLAUDE_DIR/themes/${file##*/}"
+		done
+	fi
 
-	plan_prune_stale_repo_links "$CLAUDE_DIR/rules" "$REPO_DIR/dist/claude/rules"
-	for file in "$REPO_DIR"/dist/claude/rules/*.md; do
-		[ -f "$file" ] || continue
-		plan_link_path "$file" "$CLAUDE_DIR/rules/${file##*/}"
-	done
-
-	for file in "$REPO_DIR"/dist/claude/commands/*; do
-		[ -f "$file" ] || continue
-		plan_link_path "$file" "$CLAUDE_DIR/commands/${file##*/}"
-	done
+	if [ "$setup_core" = true ]; then
+		plan_prune_stale_repo_links "$CLAUDE_DIR/rules" "$REPO_DIR/dist/claude/rules"
+		for file in "$REPO_DIR"/dist/claude/rules/*.md; do
+			[ -f "$file" ] || continue
+			plan_link_path "$file" "$CLAUDE_DIR/rules/${file##*/}"
+		done
+		for file in "$REPO_DIR"/dist/claude/commands/*; do
+			[ -f "$file" ] || continue
+			plan_link_path "$file" "$CLAUDE_DIR/commands/${file##*/}"
+		done
+	fi
 }
 
 # Adds the install of a missing agent-tools command to the setup preview. A
@@ -513,34 +627,62 @@ plan_codex_setup() {
 	local index
 	# The Codex config setup would write, compared with the user's current file.
 	local config_temp
+	# The settings the preview says the Codex config will hold.
+	local config_description
+	# The position of the last setting named in the config description.
+	local last_item
 
-	for file in "${CODEX_CONTAINERS[@]}"; do
-		plan_container_dir "$file"
-	done
-
-	for command_name in team-send doc-paths; do
-		plan_helper_command "$command_name"
-	done
-
-	for index in "${!CODEX_LINK_SOURCES[@]}"; do
-		plan_link_path "${CODEX_LINK_SOURCES[$index]}" "${CODEX_LINK_TARGETS[$index]}"
-	done
-
-	plan_prune_stale_repo_links "$CODEX_DIR/hooks" "$REPO_DIR/dist/codex/hooks"
-	for file in "$REPO_DIR"/dist/codex/hooks/*; do
-		[ -f "$file" ] || continue
-		plan_link_path "$file" "$CODEX_DIR/hooks/${file##*/}"
-	done
-
-	config_temp=$(mktemp)
-	prepare_codex_config "$CODEX_DIR/config.toml" "$config_temp"
-	if [ ! -f "$CODEX_DIR/config.toml" ] || ! cmp -s "$CODEX_DIR/config.toml" "$config_temp"; then
-		if [ -e "$CODEX_DIR/config.toml" ] || [ -L "$CODEX_DIR/config.toml" ]; then
-			plan_backup "$CODEX_DIR/config.toml"
-		fi
-		plan_change "Codex settings" "Write $(display_path "$CODEX_DIR/config.toml") with managed defaults, permission profile, MCP servers, hooks and TUI settings"
+	plan_container_dir "$HOME/.agents"
+	plan_container_dir "$HOME/.agents/skills"
+	if [ "$setup_core" = true ]; then
+		plan_container_dir "$CODEX_DIR"
 	fi
-	rm "$config_temp"
+	if [ "$setup_hooks" = true ]; then
+		plan_container_dir "$CODEX_DIR/hooks"
+	fi
+
+	if [ "$setup_helpers" = true ]; then
+		for command_name in team-send doc-paths; do
+			plan_helper_command "$command_name"
+		done
+	fi
+
+	if [ "$setup_core" = true ]; then
+		for index in "${!CODEX_LINK_SOURCES[@]}"; do
+			plan_link_path "${CODEX_LINK_SOURCES[$index]}" "${CODEX_LINK_TARGETS[$index]}"
+		done
+	fi
+	if [ "$setup_hooks" = true ]; then
+		plan_link_path "$CODEX_HOOKS_SOURCE" "$CODEX_HOOKS_TARGET"
+		plan_prune_stale_repo_links "$CODEX_DIR/hooks" "$REPO_DIR/dist/codex/hooks"
+		for file in "$REPO_DIR"/dist/codex/hooks/*; do
+			[ -f "$file" ] || continue
+			plan_link_path "$file" "$CODEX_DIR/hooks/${file##*/}"
+		done
+	fi
+
+	if [ "$setup_core" = true ]; then
+		config_temp=$(mktemp)
+		prepare_codex_config "$CODEX_DIR/config.toml" "$config_temp"
+		if [ ! -f "$CODEX_DIR/config.toml" ] || ! cmp -s "$CODEX_DIR/config.toml" "$config_temp"; then
+			if [ -e "$CODEX_DIR/config.toml" ] || [ -L "$CODEX_DIR/config.toml" ]; then
+				plan_backup "$CODEX_DIR/config.toml"
+			fi
+			# The Codex settings included in the planned config update.
+			local -a config_items=('managed defaults' 'MCP servers' 'TUI settings')
+			if [ "$setup_permissions" = true ]; then
+				config_items+=('the permission profile')
+			fi
+			if [ "$setup_hooks" = true ]; then
+				config_items+=('hooks')
+			fi
+			last_item=$((${#config_items[@]} - 1))
+			config_description=$(printf '%s, ' "${config_items[@]:0:$last_item}")
+			config_description="${config_description%, } and ${config_items[$last_item]}"
+			plan_change "Codex settings" "Write $(display_path "$CODEX_DIR/config.toml") with $config_description"
+		fi
+		rm "$config_temp"
+	fi
 
 	plan_prune_stale_repo_links "$HOME/.agents/skills" "$REPO_DIR"
 	plan_prune_stale_repo_links "$CODEX_DIR/skills" "$REPO_DIR" 1
@@ -550,7 +692,9 @@ plan_codex_setup() {
 		plan_skill_links "$HOME/.agents/skills"
 	fi
 
-	plan_hcom_folders
+	if [ "$setup_hcom" = true ]; then
+		plan_hcom_folders
+	fi
 }
 
 # Adds the folders that setup will append to HCOM's Codex arguments to the
@@ -690,7 +834,7 @@ parse_skill_list() {
 
 # Prints the options this script accepts.
 usage() {
-	printf 'Usage: %s [--claude|--codex|--both] [--claude-dir <path>] [--codex-dir <path>] [--select] [--exclude <skill>[,<skill>...]] [--include <skill>[,<skill>...]] [--include-all] [--status] [--refresh] [--yes]\n' "$(basename "$0")"
+	printf 'Usage: %s [--preset skills-only|pick|everything] [--claude|--codex|--both] [--claude-dir <path>] [--codex-dir <path>] [--select] [--exclude <skill>[,<skill>...]] [--include <skill>[,<skill>...]] [--include-all] [--status] [--refresh] [--yes]\n' "$(basename "$0")"
 }
 
 # Reads persisted skill exclusions without creating the exclusions file.
@@ -1393,8 +1537,96 @@ format_excluded_skills() {
 	printf '%s' "$formatted"
 }
 
+# Asks which preset to use and prints skills-only, pick, everything or
+# cancelled. Returns 1 when the answer is not one of the choices.
+prompt_preset() {
+	# The preset number entered at the terminal prompt.
+	local choice
+	printf 'Choose a setup preset: [1] Skills only  [2] Pick features  [3] Everything (or q to cancel): ' >&2
+	IFS= read -r choice || return 1
+	case "$choice" in
+		1) printf 'skills-only' ;;
+		2) printf 'pick' ;;
+		3) printf 'everything' ;;
+		q|Q) printf 'cancelled' ;;
+		*) printf 'Invalid preset.\n' >&2; return 1 ;;
+	esac
+}
+
+# Asks which optional features to install and turns off each one the user
+# leaves out. Claude-only runs do not offer the two Codex features, so the
+# numbers depend on the target. Exits without changes when the user cancels,
+# or returns 1 for an unknown feature number.
+pick_setup_features() {
+	# The selected feature numbers entered at the terminal prompt.
+	local answer
+	# The selected numbers split without expanding filename patterns.
+	local -a selected_numbers=()
+	# The features offered to the selected target, with their display names.
+	local -a offered_features=('hooks:Hooks')
+	# The feature number currently displayed or applied.
+	local number
+	# The internal name and display name of the current feature.
+	local feature
+	# The space printed before each numbered choice.
+	local separator=' '
+
+	setup_hooks=false setup_permissions=false setup_hcom=false
+	setup_themes=false setup_trash=false setup_helpers=false
+	if [ "$target" != claude ]; then
+		offered_features+=('permissions:Codex permission profile' 'hcom:HCOM additions')
+	fi
+	offered_features+=('themes:Themes' 'trash:Trash wrapper' 'helpers:Helper commands')
+
+	printf 'Choose features:'
+	for number in "${!offered_features[@]}"; do
+		feature="${offered_features[$number]}"
+		printf '%s[%d] %s' "$separator" "$((number + 1))" "${feature#*:}"
+		separator='  '
+	done
+	printf '\n'
+	printf 'Enter feature numbers separated by spaces (all for everything, q to cancel): '
+	IFS= read -r answer || return 1
+	case "$answer" in
+		q|Q) printf '%s\n' 'Setup cancelled. Nothing changed.'; exit 0 ;;
+		all)
+			answer=''
+			for number in "${!offered_features[@]}"; do
+				answer="$answer $((number + 1))"
+			done
+			;;
+	esac
+	read -r -a selected_numbers <<< "$answer"
+	# Choosing no numbers keeps every optional feature off. Return before the
+	# loop because Bash 3.2 treats an empty array as unset under set -u.
+	[ "${#selected_numbers[@]}" -gt 0 ] || return 0
+	for number in "${selected_numbers[@]}"; do
+		# Only 1 to 6 are looked up, so 0 cannot select the last feature through
+		# index -1 and text is never evaluated as arithmetic. A number past the
+		# offered list, such as 5 on a Claude-only run, is rejected.
+		case "$number" in
+			[1-6]) feature="${offered_features[$((number - 1))]:-}" ;;
+			*) feature='' ;;
+		esac
+		if [ -z "$feature" ]; then
+			printf 'Unknown feature number: %s\n' "$number" >&2
+			return 1
+		fi
+		case "${feature%%:*}" in
+			hooks) setup_hooks=true ;;
+			permissions) setup_permissions=true ;;
+			hcom) setup_hcom=true ;;
+			themes) setup_themes=true ;;
+			trash) setup_trash=true ;;
+			helpers) setup_helpers=true ;;
+		esac
+	done
+}
+
+# Asks which agents to set up and prints claude, codex or both. The question
+# goes to standard error so the caller captures only the answer.
 prompt_target() {
-	printf 'Which agent(s)? [1] Claude  [2] Codex  [3] Both: '
+	printf 'Which agent(s)? [1] Claude  [2] Codex  [3] Both: ' >&2
 	# The agent selection entered at the terminal prompt.
 	read -r choice
 
@@ -1480,6 +1712,8 @@ report_skill_status() {
 	done
 }
 
+# Installs Claude's skill links, plus its main configuration, hooks, themes and
+# helper commands when the matching setup_* flag is true.
 setup_claude() {
 	# The managed folder or generated file currently installed for Claude.
 	local file
@@ -1489,70 +1723,94 @@ setup_claude() {
 	cli_section "Claude global setup ($(display_path "$CLAUDE_DIR"))"
 
 	cli_group_begin "Claude directories"
-	for file in "${CLAUDE_CONTAINERS[@]}"; do
+	for file in "$CLAUDE_DIR" "$CLAUDE_DIR/skills"; do
 		label="${file##*/}"
 		if [ "$file" = "$CLAUDE_DIR" ]; then
 			label=$(display_path "$file")
 		fi
 		ensure_container_dir "$file" "$label"
 	done
+	if [ "$setup_core" = true ]; then
+		for file in "$CLAUDE_DIR/rules" "$CLAUDE_DIR/commands"; do
+			ensure_container_dir "$file" "${file##*/}"
+		done
+	fi
+	if [ "$setup_hooks" = true ]; then
+		ensure_container_dir "$CLAUDE_DIR/hooks" hooks
+	fi
+	if [ "$setup_themes" = true ]; then
+		ensure_container_dir "$CLAUDE_DIR/themes" themes
+	fi
 	cli_group_end
 
-	cli_group_begin "Claude command-line tools"
-	ensure_friction
-	ensure_team_send
-	ensure_doc_paths
-	cli_group_end
+	if [ "$setup_helpers" = true ]; then
+		cli_group_begin "Claude command-line tools"
+		ensure_friction
+		ensure_team_send
+		ensure_doc_paths
+		cli_group_end
+	fi
 
-	cli_group_begin "Claude files"
-	for file in "${CLAUDE_FILES[@]}"; do
-		link_path "$REPO_DIR/dist/claude/$file" "$CLAUDE_DIR/$file" "$file"
-	done
-	cli_group_end
+	if [ "$setup_core" = true ]; then
+		cli_group_begin "Claude files"
+		for file in "${CLAUDE_FILES[@]}"; do
+			if [ "$file" = settings.json ] && [ "$setup_hooks" = false ]; then
+				continue
+			fi
+			link_path "$REPO_DIR/dist/claude/$file" "$CLAUDE_DIR/$file" "$file"
+		done
+		cli_group_end
+	fi
 
 	cli_group_begin "Claude skills"
 	prune_stale_repo_links "$CLAUDE_DIR/skills" "$REPO_DIR" "skills"
 	link_configured_skills "$CLAUDE_DIR/skills"
 	cli_group_end
 
-	cli_group_begin "Claude hooks"
-	prune_stale_repo_links "$CLAUDE_DIR/hooks" "$REPO_DIR/dist/claude/hooks" "hooks"
-	# The generated hook file currently being linked into Claude's configuration.
-	local hook
-	for hook in "$REPO_DIR"/dist/claude/hooks/*; do
-		[ -f "$hook" ] || continue
-		link_path "$hook" "$CLAUDE_DIR/hooks/$(basename "$hook")" "hooks/$(basename "$hook")"
-	done
-	cli_group_end
+	if [ "$setup_hooks" = true ]; then
+		cli_group_begin "Claude hooks"
+		prune_stale_repo_links "$CLAUDE_DIR/hooks" "$REPO_DIR/dist/claude/hooks" "hooks"
+		# The generated hook file currently being linked into Claude's configuration.
+		local hook
+		for hook in "$REPO_DIR"/dist/claude/hooks/*; do
+			[ -f "$hook" ] || continue
+			link_path "$hook" "$CLAUDE_DIR/hooks/$(basename "$hook")" "hooks/$(basename "$hook")"
+		done
+		cli_group_end
+	fi
 
-	cli_group_begin "Claude themes"
-	prune_stale_repo_links "$CLAUDE_DIR/themes" "$REPO_DIR/dist/claude/themes" "themes"
-	# The generated theme file linked into Claude's configuration folder.
-	local theme
-	for theme in "$REPO_DIR"/dist/claude/themes/*.json; do
-		[ -f "$theme" ] || continue
-		link_path "$theme" "$CLAUDE_DIR/themes/$(basename "$theme")" "themes/$(basename "$theme")"
-	done
-	cli_group_end
+	if [ "$setup_themes" = true ]; then
+		cli_group_begin "Claude themes"
+		prune_stale_repo_links "$CLAUDE_DIR/themes" "$REPO_DIR/dist/claude/themes" "themes"
+		# The generated theme file linked into Claude's configuration folder.
+		local theme
+		for theme in "$REPO_DIR"/dist/claude/themes/*.json; do
+			[ -f "$theme" ] || continue
+			link_path "$theme" "$CLAUDE_DIR/themes/$(basename "$theme")" "themes/$(basename "$theme")"
+		done
+		cli_group_end
+	fi
 
-	cli_group_begin "Claude rules"
-	prune_stale_repo_links "$CLAUDE_DIR/rules" "$REPO_DIR/dist/claude/rules" "rules"
-	# The generated rule file linked into Claude's configuration folder.
-	local rule
-	for rule in "$REPO_DIR"/dist/claude/rules/*.md; do
-		[ -f "$rule" ] || continue
-		link_path "$rule" "$CLAUDE_DIR/rules/$(basename "$rule")" "rules/$(basename "$rule")"
-	done
-	cli_group_end
+	if [ "$setup_core" = true ]; then
+		cli_group_begin "Claude rules"
+		prune_stale_repo_links "$CLAUDE_DIR/rules" "$REPO_DIR/dist/claude/rules" "rules"
+		# The generated rule file linked into Claude's configuration folder.
+		local rule
+		for rule in "$REPO_DIR"/dist/claude/rules/*.md; do
+			[ -f "$rule" ] || continue
+			link_path "$rule" "$CLAUDE_DIR/rules/$(basename "$rule")" "rules/$(basename "$rule")"
+		done
+		cli_group_end
 
-	cli_group_begin "Claude commands"
-	# The generated command file currently being linked into Claude's configuration.
-	local command
-	for command in "$REPO_DIR"/dist/claude/commands/*; do
-		[ -f "$command" ] || continue
-		link_path "$command" "$CLAUDE_DIR/commands/$(basename "$command")" "commands/$(basename "$command")"
-	done
-	cli_group_end
+		cli_group_begin "Claude commands"
+		# The generated command file currently being linked into Claude's configuration.
+		local command
+		for command in "$REPO_DIR"/dist/claude/commands/*; do
+			[ -f "$command" ] || continue
+			link_path "$command" "$CLAUDE_DIR/commands/$(basename "$command")" "commands/$(basename "$command")"
+		done
+		cli_group_end
+	fi
 }
 
 # Ensures the friction command is available for the central Claude hook.
@@ -1650,6 +1908,8 @@ link_configured_skills() {
 	fi
 }
 
+# Installs Codex's skill links, plus its main configuration, hooks, permission
+# profile, HCOM folders and helper commands when the matching setup_* flag is true.
 setup_codex() {
 	# The managed Codex folder currently ensured by setup.
 	local folder
@@ -1661,33 +1921,47 @@ setup_codex() {
 	cli_section "Codex global setup ($(display_path "$CODEX_DIR"))"
 
 	cli_group_begin "Codex directories"
-	for folder in "${CODEX_CONTAINERS[@]}"; do
+	for folder in "$HOME/.agents" "$HOME/.agents/skills"; do
 		label=$(display_path "$folder")
-		if [ "$folder" = "$CODEX_DIR/hooks" ]; then
-			label=hooks
-		fi
 		ensure_container_dir "$folder" "$label"
 	done
+	if [ "$setup_core" = true ]; then
+		ensure_container_dir "$CODEX_DIR" "$(display_path "$CODEX_DIR")"
+	fi
+	if [ "$setup_hooks" = true ]; then
+		ensure_container_dir "$CODEX_DIR/hooks" hooks
+	fi
 	cli_group_end
 
-	cli_group_begin "Codex command-line tools"
-	ensure_team_send
-	ensure_doc_paths
-	cli_group_end
+	if [ "$setup_helpers" = true ]; then
+		cli_group_begin "Codex command-line tools"
+		ensure_team_send
+		ensure_doc_paths
+		cli_group_end
+	fi
 
-	cli_group_begin "Codex files"
-	for index in "${!CODEX_LINK_SOURCES[@]}"; do
-		link_path "${CODEX_LINK_SOURCES[$index]}" "${CODEX_LINK_TARGETS[$index]}" "${CODEX_LINK_LABELS[$index]}"
-	done
-	prune_stale_repo_links "$CODEX_DIR/hooks" "$REPO_DIR/dist/codex/hooks" "hooks"
-	# The generated hook file currently being linked into Codex's configuration.
-	local hook
-	for hook in "$REPO_DIR"/dist/codex/hooks/*; do
-		[ -f "$hook" ] || continue
-		link_path "$hook" "$CODEX_DIR/hooks/$(basename "$hook")" "hooks/$(basename "$hook")"
-	done
-	ensure_codex_config
-	cli_group_end
+	if [ "$setup_core" = true ] || [ "$setup_hooks" = true ]; then
+		cli_group_begin "Codex files"
+		if [ "$setup_core" = true ]; then
+			for index in "${!CODEX_LINK_SOURCES[@]}"; do
+				link_path "${CODEX_LINK_SOURCES[$index]}" "${CODEX_LINK_TARGETS[$index]}" "${CODEX_LINK_LABELS[$index]}"
+			done
+		fi
+		if [ "$setup_hooks" = true ]; then
+			link_path "$CODEX_HOOKS_SOURCE" "$CODEX_HOOKS_TARGET" "$CODEX_HOOKS_LABEL"
+			prune_stale_repo_links "$CODEX_DIR/hooks" "$REPO_DIR/dist/codex/hooks" "hooks"
+			# The generated hook file currently being linked into Codex's configuration.
+			local hook
+			for hook in "$REPO_DIR"/dist/codex/hooks/*; do
+				[ -f "$hook" ] || continue
+				link_path "$hook" "$CODEX_DIR/hooks/$(basename "$hook")" "hooks/$(basename "$hook")"
+			done
+		fi
+		if [ "$setup_core" = true ]; then
+			ensure_codex_config
+		fi
+		cli_group_end
+	fi
 
 	cli_group_begin "Codex skills"
 	prune_stale_repo_links "$HOME/.agents/skills" "$REPO_DIR" "skills"
@@ -1695,12 +1969,14 @@ setup_codex() {
 	link_configured_skills "$HOME/.agents/skills"
 	cli_group_end
 
-	setup_hcom_codex_folders
+	if [ "$setup_hcom" = true ]; then
+		setup_hcom_codex_folders
+	fi
 }
 
 # Ensures $CODEX_DIR/config.toml contains the managed defaults, MCP server
-# entries, feature flags, memory settings, and TUI status line. Legacy inline hooks are
-# removed so Codex uses the managed hooks.json file.
+# entries, feature flags, memory settings, and TUI status line. Legacy inline
+# hooks are removed only when hooks are chosen.
 ensure_codex_config() {
 	# The user's Codex configuration file updated by setup.
 	local config="$CODEX_DIR/config.toml"
@@ -1721,10 +1997,10 @@ ensure_codex_config() {
 		local backup
 		backup=$(backup_path "$config")
 		mv "$temp" "$config"
-		cli_group_status success "configured Codex MCP servers and hooks" "backup at $(display_path "$backup")"
+		cli_group_status success "configured Codex settings" "backup at $(display_path "$backup")"
 	else
 		mv "$temp" "$config"
-		cli_group_status success "configured Codex MCP servers and hooks"
+		cli_group_status success "configured Codex settings"
 	fi
 }
 
@@ -1757,12 +2033,16 @@ prepare_codex_config() {
 	temp=$(mktemp)
 	ensure_codex_defaults "$source" "$defaults_temp"
 
-	# Apply every managed feature flag and memory setting. The deprecated
-	# codex_hooks flag is removed, because the managed hooks flag replaces it.
+	# Apply managed feature flags and memory settings. Leave the user's hooks
+	# flag alone when hooks are off. Retire codex_hooks when hooks are chosen.
 	# This runs before the managed sections below are moved to the end, so a
 	# newly added section keeps its place on later runs.
-	ensure_codex_section_settings "$defaults_temp" "features" "codex_hooks"
-	ensure_codex_section_settings "$defaults_temp" "memories"
+	if [ "$setup_hooks" = true ]; then
+		ensure_codex_section_settings "$defaults_temp" "features" "" "codex_hooks"
+	else
+		ensure_codex_section_settings "$defaults_temp" "features" "hooks"
+	fi
+	ensure_codex_section_settings "$defaults_temp" "memories" ""
 
 	# Strip managed MCP server sections before re-appending them,
 	# so re-running setup never creates duplicate entries.
@@ -1785,13 +2065,17 @@ prepare_codex_config() {
 		printf '\n' >> "$temp"
 		codex_config_section "$section" >> "$temp"
 	done
-	ensure_codex_permission_settings "$temp"
+	if [ "$setup_permissions" = true ]; then
+		ensure_codex_permission_settings "$temp"
+	fi
 
-	# The temporary config file with legacy inline hooks removed.
-	local hooks_temp
-	hooks_temp=$(mktemp)
-	remove_inline_codex_hooks "$temp" "$hooks_temp"
-	mv "$hooks_temp" "$temp"
+	if [ "$setup_hooks" = true ]; then
+		# The temporary config file with legacy inline hooks removed.
+		local hooks_temp
+		hooks_temp=$(mktemp)
+		remove_inline_codex_hooks "$temp" "$hooks_temp"
+		mv "$hooks_temp" "$temp"
+	fi
 
 	mv "$temp" "$output"
 }
@@ -1819,10 +2103,11 @@ ensure_codex_defaults() {
 	awk -v approval_policy="$approval_policy" -v default_permissions="$default_permissions" \
 		-v model_reasoning_effort="$model_reasoning_effort" -v model_verbosity="$model_verbosity" \
 		-v model_reasoning_summary="$model_reasoning_summary" -v hide_agent_reasoning="$hide_agent_reasoning" \
-		-v suppress_unstable_features_warning="$suppress_unstable_features_warning" '
+		-v suppress_unstable_features_warning="$suppress_unstable_features_warning" \
+		-v permission_enabled="$([ "$setup_permissions" = true ] && printf 1 || printf 0)" '
 		function print_defaults() {
 			print "approval_policy = " approval_policy
-			print "default_permissions = " default_permissions
+			if (permission_enabled) print "default_permissions = " default_permissions
 			print "model_reasoning_effort = " model_reasoning_effort
 			print "model_verbosity = " model_verbosity
 			print "model_reasoning_summary = " model_reasoning_summary
@@ -1843,7 +2128,8 @@ ensure_codex_defaults() {
 			print
 			next
 		}
-		in_root && /^(approval_policy|default_permissions|sandbox_mode|model_reasoning_effort|model_verbosity|model_reasoning_summary|hide_agent_reasoning|suppress_unstable_features_warning)[[:space:]]*=/ { next }
+		in_root && /^default_permissions[[:space:]]*=/ && permission_enabled { next }
+		in_root && /^(approval_policy|sandbox_mode|model_reasoning_effort|model_verbosity|model_reasoning_summary|hide_agent_reasoning|suppress_unstable_features_warning)[[:space:]]*=/ { next }
 		in_root && /^[[:space:]]*$/ { next }
 		{ print }
 		END {
@@ -1882,27 +2168,39 @@ codex_config_value() {
 	' "$REPO_DIR/src/adapters/codex/config.base.toml"
 }
 
-# Sets every key from one repository-managed Codex section, keeping any other
-# keys already in that section. Adds the section when it is missing.
+# Sets selected keys from one repository-managed Codex section, keeping any
+# other keys already in that section. Adds the section when it is missing.
 #
 # @param  {string}  config
 #     Codex config file to update.
 # @param  {string}  section
 #     TOML section name whose managed keys should be applied.
+# @param  {string}  omitted_keys
+#     Space-separated managed keys to leave unchanged in the user's config.
 # @param  {string}  ...
 #     Retired key names to remove from the section.
 ensure_codex_section_settings() {
 	# The config file and section receiving the managed settings.
 	local config="$1" section="$2"
-	shift 2
+	# Managed keys omitted from this update.
+	local omitted_keys="$3"
+	shift 3
 	# The file of managed key lines and the completed configuration.
 	local managed temp
 
 	managed=$(mktemp)
 	temp=$(mktemp)
 
-	# Keep only the key lines from the base section, without its header or comments.
-	codex_config_section "$section" | awk 'NR > 1 && /^[^#[:space:]][^=]*=/' > "$managed"
+	# Keep only the selected key lines from the base section.
+	codex_config_section "$section" | awk -v omitted="$omitted_keys" '
+		NR > 1 && /^[^#[:space:]][^=]*=/ {
+			key = $0
+			sub(/[[:space:]]*=.*/, "", key)
+			if (index(" " omitted " ", " " key " ") == 0) {
+				print
+			}
+		}
+	' > "$managed"
 
 	# The first input is the managed key lines, the second is the user's config.
 	# Managed and retired keys are dropped from the existing section, and the

@@ -128,7 +128,15 @@ When `hcom` is installed, `scripts/setup-global.sh --codex` (or `--both`) also a
 
 ## Choose which skills to install
 
-Global setup installs every skill into Claude and Codex by default. Each skill has its own symlink, so edits to the skill in this repository take effect without rebuilding. To leave skills out or add them back, pass comma-separated names to `--exclude` or `--include`:
+Run `scripts/setup-global.sh` in a terminal to choose a preset before setup shows its plan:
+
+- **Skills only** links the chosen tools' skills and creates their skill folders. It does not install configuration files, hooks, themes, helper commands, the trash wrapper, the Codex permission profile or HCOM additions.
+- **Pick features** asks which tools and extras to install, then opens the existing skill picker. The extras are agent hooks, the Codex permission profile, HCOM additions, themes, the trash wrapper and helper commands. For a Claude-only setup, the question leaves out the Codex permission profile and HCOM additions. The chosen tools also receive their core configuration, skill links and this repository's Git hook setting. Claude's `settings.json` is installed with agent hooks because it registers them.
+- **Everything** installs the full Claude and Codex setup, including all extras.
+
+Use `--preset skills-only`, `--preset pick` or `--preset everything` to choose a preset without the first question. `--preset pick` still needs a terminal for its feature and skill questions. In a script, use `--preset skills-only` or `--preset everything` with `--yes`; pass `--claude` or `--codex` to limit the tools. Existing `--claude`, `--codex`, `--both`, `--select`, `--exclude`, `--include` and `--include-all` commands without a preset retain the full setup behaviour. A preset only controls which changes appear in the plan and are applied after confirmation.
+
+Each skill has its own symlink, so edits to the skill in this repository take effect without rebuilding. To leave skills out or add them back, pass comma-separated names to `--exclude` or `--include`:
 
 ```bash
 scripts/setup-global.sh --exclude accessibility,swift

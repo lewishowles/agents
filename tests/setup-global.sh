@@ -456,6 +456,30 @@ run_setup_target() {
 			/usr/bin/expect -f - bash "$REPO_DIR/scripts/setup-global.sh" ${target:+"$target"} "$@" <<'EXPECT'
 set timeout 20
 spawn {*}$argv
+if {[info exists env(SETUP_GLOBAL_TEST_PRESET_INPUT)]} {
+	expect {
+		-exact "Choose a setup preset: \[1\] Skills only  \[2\] Pick features  \[3\] Everything (or q to cancel): " {}
+		timeout { puts stderr "Preset prompt did not appear within 20 seconds"; exit 1 }
+		eof { puts stderr "Preset prompt did not appear before setup exited"; exit 1 }
+	}
+	send -- $env(SETUP_GLOBAL_TEST_PRESET_INPUT)
+}
+if {[info exists env(SETUP_GLOBAL_TEST_TARGET_INPUT)]} {
+	expect {
+		-exact "Which agent(s)? \[1\] Claude  \[2\] Codex  \[3\] Both: " {}
+		timeout { puts stderr "Target prompt did not appear within 20 seconds"; exit 1 }
+		eof { puts stderr "Target prompt did not appear before setup exited"; exit 1 }
+	}
+	send -- $env(SETUP_GLOBAL_TEST_TARGET_INPUT)
+}
+if {[info exists env(SETUP_GLOBAL_TEST_FEATURE_INPUT)]} {
+	expect {
+		-exact "Enter feature numbers separated by spaces (all for everything, q to cancel): " {}
+		timeout { puts stderr "Feature prompt did not appear within 20 seconds"; exit 1 }
+		eof { puts stderr "Feature prompt did not appear before setup exited"; exit 1 }
+	}
+	send -- $env(SETUP_GLOBAL_TEST_FEATURE_INPUT)
+}
 if {[info exists env(SETUP_GLOBAL_TEST_TERMINAL_INPUT)]} {
 	expect {
 		-exact "Enter skill numbers or collection names to leave out, separated by spaces (or q to cancel): " {}
@@ -798,6 +822,212 @@ test_nothing_to_change_exits_without_yes() {
 	fi
 	assert_contains "$output" 'Nothing to change.'
 	assert_equals "$(snapshot_test_directory "$home_dir")" "$before"
+}
+
+# Skills only links the chosen agents' skills and installs nothing else.
+test_skills_only_preset_installs_only_skills() {
+	# The isolated home receiving only skill links.
+	local home_dir="$TEST_ROOT/preset-skills-only"
+	# The setup preview and status messages.
+	local output="$TEST_ROOT/preset-skills-only.txt"
+
+	run_setup_target "$home_dir" --both --preset skills-only > "$output"
+
+	assert_dir_link "$home_dir/.claude/skills/accessibility"
+	assert_dir_link "$home_dir/.agents/skills/accessibility"
+	assert_not_exists "$home_dir/.claude/CLAUDE.md"
+	assert_not_exists "$home_dir/.claude/hooks"
+	assert_not_exists "$home_dir/.codex"
+	assert_not_exists "$home_dir/.local/bin/trash"
+	assert_not_exists "$home_dir/uv-calls.log"
+	assert_not_exists "$home_dir/hcom-codex-args"
+	assert_not_contains "$output" 'Git hooks:'
+	assert_not_contains "$output" 'Helper commands:'
+	assert_not_contains "$output" 'Codex settings:'
+}
+
+# Skills only prints plain status messages when cli-style has not been installed.
+test_skills_only_without_cli_style() {
+	# The isolated home used without the cli-style renderer.
+	local home_dir="$TEST_ROOT/preset-skills-no-cli-style"
+	# The plain setup preview and status messages.
+	local output="$TEST_ROOT/preset-skills-no-cli-style.txt"
+
+	SETUP_GLOBAL_TEST_CLI_STYLE_BIN="$TEST_ROOT/missing-cli-style" \
+		run_setup_target "$home_dir" --both --preset skills-only > "$output" 2>&1
+
+	assert_dir_link "$home_dir/.claude/skills/accessibility"
+	assert_dir_link "$home_dir/.agents/skills/accessibility"
+	assert_contains "$output" 'linked: skills/accessibility'
+	assert_contains "$output" 'Done.'
+	assert_not_contains "$output" 'Done.: success'
+	assert_not_exists "$home_dir/setup-global-calls.log"
+}
+
+# Pick features uses the existing skill picker and installs only selected extras.
+test_pick_preset_installs_selected_features() {
+	# The isolated home receiving the picked features.
+	local home_dir="$TEST_ROOT/preset-pick"
+	# The picker, preview and setup status messages.
+	local output="$TEST_ROOT/preset-pick.txt"
+	# The command path that keeps fzf out of this numbered-picker test.
+	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
+
+	SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true \
+		SETUP_GLOBAL_TEST_FEATURE_INPUT=$'1 5\r' SETUP_GLOBAL_TEST_TERMINAL_INPUT=$'accessibility\r' \
+		run_setup_target "$home_dir" --codex --preset pick > "$output"
+
+	assert_contains "$output" 'Enter skill numbers or collection names to leave out'
+	assert_not_exists "$home_dir/.agents/skills/accessibility"
+	assert_dir_link "$home_dir/.agents/skills/writing"
+	assert_link "$home_dir/.codex/hooks.json"
+	assert_link "$home_dir/.local/bin/trash"
+	assert_not_contains "$home_dir/.codex/config.toml" '[permissions.project-edit]'
+	assert_not_contains "$home_dir/.codex/config.toml" 'default_permissions ='
+	assert_not_exists "$home_dir/hcom-codex-args"
+	assert_not_exists "$home_dir/uv-calls.log"
+	assert_contains "$output" 'Git hooks:'
+}
+
+# Leaving hooks out keeps the user's hook settings in both agent configurations.
+test_pick_preset_without_hooks_preserves_user_settings() {
+	# The isolated home with user-owned Claude and Codex settings.
+	local home_dir="$TEST_ROOT/preset-pick-no-hooks"
+	# The preview and status messages for the selected features.
+	local output="$TEST_ROOT/preset-pick-no-hooks.txt"
+	# The command path that uses the numbered skill picker.
+	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
+
+	mkdir -p "$home_dir/.claude" "$home_dir/.codex"
+	printf '%s\n' '{"user_setting":"keep"}' > "$home_dir/.claude/settings.json"
+	printf 'custom_setting = "keep"\n\n[features]\nhooks = false\n' > "$home_dir/.codex/config.toml"
+
+	SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true \
+		SETUP_GLOBAL_TEST_FEATURE_INPUT=$'4\r' SETUP_GLOBAL_TEST_TERMINAL_INPUT=$'accessibility\r' \
+		run_setup_target "$home_dir" --both --preset pick > "$output"
+
+	assert_equals "$(cat "$home_dir/.claude/settings.json")" '{"user_setting":"keep"}'
+	if [ -L "$home_dir/.claude/settings.json" ]; then
+		fail 'Claude settings.json was replaced by a symlink without hooks selected'
+	fi
+	assert_not_exists "$home_dir/.claude/hooks"
+	assert_not_exists "$home_dir/.codex/hooks.json"
+	assert_contains "$home_dir/.codex/config.toml" 'hooks = false'
+}
+
+# Claude-only feature selection offers themes without Codex-specific choices.
+test_pick_preset_claude_features_hide_codex_choices() {
+	# The isolated home receiving Claude themes only.
+	local home_dir="$TEST_ROOT/preset-pick-claude"
+	# The feature question and setup output.
+	local output="$TEST_ROOT/preset-pick-claude.txt"
+	# The command path that uses the numbered skill picker.
+	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
+
+	SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true \
+		SETUP_GLOBAL_TEST_FEATURE_INPUT=$'2\r' SETUP_GLOBAL_TEST_TERMINAL_INPUT=$'accessibility\r' \
+		run_setup_target "$home_dir" --claude --preset pick > "$output"
+
+	assert_contains "$output" 'Choose features: [1] Hooks  [2] Themes  [3] Trash wrapper  [4] Helper commands'
+	assert_not_contains "$output" 'Codex permission profile'
+	assert_not_contains "$output" 'HCOM additions'
+	if [ ! -d "$home_dir/.claude/themes" ]; then
+		fail 'Claude themes were not installed after choosing the theme feature'
+	fi
+	assert_not_exists "$home_dir/.claude/hooks"
+	assert_not_exists "$home_dir/.local/bin/trash"
+}
+
+# Invalid Claude feature choices fail before changing the home.
+test_pick_preset_claude_rejects_unknown_features() {
+	# The isolated home for each rejected choice.
+	local home_dir
+	# The feature prompt and error for each rejected choice.
+	local output
+	# A choice that is outside the offered list or is not a number.
+	local choice
+	# The unchanged home contents before each setup attempt.
+	local before
+	# The command path that uses the numbered skill picker.
+	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
+
+	for choice in 5 0 '*'; do
+		home_dir="$TEST_ROOT/preset-pick-claude-invalid-$choice"
+		output="$TEST_ROOT/preset-pick-claude-invalid-$choice.txt"
+		mkdir -p "$home_dir"
+		before=$(snapshot_test_directory "$home_dir")
+
+		if SETUP_GLOBAL_TEST_PATH="$fallback_path" SETUP_GLOBAL_TEST_TERMINAL=true \
+			SETUP_GLOBAL_TEST_FEATURE_INPUT="${choice}"$'\r' run_setup_target "$home_dir" --claude --preset pick > "$output" 2>&1; then
+			fail "Expected feature choice $choice to fail"
+		fi
+
+		assert_contains "$output" "Unknown feature number: $choice"
+		assert_equals "$(snapshot_test_directory "$home_dir")" "$before"
+	done
+}
+
+# Everything installs the full setup, including the Codex permission profile
+# and Git hooks.
+test_everything_preset_installs_all_features() {
+	# The isolated home receiving the full setup.
+	local home_dir="$TEST_ROOT/preset-everything"
+	# The full setup preview and status messages.
+	local output="$TEST_ROOT/preset-everything.txt"
+
+	run_setup_target "$home_dir" --both --preset everything > "$output"
+
+	assert_link "$home_dir/.claude/CLAUDE.md"
+	assert_link "$home_dir/.codex/hooks.json"
+	assert_link "$home_dir/.local/bin/trash"
+	assert_dir_link "$home_dir/.agents/skills/accessibility"
+	assert_contains "$home_dir/.codex/config.toml" '[permissions.project-edit]'
+	assert_contains "$output" 'Git hooks:'
+}
+
+# An interactive run without selection options asks for a preset first.
+test_interactive_setup_asks_for_preset() {
+	# The isolated home for the prompted setup run.
+	local home_dir="$TEST_ROOT/preset-prompt"
+	# The preset prompt and setup status messages.
+	local output="$TEST_ROOT/preset-prompt.txt"
+
+	SETUP_GLOBAL_TEST_TERMINAL=true SETUP_GLOBAL_TEST_PRESET_INPUT=$'1\r' \
+		SETUP_GLOBAL_TEST_TARGET_INPUT=$'2\r' run_setup_target "$home_dir" "" > "$output"
+
+	assert_contains "$output" 'Choose a setup preset:'
+	assert_dir_link "$home_dir/.agents/skills/accessibility"
+	assert_not_exists "$home_dir/.codex"
+}
+
+# Cancelling the first preset question reports that setup left the home untouched.
+test_interactive_preset_cancel_reports_no_changes() {
+	# The isolated home used for the cancelled prompt.
+	local home_dir="$TEST_ROOT/preset-cancel"
+	# The prompt and cancellation message.
+	local output="$TEST_ROOT/preset-cancel.txt"
+
+	SETUP_GLOBAL_TEST_TERMINAL=true SETUP_GLOBAL_TEST_PRESET_INPUT=$'q\r' \
+		run_setup_target "$home_dir" "" > "$output"
+
+	assert_contains "$output" 'Setup cancelled. Nothing changed.'
+	assert_not_exists "$home_dir/.agents"
+	assert_not_exists "$home_dir/.claude"
+}
+
+# Pick needs a terminal so it can ask for features and skills.
+test_pick_preset_requires_terminal() {
+	# The isolated home that must stay unchanged when there is no terminal.
+	local home_dir="$TEST_ROOT/preset-pick-no-terminal"
+	# The error explaining why feature selection did not start.
+	local output="$TEST_ROOT/preset-pick-no-terminal.txt"
+
+	if run_setup_target "$home_dir" --codex --preset pick > "$output" 2>&1; then
+		fail 'Expected pick without a terminal to be rejected'
+	fi
+
+	assert_contains "$output" '--preset pick requires a terminal'
+	assert_not_exists "$home_dir/.agents"
 }
 
 # Setup backs up an existing Codex config with a timestamp before replacing it
@@ -2005,6 +2235,16 @@ run_setup_cases() {
 		test_terminal_decline_preserves_home
 		test_terminal_accept_creates_links
 		test_nothing_to_change_exits_without_yes
+		test_skills_only_preset_installs_only_skills
+		test_skills_only_without_cli_style
+		test_pick_preset_installs_selected_features
+		test_pick_preset_without_hooks_preserves_user_settings
+		test_pick_preset_claude_features_hide_codex_choices
+		test_pick_preset_claude_rejects_unknown_features
+		test_everything_preset_installs_all_features
+		test_interactive_setup_asks_for_preset
+		test_interactive_preset_cancel_reports_no_changes
+		test_pick_preset_requires_terminal
 		test_config_replacement_creates_timestamped_backup
 		test_user_config_is_rewritten_once
 		test_hook_file_is_replaced_with_managed_link
