@@ -8,25 +8,67 @@ SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 REPO_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 # The temporary root for isolated setup runs.
 TEST_ROOT=$(mktemp -d)
-# Temporary canonical skill group.
-ADDED_SKILL_GROUP="$REPO_DIR/skills/setup-global-test-$(basename "$TEST_ROOT")"
+# The real checkout. Skill cases point REPO_DIR at their own copy, which links back here.
+SOURCE_REPO_DIR="$REPO_DIR"
+# Temporary canonical skill group, set by each case that creates a skill.
+ADDED_SKILL_GROUP=""
 # Temporary canonical skill name.
 ADDED_SKILL_NAME="setup-global-test-skill-$(basename "$TEST_ROOT")"
-# Temporary canonical skill directory.
-ADDED_SKILL_DIR="$ADDED_SKILL_GROUP/$ADDED_SKILL_NAME"
+# Temporary canonical skill directory, set by each case that creates a skill.
+ADDED_SKILL_DIR=""
 
 # shellcheck source=SCRIPTDIR/lib/test-helpers.sh
 source "$SCRIPT_DIR/lib/test-helpers.sh"
 
-# Removes the temporary canonical skill and isolated test home.
+# Stops any cases still running, then removes the temporary test folder.
 cleanup_setup_global_test() {
-	if [ -d "$ADDED_SKILL_GROUP" ]; then
-		trash "$ADDED_SKILL_GROUP"
-	fi
+	# A case process still running because the suite is exiting early.
+	local child_pid
+
+	# Each case runs in its own process group, so stopping the group also
+	# stops the setup run it started, which could otherwise recreate files in
+	# the test folder after cleanup removes it.
+	for child_pid in $(jobs -pr); do
+		kill -TERM -- "-$child_pid" 2>/dev/null || true
+	done
+	wait 2>/dev/null || true
 	cleanup
 }
 
 trap cleanup_setup_global_test EXIT
+# Turns Ctrl-C and termination into a normal exit, so the EXIT trap stops any
+# cases still running.
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+# Points the current case at its own repository copy, so the skill fixtures it
+# creates never appear in the real skills folder. Sets REPO_DIR,
+# ADDED_SKILL_GROUP and ADDED_SKILL_DIR for the rest of the case.
+#
+# @param  {string}  case_name
+#     Name used for the case's temporary repository directory.
+create_test_repo_copy() {
+	# The case name that keeps this copy separate from other cases.
+	local case_name="$1"
+	# The temporary repository used by this case.
+	local copy_dir="$TEST_ROOT/repo-$case_name"
+	# A checkout entry or canonical skill collection to link into the copy.
+	local entry
+
+	mkdir -p "$copy_dir/skills"
+	for entry in "$SOURCE_REPO_DIR"/*; do
+		if [ "${entry##*/}" != skills ]; then
+			ln -s "$entry" "$copy_dir/${entry##*/}"
+		fi
+	done
+	for entry in "$SOURCE_REPO_DIR"/skills/*; do
+		ln -s "$entry" "$copy_dir/skills/${entry##*/}"
+	done
+
+	REPO_DIR="$copy_dir"
+	ADDED_SKILL_GROUP="$REPO_DIR/skills/setup-global-test-$(basename "$TEST_ROOT")"
+	ADDED_SKILL_DIR="$ADDED_SKILL_GROUP/$ADDED_SKILL_NAME"
+}
 
 # Creates command stubs so setup-global can run against an isolated home
 # without installing dependencies, synchronising output, or changing Git.
@@ -898,6 +940,8 @@ test_permission_profile_keeps_roots_and_drops_git_config_rule() {
 }
 
 test_skills_are_installed_and_editable() {
+	create_test_repo_copy test_skills_are_installed_and_editable
+
 	# Isolated home directory for the setup run.
 	local home_dir="$TEST_ROOT/skills-installed"
 	# Temporary source marker name.
@@ -912,7 +956,6 @@ test_skills_are_installed_and_editable() {
 	assert_dir_link "$home_dir/.agents/skills/$ADDED_SKILL_NAME"
 	printf 'visible through the installed link\n' > "$home_dir/.agents/skills/$ADDED_SKILL_NAME/$marker_name"
 	assert_contains "$source_marker" 'visible through the installed link'
-	trash "$ADDED_SKILL_GROUP"
 }
 
 test_exclusions_persist_and_report() {
@@ -957,6 +1000,8 @@ test_exclusions_persist_and_report() {
 }
 
 test_new_skill_installs_after_exclusion() {
+	create_test_repo_copy test_new_skill_installs_after_exclusion
+
 	# Isolated home directory for the setup run.
 	local home_dir="$TEST_ROOT/new-skill"
 
@@ -966,7 +1011,6 @@ test_new_skill_installs_after_exclusion() {
 
 	assert_dir_link "$home_dir/.agents/skills/$ADDED_SKILL_NAME"
 	assert_not_exists "$home_dir/.agents/skills/accessibility"
-	trash "$ADDED_SKILL_GROUP"
 }
 
 test_claude_only_exclusion_creates_agents_directory() {
@@ -1411,6 +1455,8 @@ test_select_fzf_empty_version_uses_numbered_list() {
 
 # Ensures fzf is started with --multi and its chosen skills are saved.
 test_select_fzf_updates_skill_exclusions() {
+	create_test_repo_copy test_select_fzf_updates_skill_exclusions
+
 	# Isolated home directory for the fzf selection run.
 	local home_dir="$TEST_ROOT/select-fzf"
 	# Output from the fzf selection run.
@@ -1784,69 +1830,136 @@ test_hcom_write_failure_does_not_stop_setup() {
 	assert_not_exists "$home_dir/hcom-codex-args"
 }
 
-create_command_stubs "$TEST_ROOT/bin"
+# Runs the cases side by side, up to one per CPU core, then prints each result
+# in call order with the logs of any failed case. Returns 1 if any case failed.
+run_setup_cases() {
+	# The cases, in the order that their results are reported.
+	local -a cases=(
+		test_help_hides_backup_bypass
+		test_public_backup_bypass_is_rejected
+		test_default_setup_skips_repository_refresh
+		test_existing_doc_paths_is_preserved
+		test_preflight_reports_missing_uv_without_changes
+		test_preflight_reports_missing_checkout_without_changes
+		test_preflight_accepts_installed_commands_without_installer
+		test_preflight_checks_only_codex_commands
+		test_status_skips_agent_tools_preflight
+		test_missing_doc_paths_is_installed
+		test_codex_installs_missing_doc_paths
+		test_refresh_runs_repository_sync
+		test_config_replacement_creates_timestamped_backup
+		test_hook_file_is_replaced_with_managed_link
+		test_claude_themes_are_linked_in_each_config_dir
+		test_claude_setup_preserves_user_theme
+		test_claude_theme_replacement_uses_backups_directory
+		test_trash_wrapper_links_once_for_each_mode
+		test_trash_wrapper_backs_up_existing_file
+		test_trash_wrapper_preserves_symlinked_bin_directory
+		test_permission_profile_keeps_roots_and_drops_git_config_rule
+		test_skills_are_installed_and_editable
+		test_exclusions_persist_and_report
+		test_new_skill_installs_after_exclusion
+		test_claude_only_exclusion_creates_agents_directory
+		test_unknown_skill_fails_without_changes
+		test_removed_skill_can_be_included
+		test_unmanaged_excluded_directory_survives
+		test_unmanaged_included_skill_is_backed_up
+		test_status_reports_an_installed_skill
+		test_status_reports_a_missing_skill
+		test_status_reports_an_excluded_skill
+		test_status_reports_an_excluded_skill_with_a_lingering_link
+		test_status_reports_conflicting_included_content
+		test_status_reports_conflicting_excluded_content
+		test_status_does_not_change_files
+		test_status_requires_cli_style_without_changes
+		test_status_rejects_skill_options_without_changes
+		test_select_fallback_updates_skill_exclusions
+		test_select_fallback_excludes_collection_and_skill
+		test_select_fallback_empty_selection_includes_every_skill
+		test_select_fallback_cancel_preserves_existing_state
+		test_select_old_fzf_uses_numbered_list
+		test_select_fzf_minimum_version_opens_picker
+		test_select_fzf_below_minimum_uses_numbered_list
+		test_select_fzf_new_major_opens_picker
+		test_select_fzf_empty_version_uses_numbered_list
+		test_select_fzf_updates_skill_exclusions
+		test_select_fzf_excludes_every_skill
+		test_select_fzf_cancel_preserves_existing_state
+		test_select_fallback_end_of_input_preserves_existing_state
+		test_select_fallback_invalid_number_preserves_existing_state
+		test_select_rejects_other_skill_options_without_changes
+		test_select_rejects_non_terminal_input
+		test_skip_backup_environment_does_not_bypass_backup
+		test_failed_backup_preserves_existing_config
+		test_hcom_adds_missing_codex_folders
+		test_hcom_recognises_tilde_folder
+		test_hcom_skips_missing_folders
+		test_hcom_absence_skips_codex_folders
+		test_hcom_read_failure_does_not_stop_setup
+		test_hcom_write_failure_does_not_stop_setup
+	)
+	# The process ID and result for each case, indexed in call order.
+	local -a case_pids=() case_status=()
+	# The number of cases allowed to run at once.
+	local max_running_cases
+	# The current case and the case whose slot must be freed.
+	local index finished_index
+	# Whether any case failed.
+	local failed=0
 
-test_help_hides_backup_bypass
-test_public_backup_bypass_is_rejected
-test_default_setup_skips_repository_refresh
-test_existing_doc_paths_is_preserved
-test_preflight_reports_missing_uv_without_changes
-test_preflight_reports_missing_checkout_without_changes
-test_preflight_accepts_installed_commands_without_installer
-test_preflight_checks_only_codex_commands
-test_status_skips_agent_tools_preflight
-test_missing_doc_paths_is_installed
-test_codex_installs_missing_doc_paths
-test_refresh_runs_repository_sync
-test_config_replacement_creates_timestamped_backup
-test_hook_file_is_replaced_with_managed_link
-test_claude_themes_are_linked_in_each_config_dir
-test_claude_setup_preserves_user_theme
-test_claude_theme_replacement_uses_backups_directory
-test_trash_wrapper_links_once_for_each_mode
-test_trash_wrapper_backs_up_existing_file
-test_trash_wrapper_preserves_symlinked_bin_directory
-test_permission_profile_keeps_roots_and_drops_git_config_rule
-test_skills_are_installed_and_editable
-test_exclusions_persist_and_report
-test_new_skill_installs_after_exclusion
-test_claude_only_exclusion_creates_agents_directory
-test_unknown_skill_fails_without_changes
-test_removed_skill_can_be_included
-test_unmanaged_excluded_directory_survives
-test_unmanaged_included_skill_is_backed_up
-test_status_reports_an_installed_skill
-test_status_reports_a_missing_skill
-test_status_reports_an_excluded_skill
-test_status_reports_an_excluded_skill_with_a_lingering_link
-test_status_reports_conflicting_included_content
-test_status_reports_conflicting_excluded_content
-test_status_does_not_change_files
-test_status_requires_cli_style_without_changes
-test_status_rejects_skill_options_without_changes
-test_select_fallback_updates_skill_exclusions
-test_select_fallback_excludes_collection_and_skill
-test_select_fallback_empty_selection_includes_every_skill
-test_select_fallback_cancel_preserves_existing_state
-test_select_old_fzf_uses_numbered_list
-test_select_fzf_minimum_version_opens_picker
-test_select_fzf_below_minimum_uses_numbered_list
-test_select_fzf_new_major_opens_picker
-test_select_fzf_empty_version_uses_numbered_list
-test_select_fzf_updates_skill_exclusions
-test_select_fzf_excludes_every_skill
-test_select_fzf_cancel_preserves_existing_state
-test_select_fallback_end_of_input_preserves_existing_state
-test_select_fallback_invalid_number_preserves_existing_state
-test_select_rejects_other_skill_options_without_changes
-test_select_rejects_non_terminal_input
-test_skip_backup_environment_does_not_bypass_backup
-test_failed_backup_preserves_existing_config
-test_hcom_adds_missing_codex_folders
-test_hcom_recognises_tilde_folder
-test_hcom_skips_missing_folders
-test_hcom_absence_skips_codex_folders
-test_hcom_read_failure_does_not_stop_setup
-test_hcom_write_failure_does_not_stop_setup
+	max_running_cases=$(getconf _NPROCESSORS_ONLN 2>/dev/null || true)
+	# Some sandboxes hide the CPU count. The limit only affects speed, so a
+	# modest default keeps the suite runnable there.
+	if ! [[ "$max_running_cases" =~ ^[1-9][0-9]*$ ]]; then
+		max_running_cases=4
+	fi
+	if (( max_running_cases > ${#cases[@]} )); then
+		max_running_cases=${#cases[@]}
+	fi
 
-printf '✓ setup-global backup tests passed\n'
+	mkdir -p "$TEST_ROOT/case-logs"
+	create_command_stubs "$TEST_ROOT/bin"
+	# Start each case in its own process group so cleanup can stop everything
+	# the case started.
+	set -m
+	for index in "${!cases[@]}"; do
+		if (( index >= max_running_cases )); then
+			finished_index=$((index - max_running_cases))
+			if wait "${case_pids[finished_index]}"; then
+				case_status[finished_index]=0
+			else
+				case_status[finished_index]=1
+			fi
+		fi
+
+		# With process groups on, Bash no longer gives background cases empty
+		# input, so a case that read the terminal would stop and hang the suite.
+		("${cases[index]}") < /dev/null > "$TEST_ROOT/case-logs/${cases[index]}.log" 2>&1 &
+		case_pids[index]=$!
+	done
+
+	for (( index = ${#cases[@]} - max_running_cases; index < ${#cases[@]}; index++ )); do
+		if wait "${case_pids[index]}"; then
+			case_status[index]=0
+		else
+			case_status[index]=1
+		fi
+	done
+
+	for index in "${!cases[@]}"; do
+		if [ "${case_status[index]}" -eq 0 ]; then
+			printf '✓ %s\n' "${cases[index]}"
+		else
+			printf '✗ %s\n' "${cases[index]}"
+			cat "$TEST_ROOT/case-logs/${cases[index]}.log"
+			failed=1
+		fi
+	done
+
+	if [ "$failed" -eq 0 ]; then
+		printf '✓ setup-global backup tests passed\n'
+	fi
+	return "$failed"
+}
+
+run_setup_cases
