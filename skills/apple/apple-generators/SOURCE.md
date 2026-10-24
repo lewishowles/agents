@@ -212,6 +212,9 @@ than code, so they belong to the product and release skill instead:
 
 - Renamed each generator's `SKILL.md` to `overview.md` so its reference does not appear as another installed skill, and removed that file's front matter.
 - Replaced the old pack path in `references/tipkit-generator/overview.md` with a relative link to its local template.
+- Linked the mentions of the App Store marketing strategy guide in `references/promoted-iap/overview.md`, `references/subscription-offers/overview.md` and `references/win-back-offers/overview.md` to the app-release marketing strategy reference.
+- Linked the mention of `monetization/monetization-strategy` in `references/subscription-lifecycle/overview.md` to the app-release monetisation overview, because upstream has no guide by that name.
+- Linked the mention of the App Store screenshot planner in `references/screenshot-automation/overview.md` to the app-release screenshot planner reference.
 - The new `SKILL.md` groups the generators by what they build, in place of the upstream index.
 - The repository's Markdown formatter (oxfmt) reformatted 113 Markdown and YAML references without changing their content: it pads tables, adds blank lines around blocks, writes emphasis with underscores, uses four-backtick outer fences around nested examples, and double-quotes strings in the three `ci-cd-setup/templates/github-actions/*.yml` workflows. The Swift and shell templates are unchanged.
 - Added a blank line between each lead-in line and its numbered list of files to generate in the `app-extensions`, `background-processing`, `data-export`, `debug-menu`, `screenshot-automation`, `state-restoration` and `subscription-lifecycle` overviews, so the formatter keeps one file per line as upstream has it.

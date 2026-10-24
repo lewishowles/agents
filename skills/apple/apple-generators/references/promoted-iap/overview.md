@@ -152,4 +152,4 @@ struct MyApp: App {
 - **templates.md** — Production Swift templates
 - Related: `generators/paywall-generator` — Full paywall for purchase completion
 - Related: `generators/subscription-offers` — Offer types for promoted subscriptions
-- Related: `app-store/marketing-strategy` — Strategic product promotion planning
+- Related: [app-store/marketing-strategy](../../../app-release/references/app-store/marketing-strategy/overview.md) — Strategic product promotion planning

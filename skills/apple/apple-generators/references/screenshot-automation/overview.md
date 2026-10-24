@@ -424,4 +424,4 @@ Run the full pipeline once to generate screenshots for every locale simultaneous
   - `SampleContentGenerator.swift` -- Realistic sample data patterns
   - `ScreenshotTests.xctestplan` -- Dedicated Xcode test plan
 - Related: `generators/localization-setup` -- Setting up localization infrastructure
-- Related: `app-store/screenshot-planner` -- Planning screenshot content and marketing messaging
+- Related: [app-store/screenshot-planner](../../../app-release/references/app-store/screenshot-planner/overview.md) -- Planning screenshot content and marketing messaging

@@ -362,4 +362,4 @@ Never forget to call `transaction.finish()`. Unfinished transactions will be re-
 - **templates.md** — All production Swift code templates
 - **patterns.md** — Lifecycle state diagrams, StoreKit 2 behavior reference, anti-patterns
 - Related: `generators/paywall-generator` — Purchase UI and initial transaction handling
-- Related: `monetization/monetization-strategy` — Pricing tiers and revenue planning
+- Related: [monetization/monetization-strategy](../../../app-release/references/monetization/overview.md) — Pricing tiers and revenue planning

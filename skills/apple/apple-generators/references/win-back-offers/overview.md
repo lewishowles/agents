@@ -163,4 +163,4 @@ SubscriptionStoreView(groupID: groupID)
 - **templates.md** — All production Swift templates
 - Related: `generators/subscription-offers` — All offer types including win-back
 - Related: `generators/paywall-generator` — Full paywall implementation
-- Related: `app-store/marketing-strategy` — Win-back campaign planning
+- Related: [app-store/marketing-strategy](../../../app-release/references/app-store/marketing-strategy/overview.md) — Win-back campaign planning

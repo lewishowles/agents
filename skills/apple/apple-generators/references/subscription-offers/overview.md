@@ -209,4 +209,4 @@ if let bestOffer = winBackOffers.first {
 - **templates.md** — All production Swift templates
 - Related: `generators/win-back-offers` — Dedicated win-back flow skill
 - Related: `generators/paywall-generator` — Full paywall with offer integration
-- Related: `app-store/marketing-strategy` — Strategic offer planning
+- Related: [app-store/marketing-strategy](../../../app-release/references/app-store/marketing-strategy/overview.md) — Strategic offer planning
