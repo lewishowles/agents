@@ -4,6 +4,7 @@
     "dist",
     "reviews",
     "specs",
-    "audits"
+    "audits",
+    "references"
   ]
 }
