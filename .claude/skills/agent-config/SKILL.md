@@ -47,7 +47,6 @@ Configuration/Agents/
 │   ├── audits/                 # Generated audit evidence; never canonical script source
 │   └── scripts/                # Setup-managed symlinks to selected scripts/ tools
 ├── docs/                        # Reference docs; scripts/build/build-docs.py regenerates the tables in skills.md and hooks.md
-│   ├── commands.md
 │   ├── hooks.md
 │   ├── progress-format.md
 │   ├── setup.md

@@ -20,5 +20,4 @@ Several of Claude's hooks need `jq` to run. Install it with `brew install jq` be
 
 - [Setup](docs/setup.md): manual wiring, troubleshooting, and token usage reports
 - [Skills](docs/skills.md): available skills and trigger behaviour
-- [Commands](docs/commands.md): commands provided by this repository
 - [Hooks](docs/hooks.md): Claude and Codex hook behaviour

@@ -566,7 +566,6 @@ plan_claude_setup() {
 	plan_container_dir "$CLAUDE_DIR/skills"
 	if [ "$setup_core" = true ]; then
 		plan_container_dir "$CLAUDE_DIR/rules"
-		plan_container_dir "$CLAUDE_DIR/commands"
 	fi
 	if [ "$setup_hooks" = true ]; then
 		plan_container_dir "$CLAUDE_DIR/hooks"
@@ -618,10 +617,6 @@ plan_claude_setup() {
 		for file in "$REPO_DIR"/dist/claude/rules/*.md; do
 			[ -f "$file" ] || continue
 			plan_link_path "$file" "$CLAUDE_DIR/rules/${file##*/}"
-		done
-		for file in "$REPO_DIR"/dist/claude/commands/*; do
-			[ -f "$file" ] || continue
-			plan_link_path "$file" "$CLAUDE_DIR/commands/${file##*/}"
 		done
 	fi
 }
@@ -1946,9 +1941,7 @@ setup_claude() {
 		ensure_container_dir "$file" "$label"
 	done
 	if [ "$setup_core" = true ]; then
-		for file in "$CLAUDE_DIR/rules" "$CLAUDE_DIR/commands"; do
-			ensure_container_dir "$file" "${file##*/}"
-		done
+		ensure_container_dir "$CLAUDE_DIR/rules" rules
 	fi
 	if [ "$setup_hooks" = true ]; then
 		ensure_container_dir "$CLAUDE_DIR/hooks" hooks
@@ -2014,15 +2007,6 @@ setup_claude() {
 		for rule in "$REPO_DIR"/dist/claude/rules/*.md; do
 			[ -f "$rule" ] || continue
 			link_path "$rule" "$CLAUDE_DIR/rules/$(basename "$rule")" "rules/$(basename "$rule")"
-		done
-		cli_group_end
-
-		cli_group_begin "Claude commands"
-		# The generated command file currently being linked into Claude's configuration.
-		local command
-		for command in "$REPO_DIR"/dist/claude/commands/*; do
-			[ -f "$command" ] || continue
-			link_path "$command" "$CLAUDE_DIR/commands/$(basename "$command")" "commands/$(basename "$command")"
 		done
 		cli_group_end
 	fi

@@ -51,7 +51,6 @@ backup_dir_for_path() {
 		"$HOME"/.claude*/skills/*)   printf '%s' "$(dirname "$(dirname "$path")")/backups/skills" ;;
 		"$HOME"/.claude*/hooks/*)    printf '%s' "$(dirname "$(dirname "$path")")/backups/hooks" ;;
 		"$HOME"/.claude*/themes/*)   printf '%s' "$(dirname "$(dirname "$path")")/backups/themes" ;;
-		"$HOME"/.claude*/commands/*) printf '%s' "$(dirname "$(dirname "$path")")/backups/commands" ;;
 		"$HOME/.agents/skills/"*)    printf '%s' "$HOME/.agents/backups/skills" ;;
 		*)                           dirname "$path" ;;
 	esac

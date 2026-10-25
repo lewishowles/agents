@@ -22,14 +22,13 @@ ln -s /path/to/repository/dist/claude/settings.json ~/.claude/settings.json
 ln -s /path/to/repository/dist/claude/.mcp.json ~/.claude/.mcp.json
 ```
 
-Create `~/.claude/skills/`, `~/.claude/hooks/`, and `~/.claude/commands/`, then link each item individually:
+Create `~/.claude/skills/` and `~/.claude/hooks/`, then link each item individually:
 
 ```bash
 ln -s /path/to/repository/skills/vue/vue ~/.claude/skills/vue
-ln -s /path/to/repository/dist/claude/commands/new-command.md ~/.claude/commands/new-command.md
 ```
 
-Repeat for each skill, hook, and command. Per-item links allow plugin-installed items to coexist.
+Repeat for each skill and hook. Per-item links allow plugin-installed items to coexist.
 
 This repo ships the skin plugin in `src/plugins/skin/`. It adds Catppuccin colours to Claude Code tool rows, Bash results and turn footers, and draws Markdown tables as boxed grids. Global setup does not install it; try it with `claude --plugin-dir /path/to/repository/src/plugins/skin`. Add other Claude Code plugins with `/plugin install <plugin-name>@<marketplace>`; they coexist with this repo's linked skills and hooks.
 
