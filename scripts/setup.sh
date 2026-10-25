@@ -51,6 +51,12 @@ main() {
 	setup_helpers=true
 	# The file that stores excluded skill names between setup runs.
 	skill_exclusions_file="$HOME/.agents/skill-exclusions"
+	# The file that stores the default-off collections the user has opted in to.
+	skill_inclusions_file="$HOME/.agents/skill-inclusions"
+	# Collections that require an explicit choice before their skills are linked.
+	default_off_collections=(apple)
+	# Default-off collections selected for installation.
+	included_collections=()
 	# The skill names excluded from the selected setup targets.
 	excluded_skills=()
 	# The pending include or exclude operations in command-line order.
@@ -179,6 +185,7 @@ main() {
 	fi
 
 	load_skill_exclusions
+	load_skill_inclusions
 	if ! validate_skill_operations; then
 		exit 1
 	fi
@@ -271,6 +278,9 @@ main() {
 
 	if [ "$skill_options_requested" = true ] && skill_exclusions_changed; then
 		save_skill_exclusions
+	fi
+	if [ "$skill_options_requested" = true ] && skill_inclusions_changed; then
+		save_skill_inclusions
 	fi
 	if [ "$setup_helpers" = true ] && cli_style_install_needed; then
 		bash "$REPO_DIR/scripts/install-cli-style.sh"
@@ -383,6 +393,22 @@ skill_exclusions_changed() {
 	fi
 }
 
+# Returns success when saving the collections the user opted in to would change
+# the saved file: when the list differs, when there is no file yet, or when no
+# opt-ins remain and the file should be removed.
+skill_inclusions_changed() {
+	if [ "${#included_collections[@]}" -eq 0 ]; then
+		[ -e "$skill_inclusions_file" ] || [ -L "$skill_inclusions_file" ]
+	elif [ ! -f "$skill_inclusions_file" ]; then
+		return 0
+	else
+		if ! cmp -s "$skill_inclusions_file" <(printf '%s\n' "${included_collections[@]}"); then
+			return 0
+		fi
+		return 1
+	fi
+}
+
 # Returns success when setup must install cli-style, the tool that styles setup
 # output: it is missing, or its saved version differs from the installer's. When
 # CLI_STYLE_BIN names another copy, that copy only needs to be executable.
@@ -450,6 +476,13 @@ build_setup_plan() {
 			plan_change "Selection" "Remove $(display_path "$skill_exclusions_file")"
 		else
 			plan_change "Selection" "Write $(display_path "$skill_exclusions_file") with the selected exclusions"
+		fi
+	fi
+	if [ "$skill_options_requested" = true ] && skill_inclusions_changed; then
+		if [ "${#included_collections[@]}" -eq 0 ]; then
+			plan_change "Selection" "Remove $(display_path "$skill_inclusions_file")"
+		else
+			plan_change "Selection" "Write $(display_path "$skill_inclusions_file") with the collections you opted in to"
 		fi
 	fi
 
@@ -852,6 +885,89 @@ load_skill_exclusions() {
 	done < "$skill_exclusions_file"
 }
 
+# Reads saved collection opt-ins without creating the inclusions file.
+load_skill_inclusions() {
+	# The collection currently read from the saved file.
+	local collection_name
+
+	[ -f "$skill_inclusions_file" ] || return 0
+
+	while IFS= read -r collection_name; do
+		if default_off_collection_exists "$collection_name" && ! included_collection_exists "$collection_name"; then
+			included_collections+=("$collection_name")
+		fi
+	done < "$skill_inclusions_file"
+}
+
+# Returns success when a collection is off until explicitly selected.
+#
+# @param  {string}  collection_name
+#     The collection to check.
+default_off_collection_exists() {
+	# The collection to check against the default-off list.
+	local collection_name="$1"
+	# A collection in the default-off list.
+	local default_off_collection
+
+	for default_off_collection in "${default_off_collections[@]}"; do
+		[ "$default_off_collection" = "$collection_name" ] && return 0
+	done
+	return 1
+}
+
+# Returns success when a default-off collection was selected previously.
+#
+# @param  {string}  collection_name
+#     The collection to check.
+included_collection_exists() {
+	# The collection to check against saved opt-ins.
+	local collection_name="$1"
+	# A saved collection opt-in.
+	local included_collection
+
+	if [ "${#included_collections[@]}" -gt 0 ]; then
+		for included_collection in "${included_collections[@]}"; do
+			[ "$included_collection" = "$collection_name" ] && return 0
+		done
+	fi
+	return 1
+}
+
+# Returns success when a default-off collection has not been opted in to.
+#
+# @param  {string}  collection_name
+#     The collection to check.
+collection_is_off() {
+	# The collection checked against its default and saved choice.
+	local collection_name="$1"
+
+	if default_off_collection_exists "$collection_name" && ! included_collection_exists "$collection_name"; then
+		return 0
+	fi
+	return 1
+}
+
+# Returns success when the skill is not excluded and its default-off collection,
+# if any, has been opted in to.
+#
+# @param  {string}  skill_path
+#     The canonical skill folder.
+skill_is_selected() {
+	# The canonical skill folder being checked.
+	local skill_path="$1"
+	# The collection containing the skill.
+	local collection_name
+	collection_name=$(picker_collection_of "$skill_path")
+
+	if excluded_skill_exists "${skill_path##*/}"; then
+		return 1
+	fi
+	if collection_is_off "$collection_name"; then
+		return 1
+	fi
+	return 0
+}
+
 # Returns 0 when the current exclusion list contains a skill name.
 #
 # @param  {string}  skill_name
@@ -997,7 +1113,7 @@ select_skills_with_fzf() {
 
 		skill_name=$(basename "$skill_path")
 		skill_entries+=("skill"$'\t'"$skill_name"$'\t'"$(picker_entry "$skill_path" '  ' 0 "$name_width" true)")
-		if ! excluded_skill_exists "$skill_name"; then
+		if skill_is_selected "$skill_path"; then
 			fzf_bind="${fzf_bind}toggle+"
 		fi
 		fzf_bind="${fzf_bind}down+"
@@ -1257,8 +1373,11 @@ picker_description() {
 	printf '%s\n' "$description"
 }
 
-# Replaces exclusions with every canonical skill omitted from the selection.
-# The caller must have already collected skill_paths.
+# Replaces the saved choices with the picker's selection. Choosing any skill in a
+# default-off collection opts that collection in. Unchosen skills are saved as
+# exclusions only in collections that are on, so the exclusions file never
+# lists skills from a collection that is off. The caller must have collected
+# skill_paths.
 #
 # @param  {string}  ...
 #     Canonical skill names selected for installation.
@@ -1271,10 +1390,26 @@ set_exclusions_from_selected_skills() {
 	local skill_name
 	# Whether the canonical skill remains selected.
 	local selected=false
+	# The collection containing the current skill.
+	local collection_name
 
 	excluded_skills=()
+	included_collections=()
+	for skill_path in "${skill_paths[@]}"; do
+		collection_name=$(picker_collection_of "$skill_path")
+		if ! default_off_collection_exists "$collection_name"; then
+			continue
+		fi
+		for selected_skill in "$@"; do
+			if [ "$selected_skill" = "${skill_path##*/}" ] && ! included_collection_exists "$collection_name"; then
+				included_collections+=("$collection_name")
+				break
+			fi
+		done
+	done
 	for skill_path in "${skill_paths[@]}"; do
 		skill_name=$(basename "$skill_path")
+		collection_name=$(picker_collection_of "$skill_path")
 		selected=false
 		for selected_skill in "$@"; do
 			if [ "$selected_skill" = "$skill_name" ]; then
@@ -1283,13 +1418,14 @@ set_exclusions_from_selected_skills() {
 			fi
 		done
 
-		if [ "$selected" = false ]; then
+		if [ "$selected" = false ] && ! collection_is_off "$collection_name"; then
 			excluded_skills+=("$skill_name")
 		fi
 	done
 }
 
-# Selects included skills from a numbered terminal list and updates exclusions.
+# Selects skills from a numbered terminal list, where each entered number or
+# collection name flips the ticks shown, and updates the saved choices.
 #
 # @return  {integer}
 #     0 when entries are accepted, 1 when cancelled, or 2 for an invalid entry.
@@ -1298,8 +1434,8 @@ select_skills_with_numbered_list() {
 	local selection
 	# The position of the current skill in the numbered list.
 	local index
-	# The excluded entry number currently being validated.
-	local excluded_index
+	# The number or collection name currently being validated.
+	local toggled_entry
 	# Whether the current canonical skill remains selected.
 	local keep_skill=false
 	# The current skill name displayed in the numbered list.
@@ -1320,8 +1456,8 @@ select_skills_with_numbered_list() {
 	local dim_description=false
 	# The selection marker and number printed before a skill name.
 	local prefix
-	# The entry numbers the user chose to leave out.
-	local -a excluded_indexes=()
+	# The skill numbers or collection names the user chose to toggle.
+	local -a toggled_entries=()
 	# The canonical skill names retained by the numbered selector.
 	local -a selected_skills=()
 
@@ -1339,7 +1475,7 @@ select_skills_with_numbered_list() {
 			previous_collection="$collection_name"
 		fi
 		skill_name=$(basename "${skill_paths[$index]}")
-		if excluded_skill_exists "$skill_name"; then
+		if ! skill_is_selected "${skill_paths[$index]}"; then
 			printf -v prefix '[ ] %*d. ' "$number_width" "$((index + 1))"
 		else
 			printf -v prefix '[x] %*d. ' "$number_width" "$((index + 1))"
@@ -1347,7 +1483,7 @@ select_skills_with_numbered_list() {
 		picker_entry "${skill_paths[$index]}" "$prefix" "$picker_width" "$name_width" "$dim_description"
 	done
 
-	printf 'Enter skill numbers or collection names to leave out, separated by spaces (or q to cancel): '
+	printf 'Enter skill numbers or collection names to toggle, separated by spaces (or q to cancel): '
 	if ! read -r selection; then
 		return 1
 	fi
@@ -1356,28 +1492,36 @@ select_skills_with_numbered_list() {
 		return 1
 	fi
 
-	read -r -a excluded_indexes <<< "$selection"
-	if [ "${#excluded_indexes[@]}" -gt 0 ]; then
-		for excluded_index in "${excluded_indexes[@]}"; do
-			if [[ "$excluded_index" =~ ^[1-9][0-9]*$ ]]; then
-				if [ "$excluded_index" -gt "${#skill_paths[@]}" ]; then
-					printf 'Invalid skill number: %s\n' "$excluded_index" >&2
+	read -r -a toggled_entries <<< "$selection"
+	if [ "${#toggled_entries[@]}" -gt 0 ]; then
+		for toggled_entry in "${toggled_entries[@]}"; do
+			if [[ "$toggled_entry" =~ ^[1-9][0-9]*$ ]]; then
+				if [ "$toggled_entry" -gt "${#skill_paths[@]}" ]; then
+					printf 'Invalid skill number: %s\n' "$toggled_entry" >&2
 					return 2
 				fi
-			elif [ "$(picker_collection_count "$excluded_index")" -eq 0 ]; then
-				printf 'Invalid skill number or collection: %s\n' "$excluded_index" >&2
+			elif [ "$(picker_collection_count "$toggled_entry")" -eq 0 ]; then
+				printf 'Invalid skill number or collection: %s\n' "$toggled_entry" >&2
 				return 2
 			fi
 		done
 	fi
 
 	for index in "${!skill_paths[@]}"; do
-		keep_skill=true
+		if skill_is_selected "${skill_paths[$index]}"; then
+			keep_skill=true
+		else
+			keep_skill=false
+		fi
 		collection_name=$(picker_collection_of "${skill_paths[$index]}")
-		if [ "${#excluded_indexes[@]}" -gt 0 ]; then
-			for excluded_index in "${excluded_indexes[@]}"; do
-				if [ "$excluded_index" = "$collection_name" ] || [ "$excluded_index" = "$((index + 1))" ]; then
-					keep_skill=false
+		if [ "${#toggled_entries[@]}" -gt 0 ]; then
+			for toggled_entry in "${toggled_entries[@]}"; do
+				if [ "$toggled_entry" = "$collection_name" ] || [ "$toggled_entry" = "$((index + 1))" ]; then
+					if [ "$keep_skill" = true ]; then
+						keep_skill=false
+					else
+						keep_skill=true
+					fi
 					break
 				fi
 			done
@@ -1441,6 +1585,28 @@ save_skill_exclusions() {
 	mv "$temp" "$skill_exclusions_file"
 }
 
+# Writes selected default-off collections, removing the file when none remain.
+save_skill_inclusions() {
+	# A selected collection written to the saved file.
+	local collection_name
+	# The temporary file used to replace the saved inclusions.
+	local temp
+
+	if [ "${#included_collections[@]}" -eq 0 ]; then
+		if [ -e "$skill_inclusions_file" ] || [ -L "$skill_inclusions_file" ]; then
+			trash "$skill_inclusions_file"
+		fi
+		return 0
+	fi
+
+	mkdir -p "$HOME/.agents"
+	temp=$(mktemp)
+	for collection_name in "${included_collections[@]}"; do
+		printf '%s\n' "$collection_name" >> "$temp"
+	done
+	mv "$temp" "$skill_inclusions_file"
+}
+
 # Applies the validated skill operations in their command-line order.
 apply_skill_operations() {
 	# The position of the pending skill operation being applied.
@@ -1459,9 +1625,38 @@ apply_skill_operations() {
 		skill_name="${skill_operation_names[$index]}"
 		case "$operation" in
 			exclude) add_excluded_skill "$skill_name" ;;
-			include) remove_excluded_skill "$skill_name" ;;
-			include-all) excluded_skills=() ;;
+			include)
+				remove_excluded_skill "$skill_name"
+				include_skill_collection "$skill_name"
+				;;
+			include-all)
+				excluded_skills=()
+				included_collections=("${default_off_collections[@]}")
+				;;
 		esac
+	done
+}
+
+# Opts in the default-off collection containing an included skill.
+#
+# @param  {string}  skill_name
+#     The skill explicitly included on the command line.
+include_skill_collection() {
+	# The included skill name.
+	local skill_name="$1"
+	# A canonical skill folder compared with the included name.
+	local skill_path
+	# The collection containing the included skill.
+	local collection_name
+
+	for skill_path in "$REPO_DIR"/skills/*/*; do
+		[ -d "$skill_path" ] || continue
+		[ "${skill_path##*/}" = "$skill_name" ] || continue
+		collection_name=$(picker_collection_of "$skill_path")
+		if default_off_collection_exists "$collection_name" && ! included_collection_exists "$collection_name"; then
+			included_collections+=("$collection_name")
+		fi
+		return
 	done
 }
 
@@ -1661,6 +1856,12 @@ report_skill_status() {
 	local status_name
 	# The installed skill path checked for a link or conflict.
 	local status_link
+	# The collection containing the skill currently reported.
+	local status_collection
+	# Whether the current skill belongs to a collection that is off.
+	local collection_off
+	# The command that opts in to the current collection.
+	local opt_in_hint
 
 	case "$target" in
 		claude) status_agents=("claude") ;;
@@ -1689,10 +1890,18 @@ report_skill_status() {
 			for status_skill in "${skill_paths[@]}"; do
 				status_name=$(basename "$status_skill")
 				status_link="$status_skills_dir/$status_name"
+				status_collection=$(picker_collection_of "$status_skill")
+				collection_off=false
+				if collection_is_off "$status_collection"; then
+					collection_off=true
+				fi
+				opt_in_hint="the $status_collection collection is off; run: scripts/setup.sh --$status_agent --include $status_name (adds every $status_collection skill)"
 
 				if { [ -e "$status_link" ] || [ -L "$status_link" ]; } && ! is_repo_owned_link "$status_skill" "$status_link"; then
 					if excluded_skill_exists "$status_name"; then
 						cli_status warning "conflicting $status_name" "run: trash $(display_path "$status_link")"
+					elif [ "$collection_off" = true ]; then
+						cli_status warning "conflicting $status_name" "$opt_in_hint"
 					else
 						cli_status warning "conflicting $status_name" "run: scripts/setup.sh --$status_agent --include $status_name"
 					fi
@@ -1701,6 +1910,12 @@ report_skill_status() {
 						cli_status skipped "excluded $status_name" "link still present; run: scripts/setup.sh --$status_agent --exclude $status_name"
 					else
 						cli_status skipped "excluded $status_name" "saved in ~/.agents/skill-exclusions"
+					fi
+				elif [ "$collection_off" = true ]; then
+					if is_repo_owned_link "$status_skill" "$status_link"; then
+						cli_status skipped "off by default $status_name" "link still present; $opt_in_hint, or run: trash $(display_path "$status_link")"
+					else
+						cli_status skipped "off by default $status_name" "$opt_in_hint"
 					fi
 				elif is_repo_owned_link "$status_skill" "$status_link"; then
 					cli_status success "installed $status_name" "skills/$status_name"
@@ -1892,20 +2107,49 @@ ensure_doc_paths() {
 	cli_group_status success "doc-paths" "installed globally"
 }
 
-# Links canonical skills while passing the current exclusion list safely on
-# macOS Bash 3.2, where expanding an empty array under `set -u` fails.
+# Links selected skills, removes links for user exclusions, and leaves links
+# already present for default-off collections that have not been opted in to.
+# Returns 1 without creating any links when two collections hold a skill with
+# the same name.
 #
 # @param  {string}  target_dir
 #     Directory to install skill symlinks into.
 link_configured_skills() {
 	# The agent skill folder receiving links to canonical skills.
 	local target_dir="$1"
+	# The canonical skill folder checked against saved choices.
+	local skill_path
+	# The installed link for the skill currently being checked.
+	local skill_link
+	# The collection containing the current skill.
+	local collection_name
+	# The canonical skills, collected with duplicate-name checks.
+	local skill_paths=()
 
-	if [ "${#excluded_skills[@]}" -gt 0 ]; then
-		link_skills "$target_dir" "${excluded_skills[@]}"
-	else
-		link_skills "$target_dir"
+	if ! collect_canonical_skills; then
+		return 1
 	fi
+	if [ "${#skill_paths[@]}" -eq 0 ]; then
+		return 0
+	fi
+
+	for skill_path in "${skill_paths[@]}"; do
+		skill_link="$target_dir/${skill_path##*/}"
+		if excluded_skill_exists "${skill_path##*/}"; then
+			if is_repo_owned_link "$skill_path" "$skill_link"; then
+				trash "$skill_link"
+				cli_group_status warning "removed excluded skill" "skills/${skill_path##*/}"
+			fi
+			continue
+		fi
+
+		collection_name=$(picker_collection_of "$skill_path")
+		if collection_is_off "$collection_name"; then
+			continue
+		fi
+
+		link_path "$skill_path" "$skill_link" "skills/${skill_path##*/}"
+	done
 }
 
 # Installs Codex's skill links, plus its main configuration, hooks, permission

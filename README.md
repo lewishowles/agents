@@ -12,7 +12,7 @@ With the **Everything** preset, setup links the rules, skills, hooks and trash w
 scripts/setup.sh
 ```
 
-In a terminal, setup asks whether to link skills only, pick features or install everything, then shows the planned changes before applying them. Use `--preset skills-only`, `--preset pick` or `--preset everything` to skip the preset question. Setup uses one symlink per skill, so edits to a linked skill take effect without rebuilding. Use `--exclude` to leave skills out, `--include` to add them back, `--include-all` to restore the full set, `--status` to check the links, or `--select` to pick skills from a list grouped by collection with a short description of each. See [choosing skills](docs/setup.md#choose-which-skills-to-install) for examples.
+In a terminal, setup asks whether to link skills only, pick features or install everything, then shows the planned changes before applying them. Use `--preset skills-only`, `--preset pick` or `--preset everything` to skip the preset question. Setup links every skill except the Apple collection, one symlink per skill, so edits to a linked skill take effect without rebuilding. Choose Apple in `--select` or include one of its skills to opt in; setup remembers the choice. Use `--exclude` to leave skills out, `--include` to add them back, `--include-all` to restore the full set, `--status` to check the links, or `--select` to pick skills from a list grouped by collection with a short description of each. See [choosing skills](docs/setup.md#choose-which-skills-to-install) for examples.
 
 Several of Claude's hooks need `jq` to run. Install it with `brew install jq` before running the command if you use Claude.
 

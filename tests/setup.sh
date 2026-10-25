@@ -254,7 +254,7 @@ EOF
 	chmod +x "$bin_dir/fzf"
 }
 
-# Checks that fzf opens with every skill ticked except the saved exclusion.
+# Checks that fzf leaves Apple unticked and honours a saved exclusion.
 #
 # @param  {string}  arguments_path
 #     File containing the fzf command arguments.
@@ -281,12 +281,17 @@ assert_fzf_start_selection() {
 	local skill_name
 	# Whether the input row is a heading or skill.
 	local row_kind
+	# The collection containing the current skill row.
+	local collection_name=''
 
 	fzf_bind=$(grep '^load:' "$arguments_path")
 	remaining_actions="${fzf_bind#load:}"
 
 	while IFS=$'\t' read -r row_kind skill_name _; do
-		if [ "$row_kind" = heading ] || [ "$skill_name" = "$excluded_skill" ]; then
+		if [ "$row_kind" = heading ]; then
+			collection_name="$skill_name"
+		fi
+		if [ "$row_kind" = heading ] || [ "$collection_name" = apple ] || [ "$skill_name" = "$excluded_skill" ]; then
 			expected_action='down'
 		else
 			expected_action='toggle+down'
@@ -482,7 +487,7 @@ if {[info exists env(SETUP_TEST_FEATURE_INPUT)]} {
 }
 if {[info exists env(SETUP_TEST_TERMINAL_INPUT)]} {
 	expect {
-		-exact "Enter skill numbers or collection names to leave out, separated by spaces (or q to cancel): " {}
+		-exact "Enter skill numbers or collection names to toggle, separated by spaces (or q to cancel): " {}
 		timeout { puts stderr "Picker prompt did not appear within 20 seconds"; exit 1 }
 		eof { puts stderr "Picker prompt did not appear before setup exited"; exit 1 }
 	}
@@ -877,7 +882,7 @@ test_pick_preset_installs_selected_features() {
 		SETUP_TEST_FEATURE_INPUT=$'1 5\r' SETUP_TEST_TERMINAL_INPUT=$'accessibility\r' \
 		run_setup_target "$home_dir" --codex --preset pick > "$output"
 
-	assert_contains "$output" 'Enter skill numbers or collection names to leave out'
+	assert_contains "$output" 'Enter skill numbers or collection names to toggle'
 	assert_not_exists "$home_dir/.agents/skills/accessibility"
 	assert_dir_link "$home_dir/.agents/skills/writing"
 	assert_link "$home_dir/.codex/hooks.json"
@@ -1342,6 +1347,54 @@ test_skills_are_installed_and_editable() {
 	assert_contains "$source_marker" 'visible through the installed link'
 }
 
+# Apple stays out of a plain setup run even when an older exclusions file exists.
+test_apple_stays_off_without_an_opt_in() {
+	# Isolated home directory for the setup run.
+	local home_dir="$TEST_ROOT/apple-default-off"
+
+	mkdir -p "$home_dir/.agents"
+	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
+	run_setup "$home_dir" > /dev/null
+
+	assert_not_exists "$home_dir/.agents/skills/mac-app"
+	assert_not_exists "$home_dir/.claude/skills/mac-app"
+	assert_dir_link "$home_dir/.agents/skills/bash"
+	assert_not_exists "$home_dir/.agents/skill-inclusions"
+	assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'writing'
+}
+
+# A plain setup run leaves an existing Apple skill link in place while Apple is off.
+test_apple_link_survives_without_an_opt_in() {
+	# Isolated home directory with an Apple link from an earlier setup.
+	local home_dir="$TEST_ROOT/apple-link-kept"
+	# Existing repository-owned Apple skill link.
+	local apple_link="$home_dir/.agents/skills/mac-app"
+
+	mkdir -p "$(dirname "$apple_link")"
+	ln -s "$REPO_DIR/skills/apple/mac-app" "$apple_link"
+	run_setup "$home_dir" > /dev/null
+
+	assert_equals "$(readlink "$apple_link")" "$REPO_DIR/skills/apple/mac-app"
+	assert_not_exists "$home_dir/.claude/skills/mac-app"
+	assert_not_exists "$home_dir/.agents/skill-inclusions"
+}
+
+# Including one Apple skill opts in the collection for later setup runs.
+test_apple_opt_in_is_remembered() {
+	# Isolated home directory for the setup runs.
+	local home_dir="$TEST_ROOT/apple-included"
+
+	run_setup "$home_dir" --include mac-app > /dev/null
+	assert_equals "$(cat "$home_dir/.agents/skill-inclusions")" 'apple'
+	assert_dir_link "$home_dir/.agents/skills/mac-app"
+	assert_dir_link "$home_dir/.agents/skills/apple-frameworks"
+	assert_dir_link "$home_dir/.agents/skills/bash"
+
+	run_setup_target "$home_dir" "--claude" > /dev/null
+	assert_dir_link "$home_dir/.claude/skills/mac-app"
+	assert_equals "$(cat "$home_dir/.agents/skill-inclusions")" 'apple'
+}
+
 test_exclusions_persist_and_report() {
 	# Isolated home directory for the setup run.
 	local home_dir="$TEST_ROOT/skill-exclusions"
@@ -1381,6 +1434,8 @@ test_exclusions_persist_and_report() {
 	assert_dir_link "$home_dir/.agents/skills/accessibility-audit"
 	assert_dir_link "$home_dir/.claude/skills/accessibility-audit"
 	assert_not_exists "$home_dir/.agents/skill-exclusions"
+	assert_equals "$(cat "$home_dir/.agents/skill-inclusions")" 'apple'
+	assert_dir_link "$home_dir/.agents/skills/mac-app"
 }
 
 test_new_skill_installs_after_exclusion() {
@@ -1513,6 +1568,32 @@ test_status_reports_an_excluded_skill() {
 	run_setup_target "$home_dir" "--claude" --status > "$output"
 
 	assert_contains "$output" 'excluded accessibility-audit'
+	assert_contains "$output" 'saved in ~/.agents/skill-exclusions'
+}
+
+# Status explains why an Apple skill is absent or linked without an opt-in.
+test_status_reports_apple_collection_off() {
+	# Isolated home directory for both status reports.
+	local home_dir="$TEST_ROOT/status-apple-off"
+	# Output when Apple is absent.
+	local output="$TEST_ROOT/status-apple-off.txt"
+	# Output when a repository-owned Apple link is still present.
+	local linked_output="$TEST_ROOT/status-apple-link.txt"
+	# Apple skill link retained from an earlier setup.
+	local apple_link="$home_dir/.claude/skills/mac-app"
+
+	run_setup_target "$home_dir" "--claude" --status > "$output"
+	assert_contains "$output" 'off by default mac-app'
+	assert_contains "$output" 'the apple collection is off; run: scripts/setup.sh --claude --include mac-app (adds every apple skill)'
+	assert_not_contains "$output" 'excluded mac-app'
+
+	mkdir -p "$(dirname "$apple_link")"
+	ln -s "$REPO_DIR/skills/apple/mac-app" "$apple_link"
+	run_setup_target "$home_dir" "--claude" --status > "$linked_output"
+	assert_contains "$linked_output" 'off by default mac-app'
+	assert_contains "$linked_output" 'link still present; the apple collection is off'
+	assert_contains "$linked_output" 'or run: trash ~/.claude/skills/mac-app'
+	assert_equals "$(readlink "$apple_link")" "$REPO_DIR/skills/apple/mac-app"
 }
 
 test_status_reports_an_excluded_skill_with_a_lingering_link() {
@@ -1707,8 +1788,8 @@ test_select_fallback_excludes_collection_and_skill() {
 	assert_dir_link "$home_dir/.agents/skills/bash"
 }
 
-# Ensures an empty numbered selection keeps every skill without failing on macOS Bash.
-test_select_fallback_empty_selection_includes_every_skill() {
+# Ensures an empty numbered selection keeps the default choices on macOS Bash.
+test_select_fallback_empty_selection_keeps_default_choices() {
 	# Isolated home directory for an empty numbered selection.
 	local home_dir="$TEST_ROOT/select-fallback-empty"
 	# Output from the empty numbered selection run.
@@ -1722,6 +1803,32 @@ test_select_fallback_empty_selection_includes_every_skill() {
 	assert_not_exists "$home_dir/.agents/skill-exclusions"
 	assert_dir_link "$home_dir/.agents/skills/accessibility"
 	assert_dir_link "$home_dir/.claude/skills/accessibility"
+}
+
+# The numbered picker starts with Apple unticked and remembers a group toggle.
+test_select_fallback_toggles_apple_collection() {
+	# Isolated home directory for both picker runs.
+	local home_dir="$TEST_ROOT/select-fallback-apple"
+	# Output from the first picker run.
+	local output="$TEST_ROOT/select-fallback-apple.txt"
+	# Output from the second picker run.
+	local rerun_output="$TEST_ROOT/select-fallback-apple-rerun.txt"
+	# Command path without fzf.
+	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
+
+	SETUP_TEST_PATH="$fallback_path" SETUP_TEST_TERMINAL=true SETUP_TEST_TERMINAL_INPUT=$'apple\r' run_setup_target "$home_dir" "" --select > "$output"
+	if ! grep -Eq '^\[ \] +[0-9]+\. mac-app' "$output"; then
+		fail 'Expected Apple to start unticked in the numbered picker'
+	fi
+	assert_equals "$(cat "$home_dir/.agents/skill-inclusions")" 'apple'
+	assert_dir_link "$home_dir/.agents/skills/mac-app"
+	assert_dir_link "$home_dir/.agents/skills/bash"
+
+	SETUP_TEST_PATH="$fallback_path" SETUP_TEST_TERMINAL=true SETUP_TEST_TERMINAL_INPUT=$'apple\r' run_setup_target "$home_dir" "" --select > "$rerun_output"
+	if ! grep -Eq '^\[x\] +[0-9]+\. mac-app' "$rerun_output"; then
+		fail 'Expected Apple to start ticked after an earlier choice'
+	fi
+	assert_not_exists "$home_dir/.agents/skill-inclusions"
 }
 
 # Ensures cancelling the numbered selector preserves the saved exclusions.
@@ -1778,7 +1885,7 @@ assert_fzf_version_opens_picker() {
 
 	assert_contains "$fzf_arguments" '--multi'
 	assert_contains "$output" 'Skill selection cancelled. Nothing changed.'
-	assert_not_contains "$output" 'Enter skill numbers or collection names to leave out'
+	assert_not_contains "$output" 'Enter skill numbers or collection names to toggle'
 }
 
 # Checks that an unsupported or unreadable fzf version uses the numbered list.
@@ -1811,7 +1918,7 @@ assert_fzf_version_uses_numbered_list() {
 	SETUP_FZF_VERSION="$version" SETUP_FZF_ARGUMENTS="$fzf_arguments" SETUP_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_TEST_TERMINAL=true SETUP_TEST_TERMINAL_INPUT=$'q\r' run_setup_target "$home_dir" "" --select > "$output" 2>&1
 
 	assert_contains "$output" "$notice"
-	assert_contains "$output" 'Enter skill numbers or collection names to leave out'
+	assert_contains "$output" 'Enter skill numbers or collection names to toggle'
 	assert_contains "$output" 'Skill selection cancelled. Nothing changed.'
 	assert_not_exists "$fzf_arguments"
 	assert_not_exists "$home_dir/.agents/skill-exclusions"
@@ -1919,6 +2026,34 @@ EOF
 	assert_dir_link "$home_dir/.claude/skills/accessibility"
 	assert_not_exists "$home_dir/.agents/skills/writing"
 	assert_contains "$home_dir/.agents/skill-exclusions" 'writing'
+}
+
+# Choosing an Apple skill in fzf remembers the collection for later setup runs.
+test_select_fzf_remembers_apple_collection() {
+	# Isolated home directory for the picker and plain setup runs.
+	local home_dir="$TEST_ROOT/select-fzf-apple"
+	# Output from the picker run.
+	local output="$TEST_ROOT/select-fzf-apple.txt"
+	# Directory containing the fzf stand-in.
+	local fzf_dir="$TEST_ROOT/select-fzf-apple-bin"
+	# Arguments received by the fzf stand-in.
+	local fzf_arguments="$home_dir/fzf-arguments.txt"
+	# Skills displayed to the fzf stand-in.
+	local fzf_input="$home_dir/fzf-input.txt"
+
+	create_fzf_stub "$fzf_dir"
+	# PATH here is this test's own value; ShellCheck confuses it with the copy run_setup_target changes in its subshell.
+	# shellcheck disable=SC2031
+	SETUP_FZF_ARGUMENTS="$fzf_arguments" SETUP_FZF_INPUT="$fzf_input" SETUP_FZF_SELECTION=$'skill\tmac-app\t  mac-app' SETUP_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
+
+	assert_fzf_start_selection "$fzf_arguments" "$fzf_input" ''
+	assert_equals "$(cat "$home_dir/.agents/skill-inclusions")" 'apple'
+	assert_dir_link "$home_dir/.agents/skills/mac-app"
+	assert_not_exists "$home_dir/.agents/skills/apple-frameworks"
+
+	run_setup "$home_dir" > /dev/null
+	assert_dir_link "$home_dir/.claude/skills/mac-app"
+	assert_not_exists "$home_dir/.agents/skills/apple-frameworks"
 }
 
 # Ensures a returned collection heading is never saved as a skill, so returning
@@ -2257,6 +2392,9 @@ run_setup_cases() {
 		test_stale_repo_link_has_no_backup_in_plan
 		test_permission_profile_keeps_roots_and_drops_git_config_rule
 		test_skills_are_installed_and_editable
+		test_apple_stays_off_without_an_opt_in
+		test_apple_link_survives_without_an_opt_in
+		test_apple_opt_in_is_remembered
 		test_exclusions_persist_and_report
 		test_new_skill_installs_after_exclusion
 		test_claude_only_exclusion_creates_agents_directory
@@ -2267,6 +2405,7 @@ run_setup_cases() {
 		test_status_reports_an_installed_skill
 		test_status_reports_a_missing_skill
 		test_status_reports_an_excluded_skill
+		test_status_reports_apple_collection_off
 		test_status_reports_an_excluded_skill_with_a_lingering_link
 		test_status_reports_conflicting_included_content
 		test_status_reports_conflicting_excluded_content
@@ -2275,7 +2414,8 @@ run_setup_cases() {
 		test_status_rejects_skill_options_without_changes
 		test_select_fallback_updates_skill_exclusions
 		test_select_fallback_excludes_collection_and_skill
-		test_select_fallback_empty_selection_includes_every_skill
+		test_select_fallback_empty_selection_keeps_default_choices
+		test_select_fallback_toggles_apple_collection
 		test_select_fallback_cancel_preserves_existing_state
 		test_select_old_fzf_uses_numbered_list
 		test_select_fzf_minimum_version_opens_picker
@@ -2283,6 +2423,7 @@ run_setup_cases() {
 		test_select_fzf_new_major_opens_picker
 		test_select_fzf_empty_version_uses_numbered_list
 		test_select_fzf_updates_skill_exclusions
+		test_select_fzf_remembers_apple_collection
 		test_select_fzf_excludes_every_skill
 		test_select_fzf_cancel_preserves_existing_state
 		test_select_fallback_end_of_input_preserves_existing_state

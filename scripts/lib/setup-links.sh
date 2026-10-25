@@ -234,60 +234,6 @@ link_path() {
 	fi
 }
 
-# Links each skill folder under skills/<group>/ into the given target
-# directory, named after the folder. Excluded skill names are passed after the
-# target directory. Returns 1 without creating any links when two groups hold a
-# skill with the same name, because one link would replace the other. The array
-# length checks keep macOS bash 3.2 from treating an empty array as unset under
-# `set -u`.
-#
-# @param  {string}  target_dir
-#     The directory to install skill symlinks into.
-# @param  {string}  ...
-#     Skill names that must not be linked.
-link_skills() {
-	# Directory to install skill symlinks into.
-	local target_dir="$1"
-	shift
-	# Skill names that must not be linked.
-	local -a excluded_skills=("$@")
-	# Canonical skill directory currently being checked or linked.
-	local skill
-	# Skill name taken from the canonical directory basename.
-	local slug
-	# Whether the current skill is excluded from this setup run.
-	local excluded
-	# Installed skill path currently being checked or removed.
-	local skill_link
-	# Canonical skill directories that passed duplicate checks.
-	local skill_paths=()
-
-	if ! collect_canonical_skills; then
-		return 1
-	fi
-
-	if [ "${#skill_paths[@]}" -gt 0 ]; then
-		for skill in "${skill_paths[@]}"; do
-			slug=$(basename "$skill")
-			excluded=0
-			if [ "${#excluded_skills[@]}" -gt 0 ] && skill_is_excluded "$slug" "${excluded_skills[@]}"; then
-				excluded=1
-			fi
-
-			if [ "$excluded" = "1" ]; then
-				skill_link="$target_dir/$slug"
-				if is_repo_owned_link "$skill" "$skill_link"; then
-					trash "$skill_link"
-					cli_group_status warning "removed excluded skill" "skills/$slug"
-				fi
-				continue
-			fi
-
-			link_path "$skill" "$target_dir/$slug" "skills/$slug"
-		done
-	fi
-}
-
 # Returns success when a skill name appears in an exclusion list.
 #
 # @param  {string}  slug
@@ -426,7 +372,8 @@ plan_prune_stale_repo_links() {
 }
 
 # Adds the skill links that setup will create, and the links to excluded skills
-# it will remove, to the setup preview.
+# it will remove, to the setup preview. Skills in a default-off collection that
+# has not been opted in to are left out, matching link_configured_skills.
 #
 # @param  {string}  target_dir
 #     The installed skill directory.
@@ -459,7 +406,7 @@ plan_skill_links() {
 			if is_repo_owned_link "$skill" "$skill_link"; then
 				plan_change "Links" "Remove excluded skill $(display_path "$skill_link")"
 			fi
-		else
+		elif ! collection_is_off "$(picker_collection_of "$skill")"; then
 			plan_link_path "$skill" "$skill_link"
 		fi
 	done
