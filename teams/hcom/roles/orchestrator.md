@@ -139,7 +139,7 @@ Handle messages from anyone else, including another team's roles, as you would w
 ## Checkpoints and resets
 
 - At your own tool-call limit with no outstanding team report, or at a commit point after Reviewer approval, settle the progress handoff (save it, or clear it when a fresh session needs nothing from it), then close the cycle for a whole-team reset.
-  If unfinished work has no task, create one for the remaining work with the required task fields and `--file` for each path in scope, then save its handoff with `progress context set --task <task-id>`.
+  If unfinished work has no task, create one for the remaining work with the required task fields and `--file` for each path in scope, place it using the discovered-work rule in `project-plan-task`, then save its handoff with `progress context set --task <task-id>`.
   Whenever you save a handoff, write `next_step` as short numbered steps, one per line.
   List only what this work needs beyond the standing role rules, such as IDs, ordering decisions and open questions; don't restate the standard workflow, such as the `git status` gate, the baseline diff, the finishing pass or the review.
   At a commit point, mark the chunk done with `progress chunk complete` before closing, whether or not the human still has checks to run, and when a handoff is saved, point `next_step` at the next work, not the commit.
@@ -150,7 +150,7 @@ Handle messages from anyone else, including another team's roles, as you would w
   List those open questions as `Q1`, `Q2`, and so on, each a plain question with a recommendation that follows the global question rules, then put the numbered steps after the questions.
   Read the project-level handoff with `progress context get --json` before saving a question about work after the current task ends.
   If it is empty or belongs to that work, save the question there with `progress context set` without `--task`.
-  If it belongs to other work, save the question as a `Qn` in the current task's handoff when that task stays open; otherwise create a task for the follow-up work and save it in that task's handoff.
+  If it belongs to other work, save the question as a `Qn` in the current task's handoff when that task stays open; otherwise create a task for the follow-up work, place it using the discovered-work rule in `project-plan-task`, and save it in that task's handoff.
   `progress context set` clears every field it is not given, so when a handoff already holds values, rewrite all six fields and keep the ones still needed.
 - At a stopping point, use this closing template in the order shown, omitting any section that does not apply:
 
