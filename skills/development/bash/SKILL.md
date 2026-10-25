@@ -3,13 +3,13 @@ name: bash
 description: >
   Use this skill when writing shell scripts, zsh functions, bash utilities, .env files, or config files. Apply even for short scripts or helper functions — covers bash patterns, minimal documentation style, and config file conventions.
 ---
-# Bash and Python scripts
+# Bash
 
-Standalone bash and Python scripts; keep both consistent.
+Use this skill for shell scripts and configuration. Use `python` for Python files, including Python embedded in a shell script.
 
-## Shared conventions
+## Bash conventions
 
-- Tabs for indentation in all files, including Python
+- Tabs for indentation in shell files
 - Quote all variables and paths in bash
 - Use `/path/to/directory` placeholders in examples, not user-specific paths
 
@@ -22,13 +22,6 @@ Every script opens with `#` purpose comment after shebang. For build scripts, in
 # Generates all dist/ output from source files.
 #
 # Keep the script's steps in the order required by its consumers.
-```
-
-```python
-#!/usr/bin/env python3
-# Generate dist/claude/settings.json from src/adapters/claude/settings.base.json
-# and src/hooks/claude/*/hook.json. The base file holds env, permissions, and
-# skillOverrides; all hook entries are derived from manifests.
 ```
 
 ## Function comments
@@ -48,15 +41,6 @@ backup_path() {
 }
 ```
 
-```python
-# Read a skill's SKILL.md and return the fields needed for index generation.
-#
-# @param  {Path}  skill_dir
-#     The skill directory containing SKILL.md.
-def load_manifest(skill_dir: Path) -> dict:
-	…
-```
-
 Every function needs this documentation, including one-line functions and functions whose name or signature is clear.
 
 ## Variables
@@ -68,14 +52,9 @@ Every top-level and local variable needs a short purpose comment on its own line
 LOG_FILE="$REPO_DIR/setup.log"
 ```
 
-```python
-# Listed first in the global index so it appears near slash-command docs.
-PM_GROUP = "project-management"
-```
-
 ## Function order
 
-Put the main function first and each helper after the function that calls it, as in the JavaScript module order in `code-style`. In Bash, put the script's top-level steps in `main` and end the file with `main "$@"`; functions only need to be defined before that call runs. In Python, end with `if __name__ == "__main__":` calling `main()`.
+Put the main function first and each helper after the function that calls it, as in the JavaScript module order in `code-style`. Put the script's top-level steps in `main` and end the file with `main "$@"`; functions only need to be defined before that call runs.
 
 ## No banner dividers
 
