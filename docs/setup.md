@@ -160,6 +160,14 @@ Setup writes `~/.codex/config.toml` in a fixed layout. If your copy uses differe
 
 Before changing files, global setup checks that the selected agent's helper commands are installed or can be installed from the local agent-tools checkout with `uv`. Claude needs `friction`, `team-send`, and `doc-paths`; Codex needs `team-send` and `doc-paths`. If a required command is missing and `uv` or its source package under `~/Dev/Repositories/Packages/agent-tools` is unavailable, setup lists each missing command and the fix, then stops without saving skill choices. `--status` skips this check.
 
+## What setup can't restore
+
+Setup links this repository's configuration and skills. Keep separate backups of the local state you want on another machine:
+
+- **Progress history:** `progress` stores projects, tasks, decisions, and handoffs in `~/.agents/progress.db` by default, or in the file named by `AGENTS_PROGRESS_DATABASE`. Back up that database and restore it separately before relying on earlier task records. Run `progress summary --json` to find the restored project IDs, then run `progress project attach <project_id>` in each fresh clone. Without a backup, run `progress project init --slug <slug> --name <name>` in each project directory to create new records.
+- **Tool logins:** sign in to Claude Code, Codex, and any connected services again after setup. Setup doesn't transfer their login state.
+- **HCOM state:** HCOM keeps its configuration, message history, and handoff files under `~/.hcom/`. Back up and restore that folder separately if you need its history. Otherwise, run `cont` from the project directory to start a new team and resume from the task's saved handoff in `progress`, if you restored the progress database. See [the HCOM guide](hcom.md) for the team workflow.
+
 ## Register project commands
 
 From the project root, preview likely commands and register the ones agents may run:
