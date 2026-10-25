@@ -86,6 +86,7 @@ For the full checklists, see `accessibility`, `code-style`, `error-handling`, `f
 - Matches the core code style checks above: naming, comments, no speculative abstractions?
 - Surgical: only needed changes?
 - Organisation: each function/visitor owns one concern, no boolean flags swapping the algorithm, no switchboard helpers or logic duplicated across sibling files, clear control flow over clever tricks?
+- Review the whole shape of every touched source file: has growth mixed separate jobs into one function, class, or module, or made callers parse the same tool output in several places? Raise these as findings even when the added lines work. Use the code-style split signals to prompt review, not as hard limits.
 
 **Prose** (any changed comments, docstrings, test names, descriptions, metadata, or documentation)
 

@@ -3,6 +3,7 @@ name: project-review-task
 description: >
   Use this skill when assessing a task record or implementation plan before coding, or consolidating independent peer review packets, checking repository truth, scope, evidence, and readiness.
 ---
+
 # Project review task
 
 Assess a task record or implementation plan before coding so stale repository facts, vague contracts, wrong scope, untestable acceptance criteria, and over-prescriptive recipes are caught while they are cheap to change. Give an evidence-backed `Ready as written` verdict when the task is clear, proportionate, and verifiable; otherwise request only changes that improve evidence, reduce ambiguity or risk, improve maintainability, or make completion more verifiable. Independent review is the default and does not edit the task record or begin implementation.
@@ -32,7 +33,7 @@ If the supplied ID or name does not resolve, or the lookup is ambiguous, stop an
 2. Record the task ID and `updated_at` value. Re-check the task with `progress task get <task-id> --json` before the verdict; if the record or its `updated_at` value changed during review, stop with a stale-review result.
 3. Compare task claims with current repository evidence. Verify named files, commands, generated boundaries, dependencies, existing patterns, and permission or cross-repository limits instead of accepting them from the task alone.
 4. Assess the quality rubric below. Mark an item as a finding only when the evidence supports a concrete planning change.
-5. Stress the task's boundary and altitude. It must be detailed enough for implementation and verification without prescribing incidental code structure, inventing architecture, or hiding independently reviewable work.
+5. Stress the task's boundary and altitude. It must be detailed enough for implementation and verification without prescribing incidental code structure, inventing architecture, or hiding independently reviewable work. A code task still needs a short structure plan naming the parts and what each one owns. That plan is required, not incidental structure: treat a missing plan, or a missing restructuring step for a file the task extends past the code-style split signals, as a finding.
 6. Report one verdict. Use `Ready as written` only when no **Must-fix** or **Recommended** finding remains; non-blocking **Nice-to-have** ideas do not prevent readiness.
 
 ## Consolidate reviews

@@ -20,7 +20,7 @@ description: >
 - Multi-line variable declarations should have a blank line before and after them
 - Treat `await` statements like declarations: put each on its own line, or group consecutive ones together, with a blank line separating them from the assertions or other steps around them
 - A statement that the formatter wraps over several lines, such as a multi-line `expect`, gets a blank line before and after it
-- Treat repetition as a design prompt, not automatic abstraction. Extract only a coherent behaviour that reduces risk and clarifies callers.
+- Repetition is a prompt to review the design (see the split signals under Organisation & abstraction), not a reason to abstract automatically. Extract only a coherent behaviour that reduces risk and clarifies callers.
 - Prefer line parsing, structured APIs, or small helpers over complex regex. Use regex only when clearest; name complex patterns and explain match.
 - For multi-line generated strings, prefer named values and `["line one", value, "line three"].join("\n")` over dense escaped templates.
 - Split dense template expressions into named intermediate values before interpolation.
@@ -78,9 +78,11 @@ Before writing new logic for a problem a sibling module already solves (prop det
 
 ## Organisation & abstraction
 
-- Give each module one responsibility. Split mixed concerns, not files merely because they are long; name each new module's job first.
+- Write each file as though it will grow, including a new file that starts small. Give each function, class, and module one job from the first version, and name each new module's job before splitting a file. In any function or visitor, split grouping, selection, transformation, and reporting into named steps rather than one dense block.
+- Keep code that talks to outside tools, such as Git, a database, the file system, or a network service, separate from code that makes decisions and code that builds output. Parse each tool's output once in one place.
+- Give each function one kind of result. Report failures through the language's error mechanism and represent distinct successful outcomes with a named result type. Avoid loose dictionaries or mixed results such as an integer on success and an error string on failure.
+- Split signals: a function over about 40 lines, more than about three levels of nested branching, a file over about 400 lines, or the same line appearing three or more times. These are prompts to check responsibilities and split mixed work, not hard limits; a long file with one clear job may remain together.
 - Put a concept in the module that owns it, not the lowest module that happens to hold the data. A lower-level module may expose its own facts or capabilities; it must not gain a caller's feature vocabulary, policy, or output shape.
-- A function or visitor owns one concern; split grouping, selection, transformation, and reporting into named steps rather than one dense block
 - Avoid boolean parameters that switch the algorithm entirely; split into named functions instead of one function with divergent branches
 - Avoid shared "switchboard" helpers that accumulate one option per caller; let each caller own its formatting/behaviour, or name distinct modes explicitly
 - Prefer explicit, obviously-correct control flow over clever tricks (sentinel loops, index arithmetic) even when the clever version is correct
@@ -100,6 +102,7 @@ Before writing new logic for a problem a sibling module already solves (prop det
 - No banner/divider comments; use JSDoc and blank lines
 - Comments explain purpose, not mechanics; remove stale bug-fix comments once code expresses behaviour
 - Check each docstring's claim against the function body it describes. Restating the name, or asserting behaviour the code doesn't have, both fail the same as no docstring
+- If a docstring needs a long list of edge cases to explain one function, check whether the function owns too many jobs and split the work instead of extending the docstring.
 - For fixes, state the rule the code follows, not the avoided mechanism. Use "why" only as a guardrail (e.g. declared after `initialise()` so seeding does not emit)
 - Block comments: purpose and external constraints; skip internal trivia
 - Write every CSS comment as a block, even a one-line one: `/**` on its own line, `*` before each line of text, and ` */` on its own line. Never start the text on the opening line or close on the last text line.
