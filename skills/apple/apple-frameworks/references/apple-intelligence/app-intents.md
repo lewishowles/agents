@@ -1,7 +1,5 @@
 # App Intents
 
-Parts: [intents-basics.md](app-intents-intents-basics.md), [entities-spotlight.md](app-intents-entities-spotlight.md), [advanced-features.md](app-intents-advanced-features.md).
-
 Build intents that expose your app's functionality to Siri, Shortcuts, Spotlight, and Apple Intelligence. Covers the full App Intents framework from basic actions through advanced features like interactive snippets, intent modes, visual intelligence integration, and Spotlight entity indexing.
 
 ## When This Skill Activates
@@ -23,71 +21,102 @@ What do you need?
 |
 +-- Expose an action to Siri/Shortcuts
 |   +-- Simple action, no UI needed
-|   |   --> Basic AppIntent (intents-basics.md)
+|   |   --> Basic AppIntent (app-intents-intents-basics.md)
 |   +-- Needs to show UI or ask user questions
-|   |   --> Intent Modes + Interactive Snippets (advanced-features.md)
+|   |   --> Intent Modes + Interactive Snippets (app-intents-advanced-features.md)
 |   +-- Needs a predictable voice phrase
-|       --> App Shortcuts (intents-basics.md)
+|       --> App Shortcuts (app-intents-intents-basics.md)
 |
 +-- Make content searchable
 |   +-- In Spotlight
-|   |   --> IndexedEntity + @Property (entities-spotlight.md)
+|   |   --> IndexedEntity + @Property (app-intents-entities-spotlight.md)
+|   +-- Runnable from Spotlight on Mac
+|   |   --> parameterSummary visibility gates (app-intents-entities-spotlight.md)
 |   +-- In Visual Intelligence
-|   |   --> IntentValueQuery + SemanticContentDescriptor (advanced-features.md)
+|   |   --> IntentValueQuery + SemanticContentDescriptor (app-intents-advanced-features.md)
 |   +-- As onscreen entities for Siri/ChatGPT
-|       --> .userActivity() + EntityIdentifier (advanced-features.md)
+|       --> annotation APIs + EntityIdentifier (app-intents-advanced-features.md)
+|
++-- Let Siri execute intents from natural language
+|   --> App Schemas: @AppIntent(schema:) / @AssistantIntent (app-intents-advanced-features.md)
+|
++-- Feed entities to Apple Intelligence (Use Model action)
+|   --> AttributedString params + entity JSON + Find actions (app-intents-entities-spotlight.md)
+|
++-- Hand entities to other apps as content/files
+|   --> Transferable / FileEntity (app-intents-entities-spotlight.md)
 |
 +-- Show rich results in Siri
 |   +-- Static display only
-|   |   --> .result(view:) snippet (advanced-features.md)
+|   |   --> .result(view:) snippet (app-intents-advanced-features.md)
 |   +-- Interactive buttons/controls
-|       --> SnippetIntent protocol (advanced-features.md)
+|   |   --> SnippetIntent protocol (app-intents-advanced-features.md)
+|   +-- Custom spoken dialog
+|       --> IntentDialog(full:supporting:) (app-intents-advanced-features.md)
 |
 +-- Present choices to the user
-|   --> requestChoice(between:) (advanced-features.md)
+|   --> requestChoice(between:) (app-intents-advanced-features.md)
+|
++-- Teach Siri from in-app UI actions
+|   --> IntentDonationManager (app-intents-advanced-features.md)
 |
 +-- Share intents via Swift Package
-    --> AppIntentsPackage protocol (advanced-features.md)
+    --> AppIntentsPackage protocol (app-intents-advanced-features.md)
 ```
 
 ## API Availability
 
-| Feature                               | Minimum OS        | Framework  |
-| ------------------------------------- | ----------------- | ---------- |
-| `AppIntent` protocol                  | iOS 16 / macOS 13 | AppIntents |
-| `AppEntity` protocol                  | iOS 16 / macOS 13 | AppIntents |
-| `AppShortcutsProvider`                | iOS 16 / macOS 13 | AppIntents |
-| `@Parameter` macro                    | iOS 16 / macOS 13 | AppIntents |
-| `IndexedEntity` protocol              | iOS 18 / macOS 15 | AppIntents |
-| `@Property` with `indexingKey`        | iOS 18 / macOS 15 | AppIntents |
-| Intent Modes (`supportedModes`)       | iOS 26 / macOS 26 | AppIntents |
-| `requestChoice(between:)`             | iOS 26 / macOS 26 | AppIntents |
-| `@ComputedProperty`                   | iOS 26 / macOS 26 | AppIntents |
-| `@DeferredProperty`                   | iOS 26 / macOS 26 | AppIntents |
-| `SnippetIntent` protocol              | iOS 26 / macOS 26 | AppIntents |
-| `AppIntentsPackage` protocol          | iOS 26 / macOS 26 | AppIntents |
-| Onscreen entities (`.userActivity()`) | iOS 26 / macOS 26 | AppIntents |
-| `@UnionValue`                         | iOS 18 / macOS 15 | AppIntents |
+| Feature                                             | Minimum OS              | Framework         |
+| --------------------------------------------------- | ----------------------- | ----------------- |
+| `AppIntent` protocol                                | iOS 16 / macOS 13       | AppIntents        |
+| `AppEntity` protocol                                | iOS 16 / macOS 13       | AppIntents        |
+| `AppShortcutsProvider`                              | iOS 16 / macOS 13       | AppIntents        |
+| `@Parameter` macro                                  | iOS 16 / macOS 13       | AppIntents        |
+| `IndexedEntity` protocol                            | iOS 18 / macOS 15       | AppIntents        |
+| `@Property` with `indexingKey`                      | iOS 18 / macOS 15       | AppIntents        |
+| Intent Modes (`supportedModes`)                     | iOS 26 / macOS 26       | AppIntents        |
+| `requestChoice(between:)`                           | iOS 26 / macOS 26       | AppIntents        |
+| `@ComputedProperty`                                 | iOS 26 / macOS 26       | AppIntents        |
+| `@DeferredProperty`                                 | iOS 26 / macOS 26       | AppIntents        |
+| `SnippetIntent` protocol                            | iOS 26 / macOS 26       | AppIntents        |
+| `AppIntentsPackage` protocol                        | iOS 26 / macOS 26       | AppIntents        |
+| Onscreen entities (`.userActivity()`)               | iOS 26 / macOS 26       | AppIntents        |
+| `@UnionValue`                                       | iOS 18 / macOS 15       | AppIntents        |
+| Assistant Schemas (`@AssistantIntent`)              | iOS 18                  | AppIntents        |
+| `Transferable` entities, `FileEntity`               | iOS 18 / macOS 15       | AppIntents        |
+| `UndoableIntent`                                    | iOS 26 / macOS 26       | AppIntents        |
+| App Schemas on `@AppIntent(schema:)`                | iOS 27 / macOS 27       | AppIntents        |
+| `IntentDonationManager`, `OwnershipProvidingEntity` | iOS 27 / macOS 27       | AppIntents        |
+| AppIntentsTesting framework                         | Xcode 26 cycle (WWDC26) | AppIntentsTesting |
 
 ## Quick Reference
 
-| Task                         | Type/API                                 | Reference File                                               |
-| ---------------------------- | ---------------------------------------- | ------------------------------------------------------------ |
-| Define an action             | `AppIntent` protocol                     | [`intents-basics.md`](app-intents-intents-basics.md)         |
-| Accept parameters            | `@Parameter` macro                       | [`intents-basics.md`](app-intents-intents-basics.md)         |
-| Create voice phrases         | `AppShortcutsProvider`                   | [`intents-basics.md`](app-intents-intents-basics.md)         |
-| Define a data entity         | `AppEntity` protocol                     | [`entities-spotlight.md`](app-intents-entities-spotlight.md) |
-| Index in Spotlight           | `IndexedEntity` protocol                 | [`entities-spotlight.md`](app-intents-entities-spotlight.md) |
-| Mark indexable fields        | `@Property(indexingKey:)`                | [`entities-spotlight.md`](app-intents-entities-spotlight.md) |
-| Run in background/foreground | `supportedModes`                         | [`advanced-features.md`](app-intents-advanced-features.md)   |
-| Continue in foreground       | `continueInForeground()`                 | [`advanced-features.md`](app-intents-advanced-features.md)   |
-| Show result UI               | `.result(view:)`                         | [`advanced-features.md`](app-intents-advanced-features.md)   |
-| Interactive result UI        | `SnippetIntent` protocol                 | [`advanced-features.md`](app-intents-advanced-features.md)   |
-| Present choices              | `requestChoice(between:)`                | [`advanced-features.md`](app-intents-advanced-features.md)   |
-| Visual intelligence search   | `IntentValueQuery`                       | [`advanced-features.md`](app-intents-advanced-features.md)   |
-| Onscreen entity association  | `.userActivity()` modifier               | [`advanced-features.md`](app-intents-advanced-features.md)   |
-| Computed/deferred properties | `@ComputedProperty`, `@DeferredProperty` | [`advanced-features.md`](app-intents-advanced-features.md)   |
-| Share via packages           | `AppIntentsPackage`                      | [`advanced-features.md`](app-intents-advanced-features.md)   |
+| Task                                     | Type/API                                   | Reference File                      |
+| ---------------------------------------- | ------------------------------------------ | ----------------------------------- |
+| Define an action                         | `AppIntent` protocol                       | `app-intents-intents-basics.md`     |
+| Accept parameters                        | `@Parameter` macro                         | `app-intents-intents-basics.md`     |
+| Create voice phrases                     | `AppShortcutsProvider`                     | `app-intents-intents-basics.md`     |
+| Define a data entity                     | `AppEntity` protocol                       | `app-intents-entities-spotlight.md` |
+| Index in Spotlight                       | `IndexedEntity` protocol                   | `app-intents-entities-spotlight.md` |
+| Mark indexable fields                    | `@Property(indexingKey:)`                  | `app-intents-entities-spotlight.md` |
+| Run in background/foreground             | `supportedModes`                           | `app-intents-advanced-features.md`  |
+| Continue in foreground                   | `continueInForeground()`                   | `app-intents-advanced-features.md`  |
+| Show result UI                           | `.result(view:)`                           | `app-intents-advanced-features.md`  |
+| Interactive result UI                    | `SnippetIntent` protocol                   | `app-intents-advanced-features.md`  |
+| Present choices                          | `requestChoice(between:)`                  | `app-intents-advanced-features.md`  |
+| Visual intelligence search               | `IntentValueQuery`                         | `app-intents-advanced-features.md`  |
+| Onscreen entity association              | `.userActivity()` modifier                 | `app-intents-advanced-features.md`  |
+| Computed/deferred properties             | `@ComputedProperty`, `@DeferredProperty`   | `app-intents-advanced-features.md`  |
+| Share via packages                       | `AppIntentsPackage`                        | `app-intents-advanced-features.md`  |
+| Make intents Siri-executable             | `@AppIntent(schema:)`, `@AssistantIntent`  | `app-intents-advanced-features.md`  |
+| Update-intent "clear vs leave unchanged" | `valueState` (`.set`/`.set(nil)`/`.unset`) | `app-intents-advanced-features.md`  |
+| Custom Siri dialog                       | `IntentDialog(full:supporting:)`           | `app-intents-advanced-features.md`  |
+| Donate in-app UI actions                 | `IntentDonationManager`                    | `app-intents-advanced-features.md`  |
+| Shared-content confirmations             | `OwnershipProvidingEntity`                 | `app-intents-advanced-features.md`  |
+| Undo intent actions                      | `UndoableIntent`                           | `app-intents-advanced-features.md`  |
+| Export entities as content/files         | `Transferable`, `FileEntity`               | `app-intents-entities-spotlight.md` |
+| Run from Spotlight on Mac                | `parameterSummary` gates                   | `app-intents-entities-spotlight.md` |
+| Accept model-generated rich text         | `AttributedString` parameters              | `app-intents-entities-spotlight.md` |
 
 ## Process
 
@@ -105,9 +134,9 @@ Read the user's code or requirements to determine:
 
 Based on the need, read from this directory:
 
-- [**intents-basics.md**](app-intents-intents-basics.md) -- AppIntent protocol, @Parameter, perform(), App Shortcuts
-- [**entities-spotlight.md**](app-intents-entities-spotlight.md) -- AppEntity, IndexedEntity, Spotlight indexing, @Property
-- [**advanced-features.md**](app-intents-advanced-features.md) -- Intent modes, interactive snippets, visual intelligence, onscreen entities, choices, packages
+- **app-intents-intents-basics.md** -- AppIntent protocol, @Parameter, perform(), App Shortcuts
+- **app-intents-entities-spotlight.md** -- AppEntity, IndexedEntity, Spotlight indexing, @Property
+- **app-intents-advanced-features.md** -- Intent modes, interactive snippets, visual intelligence, onscreen entities, choices, packages
 
 ### 3. Review or Implement
 
@@ -177,7 +206,7 @@ struct ToggleFavoriteIntent: AppIntent {
 struct ToggleFavoriteIntent: AppIntent {
     static var title: LocalizedStringResource = "Toggle Favorite"
 
-    var supportedModes: IntentModes { .background }
+    static let supportedModes: IntentModes = .background
 
     func perform() async throws -> some IntentResult {
         toggleFavorite()
@@ -223,6 +252,42 @@ func indexAll() async throws {
 }
 ```
 
+## Design Guidelines
+
+How to decide _what_ to expose and how it should behave — from Apple's design sessions.
+
+### App Shortcuts (WWDC22)
+
+- Pick **self-contained, straightforward features** completable without the app in focus.
+- Hard cap is **10 App Shortcuts**; aim for **2–5 high-quality** ones.
+- Invocation phrase: brief, memorable, and **must include the app name** — provide natural synonym variants per language ("Start a run" / "Begin a run").
+- At most **one dynamic parameter per phrase**; values must come from a **finite, front-of-mind list**, ordered by recency/frequency — the first value becomes the top Spotlight suggestion.
+- Three dialog flows: **Parameter Confirmation** (assume the likely value, confirm it), **Disambiguation** (short list that teaches the available values), **Intent Confirmation** only for consequential actions (financial, destructive, high-risk).
+- Snippet visuals: **semitranslucent material + vibrant label colors** — never opaque backgrounds.
+- **Suppress spoken dialog when the snippet fully communicates the result**, but keep the dialog complete for voice-only contexts (AirPods, CarPlay).
+- Surface in-app education **right before or after the user performs the action they'd repeat** — that's when the phrase sticks.
+
+### What deserves to be an intent (WWDC24)
+
+- **"Anything your app does should be an app intent."** Scope by task, not by a feature checklist.
+- Start from **fundamental verbs** — Create, Open, Search — then specialize.
+- **Consolidate near-duplicates** into one flexible intent with parameters ("Start Workout" with a workout-type parameter, not five separate intents).
+- Intents represent **tasks, never UI gestures** — "save the draft", not "tap the save button".
+- Live Activity and audio apps should expose **background read-intents** (current state, now playing), not just actions.
+- **Parameter summaries must read as complete sentences** for _every_ possible value.
+- Make parameters **optional by default** so the intent runs immediately with no follow-up questions; **binary states default to a toggle** rather than explicit on/off.
+- Intents that end in the UI get an **"Open When Run" toggle, default on** — users composing shortcuts may want to suppress it.
+
+### Interactive snippet design (WWDC25)
+
+- **Max content height 340pt** — beyond that is clipped, not scrolled.
+- Use **larger-than-default type**; snippets are glanced at from a distance.
+- Show **only essential info** — link into the app for anything more.
+- Use **ContainerRelativeShape** for margins that adapt to the snippet's corner radius.
+- Vibrant brand backgrounds are fine, but **check contrast for distance viewing**.
+- Two types: **Result** (outcome + Done button) vs **Confirmation** (action-verb button like "Order"); **Confirmation → Result is the canonical flow**.
+- The snippet must be **self-sufficient even if Siri dialog is never shown or heard**.
+
 ## Review Checklist
 
 Before shipping App Intents integration:
@@ -236,9 +301,29 @@ Before shipping App Intents integration:
 - [ ] App Shortcuts have clear, natural-language phrases with `\(.applicationName)`
 - [ ] Intent modes match the actual work: background for data ops, foreground for UI
 - [ ] Interactive snippets use `SnippetIntent` (not plain `AppIntent`)
+- [ ] SnippetIntent `perform()` never mutates state — mutations live in the button intents (WWDC25 275)
+- [ ] `parameterSummary` includes every required parameter without a default — the Spotlight-on-Mac visibility gate (WWDC25 260)
+- [ ] Text-accepting parameters use `AttributedString`, not `String` (Use Model rich text, WWDC25 260)
 - [ ] `perform()` handles errors gracefully and returns meaningful dialog
-- [ ] Intents are tested in Shortcuts app and via Siri voice
+- [ ] Intents are tested in the order: AppIntentsTesting → Shortcuts → Spotlight → Siri (WWDC26 240)
 - [ ] Deep links from entity results navigate to the correct screen
+
+## WWDC Session References
+
+Rules throughout the reference files carry inline attributions to these sessions:
+
+| Session                                                          | Covers                                                           |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------- |
+| WWDC24 10133 — Bring your app to Siri                            | Assistant Schemas, 12 iOS 18 domains, semantic search            |
+| WWDC24 10210 — Bring your app's core features to users           | Core doctrine: intents, entities, queries, reuse across surfaces |
+| WWDC24 10134 — App Intents framework additions                   | IndexedEntity, Transferable, FileEntity, `@UnionValue`           |
+| WWDC24 10176 — Design App Intents for system experiences         | Scope + parameter design rules, Open When Run                    |
+| WWDC25 244 — Get to know App Intents                             | Protocol shapes, metadata extraction, ID contract, packaging     |
+| WWDC25 275 — Advances in App Intents                             | SnippetIntent, intent modes, undo, onscreen entities             |
+| WWDC25 260 — Develop for Shortcuts and Spotlight                 | Use Model action, Find actions, Mac Spotlight gates              |
+| WWDC26 240 — Build intelligent Siri experiences with App Schemas | Unified schema macros, testing ladder                            |
+| WWDC26 343 — Advanced App Intents features for Siri              | Dialogs, donations, ownership, annotation APIs                   |
+| WWDC26 344 — Code-along: Make your app available to Siri         | Canonical integration sequence, `valueState`                     |
 
 ## References
 
@@ -247,4 +332,4 @@ Before shipping App Intents integration:
 - [App Shortcuts](https://developer.apple.com/documentation/AppIntents/app-shortcuts)
 - [IndexedEntity](https://developer.apple.com/documentation/AppIntents/IndexedEntity)
 - [Spotlight integration](https://developer.apple.com/documentation/CoreSpotlight)
-- `/Users/ravishankar/Downloads/docs/AppIntents-Updates.md`
+- Local captured doc (optional): `~/Downloads/docs/AppIntents-Updates.md` — read if present; skip silently if absent.

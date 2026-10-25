@@ -3,31 +3,36 @@
 ## Kept Apple skills
 
 - Repository: https://github.com/rshankras/claude-code-apple-skills
-- Pin: `5f1f5697c77adf99816de1a5c21742532a1c6f46` (30 June 2026)
+- Pin: `9ffb83138209057875698dd11c1720c657c47a92` (24 July 2026)
 - Licence: MIT, copyright (c) 2025 Ravishankar
-- The local copies of the 17 files in the table matched upstream exactly at this pin before this skill was built.
+- The table maps the 18 references and rules kept from the pinned upstream commit.
 
-The table maps each local reference to exactly one upstream Markdown file. The reference body keeps that file's text, apart from its removed front matter, its title, an added Parts line in the files that have parts, links adapted to the local layout, and a four-backtick outer fence around the nested example in `references/security/overview.md`.
+Each local file maps to one upstream file. File bodies keep the upstream text apart from removed front matter, the added Parts line in `references/core-ml/overview.md`, links and path pointers adapted to the local layout, formatter output, and platform and non-Swift exclusions.
 
-| Local file                                                                                                                           | Upstream path                                          |
-| ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------ |
-| [`references/apple-intelligence/app-intents-advanced-features.md`](references/apple-intelligence/app-intents-advanced-features.md)   | `apple-intelligence/app-intents/advanced-features.md`  |
-| [`references/apple-intelligence/app-intents-entities-spotlight.md`](references/apple-intelligence/app-intents-entities-spotlight.md) | `apple-intelligence/app-intents/entities-spotlight.md` |
-| [`references/apple-intelligence/app-intents-intents-basics.md`](references/apple-intelligence/app-intents-intents-basics.md)         | `apple-intelligence/app-intents/intents-basics.md`     |
-| [`references/apple-intelligence/app-intents.md`](references/apple-intelligence/app-intents.md)                                       | `apple-intelligence/app-intents/SKILL.md`              |
-| [`references/apple-intelligence/foundation-models.md`](references/apple-intelligence/foundation-models.md)                           | `apple-intelligence/foundation-models/SKILL.md`        |
-| [`references/apple-intelligence/overview.md`](references/apple-intelligence/overview.md)                                             | `apple-intelligence/SKILL.md`                          |
-| [`references/apple-intelligence/visual-intelligence.md`](references/apple-intelligence/visual-intelligence.md)                       | `apple-intelligence/visual-intelligence/SKILL.md`      |
-| [`references/core-ml/overview.md`](references/core-ml/overview.md)                                                                   | `core-ml/SKILL.md`                                     |
-| [`references/core-ml/patterns.md`](references/core-ml/patterns.md)                                                                   | `core-ml/patterns.md`                                  |
-| [`references/core-ml/templates.md`](references/core-ml/templates.md)                                                                 | `core-ml/templates.md`                                 |
-| [`references/mapkit/geotoolbox.md`](references/mapkit/geotoolbox.md)                                                                 | `mapkit/geotoolbox/SKILL.md`                           |
-| [`references/security/biometric-auth.md`](references/security/biometric-auth.md)                                                     | `security/biometric-auth.md`                           |
-| [`references/security/network-security.md`](references/security/network-security.md)                                                 | `security/network-security.md`                         |
-| [`references/security/overview.md`](references/security/overview.md)                                                                 | `security/SKILL.md`                                    |
-| [`references/security/platform-specifics.md`](references/security/platform-specifics.md)                                             | `security/platform-specifics.md`                       |
-| [`references/security/privacy-manifests.md`](references/security/privacy-manifests.md)                                               | `security/privacy-manifests/SKILL.md`                  |
-| [`references/security/secure-storage.md`](references/security/secure-storage.md)                                                     | `security/secure-storage.md`                           |
+| Local file                                                                                                                                             | Upstream path                                                   |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------- |
+| [`references/apple-intelligence/app-intents-advanced-features.md`](references/apple-intelligence/app-intents-advanced-features.md)                     | `apple-intelligence/app-intents/advanced-features.md`           |
+| [`references/apple-intelligence/app-intents-entities-spotlight.md`](references/apple-intelligence/app-intents-entities-spotlight.md)                   | `apple-intelligence/app-intents/entities-spotlight.md`          |
+| [`references/apple-intelligence/app-intents-intents-basics.md`](references/apple-intelligence/app-intents-intents-basics.md)                           | `apple-intelligence/app-intents/intents-basics.md`              |
+| [`references/apple-intelligence/app-intents.md`](references/apple-intelligence/app-intents.md)                                                         | `apple-intelligence/app-intents/SKILL.md`                       |
+| [`references/apple-intelligence/foundation-models.md`](references/apple-intelligence/foundation-models.md)                                             | `apple-intelligence/foundation-models/SKILL.md`                 |
+| [`references/apple-intelligence/foundation-models-models-and-agents.md`](references/apple-intelligence/foundation-models-models-and-agents.md)         | `apple-intelligence/foundation-models/models-and-agents.md`     |
+| [`references/apple-intelligence/foundation-models-safety-and-guardrails.md`](references/apple-intelligence/foundation-models-safety-and-guardrails.md) | `apple-intelligence/foundation-models/safety-and-guardrails.md` |
+| [`references/apple-intelligence/foundation-models-utilities-package.md`](references/apple-intelligence/foundation-models-utilities-package.md)         | `apple-intelligence/foundation-models/utilities-package.md`     |
+| [`references/apple-intelligence/overview.md`](references/apple-intelligence/overview.md)                                                               | `apple-intelligence/SKILL.md`                                   |
+| [`references/apple-intelligence/visual-intelligence.md`](references/apple-intelligence/visual-intelligence.md)                                         | `apple-intelligence/visual-intelligence/SKILL.md`               |
+| [`references/core-ml/overview.md`](references/core-ml/overview.md)                                                                                     | `core-ml/SKILL.md`                                              |
+| [`references/core-ml/patterns.md`](references/core-ml/patterns.md)                                                                                     | `core-ml/patterns.md`                                           |
+| [`references/core-ml/templates.md`](references/core-ml/templates.md)                                                                                   | `core-ml/templates.md`                                          |
+| [`references/mapkit/geotoolbox.md`](references/mapkit/geotoolbox.md)                                                                                   | `mapkit/geotoolbox/SKILL.md`                                    |
+| [`references/mapkit/overview.md`](references/mapkit/overview.md)                                                                                       | `mapkit/SKILL.md`                                               |
+| [`references/security/overview.md`](references/security/overview.md)                                                                                   | `security/SKILL.md`                                             |
+| [`references/security/privacy-manifests.md`](references/security/privacy-manifests.md)                                                                 | `security/privacy-manifests/SKILL.md`                           |
+| [`references/security/rules/swiftlint.yml`](references/security/rules/swiftlint.yml)                                                                   | `security/rules/swiftlint.yml`                                  |
+
+## Removed upstream security references
+
+Upstream removed `security/biometric-auth.md`, `security/network-security.md`, `security/platform-specifics.md` and `security/secure-storage.md` in commit `098c1b4` after its July 2026 blind-test audit judged that current models already know the material. There was no replacement upstream. The local copies were removed to follow upstream; recover them from the previous pin, `5f1f5697c77adf99816de1a5c21742532a1c6f46`, if the guidance is needed again.
 
 ## Manual refresh
 

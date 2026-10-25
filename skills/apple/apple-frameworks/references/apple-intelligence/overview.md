@@ -1,4 +1,4 @@
-# Apple Intelligence
+# Apple Intelligence Skills
 
 Skills for implementing Apple Intelligence features including on-device LLMs, visual recognition, App Intents integration, and intelligent assistants.
 
@@ -23,10 +23,12 @@ On-device LLM integration with prompt engineering best practices.
 
 - Model availability checking
 - Session management
-- @Generable structured output
+- @Generable structured output (property-order + schema-injection rules)
 - Tool calling patterns
 - Snapshot streaming
 - Prompt engineering techniques
+- `foundation-models-safety-and-guardrails.md` — model limits, the instructions-over-prompts hierarchy, guardrail handling, the four-layer safety stack, evals
+- `foundation-models-models-and-agents.md` — Private Cloud Compute, LanguageModel protocol (third-party backends), vision input, DynamicProfile agents, tool-calling modes, KV-cache rules
 
 ### [Visual Intelligence](visual-intelligence.md)
 
@@ -57,24 +59,24 @@ App Intents for Siri, Shortcuts, Spotlight, and Apple Intelligence.
 
 ### 1. Privacy First
 
-- All processing happens on-device
-- No cloud connectivity required
-- User data never leaves the device
+- On-device processing by default; Private Cloud Compute extends capacity without storing prompts (no account/API keys — WWDC26 241)
+- When routing to less-private backends, redact context first (see foundation-models-models-and-agents.md)
 
 ### 2. Graceful Degradation
 
 - Always check model availability
 - Provide fallback UI for unsupported devices
-- Handle errors gracefully
+- Handle errors gracefully (incl. guardrail violations — silent for proactive features, explained for user-initiated)
 
 ### 3. Efficient Prompting
 
 - Keep prompts focused and specific
 - Use structured output when possible
-- Respect context window limits (4,096 tokens)
+- Respect context window limits — query `model.contextSize`, never hardcode (4,096 first-gen on-device; 8,192 iOS 27 on-device; 32,000 Private Cloud Compute)
 
 ## Reference Documentation
 
-- `/Users/ravishankar/Downloads/docs/FoundationModels-Using-on-device-LLM-in-your-app.md`
-- `/Users/ravishankar/Downloads/docs/Implementing-Visual-Intelligence-in-iOS.md`
-- `/Users/ravishankar/Downloads/docs/AppIntents-Updates.md`
+- [Foundation Models](https://developer.apple.com/documentation/foundationmodels)
+- [Visual Intelligence](https://developer.apple.com/documentation/visualintelligence)
+- [App Intents](https://developer.apple.com/documentation/appintents)
+- Local captured docs (optional): if `~/Downloads/docs/` contains `FoundationModels-Using-on-device-LLM-in-your-app.md`, `Implementing-Visual-Intelligence-in-iOS.md`, or `AppIntents-Updates.md`, read them for extra detail; skip silently if absent.
