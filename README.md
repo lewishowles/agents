@@ -1,23 +1,79 @@
-# Global agent configuration
+# Agent configuration
 
-Shared configuration for Claude Code and Codex, this repository keeps common agent rules, skills, and hooks in one place.
+This repository holds Lewis Howles's shared configuration for Claude Code and Codex. You can read it for examples, use selected skills in your own setup, or install the full configuration on macOS.
 
-`scripts/sync.sh` and `scripts/validate.sh` need Bash 4 or newer, and validation also needs coreutils for `timeout`. macOS ships Bash 3.2, so install both with `brew install bash coreutils`.
+## How it fits together
 
-## Set up global configuration
+- **Rules** in `src/rules/` give both agents instructions that apply in every project.
+- **Skills** in `skills/` give an agent guidance for a particular kind of work. Each skill has its own instructions and, sometimes, supporting files.
+- **Hooks** in `src/hooks/claude/` respond to Claude Code events. Codex has its own configuration in `src/adapters/codex/`.
+- **Scripts** in `scripts/` build the generated configuration, check it, and link the selected parts into your agent directories.
 
-With the **Everything** preset, setup links the rules, skills, hooks and trash wrapper into your Claude and Codex home configuration. **Pick features** links the chosen agents' rules and skills, plus the extras you choose. The trash wrapper goes to `~/.local/bin/trash` for both agents and your shell. It refuses empty paths, your current folder, and its ancestors, which helps prevent an unset variable from moving a whole project to the Trash. It takes effect only when `~/.local/bin` comes before `/usr/bin` on `PATH`; `type -a trash` shows which command runs first. Run setup from the repository root:
+The files in `dist/` are generated from the source files. Edit the source, then regenerate the output with `scripts/sync.sh`.
+
+## Choose your route
+
+### Learn from it
+
+Start with a skill in `skills/` to see its trigger description and instructions. The [skills guide](docs/skills.md) lists the available skills, and the [hooks guide](docs/hooks.md) explains the Claude Code hooks and how Codex differs. You don't need to install anything to read them.
+
+### Reuse some skills
+
+On macOS, run setup from the repository root and choose **Skills only**. It links the skills you select into Claude Code or Codex without installing the full configuration:
 
 ```bash
-scripts/setup.sh
+scripts/setup.sh --preset skills-only
 ```
 
-In a terminal, setup asks whether to link skills only, pick features or install everything, then shows the planned changes before applying them. Use `--preset skills-only`, `--preset pick` or `--preset everything` to skip the preset question. Setup links every skill except the Apple collection, one symlink per skill, so edits to a linked skill take effect without rebuilding. Choose Apple in `--select` or include one of its skills to opt in; setup remembers the choice. Use `--exclude` to leave skills out, `--include` to add them back, `--include-all` to restore the full set, `--status` to check the links, or `--select` to pick skills from a list grouped by collection with a short description of each. See [choosing skills](docs/setup.md#choose-which-skills-to-install) for examples.
+Setup shows its plan before applying changes. Most skills are selected by default; the Apple collection is optional. See [choose which skills to install](docs/setup.md#choose-which-skills-to-install) for the selection options, including how to opt in to the Apple collection.
 
-Several of Claude's hooks need `jq` to run. Install it with `brew install jq` before running the command if you use Claude.
+### Install everything
 
-## Read next
+On macOS, run setup from the repository root and choose **Everything**, or select it directly:
 
-- [Setup](docs/setup.md): manual wiring, troubleshooting, and token usage reports
-- [Skills](docs/skills.md): available skills and trigger behaviour
-- [Hooks](docs/hooks.md): Claude and Codex hook behaviour
+```bash
+scripts/setup.sh --preset everything
+```
+
+The plan includes rules, skills, hooks and the supporting tools for Claude Code and Codex. Review it before confirming. The [setup guide](docs/setup.md) covers manual wiring and troubleshooting. If you're moving to another machine, read [what setup can't restore](docs/setup.md#what-setup-cant-restore) before relying on previous task records or logins.
+
+## Requirements
+
+The setup scripts are for macOS and require a terminal with Claude Code or Codex installed. Regeneration and validation need Bash 4 or newer; validation also needs coreutils for `timeout`. macOS's Bash 3.2 is too old. Claude's hooks need `jq`. With Homebrew, install these tools using:
+
+```bash
+brew install bash coreutils jq
+```
+
+Setup may need the local `agent-tools` checkout and `uv` to install helper commands. It checks for them before making changes and tells you what is missing. The [setup guide](docs/setup.md#choose-which-skills-to-install) has the details.
+
+## First use
+
+After setup, check which skills are linked and which are available to opt in:
+
+```bash
+scripts/setup.sh --status
+```
+
+For example, ask your agent to review a README. The `writing-readme` skill gives it a reader-first structure, while the general `writing` skill covers voice and plain language. Skills are discovered from their descriptions when the task matches.
+
+## Repository map
+
+| Path                | What you'll find                                |
+| ------------------- | ----------------------------------------------- |
+| `src/rules/`        | Shared instructions for both agents             |
+| `skills/`           | Task-specific skills and their supporting files |
+| `src/hooks/claude/` | Claude Code hook sources                        |
+| `src/adapters/`     | Agent-specific configuration sources            |
+| `scripts/`          | Setup, generation and validation scripts        |
+| `docs/`             | Guides and reference pages                      |
+| `dist/`             | Generated output for installation               |
+
+## More information
+
+- [Setup and recovery](docs/setup.md)
+- [Working with HCOM teams](docs/hcom.md)
+- [Available skills](docs/skills.md)
+- [Hook behaviour](docs/hooks.md)
+- [Catppuccin skin for Claude Code](src/plugins/skin/README.md)
+- [MIT licence](LICENSE)
