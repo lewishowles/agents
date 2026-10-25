@@ -5,7 +5,7 @@
 - Repository: https://github.com/rshankras/claude-code-apple-skills
 - Pin: `5f1f5697c77adf99816de1a5c21742532a1c6f46` (30 June 2026)
 - Licence: MIT, copyright (c) 2025 Ravishankar
-- Local inputs: `project-skill-packs/macos/` at this pin. The 17 files in the table matched upstream before this skill was built.
+- The local copies of the 17 files in the table matched upstream exactly at this pin before this skill was built.
 
 The table maps each local reference to exactly one upstream Markdown file. The reference body keeps that file's text, apart from its removed front matter, its title, an added Parts line in the files that have parts, links adapted to the local layout, and a four-backtick outer fence around the nested example in `references/security/overview.md`.
 

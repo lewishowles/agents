@@ -85,6 +85,6 @@ assert_allowed "tree src"
 assert_allowed "rg -n 'node_modules' src"
 assert_allowed "rg --hidden --no-ignore-vcs -n 'needle' src/cache"
 assert_allowed "rg --hidden --no-ignore-vcs -n 'needle' src/caches"
-assert_allowed "rg --hidden --no-ignore-vcs -n 'needle' project-skill-packs/macos/generators/http-cache"
+assert_allowed "rg --hidden --no-ignore-vcs -n 'needle' src/http-cache"
 
 printf '✓ search-boundary tests passed\n'

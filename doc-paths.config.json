@@ -2,7 +2,6 @@
   "extraIgnoreDirs": [
     ".agent",
     "dist",
-    "project-skill-packs",
     "reviews",
     "specs",
     "audits"

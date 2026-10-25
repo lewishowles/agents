@@ -5,7 +5,7 @@
 - Repository: https://github.com/rshankras/claude-code-apple-skills
 - Pin: `5f1f5697c77adf99816de1a5c21742532a1c6f46` (30 June 2026)
 - Licence: MIT, copyright (c) 2025 Ravishankar
-- Local inputs: `project-skill-packs/macos/` at this pin. Its eight topic folders (design, foundation, macos, performance, swift, swiftdata, swiftui and testing) matched upstream exactly before this skill was built. Local lowercase `skill.md` files correspond to upstream `SKILL.md`; the table uses the upstream spelling.
+- The local copies of the eight topic folders (design, foundation, macos, performance, swift, swiftdata, swiftui and testing) matched upstream exactly at this pin before this skill was built.
 
 The table lists each local reference with the upstream Markdown files it was built from. Inside a reference, a heading named after an upstream path marks the section kept from that file.
 
