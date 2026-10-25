@@ -25,10 +25,10 @@ Use this skill when the user:
 
 Before starting the review, familiarize yourself with the reference patterns by reading the following files in `.claude/skills/coding-best-practices/`:
 
-- **swift-patterns.md** - Optionals, type safety, collections, error handling, naming
-- **swiftui-patterns.md** - State management, view composition, performance
-- **architecture-patterns.md** - MVVM, code organization, memory management, security
-- **coredata-patterns.md** - Core Data best practices, fetching, saving, relationships
+- **[swift-patterns.md](swift-patterns.md)** - Optionals, type safety, collections, error handling, naming
+- **[swiftui-patterns.md](swiftui-patterns.md)** - State management, view composition, performance
+- **[architecture-patterns.md](architecture-patterns.md)** - MVVM, code organization, memory management, security
+- **[coredata-patterns.md](coredata-patterns.md)** - Core Data best practices, fetching, saving, relationships
 
 ### 3. Review Categories
 
@@ -135,6 +135,7 @@ Use this comprehensive checklist during review:
 - [ ] Views broken into components
 - [ ] No heavy computation in body
 - [ ] Single source of truth
+- [ ] Reaches for the modern baseline APIs (see Modern SwiftUI Baseline below)
 
 ### Architecture
 
@@ -165,6 +166,48 @@ Use this comprehensive checklist during review:
 - [ ] No hardcoded secrets
 - [ ] Input validation
 - [ ] Safe logging
+
+## Modern SwiftUI Baseline (What to Reach For Today)
+
+The default APIs to expect in a healthy SwiftUI codebase. During review, flag code still on the legacy column — each line is: reach for this / when. Version floors in parentheses; anything unmarked is broadly available.
+
+**Structure & navigation**
+
+- `NavigationStack` / `NavigationSplitView` — `NavigationView` is deprecated; value-based links + `navigationDestination` (iOS 16+)
+
+**State & data flow**
+
+- `@Observable` over `ObservableObject` — per-property invalidation means fewer re-renders, no `@Published` (iOS 17+)
+- `@State` lazily initializes `@Observable` classes (behavior backported to iOS 17) — delete double-initialization workarounds and "cheap placeholder default" hacks
+- `@Previewable` inside `#Preview` — use `@State` directly in a preview without a wrapper view (Xcode 16+)
+
+**Presentation & input**
+
+- `presentationDetents` for resizable sheets — half-height/custom stops instead of full-screen covers (iOS 16+)
+- Item-binding `alert(_:item:)` / `confirmationDialog(_:item:)` — prefer over `isPresented` + a side-car state variable; the item carries the context (WWDC26)
+- `searchable` with scopes, tokens, and suggestions + `searchFocused` for programmatic search-field focus — structured search over hand-rolled filter bars
+- `@FocusState` + `defaultFocus` + `focused(_:equals:)` for focus management; `onKeyPress` for hardware-keyboard handling
+- Spring presets `.smooth` / `.snappy` / `.bouncy` — sensible spring defaults before hand-tuning stiffness/damping (iOS 17+)
+
+**Scrolling**
+
+- The scroll suite: `.scrollTargetBehavior(.paging)` / `.viewAligned`, `scrollPosition`, `onScrollGeometryChange` / `onScrollVisibilityChange` — paging, position control, and scroll-driven effects without `GeometryReader` + preference-key plumbing (iOS 17+)
+
+**Content & media**
+
+- `ShareLink` + `Transferable` — system share sheet from a declarative type conformance (iOS 16+)
+- `PhotosPicker` — out-of-process photo selection, no permission prompt (iOS 16+)
+- `AsyncImage` participates in HTTP caching by default (WWDC26); set `asyncImageURLSession` for custom cache/auth policies
+
+**Lists & collections**
+
+- `reorderable()` on `ForEach` and `swipeActions` outside `List` — drag-reorder and swipe in lazy stacks/grids too (WWDC26)
+
+**Layout, effects & design**
+
+- `visualEffect` over `GeometryReader` for visual-only geometry (scroll parallax, proximity scaling) — reads geometry without changing layout (iOS 17+)
+- `glassEffect()` + `ToolbarSpacer` + bottom-aligned search for the system design language (iOS 26+) — route deep Liquid Glass work to [design/liquid-glass](../../../mac-app/references/design/liquid-glass.md)
+- `@ContentBuilder` as the `ViewBuilder` evolution — one builder for content usable across views, widgets, and app intents (WWDC26)
 
 ## Example Review Output
 
@@ -255,12 +298,6 @@ let found = expenses.first { $0.id == targetId }
 - Some patterns are valid in certain scenarios
 - Balance idealism with pragmatism
 - Consider project constraints
-
-### Prioritize Impact
-
-- Focus on issues that affect correctness first
-- Then performance and maintainability
-- Style issues last
 
 ### Actionable Feedback
 

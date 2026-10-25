@@ -1,6 +1,6 @@
 # Human Interface Guidelines Checklist
 
-Comprehensive checklist for iOS and watchOS HIG compliance.
+Comprehensive checklist for iOS HIG compliance.
 
 ## iOS Human Interface Guidelines
 
@@ -351,140 +351,6 @@ ContentUnavailableView(
 }
 ```
 
-## watchOS Human Interface Guidelines
-
-### Layout
-
-#### Screen Sizes
-
-- [ ] Support all watch sizes (38mm to 49mm)
-- [ ] Test on different screen sizes
-- [ ] Responsive layouts
-
-#### Padding & Spacing
-
-- [ ] Larger padding than iOS (content closer to edges)
-- [ ] Clear visual hierarchy
-- [ ] Generous tap targets (40x40 minimum)
-
-#### Scrolling
-
-- [ ] Use Lists for scrollable content
-- [ ] Digital Crown scroll support
-- [ ] Minimal horizontal scrolling
-
-### Interaction
-
-#### Digital Crown
-
-- [ ] Support Digital Crown for scrolling
-- [ ] Use for value input when appropriate
-- [ ] Provide visual feedback
-
-```swift
-// ✅ Digital Crown input
-@State private var value = 0.5
-
-var body: some View {
-    VStack {
-        Text("Value: \(value, specifier: "%.2f")")
-        Gauge(value: value, in: 0...1) {
-            Text("Amount")
-        }
-    }
-    .focusable()
-    .digitalCrownRotation($value)
-}
-```
-
-#### Tap Targets
-
-- [ ] Minimum 40x40 points
-- [ ] Full-width buttons when possible
-- [ ] Clear spacing between elements
-
-#### Complications
-
-- [ ] Provide complications for quick access
-- [ ] Update complications regularly
-- [ ] Support multiple complication families
-
-### Navigation
-
-#### Hierarchical Navigation
-
-- [ ] Clear navigation stack
-- [ ] Back navigation with edge swipe
-- [ ] Navigation titles
-
-```swift
-// ✅ watchOS navigation
-NavigationStack {
-    List(items) { item in
-        NavigationLink(value: item) {
-            Text(item.name)
-        }
-    }
-    .navigationTitle("Items")
-    .navigationDestination(for: Item.self) { item in
-        ItemDetailView(item: item)
-    }
-}
-```
-
-#### Pages (Tab-like)
-
-- [ ] Use TabView for page-based navigation
-- [ ] Index dots visible
-- [ ] Swipe between pages
-
-```swift
-// ✅ Page-based navigation
-TabView {
-    ActivityView()
-    SummaryView()
-    SettingsView()
-}
-.tabViewStyle(.page)
-```
-
-### Text & Fonts
-
-#### Font Sizes
-
-- [ ] Larger than iOS equivalents
-- [ ] Support Dynamic Type
-- [ ] Test at largest sizes
-
-```swift
-// ✅ Appropriate watchOS fonts
-Text("Title")
-    .font(.headline)
-
-Text("Body")
-    .font(.body)
-```
-
-#### Text Length
-
-- [ ] Keep text concise
-- [ ] Truncate appropriately
-- [ ] Use abbreviations when sensible
-
-### Color & Contrast
-
-#### High Contrast
-
-- [ ] Higher contrast than iOS
-- [ ] Test in both always-on modes
-- [ ] Consider outdoor visibility
-
-#### Always-On Display
-
-- [ ] Dimmed content for always-on
-- [ ] Remove unnecessary animations
-- [ ] Reduce color saturation
-
 ## Testing Checklist
 
 ### Device Testing
@@ -516,6 +382,5 @@ Text("Body")
 ## References
 
 - [iOS Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines/designing-for-ios)
-- [watchOS Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines/designing-for-watchos)
 - [SF Symbols](https://developer.apple.com/sf-symbols/)
 - [Accessibility Guidelines](https://developer.apple.com/accessibility/)

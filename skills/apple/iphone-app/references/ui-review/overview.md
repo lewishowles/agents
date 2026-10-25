@@ -1,6 +1,6 @@
 # UI Review Skill
 
-Performs comprehensive UI/UX review of SwiftUI code against Apple's Human Interface Guidelines, font best practices, and accessibility standards for iOS and watchOS.
+Performs comprehensive UI/UX review of SwiftUI code against Apple's Human Interface Guidelines, font best practices, and accessibility standards for iOS.
 
 ## When This Skill Activates
 
@@ -25,14 +25,13 @@ Use this skill when the user:
 
 Before starting the review, familiarize yourself with the reference materials by reading the following files in `.claude/skills/ui-review/`:
 
-- **hig-checklist.md** - Comprehensive HIG compliance checklist for iOS and watchOS
-- **font-guidelines.md** - Font usage, Dynamic Type, and typography best practices
-- **accessibility-quick-ref.md** - Quick reference for accessibility implementation
+- **[hig-checklist.md](hig-checklist.md)** - Comprehensive HIG compliance checklist for iOS
+- **[font-guidelines.md](font-guidelines.md)** - Font usage, Dynamic Type, and typography best practices
+- **[accessibility-quick-ref.md](accessibility-quick-ref.md)** - Quick reference for accessibility implementation
 
 You may also reference the official Apple guidelines using WebFetch when needed:
 
 - **iOS HIG**: https://developer.apple.com/design/human-interface-guidelines/designing-for-ios
-- **watchOS HIG**: https://developer.apple.com/design/human-interface-guidelines/designing-for-watchos
 
 ### 3. Review Categories
 
@@ -43,7 +42,6 @@ Apply these review categories based on the code type:
 - Layout & spacing (tap targets, safe areas, padding)
 - Navigation patterns (NavigationStack, sheets, alerts)
 - Colors & visuals (semantic colors, dark mode, contrast)
-- Platform-specific requirements (iOS vs watchOS)
 - Loading/empty/error states
 
 **Font Usage:**
@@ -70,12 +68,12 @@ Apply these review categories based on the code type:
 - Hardcoded colors (`.foregroundColor(.black)`)
 - Fixed font sizes (`.font(.system(size: 14))`)
 - Missing accessibility labels on icon-only buttons
-- Tap targets smaller than 44pt (iOS) or 40pt (watchOS)
+- Tap targets smaller than 44pt (iOS)
 - Important info conveyed by color only
 - Missing loading/error states
 - Direct UIColor usage (use `Color(.systemBackground)`)
 - `.frame()` without considering Dynamic Type expansion
-- Missing keyboard shortcuts (iPad/Mac)
+- Missing keyboard shortcuts (iPad)
 
 **Good Patterns:**
 
@@ -86,6 +84,31 @@ Apply these review categories based on the code type:
 - Consistent spacing
 - Proper error handling
 - Responsive layouts
+
+### 5. Component Checklists
+
+Apply when the reviewed code contains the component.
+
+**Search UX (WWDC26):**
+
+- [ ] Standard Search Field anatomy intact — leading magnifying-glass icon, placeholder, clear button; on iOS a Cancel button appears while focused. Don't rebuild these from scratch
+- [ ] iOS placement: prefer the bottom toolbar — it animates above the keyboard and stays within thumb reach
+- [ ] Tab apps: exactly one primary Search tab, not a search field per tab
+- [ ] iPad placement: trailing side of the toolbar, or pinned at the top of the sidebar
+- [ ] Recent searches shown on focus, with per-item removal and a clear-all affordance
+- [ ] Suggestions correspond to the typed text, visually distinguish the user's input from the predicted part, and are limited in count
+- [ ] Scope Bar used for lightweight filtering of where to search (e.g. All / Sender / Subject)
+- [ ] Search Tokens supplement — never replace — visible filter UI (tokens are less discoverable)
+- [ ] Empty results show a Content Unavailable view (`ContentUnavailableView.search`), not a blank list
+
+**Menus & Pickers (WWDC20):**
+
+- [ ] Menus preferred over action sheets/popovers for NON-destructive actions — the menu opens adjacent to the tap (less eye/finger travel) and doesn't dim the screen
+- [ ] Action sheets kept for destructive confirmation — their friction is deliberate
+- [ ] Never ALL primary actions hidden in a menu or "more" (ellipsis) button — menus hold secondary actions only
+- [ ] Each menu fits one of four uses: disambiguation, navigation, selection (check marks required), or secondary actions
+- [ ] Menu anatomy: label on the left, icon on the right, separators to group — and NO Cancel item (tapping outside cancels)
+- [ ] Date pickers: inline (calendar) when space allows, compact style when constrained
 
 ## Output Format
 
@@ -178,7 +201,6 @@ Reviewing: AddOrUpdateExpenseView.swift
 Always reference these when in doubt:
 
 - [iOS HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-ios)
-- [watchOS HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-watchos)
 - [SF Symbols](https://developer.apple.com/sf-symbols/)
 - [Accessibility on Apple platforms](https://developer.apple.com/accessibility/)
 

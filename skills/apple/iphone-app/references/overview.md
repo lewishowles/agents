@@ -34,14 +34,23 @@ UI/UX review against Apple HIG.
 - Human Interface Guidelines compliance
 - Font usage and Dynamic Type support
 - Accessibility review (VoiceOver, color contrast)
-- SwiftUI best practices for iOS/watchOS
+- SwiftUI best practices for iOS
+
+### accessibility-audit/
+
+Structured accessibility audit workflow (advisory).
+
+- Automated XCUITest audits (`performAccessibilityAudit`) + CI patterns
+- Accessibility Inspector workflow
+- Manual VoiceOver / Voice Control / Dynamic Type passes per common task
+- App Store Accessibility Nutrition Label evaluation + declaration
 
 ### navigation-patterns/
 
 SwiftUI navigation architecture patterns.
 
 - NavigationStack, NavigationLink, navigationDestination
-- NavigationSplitView (two/three column, iPad/macOS)
+- NavigationSplitView (two/three column, iPad)
 - TabView (iOS 18 customizable tabs, sidebar mode)
 - Programmatic navigation (NavigationPath, pop-to-root, state restoration)
 - Navigation transitions (zoom, custom animations)

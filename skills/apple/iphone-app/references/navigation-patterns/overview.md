@@ -1,6 +1,6 @@
 # Navigation Patterns
 
-Comprehensive guide for SwiftUI navigation architecture on iOS, iPadOS, and macOS. Covers the modern navigation APIs (iOS 16+/macOS 13+) with patterns for common and advanced use cases.
+Comprehensive guide for SwiftUI navigation architecture on iOS and iPadOS. Covers the modern navigation APIs (iOS 16+) with patterns for common and advanced use cases.
 
 ## When This Skill Activates
 
@@ -25,7 +25,7 @@ What is the app structure?
 ├─ Hierarchical drill-down (list → detail)
 │  └─ NavigationStack → see navigation-stack.md
 │
-├─ Sidebar + content (macOS / iPad)
+├─ Sidebar + content (iPad)
 │  ├─ Two columns → NavigationSplitView → see navigation-split-view.md
 │  └─ Three columns → NavigationSplitView → see navigation-split-view.md
 │
@@ -52,6 +52,40 @@ What is the app structure?
 | Zoom transition       | `.navigationTransition(.zoom)`         | iOS 18 | [navigation-transitions.md](navigation-transitions.md)   |
 | Custom transitions    | `NavigationTransition`                 | iOS 18 | [navigation-transitions.md](navigation-transitions.md)   |
 
+## Navigation Design Rules (WWDC22)
+
+The container APIs above decide _how_ navigation is built; these rules decide _whether_ it's designed right.
+
+**Tab bars**
+
+- Tabs are top-level **content categories**, not arbitrary groupings — balance features across tabs so each carries real weight.
+- ❌ Never auto-switch tabs in response to an action taken in another tab — confirm in place instead.
+
+**Push vs modal**
+
+- Push (right-to-left) = traversing the app's hierarchy. Modal (slides up — covering the tab bar is _by design_) = a self-contained task apart from the hierarchy.
+- Modals come in three types: simple task, multi-step task, full-screen content.
+- Limit modals presented over modals — each stacked layer buries the user deeper in transient state.
+
+**Wayfinding**
+
+- Nav bar title = the current location; the back button shows the _previous_ screen's title.
+
+## The Three Cookbook Recipes (WWDC22)
+
+Nearly every app is one of these three shapes. Pick one per scene, then lift its navigation state.
+
+1. **Pushable stack** — `NavigationStack(path:)` + `NavigationLink(value:)` + `.navigationDestination(for:)`. Pop-to-root is `path.removeAll()`; a deep link is just assigning the path.
+2. **Multi-column without stacks** — `NavigationSplitView` + `List(selection:)` in each leading column. Value links auto-drive the next column's selection, so programmatic navigation is setting the selection value.
+3. **Split + stack (Photos-style)** — `NavigationSplitView` with a `NavigationStack(path:)` _inside the detail column_: sidebar selection picks the collection, the stack drills into it.
+
+**Rules that make the recipes hold up:**
+
+- Build with `NavigationSplitView` even for iPhone-first apps — it auto-collapses to a single stack in compact width, and iPad layouts come free.
+- Lift navigation state: exactly one bound `path`/selection per container. That single source of truth is what makes pop-to-root, deep links, and restoration one-line operations.
+
+**State restoration:** persist through `@SceneStorage("navigation")` plus a `.task` that restores once on appear, then streams subsequent path changes back into storage.
+
 ## Process
 
 ### 1. Identify Navigation Needs
@@ -59,7 +93,7 @@ What is the app structure?
 Read the user's code or requirements to determine:
 
 - App structure (flat, hierarchical, sidebar-based)
-- Target platforms (iOS only, iPad adaptive, macOS)
+- Target platforms (iOS only, iPad adaptive)
 - Whether programmatic navigation is needed
 - Deep linking requirements
 
@@ -79,7 +113,8 @@ Apply patterns from the reference files. Check for common mistakes:
 
 - [ ] Using deprecated `NavigationView` instead of `NavigationStack`/`NavigationSplitView`
 - [ ] Using `NavigationLink(destination:)` instead of `NavigationLink(value:)` + `.navigationDestination`
-- [ ] Placing `NavigationStack` inside `NavigationSplitView` detail (usually wrong)
+- [ ] Placing `NavigationStack` in a sidebar/content column of `NavigationSplitView` (a stack belongs only in the detail column — Recipe 3)
+- [ ] `.navigationDestination` attached inside a lazy container (destination may never register)
 - [ ] Missing `.navigationDestination` registration for a value type
 - [ ] NavigationPath not `@State` or not in the right scope
 - [ ] Multiple NavigationStacks competing for the same navigation context
@@ -90,7 +125,6 @@ Apply patterns from the reference files. Check for common mistakes:
 
 - For **deep linking URL handling**, see `generators/deep-linking/` skill
 - For **navigation animations**, see [design/animation-patterns/transitions.md](../../../mac-app/references/design/animation-patterns-transitions.md)
-- For **macOS sidebar patterns**, see [macos/ui-review-tahoe/swiftui-macos.md](../../../mac-app/references/macos/ui-review-tahoe-swiftui-macos.md)
 
 ## References
 

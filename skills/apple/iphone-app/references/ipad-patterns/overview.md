@@ -67,18 +67,14 @@ What iPad feature are you building?
 | `NavigationSplitView`                          | iPadOS 16                     | multitasking.md  |
 | `.horizontalSizeClass` / `.verticalSizeClass`  | iPadOS 14 (SwiftUI)           | multitasking.md  |
 | `.hoverEffect()`                               | iPadOS 13                     | input-methods.md |
-| `UIPointerInteraction`                         | iPadOS 13.4                   | input-methods.md |
 | `.keyboardShortcut()`                          | iPadOS 14                     | input-methods.md |
-| `UIKeyCommand`                                 | iPadOS 7                      | input-methods.md |
 | `PencilKit` (PKCanvasView)                     | iPadOS 13                     | input-methods.md |
-| `UIPencilInteraction`                          | iPadOS 12.1                   | input-methods.md |
 | `.draggable()` / `.dropDestination()`          | iPadOS 16                     | drag-drop.md     |
 | `Transferable` protocol                        | iPadOS 16                     | drag-drop.md     |
 | `UIDragInteraction` / `UIDropInteraction`      | iPadOS 11                     | drag-drop.md     |
 | `NSItemProvider`                               | iPadOS 11                     | drag-drop.md     |
 | `WindowGroup` (multi-window)                   | iPadOS 16 (SwiftUI lifecycle) | multitasking.md  |
 | `.handlesExternalEvents`                       | iPadOS 14                     | multitasking.md  |
-| Stage Manager                                  | iPadOS 16 (M1+ iPads)         | multitasking.md  |
 | `UISceneSession.requestSceneSessionActivation` | iPadOS 13                     | multitasking.md  |
 | `.focusable()` / `@FocusState`                 | iPadOS 15                     | input-methods.md |
 | `FocusedValue` / `FocusedObject`               | iPadOS 16                     | input-methods.md |
@@ -92,6 +88,17 @@ What iPad feature are you building?
 | 3   | Missing drag and drop on list/grid items            | Add `.draggable()` and `.dropDestination()` for content types users expect to move | drag-drop.md     |
 | 4   | No hover effects on interactive elements            | Add `.hoverEffect()` to buttons, list rows, and custom controls                    | input-methods.md |
 | 5   | Not supporting multiple windows (single-scene only) | Add `WindowGroup` support and handle `NSUserActivity` for state restoration        | multitasking.md  |
+
+## iPad Design Rules (WWDC25)
+
+| Area                | Rule                                                                                                                                                                             |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Adaptive navigation | The tab bar can morph into a sidebar -- use a sidebar for deep or nested content hierarchies, a tab bar when the app is compact and content-forward                              |
+| Immersion           | Run content under the toolbar/sidebar with a scroll edge effect so a floating window still feels edge-to-edge                                                                    |
+| Window controls     | Wrap the toolbar around the window controls on the leading edge instead of reserving a safe-area strip above the content                                                         |
+| Documents           | Each document opens in ITS OWN window, never "in place" -- and every window gets a unique, descriptive name so the app menu's window list stays navigable                        |
+| Pointer             | Test with the pointer -- it is 1:1 precise with no magnetizing or rubber-banding to targets, so dense hit areas that survive touch forgiveness can still fail                    |
+| Menu bar            | Order menu items by frequency of use (not alphabetically); push secondary actions into submenus; populate the View menu with tabs, their keyboard shortcuts, and sidebar toggles |
 
 ## Process
 
@@ -119,7 +126,6 @@ Apply patterns from the reference files. Check for common issues using the revie
 ### 4. Cross-Reference
 
 - For **navigation architecture** on iPad, see [ios/navigation-patterns/navigation-split-view.md](../navigation-patterns/navigation-split-view.md)
-- For **macOS Catalyst** concerns, see `macos/coding-best-practices/`
 - For **toolbar patterns**, see [swiftui/toolbars/SKILL.md](../../../mac-app/references/swiftui/toolbars.md)
 - For **animation and transitions**, see `design/animation-patterns/`
 

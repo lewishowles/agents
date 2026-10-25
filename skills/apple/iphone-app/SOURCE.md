@@ -3,27 +3,32 @@
 ## Kept iOS skills
 
 - Repository: https://github.com/rshankras/claude-code-apple-skills
-- Pin: `5f1f5697c77adf99816de1a5c21742532a1c6f46` (30 June 2026)
+- Pin: `9ffb83138209057875698dd11c1720c657c47a92` (24 July 2026)
 - Licence: MIT, copyright (c) 2025 Ravishankar
-- The local copy this skill was built from matched upstream exactly at this pin.
+- The first local copy matched upstream at `5f1f5697c77adf99816de1a5c21742532a1c6f46` before link and formatting adaptations. This refresh brought in the upstream changes up to the pin above.
 
 The table maps every local reference to exactly one upstream file. The reference
 body keeps the upstream text apart from removed skill front matter and adapted
-links. Filename pointers to other retained topics and to Mac app references became
-relative Markdown links. The app planner's links to example files that it asks
-an agent to create became code paths, because those files are not part of this skill.
-The watchOS complications mention remains plain text. The formatter also realigned
-tables, widened some code fences and escaped some characters; the wording is unchanged.
+links. Filename pointers to retained topics and other Apple skills became relative
+Markdown links. The app planner's links to example files that it asks an agent to
+create became code paths, because those files are not part of this skill.
+Platform-specific lines outside iPhone and iPad were removed throughout; the larger removals are listed below. The
+formatter also realigned tables, widened some code fences and escaped some
+characters; the wording is otherwise unchanged.
 
 | Local file                                                                                                               | Upstream path                                        |
 | ------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------- |
 | [`references/overview.md`](references/overview.md)                                                                       | `ios/SKILL.md`                                       |
+| [`references/accessibility-audit/overview.md`](references/accessibility-audit/overview.md)                               | `ios/accessibility-audit/SKILL.md`                   |
+| [`references/accessibility-audit/automated-audits.md`](references/accessibility-audit/automated-audits.md)               | `ios/accessibility-audit/automated-audits.md`        |
+| [`references/accessibility-audit/nutrition-labels.md`](references/accessibility-audit/nutrition-labels.md)               | `ios/accessibility-audit/nutrition-labels.md`        |
 | [`references/app-planner/overview.md`](references/app-planner/overview.md)                                               | `ios/app-planner/SKILL.md`                           |
 | [`references/app-planner/architecture-guide.md`](references/app-planner/architecture-guide.md)                           | `ios/app-planner/architecture-guide.md`              |
 | [`references/app-planner/planning-checklist.md`](references/app-planner/planning-checklist.md)                           | `ios/app-planner/planning-checklist.md`              |
 | [`references/app-planner/tech-stack-options.md`](references/app-planner/tech-stack-options.md)                           | `ios/app-planner/tech-stack-options.md`              |
 | [`references/assistive-access/overview.md`](references/assistive-access/overview.md)                                     | `ios/assistive-access/SKILL.md`                      |
 | [`references/coding-best-practices/overview.md`](references/coding-best-practices/overview.md)                           | `ios/coding-best-practices/SKILL.md`                 |
+| [`references/coding-best-practices/rules/swiftlint.yml`](references/coding-best-practices/rules/swiftlint.yml)           | `ios/coding-best-practices/rules/swiftlint.yml`      |
 | [`references/coding-best-practices/architecture-patterns.md`](references/coding-best-practices/architecture-patterns.md) | `ios/coding-best-practices/architecture-patterns.md` |
 | [`references/coding-best-practices/coredata-patterns.md`](references/coding-best-practices/coredata-patterns.md)         | `ios/coding-best-practices/coredata-patterns.md`     |
 | [`references/coding-best-practices/swift-patterns.md`](references/coding-best-practices/swift-patterns.md)               | `ios/coding-best-practices/swift-patterns.md`        |
@@ -49,6 +54,12 @@ tables, widened some code fences and escaped some characters; the wording is unc
 | [`references/ui-review/accessibility-quick-ref.md`](references/ui-review/accessibility-quick-ref.md)                     | `ios/ui-review/accessibility-quick-ref.md`           |
 | [`references/ui-review/font-guidelines.md`](references/ui-review/font-guidelines.md)                                     | `ios/ui-review/font-guidelines.md`                   |
 | [`references/ui-review/hig-checklist.md`](references/ui-review/hig-checklist.md)                                         | `ios/ui-review/hig-checklist.md`                     |
+
+The changed `ios/app-planner/SKILL.md` and `ios/migration-patterns/SKILL.md` contain only upstream skill metadata changes. Their mapped reference bodies are unchanged.
+
+The upstream `ios/run-device/SKILL.md` and `ios/run-simulator/SKILL.md` remain excluded. They are command-line run procedures tied to the caller's Xcode and device setup; this reference pack covers iOS app guidance, while project commands and verification belong to the target repository. Their refresh changes do not add iOS guidance worth copying here.
+
+Mac-only audit types, Mac keyboard guidance and watchOS device-family examples are omitted from the new accessibility audit pages to keep this pack focused on iPhone and iPad. The older watchOS guidance and links in the UI review overview and HIG checklist are omitted for the same reason. Mac-only lines in other references, such as the Mac Catalyst pointer in the iPad overview and Mac keyboard testing, are removed for the same reason. The upstream `tearDown()` sample used `try?`, which would discard audit failures, so it is omitted. The audit overview's related link to the upstream `design/typography` page is dropped, because this skill carries no design pages; that topic is planned for the Mac skill's design references.
 
 ## Manual refresh
 
