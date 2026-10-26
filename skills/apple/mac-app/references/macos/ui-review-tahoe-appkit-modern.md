@@ -91,7 +91,7 @@ final class ArticleViewController: NSViewController {
 final class GlassPanel: NSView {
     private let visualEffectView: NSVisualEffectView = {
         let view = NSVisualEffectView()
-        view.material = .sidebar  // or .headerView, .menu, .popover
+        view.material = .sidebar
         view.blendingMode = .behindWindow
         view.state = .active
         return view

@@ -81,31 +81,55 @@ Before completing review, ensure you've checked:
 - [ ] Memory management
 - [ ] Accessibility support
 
+## Modern SwiftUI on macOS: Baseline APIs
+
+The Mac-specific defaults to expect during review — flag hand-rolled equivalents.
+
+**App shell & windows**
+- `NavigationSplitView` is the default shell — sidebar + content + detail, with column visibility control
+- `MenuBarExtra` for menu bar apps; `Window(id:)` + `openWindow` for auxiliary windows, with `defaultPosition` / `defaultSize` declared on the scene
+- Window styling belongs on the scene, not in AppKit hacks: `windowStyle(.plain)`, `windowLevel(.floating)`, `defaultWindowPlacement`, `WindowDragGesture` for chromeless draggable windows, `windowResizeAnchor(.top)`
+
+**Standard surfaces**
+- `formStyle(.grouped)` + `LabeledContent` for settings panes — matches System Settings without custom grids
+- `Table` for multi-column data, with `TableColumnCustomization` (user-reorderable/hideable columns) and `DisclosureTableRow` for hierarchy
+
+**Performance**
+- SwiftUI `List` was rewritten with large-list performance roughly 6x faster at 100k+ rows (WWDC25) — before reaching for `NSTableView`, profile with the SwiftUI instrument in Instruments
+
+**Focus & keyboard (where Mac reviews earn their keep)**
+- macOS Sonoma changed `focusable()` semantics: it now grants click-to-focus by default — audit adopters and add `focusable(interactions: .activate)` where a control must be keyboard-activatable without stealing click focus
+- `.activate`-only controls are reachable via Tab only when System Settings keyboard navigation is on — test both states
+- Always test with Keyboard Navigation enabled (System Settings > Keyboard)
+
+**AppKit interop**
+- Scene bridging lets an AppKit app host SwiftUI scenes (windows, menu bar extras) directly; `NSGestureRecognizerRepresentable` bridges AppKit gestures into SwiftUI; `NSHostingView` is usable straight from Interface Builder
+
 ## Module References
 
 Load these modules as needed during review:
 
-1. **Swift Language**: `skills/coding-best-practices/swift-language.md`
+1. **Swift Language**: [Swift language](coding-best-practices-swift-language.md)
    - Modern Swift 6+ features
    - Value vs reference types
    - Protocol-oriented programming
 
-2. **Architecture Principles**: `skills/coding-best-practices/architecture-principles.md`
+2. **Architecture Principles**: [Architecture principles](coding-best-practices-architecture-principles.md)
    - SOLID principles with examples
    - DRY principle
    - Clean Architecture patterns
 
-3. **Data Persistence**: `skills/coding-best-practices/data-persistence.md`
+3. **Data Persistence**: [Data persistence](coding-best-practices-data-persistence.md)
    - SwiftData best practices
    - Core Data (when needed)
    - Migration strategies
 
-4. **Code Organization**: `skills/coding-best-practices/code-organization.md`
+4. **Code Organization**: [Code organisation](coding-best-practices-code-organization.md)
    - Modular architecture
    - Feature vs layer organization
    - Package structure
 
-5. **Modern Concurrency**: `skills/coding-best-practices/modern-concurrency.md`
+5. **Modern Concurrency**: [Modern concurrency](coding-best-practices-modern-concurrency.md)
    - Async/await patterns
    - Actors and isolation
    - Structured concurrency

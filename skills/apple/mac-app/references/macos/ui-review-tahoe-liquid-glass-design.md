@@ -7,7 +7,7 @@
 
 Modern design language for macOS 26 (Tahoe), iOS 26, and iPadOS 26.
 
-> **Note:** For the new `.glassEffect()` API introduced in iOS/macOS 26, see the updated skill at `skills/design/liquid-glass/SKILL.md` which covers GlassEffectContainer, morphing transitions, and interactive effects.
+> **Note:** For the new `.glassEffect()` API introduced in iOS/macOS 26, see [Liquid Glass](../design/liquid-glass.md), which covers GlassEffectContainer, morphing transitions, and interactive effects.
 
 ## Core Principles
 
@@ -368,7 +368,6 @@ struct GlassMorphCard: View {
 
 ## macOS 26 Tahoe Specific
 
-- Menu bar is fully transparent by default
 - Control Center redesigned with modular cards
 - Folder icons support custom colors and emblems
 - Liquid Glass materials are primary design element

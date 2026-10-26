@@ -41,7 +41,7 @@ class Project {
 ```swift
 @Model
 class Document {
-    // Unique constraint (macOS 15+ / iOS 18+)
+    // Unique constraint
     #Unique<Document>([\.slug])
 
     var title: String
@@ -207,11 +207,11 @@ class Project {
 | Rule | Behavior | Use When |
 |------|----------|----------|
 | `.cascade` | Delete children when parent deleted | Children have no meaning without parent |
-| `.nullify` (default) | Set reference to nil | Children can exist independently |
+| `.nullify` | Set reference to nil | Children can exist independently |
 | `.deny` | Prevent parent deletion if children exist | Children must be handled first |
 | `.noAction` | Do nothing (leaves orphans) | Rarely appropriate |
 
-## Unique Constraints (macOS 15+ / iOS 18+)
+## Unique Constraints
 
 Prevent duplicate records:
 
@@ -249,7 +249,7 @@ class Enrollment {
 
 ### Upsert Behavior
 
-When inserting a model that violates a unique constraint, SwiftData performs an upsert (update existing record):
+When inserting a model that violates a unique constraint, SwiftData performs an upsert:
 
 ```swift
 // First insert creates the record

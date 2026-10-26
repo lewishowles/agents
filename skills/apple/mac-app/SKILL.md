@@ -30,6 +30,9 @@ Choose the task's topic below and open only its reference. Where a topic has nam
 
 ## SwiftUI
 
+- [Overview](references/swiftui/overview.md): See which SwiftUI guide covers a task when the right one is unclear.
+- [Data flow](references/swiftui/data-flow.md): Trace view identity, state lifetime, Observation and updates.
+- [Layout](references/swiftui/layout.md): Build custom layouts and containers or diagnose scrolling performance.
 - [AlarmKit](references/swiftui/alarmkit.md): Build alarm UI; open named parts for Live Activities, presentation or scheduling.
 - [3D charts](references/swiftui/charts-3d.md): Build or review a 3D chart.
 - [Text editing](references/swiftui/text-editing.md): Build a SwiftUI text editor.
@@ -38,10 +41,12 @@ Choose the task's topic below and open only its reference. Where a topic has nam
 
 ## SwiftData
 
+- [Overview](references/swiftdata/overview.md): See which SwiftData guide covers a task when the right one is unclear.
 - [SwiftData inheritance](references/swiftdata/inheritance.md): Model inherited data types.
 
 ## Foundation
 
+- [Overview](references/foundation/overview.md): See which Foundation guide covers a task when the right one is unclear.
 - [Attributed strings](references/foundation/attributed-string.md): Work with attributed text and text attributes.
 
 ## Design

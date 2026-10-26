@@ -18,6 +18,7 @@ Use this skill when the user:
 - Needs to style 3D surfaces with gradients or height-based coloring
 - Wants to render multiple surfaces in a single 3D chart
 - Asks about data-driven 3D plots from an array of points
+- Needs the 2D Swift Charts API layer: marks, axes, series styling, selection, SectorMark pies/donuts, or scrollable charts
 
 ## Decision Tree
 
@@ -193,7 +194,7 @@ SurfacePlot(x: "X", y: "Y", z: "Z", function: { x, z in sin(x) * cos(z) })
 
 ### Surface Roughness
 
-Control how shiny or matte the surface appears. A value of 0 is perfectly smooth (reflective), and 1 is fully rough (matte):
+Control surface shininess (0 = reflective, 1 = matte):
 
 ```swift
 SurfacePlot(x: "X", y: "Y", z: "Z", function: { x, z in sin(x) * cos(z) })
@@ -227,18 +228,6 @@ Specify exact azimuth (horizontal rotation) and inclination (vertical tilt):
 )
 ```
 
-### Read-Only vs Interactive
-
-```swift
-// ✅ Read-only — user cannot rotate the chart
-.chart3DPose(Chart3DPose.front)
-
-// ✅ Interactive — user can drag to rotate, pose updates automatically
-@State private var pose = Chart3DPose.default
-// ...
-.chart3DPose($pose)
-```
-
 ### Anti-Patterns
 
 ```swift
@@ -264,10 +253,6 @@ Chart3D {
 // .chart3DCameraProjection(.orthographic)  // No perspective distortion
 // .chart3DCameraProjection(.automatic)     // System decides
 ```
-
-- **Perspective**: Gives natural depth perception. Objects farther from the camera appear smaller. Good for presentations and visual appeal.
-- **Orthographic**: No size distortion with distance. Good for precise data reading and scientific visualization.
-- **Automatic**: System selects based on context.
 
 ## Multiple Surfaces
 
@@ -351,6 +336,237 @@ struct TerrainView: View {
 }
 ```
 
+## Chart Design Fundamentals (WWDC22)
+
+These apply to every chart you build — 2D or 3D. The pillars: **focused, approachable, accessible**.
+
+- **Pick marks by goal**: bars for patterns, ranges, and individual values; points for spotting outliers; lines for rates of change.
+- **Test with real, noisy data early** — placeholder sine waves hide layout failures. Design the edge cases explicitly (e.g., gaps in a line chart where data is missing).
+- **~4 horizontal gridlines** is a good baseline; pick intuitive intervals — multiples of 20 for counts, multiples of 7 for day-based axes.
+- **Descriptive takeaway title** ("Total Sales: 1,234 Pancakes"), not a generic label ("Sales") — and give the chart surrounding context.
+- **Touch targets stretch to full chart height** — a tap anywhere in a bar's column selects it, not just the drawn pixels.
+- Support **touch, keyboard, Voice Control, Switch Control, and VoiceOver equally** — every interaction needs a non-pointer path.
+- **Color enhances, never solely conveys** — differentiate series with symbols/shapes first, color second. Verify contrast in Dark, Light, and Increase Contrast, and balance saturation so no series visually outweighs the others.
+- **Every visual encoding needs a non-visual representation** — per-mark VoiceOver labels and an Audio Graph descriptor; Swift Charts provides both by default, so don't break them with custom drawing. Custom-drawn charts implement them by hand — see "Audio Graphs: AXChartDescriptor" below.
+
+## Swift Charts Construction Reference (2D)
+
+The design fundamentals above apply to every chart; this is the API layer for standard 2D charts (iOS 16+ unless noted; selection, SectorMark, and scrolling are iOS 17+).
+
+### Marks Compose
+
+A `Chart` is a composition of marks — `BarMark`, `LineMark`, `PointMark`, `AreaMark`, `RuleMark`, `RectangleMark`. The `.value("Label", v)` factory arguments do double duty: they bind data AND drive the automatic axes and legend, so label them meaningfully:
+
+```swift
+Chart(salesData) { sale in          // Identifiable data — no explicit ForEach needed
+    BarMark(
+        x: .value("Day", sale.day, unit: .day),   // unit: .day buckets temporal values per day
+        y: .value("Sales", sale.count)
+    )
+}
+```
+
+- Transpose a chart by swapping the x/y value pairs — horizontal bars need no other change.
+- `unit:` (`.day`, `.month`, `.hour`) controls temporal bucketing; omit it and every timestamp is its own position.
+
+### Series: Style + Symbol, Never Color Alone
+
+`.foregroundStyle(by:)` splits marks into series; pair it with `.symbol(by:)` so series stay distinguishable without color (WWDC22):
+
+```swift
+Chart(data) { point in
+    LineMark(x: .value("Day", point.day), y: .value("Sales", point.sales))
+        .foregroundStyle(by: .value("City", point.city))
+        .symbol(by: .value("City", point.city))
+}
+```
+
+- Remap series colors with `.chartForegroundStyleScale(["Cupertino": .indigo, "San Francisco": .teal])`.
+- `.position(by: .value("City", point.city))` converts stacked bars into grouped bars.
+
+### Pin Scales for Stability
+
+Pin scales so a filtered dataset doesn't make the whole chart jump:
+
+```swift
+.chartYScale(domain: 0...maxExpectedSales)
+.chartXScale(domain: startDate...endDate)
+```
+
+### Composing Statistics into a Chart
+
+Marks compose freely, so summary statistics are just more marks:
+
+```swift
+Chart {
+    ForEach(data) { point in
+        AreaMark(                                    // min–max band
+            x: .value("Day", point.day),
+            yStart: .value("Min", point.min),
+            yEnd: .value("Max", point.max)
+        )
+        .opacity(0.3)
+
+        LineMark(x: .value("Day", point.day), y: .value("Average", point.average))
+    }
+
+    RuleMark(y: .value("Overall", overallAverage))   // overall average line
+        .foregroundStyle(.secondary)
+        .annotation(position: .top, alignment: .leading) {
+            Text("Avg: \(overallAverage, format: .number.precision(.fractionLength(0)))")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+}
+```
+
+### Axes Are Builders
+
+```swift
+.chartXAxis {
+    AxisMarks(values: .stride(by: .month)) { value in
+        AxisGridLine()
+        AxisTick()
+        AxisValueLabel(format: .dateTime.month(.narrow))
+    }
+}
+.chartYAxis {
+    AxisMarks(position: .leading)   // move the value axis to the leading edge
+}
+```
+
+- Conditional styling belongs *inside* the builder — check `value.as(Date.self)` in the closure to, say, bold only the first month of each quarter.
+- `.chartXAxis(.hidden)` removes an axis entirely; `.chartPlotStyle { $0.frame(height: 200).background(.gray.opacity(0.05)).border(.quaternary) }` sizes and styles the plot area itself.
+
+### Interactivity: Selection First
+
+Prefer the built-in selection binding over hand-rolled overlay gestures (iOS 17):
+
+```swift
+@State private var selectedDay: Date?
+
+Chart(data) { ... }
+    .chartXSelection(value: $selectedDay)
+```
+
+Render the selection as marks — a `RuleMark` with `zIndex(-1)` so it draws behind the data, and an annotation that stays inside the plot:
+
+```swift
+if let selectedDay {
+    RuleMark(x: .value("Selected", selectedDay, unit: .day))
+        .foregroundStyle(.gray.opacity(0.3))
+        .zIndex(-1)
+        .annotation(
+            position: .top, spacing: 0,
+            overflowResolution: .init(x: .fit(to: .chart), y: .disabled)
+        ) {
+            SelectionDetailCard(day: selectedDay)
+        }
+}
+```
+
+For fully custom hit-testing, drop to `ChartProxy` inside `.chartOverlay` with a `GeometryReader`: `proxy.value(atX:)` converts gesture locations to data values, `proxy.position(forX:)` converts back.
+
+### SectorMark: Pies and Donuts (iOS 17+)
+
+```swift
+Chart(data) { item in
+    SectorMark(
+        angle: .value("Sales", item.sales),
+        innerRadius: .ratio(0.62),     // donut hole
+        angularInset: 1.5              // 1.5 per side = 3pt gaps between sectors
+    )
+    .cornerRadius(4)
+    .foregroundStyle(by: .value("Name", item.name))
+}
+.chartBackground { proxy in
+    GeometryReader { geo in            // headline metric in the donut hole
+        if let anchor = proxy.plotFrame {
+            let frame = geo[anchor]
+            Text("Best: \(topSellerName)")
+                .position(x: frame.midX, y: frame.midY)
+        }
+    }
+}
+```
+
+### Large Datasets: Scroll a Window
+
+Don't cram a year into one screen — show a window and scroll (WWDC23):
+
+```swift
+Chart(yearOfData) { ... }
+    .chartScrollableAxes(.horizontal)
+    .chartXVisibleDomain(length: 3600 * 24 * 30)   // 30-day window
+    .chartScrollPosition(x: $scrollDate)           // read/write the scroll offset
+    .chartScrollTargetBehavior(
+        .valueAligned(
+            matching: DateComponents(hour: 0),                    // land on day boundaries
+            majorAlignment: .matching(DateComponents(day: 1))     // snap paging to month starts
+        )
+    )
+```
+
+### Accessibility Per Mark
+
+Auto-generated VoiceOver descriptions read raw values; per-mark labels beat them:
+
+```swift
+BarMark(x: .value("Day", sale.day, unit: .day), y: .value("Sales", sale.count))
+    .accessibilityLabel(sale.day.formatted(date: .abbreviated, time: .omitted))
+    .accessibilityValue("\(sale.count) pancakes sold")
+```
+
+With hundreds or thousands of points, bucket into reasonable intervals and expose one
+accessibility element per interval rather than per point (WWDC21 10122).
+
+### Audio Graphs: AXChartDescriptor (WWDC21 10122)
+
+Audio Graphs let VoiceOver play a data series as a continuous tone — pitch = Y value,
+time = X position — with an explorer view (rotor → "Audio Graph" → Chart Details) that
+plays the sonification, scrubs it (double-tap-and-hold; pausing speaks the value at the
+current position), and shows automatically computed summary statistics. Swift Charts
+generates a default descriptor; custom-drawn charts conform to `AXChart` (UIKit) or use
+the `.accessibilityChartDescriptor(_:)` modifier with an `AXChartDescriptorRepresentable`
+(SwiftUI, iOS 15+):
+
+```swift
+var accessibilityChartDescriptor: AXChartDescriptor? {
+    let xAxis = AXNumericDataAxisDescriptor(
+        title: "Cups of coffee",
+        range: 0...10,
+        gridlinePositions: [],                              // gridlines render as haptics during playback
+        valueDescriptionProvider: { "\(Int($0)) cups" })    // "5 cups", never a bare "5"
+
+    let yAxis = AXNumericDataAxisDescriptor(
+        title: "Lines of code",
+        range: 0...100,
+        gridlinePositions: [],
+        valueDescriptionProvider: { "\(Int($0)) lines of code" })
+
+    let series = AXDataSeriesDescriptor(
+        name: "Productivity",
+        isContinuous: true,      // line → one continuous tone; false for bars/points → discrete tones
+        dataPoints: model.points.map { AXDataPoint(x: $0.x, y: $0.y) })
+
+    return AXChartDescriptor(
+        title: model.title,
+        summary: model.summary,  // 1–2 sentence alt text; spoken in the explorer view
+        xAxis: xAxis,
+        yAxis: yAxis,
+        additionalAxes: [],
+        series: [series])
+}
+```
+
+- Categorical axes use `AXCategoricalDataAxisDescriptor`; localize and pluralize the
+  `valueDescriptionProvider` output in production.
+- Visual floor for any chart (WWDC21 10122): foreground/background contrast **≥ 4.5:1**
+  (verify with Accessibility Inspector's Color Contrast Calculator); **never pair
+  red + green** (the most common color blindness) and avoid **blue + yellow** (the second
+  most common); use **symbols in addition to color** so series stay distinguishable with
+  no color perception at all.
+
 ## Top Mistakes
 
 | # | Mistake | Fix |
@@ -387,8 +603,14 @@ struct TerrainView: View {
 - [ ] Each surface has a distinct color or opacity to differentiate
 - [ ] Axis labels are unique per surface or shared where appropriate
 
+### Accessibility
+- [ ] Contrast ≥ 4.5:1; no red+green or blue+yellow series pairs; symbols supplement color (WWDC21 10122)
+- [ ] Custom-drawn charts expose an `AXChartDescriptor` (Audio Graphs) — or keep Swift Charts' default intact
+- [ ] Large datasets expose one accessibility element per interval, not per point
+
 ## References
 
+- [Swift Charts](https://developer.apple.com/documentation/charts)
 - [Swift Charts — Chart3D](https://developer.apple.com/documentation/Charts/Chart3D)
 - [Swift Charts — SurfacePlot](https://developer.apple.com/documentation/Charts/SurfacePlot)
 - [Swift Charts — Chart3DPose](https://developer.apple.com/documentation/Charts/Chart3DPose)

@@ -122,31 +122,31 @@ Before completing review, ensure you've checked:
 
 Load these modules as needed during review:
 
-1. **Liquid Glass Design**: `skills/ui-review-tahoe/liquid-glass-design.md`
+1. **Liquid Glass Design**: [Liquid Glass design](ui-review-tahoe-liquid-glass-design.md)
    - Design language principles
    - Visual hierarchy and depth
    - Transparency and materials
    - Animation guidelines
 
-2. **macOS Tahoe HIG**: `skills/ui-review-tahoe/macos-tahoe-hig.md`
+2. **macOS Tahoe HIG**: [macOS Tahoe HIG](ui-review-tahoe-macos-tahoe-hig.md)
    - Human Interface Guidelines
    - Platform conventions
    - Window management
    - Toolbar and menu design
 
-3. **SwiftUI for macOS**: `skills/ui-review-tahoe/swiftui-macos.md`
+3. **SwiftUI for macOS**: [SwiftUI for macOS](ui-review-tahoe-swiftui-macos.md)
    - SwiftUI patterns and components
    - macOS-specific modifiers
    - Known Tahoe SwiftUI issues
    - Layout best practices
 
-4. **AppKit Modernization**: `skills/ui-review-tahoe/appkit-modern.md`
+4. **AppKit Modernization**: [AppKit modernisation](ui-review-tahoe-appkit-modern.md)
    - Modern AppKit patterns
    - Liquid Glass in AppKit
    - NSViewController best practices
    - AppKit + SwiftUI hybrid
 
-5. **Accessibility**: `skills/ui-review-tahoe/accessibility.md`
+5. **Accessibility**: [Accessibility](ui-review-tahoe-accessibility.md)
    - VoiceOver testing
    - Keyboard navigation
    - Dynamic Type

@@ -26,14 +26,12 @@ Create comprehensive planning documents for new macOS apps or analyze existing p
 
 ## Module References
 
-1. **New App Planning**: `skills/app-planner/new-app-planning.md`
-2. **Existing App Analysis**: `skills/app-planner/existing-app-analysis.md`
+1. **New App Planning**: [New app planning](#source-macos-app-planner-new-app-planning-md)
+2. **Existing App Analysis**: [Existing app analysis](#source-macos-app-planner-existing-app-analysis-md)
 
 ## Approach
 
 - Ask detailed questions about requirements
-- Consider macOS 26 Tahoe features
-- Recommend SwiftData, SwiftUI where appropriate
 - Plan for SOLID/DRY principles
 - Consider accessibility and performance
 

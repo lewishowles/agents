@@ -11,7 +11,7 @@ Common design patterns implemented in modern Swift for macOS applications. Each 
 
 The primary pattern for SwiftUI macOS apps. The ViewModel owns business logic and exposes state the View observes.
 
-### Implementation with @Observable (macOS 14+)
+### Implementation with @Observable
 
 ```swift
 // Model
@@ -203,7 +203,7 @@ enum ViewModelFactory {
 
 Built into Swift via Combine, @Observable, and NotificationCenter. Choose the right mechanism for the coupling level.
 
-### @Observable (Tight Coupling, macOS 14+)
+### @Observable (Tight Coupling)
 
 ```swift
 @Observable class DownloadManager {
@@ -256,7 +256,6 @@ class EditorController {
 |-----------|----------|----------|
 | @Observable | Tight | ViewModel-to-View data binding |
 | Combine | Medium | Async streams, data transformation pipelines |
-| NotificationCenter | Loose | App-wide events, system notifications |
 | AsyncSequence | Medium | Streaming data, server-sent events |
 
 ## Coordinator Pattern
@@ -374,4 +373,3 @@ struct TaskListView: View {
 | Multi-screen app with navigation | MVVM + Repository + Coordinator |
 | App with swappable backends | Repository + Factory |
 | Plugin/extension architecture | Factory + Observer |
-| Menu bar utility | MVVM (lightweight, single ViewModel) |

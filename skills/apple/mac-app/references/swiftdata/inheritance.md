@@ -118,7 +118,7 @@ class PersonalTrip: Trip {
 
 ### Relationships Across the Hierarchy
 
-Relationships defined on the base class apply to all subclasses. The inverse can point to a base class property and will resolve to the correct subclass at runtime.
+Relationships defined on the base class apply to all subclasses:
 
 ```swift
 @Model
@@ -238,7 +238,7 @@ if let personal = trip as? PersonalTrip {
 
 ### 1. Missing @Model on Subclass
 
-The `@Model` macro must appear on both the base class and every subclass. Omitting it on a subclass causes its unique properties to be silently ignored.
+The `@Model` macro must appear on both the base class and every subclass.
 
 ```swift
 // WRONG -- subclass properties not persisted
@@ -257,7 +257,7 @@ class BusinessTrip: Trip {
 
 ### 2. Deep Hierarchies
 
-Keep to one level of subclassing. Going beyond two levels (base + one tier) increases schema complexity and migration risk.
+Keep hierarchies to one level of subclassing (base + one tier).
 
 ```swift
 // WRONG -- three levels deep
@@ -307,7 +307,7 @@ init(name: String, startDate: Date, endDate: Date, company: String) {
 
 ### 5. Registering Subclasses Separately in ModelContainer
 
-SwiftData discovers subclasses automatically. Register only the base class.
+Register only the base class -- see "ModelContainer Configuration" above.
 
 ```swift
 // UNNECESSARY
@@ -344,4 +344,4 @@ When reviewing code that uses SwiftData class inheritance, verify each item:
 
 - [Preserving your app's model data across launches](https://developer.apple.com/documentation/swiftdata/preserving-your-apps-model-data-across-launches)
 - [SwiftData documentation](https://developer.apple.com/documentation/swiftdata)
-- Apple doc: `/Users/ravishankar/Downloads/docs/SwiftData-Class-Inheritance.md`
+- Local captured doc (optional): `~/Downloads/docs/SwiftData-Class-Inheritance.md` — read if present; skip silently if absent.

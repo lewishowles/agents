@@ -588,8 +588,6 @@ class ServiceLocator {
         return services[key] as? T
     }
 }
-
-// Better: Use constructor injection instead
 ```
 
 ## Composition Over Inheritance

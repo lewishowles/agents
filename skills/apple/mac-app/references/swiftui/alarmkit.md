@@ -58,15 +58,15 @@ What do you need?
 
 | API | Minimum Version | Reference |
 |-----|----------------|-----------|
-| `AlarmManager` | iOS 18 | scheduling.md |
-| `Alarm` / `Alarm.Schedule` | iOS 18 | scheduling.md |
-| `AlarmPresentation` (.alert, .countdown, .paused) | iOS 18 | presentation.md |
-| `AlarmAttributes` | iOS 18 | live-activities.md |
-| `AlarmMetadata` | iOS 18 | live-activities.md |
-| `AlarmButton` | iOS 18 | presentation.md |
-| `CountdownDuration` | iOS 18 | scheduling.md |
-| `alarmUpdates` async sequence | iOS 18 | scheduling.md |
-| `authorizationUpdates` async sequence | iOS 18 | scheduling.md |
+| `AlarmManager` | iOS 26 | scheduling.md |
+| `Alarm` / `Alarm.Schedule` | iOS 26 | scheduling.md |
+| `AlarmPresentation` (.alert, .countdown, .paused) | iOS 26 | presentation.md |
+| `AlarmAttributes` | iOS 26 | live-activities.md |
+| `AlarmMetadata` | iOS 26 | live-activities.md |
+| `AlarmButton` | iOS 26 | presentation.md |
+| `CountdownDuration` | iOS 26 | scheduling.md |
+| `alarmUpdates` async sequence | iOS 26 | scheduling.md |
+| `authorizationUpdates` async sequence | iOS 26 | scheduling.md |
 
 ## Top Mistakes -- Quick Reference
 
@@ -97,6 +97,6 @@ When reviewing AlarmKit code, verify:
 
 | File | Content |
 |------|---------|
-| [alarmkit-scheduling.md](alarmkit-scheduling.md#source-swiftui-alarmkit-scheduling-md) | Authorization, one-time/repeating/timer creation, managing alarms, observing updates |
-| [alarmkit-presentation.md](alarmkit-presentation.md#source-swiftui-alarmkit-presentation-md) | Alert, countdown, paused UI customization, buttons, tint color |
-| [alarmkit-live-activities.md](alarmkit-live-activities.md#source-swiftui-alarmkit-live-activities-md) | Widget extension, AlarmAttributes, AlarmMetadata, Dynamic Island |
+| [scheduling.md](alarmkit-scheduling.md#source-swiftui-alarmkit-scheduling-md) | Authorization, one-time/repeating/timer creation, managing alarms, observing updates |
+| [presentation.md](alarmkit-presentation.md#source-swiftui-alarmkit-presentation-md) | Alert, countdown, paused UI customization, buttons, tint color |
+| [live-activities.md](alarmkit-live-activities.md#source-swiftui-alarmkit-live-activities-md) | Widget extension, AlarmAttributes, AlarmMetadata, Dynamic Island |

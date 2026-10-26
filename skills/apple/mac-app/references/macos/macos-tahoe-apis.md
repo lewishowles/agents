@@ -22,18 +22,18 @@ Guide developers in using macOS 26 (Tahoe) specific features and APIs effectivel
 ## Core Focus Areas
 
 1. **Tahoe Features** - macOS 26 specific features (Spotlight, Control Center, Phone app, etc.)
-2. **Apple Intelligence** - Foundation Models, on-device AI, MCP support
+2. **Apple Intelligence** - FoundationModels framework, on-device AI (canonical guidance: [Foundation Models](../../../apple-frameworks/references/apple-intelligence/foundation-models.md))
 3. **MLX Framework** - Machine learning with M5 chip optimization
 4. **Continuity** - Cross-device features and integration
 5. **Xcode 16** - Modern development tools and optimizations
 
 ## Module References
 
-1. **Tahoe Features**: `skills/macos-tahoe-apis/tahoe-features.md`
-2. **Apple Intelligence**: `skills/macos-tahoe-apis/apple-intelligence.md`
-3. **MLX Framework**: `skills/macos-tahoe-apis/mlx-framework.md`
-4. **Continuity**: `skills/macos-tahoe-apis/continuity.md`
-5. **Xcode 16**: `skills/macos-tahoe-apis/xcode16.md`
+1. **Tahoe Features**: [Tahoe features](#source-macos-macos-tahoe-apis-tahoe-features-md)
+2. **Apple Intelligence**: [Apple Intelligence](#source-macos-macos-tahoe-apis-apple-intelligence-md)
+3. **MLX Framework**: [MLX framework](#source-macos-macos-tahoe-apis-mlx-framework-md)
+4. **Continuity**: [Continuity](#source-macos-macos-tahoe-apis-continuity-md)
+5. **Xcode 16**: [Xcode 16](#source-macos-macos-tahoe-apis-xcode16-md)
 
 ## Review Approach
 
@@ -48,93 +48,51 @@ Begin by asking about the project's requirements and target macOS version.
 <a id="source-macos-macos-tahoe-apis-apple-intelligence-md"></a>
 ## Source: `macos/macos-tahoe-apis/apple-intelligence.md`
 
-# Apple Intelligence Integration
+# Apple Intelligence on macOS
 
-Foundation Models, on-device AI, and MCP (Model Context Protocol) support in macOS 26.
+On-device AI on macOS 26 ships through the **FoundationModels** framework —
+there is no `AppleIntelligence` module, no `processingLocation` switch, and no
+MCP (Model Context Protocol) support in Apple's SDK. The full, current API
+guidance (availability handling, sessions, structured output, tool calling,
+Private Cloud Compute, guardrails) lives in the dedicated skill:
+**[Foundation Models](../../../apple-frameworks/references/apple-intelligence/foundation-models.md)** — read that, not this file,
+before implementing.
 
-## Foundation Models API
+## macOS specifics
 
 ```swift
-import AppleIntelligence  // Hypothetical framework
+import FoundationModels
 
-// ✅ Text generation
-func generateText(prompt: String) async throws -> String {
-    let model = try await AIFoundationModel.load(.textGeneration)
-    let response = try await model.generate(prompt: prompt)
-    return response.text
-}
+let model = SystemLanguageModel.default
 
-// ✅ Text summarization
-func summarize(_ text: String) async throws -> String {
-    let model = try await AIFoundationModel.load(.summarization)
-    return try await model.summarize(text)
-}
-
-// ✅ On-device processing (privacy-preserving)
-func analyzeOnDevice(_ data: String) async throws -> Analysis {
-    let model = try await AIFoundationModel.load(.analysis)
-    model.processingLocation = .onDevice  // Ensures privacy
-    return try await model.analyze(data)
+switch model.availability {
+case .available:
+    let session = LanguageModelSession()
+    let response = try await session.respond(to: prompt)
+case .unavailable(.deviceNotEligible):
+    // Apple silicon required — Intel Macs are not eligible
+    showUnsupportedUI()
+case .unavailable(.appleIntelligenceNotEnabled):
+    // User must enable Apple Intelligence in System Settings
+    showEnableIntelligenceUI()
+case .unavailable(let reason):
+    showErrorUI(reason)
 }
 ```
 
-## Model Context Protocol (MCP)
+- The system model runs **on-device by default**; privacy is inherent to the
+  framework, not a property you set. Larger workloads opt into Private Cloud
+  Compute via `PrivateCloudComputeLanguageModel` (see the foundation-models
+  skill's `models-and-agents.md`).
+- Check `availability` every launch — model eligibility and the Apple
+  Intelligence toggle are user- and hardware-dependent.
+- Tool calling uses the framework's `Tool` protocol (see the foundation-models
+  skill) — define tools there rather than inventing protocol layers.
 
-```swift
-// ✅ MCP integration for AI context
-struct MCPContext {
-    let tools: [MCPTool]
-    let resources: [MCPResource]
-}
+## References
 
-protocol MCPTool {
-    var name: String { get }
-    var description: String { get }
-    func execute(parameters: [String: Any]) async throws -> Any
-}
-
-// Example MCP tool
-struct FileSearchTool: MCPTool {
-    let name = "file_search"
-    let description = "Search for files in the system"
-
-    func execute(parameters: [String: Any]) async throws -> Any {
-        guard let query = parameters["query"] as? String else {
-            throw MCPError.invalidParameters
-        }
-        // Perform file search
-        return searchFiles(query: query)
-    }
-
-    private func searchFiles(query: String) -> [URL] {
-        // Implementation
-        return []
-    }
-}
-```
-
-## Privacy-Preserving AI
-
-```swift
-// ✅ On-device model inference
-func processPrivately(_ input: String) async throws -> Result {
-    // All processing happens on-device
-    let model = try await LocalAIModel.load()
-    return try await model.process(input)
-}
-
-// ✅ Check processing location
-func verifyPrivacy() async -> Bool {
-    let model = try? await AIFoundationModel.load(.textGeneration)
-    return model?.processingLocation == .onDevice
-}
-```
-
-## Resources
-
-- [Apple Intelligence Documentation](https://developer.apple.com/documentation/apple-intelligence)
-- [MCP Specification](https://modelcontextprotocol.io/)
-- [WWDC 2025: Apple Intelligence](https://developer.apple.com/videos/)
+- [Foundation Models documentation](https://developer.apple.com/documentation/foundationmodels)
+- [Foundation Models](../../../apple-frameworks/references/apple-intelligence/foundation-models.md) — the canonical reference
 
 <a id="source-macos-macos-tahoe-apis-continuity-md"></a>
 ## Source: `macos/macos-tahoe-apis/continuity.md`
@@ -477,36 +435,36 @@ func detectThunderbolt5() -> Bool {
 // Use distributed actor frameworks for multi-Mac processing
 ```
 
-## Urgent Reminders
+## High-Priority Reminders
 
-### Creating Urgent Reminders
+### Creating High-Priority Reminders
+
+EventKit has no "urgent" flag — `EKReminder.priority` is the standard 1–9
+scale (1 = highest). Reminders surfaces priority 1 as a high-priority item;
+there is no separate urgent state on macOS 26.
 
 ```swift
 import EventKit
 
-// ✅ Create urgent reminder
-func createUrgentReminder() {
+// ✅ Create high-priority reminder
+func createHighPriorityReminder() async throws {
     let eventStore = EKEventStore()
+    guard try await eventStore.requestFullAccessToReminders() else { return }
 
-    eventStore.requestAccess(to: .reminder) { granted, error in
-        guard granted else { return }
+    let reminder = EKReminder(eventStore: eventStore)
+    reminder.title = "Important Task"
+    reminder.calendar = eventStore.defaultCalendarForNewReminders()
 
-        let reminder = EKReminder(eventStore: eventStore)
-        reminder.title = "Important Task"
-        reminder.calendar = eventStore.defaultCalendarForNewReminders()
+    // Set due date
+    let dueDate = Calendar.current.date(byAdding: .hour, value: 2, to: Date())
+    reminder.dueDateComponents = Calendar.current.dateComponents(
+        [.year, .month, .day, .hour, .minute],
+        from: dueDate!
+    )
 
-        // Set due date
-        let dueDate = Calendar.current.date(byAdding: .hour, value: 2, to: Date())
-        reminder.dueDateComponents = Calendar.current.dateComponents(
-            [.year, .month, .day, .hour, .minute],
-            from: dueDate!
-        )
+    reminder.priority = 1  // 1–9 scale; 1 = highest
 
-        // Mark as urgent (macOS 26+)
-        reminder.priority = 1  // High priority triggers urgent flag
-
-        try? eventStore.save(reminder, commit: true)
-    }
+    try eventStore.save(reminder, commit: true)
 }
 ```
 
