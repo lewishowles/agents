@@ -114,7 +114,7 @@ Ask the user via AskUserQuestion:
 
 ### Step 1: Select Template Sections
 
-Read [templates.md](templates.md) for the document templates.
+Read [`templates.md`](templates.md) for the document templates.
 
 Based on configuration answers, include or exclude sections:
 
@@ -236,18 +236,7 @@ Declare these data types based on your app's practices:
 
 ### When ATT (App Tracking Transparency) Is Required
 
-ATT is required when your app:
-
-- Accesses the IDFA (Identifier for Advertisers)
-- Links user data with third-party data for advertising
-- Shares user data with data brokers
-
-ATT is NOT required for:
-
-- First-party analytics that stays on your server
-- Crash reporting
-- Fraud detection
-- Attribution that does not use IDFA (e.g., SKAdNetwork)
+Required for: IDFA access, linking user data with third-party data for advertising, or sharing user data with data brokers. Not required for first-party server-side analytics, crash reporting, fraud detection, or non-IDFA attribution (e.g., SKAdNetwork).
 
 ## Hosting Guidance
 
@@ -288,9 +277,7 @@ struct PrivacyPolicyView: View {
 
 ### Apple Requirements for Privacy Policy URL
 
-- Must be publicly accessible (not behind login or in-app only)
-- Must be a working URL at all times (Apple checks during review)
-- Required in App Store Connect under "App Privacy"
+- Must resolve publicly (not behind login or in-app only) at all times -- Apple checks during review and requires it under App Store Connect's "App Privacy"
 - Must also be accessible from within the app (Settings or About screen)
 
 ## Output Format
@@ -323,9 +310,9 @@ Provide a checklist the user can follow in App Store Connect.
 ## References
 
 - **templates.md** -- Full legal document templates with placeholders
-- Related: `generators/consent-flow` -- GDPR/CCPA consent UI generation
-- Related: `generators/account-deletion` -- Account deletion flow (App Store requirement)
-- Related: `generators/permission-priming` -- Pre-permission UI for ATT
+- Related: [`generators/consent-flow`](../../../../apple-generators/references/consent-flow/overview.md) -- GDPR/CCPA consent UI generation
+- Related: [`generators/account-deletion`](../../../../apple-generators/references/account-deletion/overview.md) -- Account deletion flow (App Store requirement)
+- Related: [`generators/permission-priming`](../../../../apple-generators/references/permission-priming/overview.md) -- Pre-permission UI for ATT
 - Related: `monetization/` -- Subscription terms and pricing disclosures
 - Apple App Review Guidelines Section 5.1 (Privacy)
 - Apple App Store Connect Privacy Details documentation

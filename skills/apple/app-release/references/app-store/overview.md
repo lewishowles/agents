@@ -78,6 +78,10 @@ Apple Search Ads campaign strategy for indie developers.
 - Campaign structure templates and measurement KPIs
 - Custom Product Pages integration for ad groups
 
+### ad-attribution/
+
+Privacy-preserving paid-traffic measurement with AdAttributionKit (SKAdNetwork's successor) — install + re-engagement attribution, conversion-value design under crowd anonymity, postback testing. (Apple Ads itself attributes via AdServices — see apple-search-ads.)
+
 ### rejection-handler/
 
 Handle App Store rejections and prepare submissions to avoid them.
@@ -88,30 +92,42 @@ Handle App Store rejections and prepare submissions to avoid them.
 - Appeal escalation path (Resolution Center → phone → App Review Board)
 - Top 20 common rejections with fixes (common-rejections.md)
 
+### originality-check/
+
+Guideline 4.3 anti-spam / originality gate — verify an app (and each portfolio addition) is meaningfully distinct in function, content, and metadata before you invest or submit.
+
+### ratings-mechanics/
+
+How ratings actually behave — per-storefront isolation (your US stars show nowhere else), the never-reset rule, and phased release + manual release as rating protection.
+
+### web-presence/
+
+Discovery outside the store app — the apps.apple.com page as a Google citizen, an owned landing page with Smart App Banner, and the deal-site ecosystem that auto-amplifies price drops.
+
 ## Related Generator Skills
 
 These generator skills produce code, metadata, and configuration for App Store features:
 
-| Skill                                  | Purpose                                          |
-| -------------------------------------- | ------------------------------------------------ |
-| `generators/subscription-offers`       | StoreKit 2 code for all subscription offer types |
-| `generators/win-back-offers`           | Win-back flow for churned subscribers            |
-| `generators/promoted-iap`              | Promoted In-App Purchase setup                   |
-| `generators/in-app-events`             | In-App Event metadata templates                  |
-| `generators/custom-product-pages`      | Custom Product Page strategy and metadata        |
-| `generators/product-page-optimization` | A/B test plans for product page                  |
-| `generators/featuring-nomination`      | App Store featuring pitch templates              |
-| `generators/offer-codes-setup`         | Offer code distribution strategies               |
-| `generators/pre-orders`                | Pre-order setup and launch timelines             |
-| `generators/app-store-assets`          | Asset specs for all App Store media              |
+| Skill                                                                                                    | Purpose                                          |
+| -------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| [`generators/subscription-offers`](../../../apple-generators/references/subscription-offers/overview.md) | StoreKit 2 code for all subscription offer types |
+| [`generators/win-back-offers`](../../../apple-generators/references/win-back-offers/overview.md)         | Win-back flow for churned subscribers            |
+| [`generators/promoted-iap`](../../../apple-generators/references/promoted-iap/overview.md)               | Promoted In-App Purchase setup                   |
+| [`generators/in-app-events`](../generators/in-app-events/overview.md)                                    | In-App Event metadata templates                  |
+| [`generators/custom-product-pages`](../generators/custom-product-pages/overview.md)                      | Custom Product Page strategy and metadata        |
+| [`generators/product-page-optimization`](../generators/product-page-optimization/overview.md)            | A/B test plans for product page                  |
+| [`generators/featuring-nomination`](../generators/featuring-nomination/overview.md)                      | App Store featuring pitch templates              |
+| [`generators/offer-codes-setup`](../generators/offer-codes-setup/overview.md)                            | Offer code distribution strategies               |
+| [`generators/pre-orders`](../generators/pre-orders/overview.md)                                          | Pre-order setup and launch timelines             |
+| [`generators/app-store-assets`](../generators/app-store-assets/overview.md)                              | Asset specs for all App Store media              |
 
 ## How to Use
 
 1. User requests App Store help
-2. For strategy questions → Read [marketing-strategy/SKILL.md](marketing-strategy/overview.md)
-3. For paid acquisition → Read [apple-search-ads/SKILL.md](apple-search-ads/overview.md)
-4. For rejections or submission prep → Read [rejection-handler/SKILL.md](rejection-handler/overview.md)
-5. For specific content → Read the relevant sub-skill's SKILL.md
+2. For strategy questions → Read the [marketing strategy overview](marketing-strategy/overview.md)
+3. For paid acquisition → Read the [Apple Search Ads overview](apple-search-ads/overview.md)
+4. For rejections or submission prep → Read the [rejection handling overview](rejection-handler/overview.md)
+5. For specific content → Read the relevant topic overview
 6. For code/implementation → Read the relevant generator skill
 7. Ask clarifying questions about the app
 8. Generate optimized content

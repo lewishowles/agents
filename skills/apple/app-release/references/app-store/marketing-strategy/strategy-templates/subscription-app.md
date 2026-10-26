@@ -68,7 +68,7 @@ Each stage has specific App Store features that optimize it.
 
 ### Key Features
 
-- **Paywall Design**: Use `generators/paywall-generator` for StoreKit 2 implementation
+- **Paywall Design**: Use [`generators/paywall-generator`](../../../../../apple-generators/references/paywall-generator/overview.md) for StoreKit 2 implementation
 - **Pricing Psychology**: Annual-first presentation, anchor pricing
 - **Promotional Offers**: Discounted rate for users who didn't convert from trial
 

@@ -72,7 +72,7 @@ Users must invest time and data before seeing a paywall:
 ### Key Features
 
 - **Promoted IAP**: Show premium unlock directly on the App Store product page
-- **Paywall Design**: Use `generators/paywall-generator`
+- **Paywall Design**: Use [`generators/paywall-generator`](../../../../../apple-generators/references/paywall-generator/overview.md)
 
 ### Promoted IAP Best Practices
 

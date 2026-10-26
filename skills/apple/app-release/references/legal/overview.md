@@ -23,13 +23,13 @@ Generate privacy policies, terms of service, and EULAs tailored to your app's da
 ## How to Use
 
 1. User requests legal documents or compliance guidance
-2. Read [privacy-policy/SKILL.md](privacy-policy/overview.md) for the full generation workflow
+2. Read the [privacy policy overview](privacy-policy/overview.md) for the full generation workflow
 3. The skill will ask configuration questions about data practices
 4. Documents are generated in Markdown with app-specific placeholders filled in
 
 ## Related Skills
 
-- `generators/consent-flow` -- GDPR/CCPA consent UI and tracking consent management
-- `generators/account-deletion` -- Account deletion flow (App Store requirement)
-- `generators/permission-priming` -- Pre-permission UI patterns (ATT priming)
+- [`generators/consent-flow`](../../../apple-generators/references/consent-flow/overview.md) -- GDPR/CCPA consent UI and tracking consent management
+- [`generators/account-deletion`](../../../apple-generators/references/account-deletion/overview.md) -- Account deletion flow (App Store requirement)
+- [`generators/permission-priming`](../../../apple-generators/references/permission-priming/overview.md) -- Pre-permission UI patterns (ATT priming)
 - `monetization/` -- Subscription terms and pricing disclosures

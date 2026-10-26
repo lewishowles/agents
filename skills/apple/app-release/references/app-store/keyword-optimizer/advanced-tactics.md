@@ -219,33 +219,11 @@ Add **English (UK)** localization with different keywords. These index for:
 
 ## 7. Left-to-Right Keyword Weight
 
-Apple's algorithm reads title/subtitle **left to right** and gives more weight to words that appear first.
-
-### Examples
-
-```
-Weaker:  Bills Split - Expense App
-Stronger: Expense Split - Settle Up
-          ↑ Most important word first
-```
-
-### Application
-
-- Put your primary keyword FIRST in title
-- Put secondary keyword FIRST in subtitle
-- Front-load your keyword field too
+Apple's algorithm reads title/subtitle **left to right**, weighting earlier words more heavily — put your primary keyword first in the title, secondary first in the subtitle, and front-load the keyword field too.
 
 ## 8. Singular vs Plural (Don't Waste Space)
 
-Apple treats these as equivalent:
-
-```
-bill = bills
-expense = expenses
-tracker = trackers
-```
-
-**Never include both forms** — it wastes precious characters.
+Apple treats singular and plural forms as equivalent (bill = bills) — never include both, it wastes characters.
 
 ## 9. Stop Words Are Auto-Indexed
 
@@ -280,6 +258,66 @@ Apple tracks **impressions → downloads** ratio. Higher conversion = higher ran
 - First screenshot is most important (70% decide from it alone)
 - First 3 words of subtitle are visible in search results
 
+## 12. Developer Name Is Indexed
+
+Your developer/brand name is itself an **indexed search field** — a descriptive name gives free, permanent keyword coverage across every app you ship.
+
+```
+Weaker:   Acme LLC              (zero keyword value)
+Stronger: Acme Photo Tools      ("photo" + "tools" index for every app)
+```
+
+### Rules
+
+- Changing it is heavy (legal entity name change or DBA in App Store Connect) — treat it as a **one-time strategic choice**
+- Don't keyword-stuff it ("Photo Editor Filter Collage Inc") — metadata rejection risk
+
+## 13. Write for Apple's AI Tagging
+
+Apple's AI reads your metadata AND screenshot captions to tag apps for search and Personalized Collections. Ambiguous copy = wrong tags = wrong shelves.
+
+| Clever Caption (Tags Poorly) | Literal Caption (Tags Well)          |
+| ---------------------------- | ------------------------------------ |
+| "Your pocket time machine"   | "Restore old photos in one tap"      |
+| "Money, mastered"            | "Track shared expenses with friends" |
+
+Write copy that is unambiguous about **what the app does** and **who it's for**. Pairs with tactic §2 — the same captions feed both the OCR index and the tagging model.
+
+## 14. Quarterly Keyword Refresh from Apple Ads Search-Term Reports
+
+Keep a small Apple Ads discovery campaign running. The search-term report shows the **literal queries users typed before converting** — ground truth no third-party ASO tool has.
+
+### Quarterly Routine
+
+1. Export the search-term report from Apple Ads
+2. Filter to terms that converted in paid but aren't in your metadata
+3. Move winners into the keyword field/subtitle at the next release
+4. Re-baseline rankings and repeat next quarter
+
+## 15. Curate Your App Store Tags
+
+Apple assigns tags to your app that surface next to categories, in search results, and in
+browsable tag collections ("tag rooms"). You can — and should — edit them: App Information
+page → Edit tags.
+
+- ✅ Deselect tags that misrepresent the app — a deselected tag removes you from its tag room
+  AND from your product page, so wrong tags cost you misqualified traffic and muddy Apple's
+  model of what your app is.
+- ✅ Recheck after each major version — new features can earn new tags worth keeping.
+- Pairs with §13: tags are one more machine-read surface; literal metadata earns literal tags.
+
+## 16. Route Keywords to Custom Product Pages
+
+You can assign keywords (per language) to a specific Custom Product Page — when your app ranks
+for that keyword, searchers land on the matching page instead of the default one. Assigning
+keywords needs **no App Review**.
+
+- ✅ Map each keyword theme to a page whose first two screenshots answer that exact intent
+  ("meal planner" → planner screenshots first; "calorie counter" → tracker screenshots first).
+- ✅ Keep selections unique per page; read per-CPP search traffic in App Analytics to see which
+  intents convert.
+- Full CPP mechanics live in [`generators/custom-product-pages`](../../generators/custom-product-pages/overview.md).
+
 ## Quick Reference Checklist
 
 ### Zero-Risk Additions
@@ -299,6 +337,8 @@ Apple tracks **impressions → downloads** ratio. Higher conversion = higher ran
 - [ ] No singular AND plural forms
 - [ ] Primary keywords at START of title/subtitle
 - [ ] Most important keywords in first 2 screenshots
+- [ ] Captions written literally for AI tagging (no clever metaphors)
+- [ ] Developer name reviewed as an indexed keyword asset (one-time choice — don't stuff it)
 
 ### Tracking
 
@@ -306,6 +346,7 @@ Apple tracks **impressions → downloads** ratio. Higher conversion = higher ran
 - [ ] Check rankings weekly
 - [ ] Update keywords every 4-6 weeks
 - [ ] Swap underperforming keywords (rank >100)
+- [ ] Quarterly: mine Apple Ads search-term report into keyword field/subtitle
 
 ## Sources
 

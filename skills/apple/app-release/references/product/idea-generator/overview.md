@@ -367,7 +367,7 @@ At the end of this skill, you should have:
 
 Save results to:
 
-- [idea-shortlist.json](examples/idea-shortlist.json) (project root)
+- `idea-shortlist.json` (project root)
 
 **Format:** Use the JSON structure from the Output Structure section.
 

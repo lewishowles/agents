@@ -15,11 +15,11 @@ Optimize app title, subtitle, and keywords for maximum App Store discoverability
 
 Before optimizing, load these reference materials:
 
-| File                                                     | Purpose                                                 |
-| -------------------------------------------------------- | ------------------------------------------------------- |
-| [**keyword-criteria.md**](keyword-criteria.md)           | Popularity/Difficulty sweet spots, opportunity scoring  |
-| [**advanced-tactics.md**](advanced-tactics.md)           | Cross-localization, screenshot indexing, velocity boost |
-| [**existing-app-strategy.md**](existing-app-strategy.md) | Safe optimization for apps with existing traffic        |
+| File                         | Purpose                                                 |
+| ---------------------------- | ------------------------------------------------------- |
+| **keyword-criteria.md**      | Popularity/Difficulty sweet spots, opportunity scoring  |
+| **advanced-tactics.md**      | Cross-localization, screenshot indexing, velocity boost |
+| **existing-app-strategy.md** | Safe optimization for apps with existing traffic        |
 
 ## Information Gathering
 
@@ -186,74 +186,27 @@ Searchable combinations:
 
 ## Cross-Field Deduplication
 
-Apple indexes words from **all three fields** for the same locale. A word only needs to appear **once** — putting it in multiple fields wastes characters and provides zero ranking benefit.
-
-### Priority Cascade
-
-```
-Title (30 chars)     → Highest search weight
-  ↓ words flow down
-Subtitle (30 chars)  → High search weight
-  ↓ words flow down
-Keywords (100 chars) → Medium search weight
-```
-
-**The rule:** If a word appears in your Title, **do not repeat it** in Subtitle or Keywords. If a word appears in your Subtitle, **do not repeat it** in Keywords. Apple already indexes it from the higher-weight field.
-
-### Why This Matters
-
-Every duplicated word steals characters from the Keywords field where you could fit **new** discoverable terms. With only 100 characters, even one wasted word costs you reach.
-
-### Validation Process
-
-For each locale, extract every word from all three fields and check for overlaps:
-
-```
-Step 1: List all words in Title
-Step 2: List all words in Subtitle → flag any that appear in Title
-Step 3: List all words in Keywords → flag any that appear in Title OR Subtitle
-Step 4: Remove flagged words from lower fields
-Step 5: Replace removed words with new keyword opportunities
-```
+Apple indexes words from **all three fields** for the same locale — a word only needs to appear **once**. If a word appears in Title, don't repeat it in Subtitle or Keywords; if it appears in Subtitle, don't repeat it in Keywords.
 
 ### Before & After Example
 
 ```
-❌ BEFORE (duplicated words waste 23 characters):
-
+❌ BEFORE (duplicated words waste ~38 characters):
 Title:    "Focus Timer - Stay Productive"
 Subtitle: "Pomodoro Timer & Focus Sessions"
 Keywords: "timer,focus,pomodoro,productive,study,work,session,break"
 
-Duplicates:
-  "timer"      — in Title AND Subtitle AND Keywords
-  "focus"      — in Title AND Subtitle AND Keywords
-  "pomodoro"   — in Subtitle AND Keywords
-  "productive" — in Title ("Productive") AND Keywords
-  "session"    — in Subtitle ("Sessions") AND Keywords
-
-Wasted: 5 keyword slots = ~38 characters lost
-
 ✅ AFTER (zero duplication, 5 new keywords gained):
-
 Title:    "Focus Timer - Stay Productive"
 Subtitle: "Pomodoro Technique & Deep Work"
 Keywords: "study,concentration,interval,tomato,distraction,block,exam,revision,flowstate,desk"
-
-New searchable combinations gained:
-  "focus concentration"  "timer interval"
-  "study timer"          "deep focus"
-  "exam study"           "pomodoro technique"
 ```
 
 ### Quick Dedup Check
 
-When generating keyword recommendations, always verify:
-
 | Check                                  | Rule                                  |
 | -------------------------------------- | ------------------------------------- |
-| Title word in Subtitle?                | Remove from Subtitle                  |
-| Title word in Keywords?                | Remove from Keywords                  |
+| Title word in Subtitle or Keywords?    | Remove from the lower field           |
 | Subtitle word in Keywords?             | Remove from Keywords                  |
 | Plural/singular variant across fields? | Keep only in highest field            |
 | Stop words (a, the, and, for)?         | Don't include anywhere — auto-indexed |
@@ -405,14 +358,14 @@ Ideal: Popularity 25-50, Difficulty < 45
 3. Double down on winners, abandon losers
 4. Portfolio effect compounds (30 apps × $500 = $15k/month)
 
-See [**keyword-criteria.md**](keyword-criteria.md) for detailed scoring and evaluation.
+See **keyword-criteria.md** for detailed scoring and evaluation.
 
 ## Advanced Tactics Summary
 
 ### Cross-Localization (Double Keywords)
 
 Add Spanish (Mexico) locale with English keywords for US market.
-See [**advanced-tactics.md**](advanced-tactics.md) for all locales.
+See **advanced-tactics.md** for all locales.
 
 ### Screenshot Text Indexing (June 2025)
 
@@ -422,4 +375,4 @@ Put keywords in top/bottom of screenshots.
 ### Existing App Optimization
 
 Never change what's working. Use phased rollout.
-See [**existing-app-strategy.md**](existing-app-strategy.md) for safe optimization.
+See **existing-app-strategy.md** for safe optimization.

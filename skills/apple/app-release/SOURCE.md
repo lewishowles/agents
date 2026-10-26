@@ -3,18 +3,20 @@
 ## Kept product and release skills
 
 - Repository: https://github.com/rshankras/claude-code-apple-skills
-- Pin: `5f1f5697c77adf99816de1a5c21742532a1c6f46` (30 June 2026)
+- Pin: `9ffb83138209057875698dd11c1720c657c47a92` (24 July 2026)
 - Licence: MIT, copyright (c) 2025 Ravishankar
-- The local copy this skill was built from matched upstream exactly at this pin.
+- The references were refreshed from this pin, with the local changes listed under Adaptations.
 
 The table maps every local reference to exactly one upstream file. The reference
-body keeps the upstream text apart from removed skill front matter, and filename
-pointers to sibling files became relative Markdown links. JSON examples remain
-JSON. The seven App Store planning generators live
-here because they produce release plans and assets rather than Swift code.
+body keeps the upstream text apart from the changes listed under Adaptations.
+JSON examples remain JSON. The seven App Store planning generators live here
+because they produce release plans and assets rather than Swift code. The
+app-namer pages live here because they cover the App Store title, subtitle,
+search and listing availability.
 
 | Local file                                                                                                                                                         | Upstream path                                                         |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| [`references/app-store/ad-attribution/overview.md`](references/app-store/ad-attribution/overview.md)                                                               | `app-store/ad-attribution/SKILL.md`                                   |
 | [`references/app-store/app-description-writer/overview.md`](references/app-store/app-description-writer/overview.md)                                               | `app-store/app-description-writer/SKILL.md`                           |
 | [`references/app-store/apple-search-ads/overview.md`](references/app-store/apple-search-ads/overview.md)                                                           | `app-store/apple-search-ads/SKILL.md`                                 |
 | [`references/app-store/keyword-optimizer/advanced-tactics.md`](references/app-store/keyword-optimizer/advanced-tactics.md)                                         | `app-store/keyword-optimizer/advanced-tactics.md`                     |
@@ -27,11 +29,14 @@ here because they produce release plans and assets rather than Swift code.
 | [`references/app-store/marketing-strategy/strategy-templates/game-app.md`](references/app-store/marketing-strategy/strategy-templates/game-app.md)                 | `app-store/marketing-strategy/strategy-templates/game-app.md`         |
 | [`references/app-store/marketing-strategy/strategy-templates/paid-app.md`](references/app-store/marketing-strategy/strategy-templates/paid-app.md)                 | `app-store/marketing-strategy/strategy-templates/paid-app.md`         |
 | [`references/app-store/marketing-strategy/strategy-templates/subscription-app.md`](references/app-store/marketing-strategy/strategy-templates/subscription-app.md) | `app-store/marketing-strategy/strategy-templates/subscription-app.md` |
+| [`references/app-store/originality-check/overview.md`](references/app-store/originality-check/overview.md)                                                         | `app-store/originality-check/SKILL.md`                                |
 | [`references/app-store/overview.md`](references/app-store/overview.md)                                                                                             | `app-store/SKILL.md`                                                  |
+| [`references/app-store/ratings-mechanics/overview.md`](references/app-store/ratings-mechanics/overview.md)                                                         | `app-store/ratings-mechanics/SKILL.md`                                |
 | [`references/app-store/rejection-handler/common-rejections.md`](references/app-store/rejection-handler/common-rejections.md)                                       | `app-store/rejection-handler/common-rejections.md`                    |
 | [`references/app-store/rejection-handler/overview.md`](references/app-store/rejection-handler/overview.md)                                                         | `app-store/rejection-handler/SKILL.md`                                |
 | [`references/app-store/review-response-writer/overview.md`](references/app-store/review-response-writer/overview.md)                                               | `app-store/review-response-writer/SKILL.md`                           |
 | [`references/app-store/screenshot-planner/overview.md`](references/app-store/screenshot-planner/overview.md)                                                       | `app-store/screenshot-planner/SKILL.md`                               |
+| [`references/app-store/web-presence/overview.md`](references/app-store/web-presence/overview.md)                                                                   | `app-store/web-presence/SKILL.md`                                     |
 | [`references/generators/app-store-assets/overview.md`](references/generators/app-store-assets/overview.md)                                                         | `generators/app-store-assets/SKILL.md`                                |
 | [`references/generators/app-store-assets/specs-reference.md`](references/generators/app-store-assets/specs-reference.md)                                           | `generators/app-store-assets/specs-reference.md`                      |
 | [`references/generators/custom-product-pages/overview.md`](references/generators/custom-product-pages/overview.md)                                                 | `generators/custom-product-pages/SKILL.md`                            |
@@ -49,13 +54,24 @@ here because they produce release plans and assets rather than Swift code.
 | [`references/growth/overview.md`](references/growth/overview.md)                                                                                                   | `growth/SKILL.md`                                                     |
 | [`references/growth/press-media/overview.md`](references/growth/press-media/overview.md)                                                                           | `growth/press-media/SKILL.md`                                         |
 | [`references/growth/press-media/pitch-templates.md`](references/growth/press-media/pitch-templates.md)                                                             | `growth/press-media/pitch-templates.md`                               |
+| [`references/growth/store-growth-audit/audit-checklist-p0-p4.md`](references/growth/store-growth-audit/audit-checklist-p0-p4.md)                                   | `growth/store-growth-audit/audit-checklist-p0-p4.md`                  |
+| [`references/growth/store-growth-audit/audit-checklist-p5-p9.md`](references/growth/store-growth-audit/audit-checklist-p5-p9.md)                                   | `growth/store-growth-audit/audit-checklist-p5-p9.md`                  |
+| [`references/growth/store-growth-audit/detection-playbook.md`](references/growth/store-growth-audit/detection-playbook.md)                                         | `growth/store-growth-audit/detection-playbook.md`                     |
+| [`references/growth/store-growth-audit/overview.md`](references/growth/store-growth-audit/overview.md)                                                             | `growth/store-growth-audit/SKILL.md`                                  |
+| [`references/growth/store-signals/overview.md`](references/growth/store-signals/overview.md)                                                                       | `growth/store-signals/SKILL.md`                                       |
+| [`references/growth/store-signals/signals-ledger.md`](references/growth/store-signals/signals-ledger.md)                                                           | `growth/store-signals/signals-ledger.md`                              |
 | [`references/legal/overview.md`](references/legal/overview.md)                                                                                                     | `legal/SKILL.md`                                                      |
 | [`references/legal/privacy-policy/overview.md`](references/legal/privacy-policy/overview.md)                                                                       | `legal/privacy-policy/SKILL.md`                                       |
 | [`references/legal/privacy-policy/templates.md`](references/legal/privacy-policy/templates.md)                                                                     | `legal/privacy-policy/templates.md`                                   |
 | [`references/monetization/app-type-guides.md`](references/monetization/app-type-guides.md)                                                                         | `monetization/app-type-guides.md`                                     |
+| [`references/monetization/bundles-and-licensing/overview.md`](references/monetization/bundles-and-licensing/overview.md)                                           | `monetization/bundles-and-licensing/SKILL.md`                         |
+| [`references/monetization/external-purchases/overview.md`](references/monetization/external-purchases/overview.md)                                                 | `monetization/external-purchases/SKILL.md`                            |
 | [`references/monetization/overview.md`](references/monetization/overview.md)                                                                                       | `monetization/SKILL.md`                                               |
 | [`references/monetization/pricing-models.md`](references/monetization/pricing-models.md)                                                                           | `monetization/pricing-models.md`                                      |
 | [`references/product/WORKFLOW.md`](references/product/WORKFLOW.md)                                                                                                 | `product/WORKFLOW.md`                                                 |
+| [`references/product/app-namer/naming-strategies.md`](references/product/app-namer/naming-strategies.md)                                                           | `product/app-namer/naming-strategies.md`                              |
+| [`references/product/app-namer/overview.md`](references/product/app-namer/overview.md)                                                                             | `product/app-namer/SKILL.md`                                          |
+| [`references/product/app-namer/validation-checklist.md`](references/product/app-namer/validation-checklist.md)                                                     | `product/app-namer/validation-checklist.md`                           |
 | [`references/product/architecture-spec/overview.md`](references/product/architecture-spec/overview.md)                                                             | `product/architecture-spec/SKILL.md`                                  |
 | [`references/product/beta-testing/overview.md`](references/product/beta-testing/overview.md)                                                                       | `product/beta-testing/SKILL.md`                                       |
 | [`references/product/competitive-analysis/examples/analysis-output.json`](references/product/competitive-analysis/examples/analysis-output.json)                   | `product/competitive-analysis/examples/analysis-output.json`          |
@@ -82,6 +98,15 @@ here because they produce release plans and assets rather than Swift code.
 | [`references/release-review/privacy-checklist.md`](references/release-review/privacy-checklist.md)                                                                 | `release-review/privacy-checklist.md`                                 |
 | [`references/release-review/security-checklist.md`](references/release-review/security-checklist.md)                                                               | `release-review/security-checklist.md`                                |
 | [`references/release-review/ux-polish-checklist.md`](references/release-review/ux-polish-checklist.md)                                                             | `release-review/ux-polish-checklist.md`                               |
+
+## Adaptations
+
+- Renamed upstream `SKILL.md` pages to local `overview.md` references and removed their skill front matter. The curated root index and topic overviews navigate the added references.
+- Linked local source and child-page pointers to the matching references, including cross-skill Apple framework and generator pages.
+- Replaced SwiftShip-only slash-command routes, context wording and scorecard template pointers in the store growth audit and store signals pages with local reference routes and general project wording, while keeping upstream's `.planning/` paths. The unavailable portfolio-health-monitor route now points to the store growth audit.
+- Omitted watchOS and visionOS route targets from the store growth audit and retained the iPhone and Mac references.
+- Omitted `app-store/iap-finalizer`, `legal/privacy-publish` and `_shared/asc-api` because their App Store Connect API helper handles credentials and the Apple skills ship guidance only.
+- The repository Markdown formatter (oxfmt) reformatted the refreshed references without changing their guidance.
 
 ## Manual refresh
 

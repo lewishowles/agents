@@ -47,7 +47,7 @@ Have 100+ organic downloads/month?
 
 ## Campaign Types
 
-Apple Search Ads offers four placement types. Not all are useful for indie developers.
+Apple Search Ads offers four placement types. Not all are useful for indie developers. All placements price as **cost-per-tap on a second-price auction** — you pay just above the next-highest bid, never your max — with **no minimum spend**, and daily budgets are adjustable anytime.
 
 ### Search Results (Recommended Starting Point)
 
@@ -70,6 +70,7 @@ Apple Search Ads offers four placement types. Not all are useful for indie devel
 - **Where**: Today tab in the App Store
 - **Targeting**: Audience-based
 - **Cost model**: Cost Per Tap (CPT)
+- **Requirements**: Ads always come from a Custom Product Page with **≥4 portrait or ≥5 landscape assets**, and undergo a separate creative review
 - **Best for**: Mass awareness, seasonal pushes
 - **Indie priority**: Usually too expensive for indie budgets. Skip unless budget allows $500+/day.
 
@@ -92,6 +93,10 @@ Stage 3: Product Page (competitor audiences)
     ↓ profitable?
 Stage 4: Search Tab (brand awareness)
 ```
+
+### Discovery Campaigns as Keyword Research
+
+Beyond acquisition, a low-budget broad-match discovery campaign is the cheapest source of Apple's official keyword popularity data and the real queries users type. Even if it never turns a profit, harvest the Search Terms report into your organic metadata — see `keyword-optimizer` advanced tactics (§14) for the quarterly routine.
 
 ## Keyword Strategy
 
@@ -123,6 +128,13 @@ Stage 4: Search Tab (brand awareness)
 - Lower volume but very high intent
 - Often cheapest CPT because few advertisers target them
 - Excellent ROAS potential
+
+### The ASA → Organic Halo
+
+Paid conversions on a keyword lift that keyword's **organic** rank — Apple's algorithm reads them as conversion velocity. Two implications:
+
+- Run exact-match campaigns on your target organic terms to accelerate ranking while metadata changes take hold
+- Always defend your brand term once competitors bid on it — brand CPAs are the cheapest in your account, and losing the top slot bleeds organic installs too
 
 ### Keyword Research Process
 
@@ -240,6 +252,10 @@ Apple Search Ads supports linking ad groups to Custom Product Pages (CPPs) for t
 | Audience segments   | Different messaging for students vs. professionals |
 | Seasonal campaigns  | Holiday or event-themed screenshots/descriptions   |
 
+### The Pairing Rule
+
+Every exact-match ad group should point to a CPP whose **first screenshots match that keyword's intent** — 35 CPP slots is enough for every major keyword theme. A user searching "habit tracker" who lands on habit-first screenshots taps through and converts measurably better than one landing on your default page.
+
 ### CPP Setup for Ads
 
 1. Create Custom Product Pages in App Store Connect (max 35)
@@ -248,7 +264,7 @@ Apple Search Ads supports linking ad groups to Custom Product Pages (CPPs) for t
 4. Assign relevant keywords to each ad group
 5. Monitor CVR per CPP to see which messaging converts best
 
-Use the `generators/custom-product-pages` skill for CPP metadata and strategy.
+Use the [`generators/custom-product-pages`](../../generators/custom-product-pages/overview.md) skill for CPP metadata and strategy.
 
 ## Campaign Structure Template
 
@@ -305,6 +321,8 @@ CAMPAIGN: [App Name] - Product Page
 | **CPT** (Cost Per Tap)         | Spend / Taps       | Category-dependent (see benchmarks) |
 | **CPA** (Cost Per Acquisition) | Spend / Installs   | < Customer LTV                      |
 | **ROAS** (Return on Ad Spend)  | Revenue / Spend    | > 1.0 (ideally > 2.0)               |
+
+Apple cites **~60% average conversion rate** for search ads — if your CVR sits well below that, the product page (not the bid) is the problem. Also test the campaign destination: full product page vs. in-app store sheet (`SKStoreProductViewController`) — "the choice you make may meaningfully impact your conversion" (per Apple's App Analytics Tech Talk).
 
 ### Interpreting Metrics
 
@@ -469,8 +487,8 @@ When advising on Apple Search Ads, produce this document:
 
 ## References
 
-- Related: `app-store/keyword-optimizer` — ASO keyword strategy (organic, complements paid)
-- Related: `app-store/screenshot-planner` — Product page optimization (improves ad CVR)
-- Related: `generators/custom-product-pages` — Custom Product Page creation for ad groups
-- Related: `app-store/marketing-strategy` — Overall marketing strategy including paid acquisition
+- Related: [`app-store/keyword-optimizer`](../keyword-optimizer/overview.md) — ASO keyword strategy (organic, complements paid)
+- Related: [`app-store/screenshot-planner`](../screenshot-planner/overview.md) — Product page optimization (improves ad CVR)
+- Related: [`generators/custom-product-pages`](../../generators/custom-product-pages/overview.md) — Custom Product Page creation for ad groups
+- Related: [`app-store/marketing-strategy`](../marketing-strategy/overview.md) — Overall marketing strategy including paid acquisition
 - Apple Search Ads documentation: https://searchads.apple.com

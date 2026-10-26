@@ -166,7 +166,7 @@ Read [nomination-template.md](nomination-template.md) and fill all fields.
 ## References
 
 - **nomination-template.md** — Detailed nomination form and angle framework
-- Related: `app-store/marketing-strategy` — Featuring as part of broader strategy
-- Related: `app-store/app-description-writer` — Compelling app copy
-- Related: `generators/in-app-events` — Pair featuring with events
+- Related: [`app-store/marketing-strategy`](../../app-store/marketing-strategy/overview.md) — Featuring as part of broader strategy
+- Related: [`app-store/app-description-writer`](../../app-store/app-description-writer/overview.md) — Compelling app copy
+- Related: [`generators/in-app-events`](../in-app-events/overview.md) — Pair featuring with events
 - Apple: [Nominate your app for featuring](https://developer.apple.com/app-store/discoverability/)

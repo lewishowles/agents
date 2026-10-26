@@ -185,7 +185,7 @@ This approach limits risk. If Japanese Level 0 doesn't move the needle, you save
 
 #### Xcode String Catalogs
 
-Starting with Xcode 15, String Catalogs (.xcstrings) are the standard localization format.
+String Catalogs (.xcstrings) are the standard localization format.
 
 **Export workflow:**
 
@@ -212,7 +212,7 @@ Starting with Xcode 15, String Catalogs (.xcstrings) are the standard localizati
 | AI + human review     | $0.03-0.06    | Good     | 1-3 days      | Level 0-1, fast iteration   |
 | Community/crowdsource | Free-$0.03    | Variable | Unpredictable | Open source, community apps |
 
-**AI + human review workflow (recommended for indie devs):**
+**AI + human review workflow:**
 
 1. Export strings from Xcode
 2. Run through high-quality AI translation (provide app context and glossary)
@@ -232,7 +232,7 @@ Starting with Xcode 15, String Catalogs (.xcstrings) are the standard localizati
 
 #### Review Process
 
-Native speaker review is mandatory — never ship translations without it.
+Native speaker review is mandatory.
 
 **Review checklist per language:**
 
@@ -291,9 +291,7 @@ Text(String(format: "%m/%d/%Y", date))
 
 #### Layout Direction
 
-Right-to-left (RTL) languages require layout mirroring:
-
-**RTL languages:** Arabic, Hebrew, Urdu, Persian
+**RTL languages** (require layout mirroring): Arabic, Hebrew, Urdu, Persian
 
 **What to mirror:**
 
@@ -559,13 +557,13 @@ This skill connects to the broader product development pipeline:
 
 - `market-research` provides TAM/SAM/SOM data that helps prioritize markets
 - `competitive-analysis` reveals which markets have fewer localized competitors
-- `monetization` informs regional pricing (App Store price tier selection)
+- [`monetization`](../../monetization/overview.md) informs regional pricing (App Store price tier selection)
 
 **Outputs to other skills:**
 
 - Prioritized language list feeds into `app-store` for localized metadata
 - Regional competitor data informs `competitive-analysis` per market
-- Revenue projections per market feed into `monetization` strategy
+- Revenue projections per market feed into [`monetization`](../../monetization/overview.md) strategy
 
 ## Common Mistakes to Avoid
 

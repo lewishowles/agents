@@ -14,12 +14,13 @@ Use this skill when the user:
 
 ## How Pre-Orders Work
 
-- Available up to **180 days** before release
+- Unreleased app: release date can be set up to **180 days** out
 - Users can order your app before it's available
-- App auto-downloads on release day
+- On release day customers are notified and the app **auto-downloads within ~24 hours** — the queue converts itself
 - Pre-orders count toward your launch day download numbers
 - Your app appears in search and browse during pre-order period
 - Price can be set to "Free" or any paid tier during pre-order
+- Three edit options stay open anytime: change the date, release immediately, or pull a region; changes propagate within 24 hours
 
 ### Key Benefits
 
@@ -27,13 +28,21 @@ Use this skill when the user:
 2. **Search visibility**: App is searchable before release
 3. **Featuring eligibility**: Apple can feature pre-order apps
 4. **Marketing anchor**: Give audiences a concrete action ("Pre-order now")
+5. **A working ASO period**: Custom Product Pages and PPO tests both run during pre-order — launch day should land on an already-tested page
+
+### Not Just for Launches: Regional Pre-Orders
+
+An **existing app** entering new storefronts can run a pre-order in just those territories — with a longer runway: the release date can be up to **365 days** out (vs. 180 for an unreleased app), and any date change is capped at 365 days from when the pre-order first published. Accumulated pre-orders convert on day one in the new market — the same velocity spike a launch gets, aimed at the new market's chart entry.
+
+⚠️ **One-shot per territory**: once released in a region, you can never run a pre-order there again.
 
 ### Limitations
 
 - Cannot change app name or primary category after pre-order starts
 - Price increases require 7-day notice to pre-order customers
 - App must be ready for review before pre-order goes live
-- Release date can be moved earlier but not more than 180 days out
+- Release date can be moved earlier but not more than 180 days out (365 for a published app's regional pre-order, measured from first publication)
+- Once released in a region, a pre-order can never be re-run there
 
 ## Configuration Questions
 
@@ -121,7 +130,7 @@ Ask user via AskUserQuestion:
 ## Pre-Order Marketing Assets
 
 ### Landing Page
-- Pre-order App Store badge/button
+- Apple's official **localized pre-order badge** (per-storefront artwork — don't hand-roll the button)
 - App preview screenshots
 - Feature highlights
 - Release date and countdown
@@ -169,7 +178,7 @@ Ask user via AskUserQuestion:
 
 ## References
 
-- Related: `generators/in-app-events` — Launch event for release day
-- Related: `generators/featuring-nomination` — Featuring during pre-order
-- Related: `generators/app-store-assets` — Asset specs for pre-order page
-- Related: `app-store/marketing-strategy` — Pre-launch as part of overall strategy
+- Related: [`generators/in-app-events`](../in-app-events/overview.md) — Launch event for release day
+- Related: [`generators/featuring-nomination`](../featuring-nomination/overview.md) — Featuring during pre-order
+- Related: [`generators/app-store-assets`](../app-store-assets/overview.md) — Asset specs for pre-order page
+- Related: [`app-store/marketing-strategy`](../../app-store/marketing-strategy/overview.md) — Pre-launch as part of overall strategy

@@ -29,6 +29,14 @@ Brainstorm and rank app ideas via 5 lenses.
 - Feasibility filtering and scoring
 - Ranked shortlist of 3-5 ideas with `next_step` commands
 
+**app-namer/**
+Turn a chosen idea into validated, App-Store-ready name candidates.
+
+- Branded vs. descriptive vs. hybrid archetypes, paired with a subtitle
+- App Store display rules (30-char limit, Home-Screen truncation, name/subtitle interplay)
+- Validation gauntlet: App Store Connect name, trademark knockout, domain/.app, social handle, linguistic safety
+- Ranked shortlist with scores and a "reserve now" action; feeds [`app-store/keyword-optimizer`](../app-store/keyword-optimizer/overview.md)
+
 ### Discovery & Validation
 
 **product-agent/**
@@ -130,13 +138,13 @@ Master orchestrator.
 - Coordinates all role-based agents
 - End-to-end spec generation
 
-[**WORKFLOW.md**](WORKFLOW.md)
+**WORKFLOW.md**
 Product development workflow guide.
 
 ## How to Use
 
 1. Identify where user is in product lifecycle
-2. Read relevant module SKILL.md for detailed process
+2. Read the relevant module overview for the detailed process
 3. Generate requested specifications
 4. Save outputs to appropriate files
 
@@ -147,7 +155,8 @@ Product development workflow guide.
 1. Use `idea-generator/` to brainstorm and rank ideas
 2. Pick top idea from shortlist
 3. Run `product-agent/` to validate the idea
-4. Continue with market research and specs
+4. Run `app-namer/` to name it and reserve the App Store name
+5. Continue with market research and specs
 
 **User has new app idea:**
 

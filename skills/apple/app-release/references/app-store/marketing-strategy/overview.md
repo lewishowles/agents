@@ -57,7 +57,7 @@ Gather information via AskUserQuestion:
 
 ### Phase 2: Strategy Analysis
 
-Read [**decision-matrix.md**](decision-matrix.md) to map the app profile to recommended features.
+Read **decision-matrix.md** to map the app profile to recommended features.
 
 The decision matrix evaluates these dimensions:
 
@@ -75,10 +75,10 @@ Not every feature makes sense at every scale. The decision matrix (Dimension 6) 
 
 Based on the analysis, read the appropriate strategy template:
 
-- [strategy-templates/subscription-app.md](strategy-templates/subscription-app.md) — For subscription-based apps
-- [strategy-templates/paid-app.md](strategy-templates/paid-app.md) — For paid upfront apps
-- [strategy-templates/freemium-app.md](strategy-templates/freemium-app.md) — For freemium with IAP
-- [strategy-templates/game-app.md](strategy-templates/game-app.md) — For games (any monetization)
+- [`strategy-templates/subscription-app.md`](strategy-templates/subscription-app.md) — For subscription-based apps
+- [`strategy-templates/paid-app.md`](strategy-templates/paid-app.md) — For paid upfront apps
+- [`strategy-templates/freemium-app.md`](strategy-templates/freemium-app.md) — For freemium with IAP
+- [`strategy-templates/game-app.md`](strategy-templates/game-app.md) — For games (any monetization)
 
 Customize the template with the app's specific details.
 
@@ -93,18 +93,18 @@ For each recommended feature, provide:
 
 #### Available Sub-Skills
 
-| Feature                         | Generator Skill                        | What It Produces                       |
-| ------------------------------- | -------------------------------------- | -------------------------------------- |
-| Introductory/promotional offers | `generators/subscription-offers`       | StoreKit 2 offer code + eligibility    |
-| Win-back campaigns              | `generators/win-back-offers`           | Win-back flow + Message API handling   |
-| Promoted IAP on product page    | `generators/promoted-iap`              | StoreKit 2 promoted purchase setup     |
-| In-App Events                   | `generators/in-app-events`             | Event metadata + image specs           |
-| Custom Product Pages            | `generators/custom-product-pages`      | Page metadata + screenshot strategy    |
-| Product Page Optimization       | `generators/product-page-optimization` | A/B test plan + optimization checklist |
-| App Store featuring             | `generators/featuring-nomination`      | Nomination form + pitch template       |
-| Offer codes distribution        | `generators/offer-codes-setup`         | Distribution strategy + configuration  |
-| Pre-launch / pre-orders         | `generators/pre-orders`                | Pre-order setup + launch timeline      |
-| Promotional assets              | `generators/app-store-assets`          | Asset specs + guidelines               |
+| Feature                         | Generator Skill                                                                                             | What It Produces                       |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| Introductory/promotional offers | [`generators/subscription-offers`](../../../../apple-generators/references/subscription-offers/overview.md) | StoreKit 2 offer code + eligibility    |
+| Win-back campaigns              | [`generators/win-back-offers`](../../../../apple-generators/references/win-back-offers/overview.md)         | Win-back flow + Message API handling   |
+| Promoted IAP on product page    | [`generators/promoted-iap`](../../../../apple-generators/references/promoted-iap/overview.md)               | StoreKit 2 promoted purchase setup     |
+| In-App Events                   | [`generators/in-app-events`](../../generators/in-app-events/overview.md)                                    | Event metadata + image specs           |
+| Custom Product Pages            | [`generators/custom-product-pages`](../../generators/custom-product-pages/overview.md)                      | Page metadata + screenshot strategy    |
+| Product Page Optimization       | [`generators/product-page-optimization`](../../generators/product-page-optimization/overview.md)            | A/B test plan + optimization checklist |
+| App Store featuring             | [`generators/featuring-nomination`](../../generators/featuring-nomination/overview.md)                      | Nomination form + pitch template       |
+| Offer codes distribution        | [`generators/offer-codes-setup`](../../generators/offer-codes-setup/overview.md)                            | Distribution strategy + configuration  |
+| Pre-launch / pre-orders         | [`generators/pre-orders`](../../generators/pre-orders/overview.md)                                          | Pre-order setup + launch timeline      |
+| Promotional assets              | [`generators/app-store-assets`](../../generators/app-store-assets/overview.md)                              | Asset specs + guidelines               |
 
 ### Phase 5: Timeline & Calendar
 
@@ -228,9 +228,9 @@ Present the strategy as:
 
 ## References
 
-- [**decision-matrix.md**](decision-matrix.md) — Feature recommendation logic by app attributes
+- **decision-matrix.md** — Feature recommendation logic by app attributes
 - **strategy-templates/** — Monetization-specific strategy playbooks
-- Related: `app-store/keyword-optimizer` — ASO keyword strategy
-- Related: `app-store/app-description-writer` — Product page copy
-- Related: `app-store/screenshot-planner` — Screenshot sequences
-- Related: `monetization` — Pricing and tier strategy
+- Related: [`app-store/keyword-optimizer`](../keyword-optimizer/overview.md) — ASO keyword strategy
+- Related: [`app-store/app-description-writer`](../app-description-writer/overview.md) — Product page copy
+- Related: [`app-store/screenshot-planner`](../screenshot-planner/overview.md) — Screenshot sequences
+- Related: [`monetization`](../../monetization/overview.md) — Pricing and tier strategy

@@ -404,5 +404,5 @@ When handling a rejection, produce this assessment:
 - **common-rejections.md** — Detailed breakdown of top 20 rejection reasons with fix guides
 - Related: `release-review` — Pre-release audit that catches rejection-causing issues
 - Related: `security/privacy-manifests` — Privacy manifest compliance
-- Related: `app-store/app-description-writer` — Metadata accuracy (prevents Guideline 2.3 rejections)
-- Related: `monetization` — IAP compliance guidance (prevents Guideline 3.1 rejections)
+- Related: [`app-store/app-description-writer`](../app-description-writer/overview.md) — Metadata accuracy (prevents Guideline 2.3 rejections)
+- Related: [`monetization`](../../monetization/overview.md) — IAP compliance guidance (prevents Guideline 3.1 rejections)

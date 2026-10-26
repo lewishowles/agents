@@ -126,6 +126,13 @@ Rules engine that maps app attributes to recommended App Store promotional featu
 | 🟠 Medium | Featuring Nomination      | "What's New" angle for major update    |
 | 🟢 Low    | Custom Product Pages      | New pages for repositioned app         |
 
+### Cross-Stage Distribution Levers
+
+Two tactics worth weaving into Growth and Mature stages that most matrices miss:
+
+- **Checkbox storefronts**: shipping a Catalyst/iPad-on-Mac, visionOS, watchOS, or tvOS variant enters tiny catalogs where charts and featuring are far easier to crack — treat the port as a distribution lever, not just a feature
+- **Secondary category**: costs nothing and gives a second chart presence — pick the less-competitive category where you'd rank higher, not the most descriptive one
+
 ---
 
 ## Dimension 3: App Category → Featuring Angles
@@ -171,6 +178,7 @@ Rules engine that maps app attributes to recommended App Store promotional featu
 - **Seasonal peaks**: Holiday season, summer, game award season
 - **Apple tie-ins**: Game Center, Metal, Spatial Audio, Game controllers
 - **Event ideas**: Tournaments, seasonal content, limited-time modes
+- **Free discovery levers**: enabling Game Center automatically surfaces a game across App Store discovery surfaces — the dashboard, home-screen widgets, "Friends Are Playing", product page, search, and the Today/Games tabs — near-free discovery for one entitlement; declared game-controller support displays as a product-page capability; leaderboard friend-passing notifications drive re-engagement automatically
 
 ### Social & Communication
 

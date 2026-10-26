@@ -2,6 +2,8 @@
 
 End-to-end monetization guidance for Apple platform apps — from "should I charge?" to "here's your pricing page structure."
 
+Sub-skills in this category: `external-purchases/` (US web checkout via the External Purchase Link entitlement, commission-flip architecture) and `bundles-and-licensing/` (own-app bundles, Family Sharing, cross-developer suites, institutional volume licensing). Route there when the question is beyond the single-app price tag.
+
 ## When This Skill Activates
 
 Use this skill when the user:
