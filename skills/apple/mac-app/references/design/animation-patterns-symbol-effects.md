@@ -5,7 +5,7 @@
 
 # SF Symbol Effects
 
-Animate SF Symbols using the `.symbolEffect()` modifier (iOS 17+). These are purpose-built animations — do **not** use `withAnimation` for symbol effects.
+Animate SF Symbols using the `.symbolEffect()` modifier (iOS 17+) — not `withAnimation`.
 
 ## Available Effects
 

@@ -111,6 +111,29 @@ DetailView()
     .transition(.slideAndFade)
 ```
 
+### Transition Protocol (iOS 17+)
+
+Compose built-ins first — `.scale.combined(with: .opacity)` covers most needs. When it can't, conform to `Transition` (the typed successor to `AnyTransition.modifier`):
+
+```swift
+struct Twirl: Transition {
+    func body(content: Content, phase: TransitionPhase) -> some View {
+        content
+            .scaleEffect(phase.isIdentity ? 1 : 0.5)
+            .opacity(phase.isIdentity ? 1 : 0)
+            .rotationEffect(.degrees(
+                phase == .willAppear ? 30 :
+                phase == .didDisappear ? -30 : 0
+            ))
+    }
+}
+
+DetailView()
+    .transition(Twirl())
+```
+
+The three-case `TransitionPhase` (`.willAppear`, `.identity`, `.didDisappear`) expresses what the `active`/`identity` modifier pair can't: insertion and removal can move in the *same* visual direction — e.g. content always exits downward instead of playing its entrance in reverse (WWDC24).
+
 ## matchedGeometryEffect (iOS 14+)
 
 Creates a visual connection between two views by matching their geometry (position, size). Used for shared element transitions within the same view hierarchy.
@@ -177,76 +200,26 @@ let animation = Namespace()  // This is wrong
 // ❌ WRONG: Using for NavigationStack push/pop transitions
 NavigationLink { DetailView().matchedGeometryEffect(id: "item", in: ns) }
 // matchedGeometryEffect does NOT work across NavigationStack push/pop
-// ✅ Use matchedTransitionSource (iOS 18+) instead — see below
 ```
 
-## Navigation Transitions (iOS 18+)
+## Navigation Responsiveness
 
-### matchedTransitionSource + navigationTransition(.zoom)
+- ❌ Don't gate push/pop calls on "is a transition running" — deferring navigation until animations settle makes the app feel unresponsive.
 
-The correct way to create hero/zoom transitions with NavigationStack. **Do not use matchedGeometryEffect for this.**
+## Gesture-Driven Transitions
+
+Use `.interactiveSpring` while the gesture is changing and `.spring` when it ends — SwiftUI merges the two, retargets mid-flight, and carries the gesture's velocity into the settling spring automatically:
 
 ```swift
-struct GalleryView: View {
-    @Namespace private var namespace
-    let photos: [Photo]
-
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))]) {
-                    ForEach(photos) { photo in
-                        NavigationLink(value: photo) {
-                            PhotoThumbnail(photo: photo)
-                                .matchedTransitionSource(id: photo.id, in: namespace)
-                        }
-                    }
-                }
-            }
-            .navigationDestination(for: Photo.self) { photo in
-                PhotoDetailView(photo: photo)
-                    .navigationTransition(.zoom(sourceID: photo.id, in: namespace))
-            }
+.gesture(
+    DragGesture()
+        .onChanged { value in
+            withAnimation(.interactiveSpring) { offset = value.translation }
         }
-    }
-}
-```
-
-### How It Differs from matchedGeometryEffect
-
-| | matchedGeometryEffect | matchedTransitionSource |
-|---|---|---|
-| **Purpose** | Shared element within same hierarchy | Navigation push/pop transitions |
-| **Works with NavigationStack** | No | Yes |
-| **Availability** | iOS 14+ | iOS 18+ |
-| **Both views exist** | Must coordinate with `isSource` | Source and destination are separate screens |
-| **Configuration** | On both views | Source: `.matchedTransitionSource`, Destination: `.navigationTransition(.zoom)` |
-
-### Other Navigation Transitions
-
-```swift
-// Slide transition (default NavigationStack behavior)
-.navigationTransition(.slide)
-
-// Zoom from a source
-.navigationTransition(.zoom(sourceID: id, in: namespace))
-
-// Automatic — system chooses based on context
-.navigationTransition(.automatic)
-```
-
-### Customizing Zoom Appearance
-
-```swift
-PhotoThumbnail(photo: photo)
-    .matchedTransitionSource(id: photo.id, in: namespace) { source in
-        source
-            .clipShape(.rect(cornerRadius: 12))
-            .shadow(radius: 5)
-    }
-
-PhotoDetailView(photo: photo)
-    .navigationTransition(.zoom(sourceID: photo.id, in: namespace))
+        .onEnded { _ in
+            withAnimation(.spring) { offset = .zero }
+        }
+)
 ```
 
 ## Content Transitions

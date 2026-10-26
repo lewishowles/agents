@@ -3,7 +3,10 @@
 ## Topics
 
 - [Animation patterns](animation-patterns.md)
-- [Liquid glass](liquid-glass.md)
+- [Liquid Glass](liquid-glass.md)
+- [SF Symbols](sf-symbols.md)
+- [Typography](typography.md)
+- [UX writing](ux-writing.md)
 
 <a id="source-design-skill-md"></a>
 ## Source: `design/SKILL.md`
@@ -25,6 +28,9 @@ Use this skill when the user:
 - Needs **view transitions**, **matched geometry**, or **hero transitions**
 - Wants **SF Symbol effects** (bounce, pulse, wiggle, breathe)
 - Asks about **animation completions** or **withAnimation**
+- Needs UX structure help: navigation clarity, discoverability, information architecture
+- Is writing or reviewing interface copy, alerts, or feature names
+- Asks about SF Symbols usage/authoring, fonts, Dynamic Type, or type hierarchy
 
 ## Available Skills
 
@@ -45,6 +51,15 @@ SwiftUI animation patterns for iOS 13–18+.
 - SF Symbol effects
 - Animation completions, transactions, timing curves
 
+### ux-writing/
+Interface copy that works — voice/tone, the PACE framework, alert anatomy, feature naming, empty states, and the small-word edits that measurably improve UX.
+
+### sf-symbols/
+SF Symbols end-to-end — choosing/configuring system symbols (rendering modes, variable color/draw), authoring custom symbols that interpolate across weights, and the animation preset vocabulary.
+
+### typography/
+UI typography — text styles and Dynamic Type, the San Francisco family with its width axis, optical sizes, tracking vs kerning, and custom-font scaling obligations.
+
 ## Key Principles
 
 ### 1. Platform Consistency
@@ -64,5 +79,6 @@ SwiftUI animation patterns for iOS 13–18+.
 
 ## Reference Documentation
 
-- `/Users/ravishankar/Downloads/docs/SwiftUI-Implementing-Liquid-Glass-Design.md`
-- `/Users/ravishankar/Downloads/docs/AppKit-Implementing-Liquid-Glass-Design.md`
+- [Applying Liquid Glass to custom views (SwiftUI)](https://developer.apple.com/documentation/swiftui/applying-liquid-glass-to-custom-views)
+- [NSGlassEffectView (AppKit)](https://developer.apple.com/documentation/appkit/nsglasseffectview)
+- Local captured docs (optional): if `~/Downloads/docs/SwiftUI-Implementing-Liquid-Glass-Design.md` or `~/Downloads/docs/AppKit-Implementing-Liquid-Glass-Design.md` exists, read it for extra detail; skip silently if absent.
