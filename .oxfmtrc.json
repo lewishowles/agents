@@ -1,4 +1,4 @@
 {
 	"embeddedLanguageFormatting": "off",
-	"ignorePatterns": []
+	"ignorePatterns": ["docs/skills.md", "docs/hooks.md"]
 }
