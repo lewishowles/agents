@@ -150,9 +150,7 @@ Now fix the code to make the test pass. The fix should be **minimal** — only c
 
 #### Fix Guidelines
 
-- **Change as little code as possible** to make the test pass
-- **Don't refactor while fixing** — that's the next step
-- **Don't fix other issues** you notice — file them separately
+- **Minimal, targeted fix** — change only what's needed; don't refactor or fix unrelated issues (file those separately)
 - **AI should target the specific test** — give Claude the failing test as context
 
 ```
@@ -205,18 +203,6 @@ struct BugFix_DiscountCalculationTests {
         #expect(calc.applyDiscount(price: 100, percent: 50) == 50.0)
     }
 
-    @Test("0% discount should return original price")
-    func zeroDiscount() {
-        let calc = PriceCalculator()
-        #expect(calc.applyDiscount(price: 100, percent: 0) == 100.0)
-    }
-
-    @Test("100% discount should return 0")
-    func fullDiscount() {
-        let calc = PriceCalculator()
-        #expect(calc.applyDiscount(price: 100, percent: 100) == 0.0)
-    }
-
     @Test("discount on $0 should return $0")
     func zeroPrice() {
         let calc = PriceCalculator()
@@ -266,10 +252,9 @@ This test will catch any future regression of this bug.
 | Fix breaks other tests | Fix was too broad | Revert and use smaller, targeted change |
 | Test is too specific | Brittle, breaks on unrelated changes | Test behavior, not implementation details |
 | Skipping the red step | No proof the test catches the bug | Always verify test fails first |
-| Fixing multiple bugs at once | Can't isolate regressions | One bug = one test + one fix |
 
 ## References
 
-- `testing/tdd-feature/` — for new features (not bug fixes)
-- `testing/characterization-test-generator/` — for capturing existing behavior first
-- `generators/test-generator/` — for general test generation
+- `tdd-feature.md` — for new features (not bug fixes)
+- `characterization-test-generator.md` — for capturing existing behavior first
+- `../../../apple-generators/references/test-generator/overview.md` — for general test generation

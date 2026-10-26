@@ -234,7 +234,7 @@ extension Item {
 
 ### Phase 4: Generate Date/Time Helpers
 
-Tests with dates are notoriously flaky. Provide fixed dates:
+Provide fixed reference dates:
 
 ```swift
 // Tests/Factories/Date+Factory.swift
@@ -285,13 +285,13 @@ extension APIResponse where T == [Item] {
 
 | Property Type | Default Strategy |
 |--------------|-----------------|
-| UUID | `UUID()` (unique per call) |
+| UUID | `UUID()` |
 | String | Descriptive placeholder (`"Test Item"`) |
-| Date | Fixed timestamp (not `Date()` — causes flaky tests) |
-| Bool | `false` (opt-in to special states) |
+| Date | Fixed timestamp, not `Date()` |
+| Bool | `false` |
 | Array | Empty `[]` (opt-in to populated) |
-| Optional | `nil` (opt-in to having a value) |
-| Enum | Most common/default case |
+| Optional | `nil` |
+| Enum | Most common case |
 | Nested model | That model's `.fixture()` |
 
 ### Naming Conventions
@@ -344,6 +344,6 @@ let item = Item.fixture(isFavorite: true)
 
 ## References
 
-- `generators/test-generator/` — generates tests that use these factories
-- `testing/tdd-feature/` — TDD workflow benefits from low-friction factories
-- `testing/integration-test-scaffold/` — integration tests need realistic data
+- `../../../apple-generators/references/test-generator/overview.md` — generates tests that use these factories
+- `tdd-feature.md` — TDD workflow benefits from low-friction factories
+- `integration-test-scaffold.md` — integration tests need realistic data

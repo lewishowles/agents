@@ -125,13 +125,16 @@ enum SnapshotConfig {
 @Suite("Snapshots: HomeView")
 struct HomeViewSnapshotTests {
 
+    // perceptualPrecision < 1.0 absorbs GPU/anti-aliasing noise across runs
+    // on the same pinned simulator — 0.98 catches real layout/color changes
+    // while ignoring sub-perceptual rendering jitter.
     @Test("matches reference - light mode")
     func lightMode() {
         let view = HomeView(items: Item.sampleList)
 
         assertSnapshot(
             of: UIHostingController(rootView: view),
-            as: .image(on: .iPhone13)
+            as: .image(on: .iPhone13, perceptualPrecision: 0.98)
         )
     }
 
@@ -142,7 +145,7 @@ struct HomeViewSnapshotTests {
 
         assertSnapshot(
             of: UIHostingController(rootView: view),
-            as: .image(on: .iPhone13)
+            as: .image(on: .iPhone13, perceptualPrecision: 0.98)
         )
     }
 
@@ -152,18 +155,18 @@ struct HomeViewSnapshotTests {
 
         assertSnapshot(
             of: UIHostingController(rootView: view),
-            as: .image(on: .iPhone13)
+            as: .image(on: .iPhone13, perceptualPrecision: 0.98)
         )
     }
 
-    @Test("matches reference - dynamic type XXL")
-    func dynamicTypeXXL() {
+    @Test("matches reference - accessibility Dynamic Type")
+    func dynamicTypeAccessibility() {
         let view = HomeView(items: Item.sampleList)
-            .environment(\.sizeCategory, .accessibilityExtraExtraLarge)
+            .environment(\.dynamicTypeSize, .accessibility3)
 
         assertSnapshot(
             of: UIHostingController(rootView: view),
-            as: .image(on: .iPhone13)
+            as: .image(on: .iPhone13, perceptualPrecision: 0.98)
         )
     }
 }
@@ -243,7 +246,7 @@ xcodebuild test -scheme YourApp \
   -destination 'platform=iOS Simulator,name=iPhone 16'
 ```
 
-**Important:** Reference images are stored in `__Snapshots__/` directories next to test files. Commit these to git.
+Reference images land in `__Snapshots__/` directories next to test files:
 
 ```
 Tests/SnapshotTests/
@@ -275,18 +278,40 @@ func lightMode() {
 }
 ```
 
-Or use environment variable:
-```bash
-SNAPSHOT_TESTING_RECORD=all xcodebuild test -scheme YourApp
-```
+## Gate Wiring (the deterministic UI gate)
+
+Snapshot suites are the UI half of the deterministic gauntlet (code half:
+`fitness-functions.md`, `../swift/code-size.md`, `coverage-ratchet.md`).
+They use the same install trick as fitness functions: **they are ordinary
+tests in the existing unit-test target**, so they ride every `test` gate that
+already exists — no new CI plumbing to *run* them. What makes them a *gate*
+rather than a capability:
+
+- **A pixel diff is a FAIL, not a discussion.** SwiftShip's `<check
+  type="snapshot">` runs the suite scoped to a task's touched screens
+  (`-only-testing`); the phase does not close on a red diff.
+- **The re-record ratchet.** `__Snapshots__/` baselines are committed;
+  re-recording is a *stated decision* — the commit message says which screens
+  changed and why. Record mode (`withSnapshotTesting(record: .all)`) is never
+  committed enabled; a committed record-mode test asserts nothing.
+- **Determinism guards.** Pin one simulator model/OS as the snapshot
+  destination and document it in the suite header (baselines from other
+  devices/OS versions will diff). Use `perceptualPrecision: 0.98`. Require a
+  **double-run green** before committing new baselines — a suite that flakes
+  between two identical runs is not a gate. OS/simulator bumps legitimately
+  require re-records: that's a stated-intent event like any other.
+- **New or changed screen ⇒ snapshot in the same task.** A view task without
+  a snapshot for its touched screens leaves the gate blind exactly where the
+  change happened.
+- **Environment assembly:** reuse the project's preview harness (the struct
+  its `#Preview`s already use to inject state/environment) rather than
+  building a parallel one — the DEBUG-only harness is visible to test builds,
+  and reuse keeps snapshots rendering exactly what previews render.
 
 ## What to Snapshot
 
 ### High Value (Always Snapshot)
-- Screens/pages with multiple states (empty, loaded, error)
-- Reusable components in all configurations
-- Dark mode vs. light mode
-- Dynamic type at standard and accessibility sizes
+- Screens with multiple states (empty, loaded, error), reusable components across configurations, light/dark mode, Dynamic Type at accessibility sizes
 
 ### Medium Value (Selectively Snapshot)
 - Navigation flows (each step)
@@ -363,5 +388,6 @@ swift-snapshot-testing 1.17.0 via SPM
 ## References
 
 - [swift-snapshot-testing](https://github.com/pointfreeco/swift-snapshot-testing)
-- `generators/test-generator/` — for unit/integration test generation
-- `testing/tdd-feature/` — for TDD workflow with UI features
+- `../../../apple-generators/references/test-generator/overview.md` — for unit/integration test generation
+- `tdd-feature.md` — for TDD workflow with UI features
+- `fitness-functions.md` — the code half of the deterministic gauntlet (same ride-the-test-gate trick)

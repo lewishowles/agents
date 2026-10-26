@@ -320,6 +320,6 @@ All [X] tests passing.
 ## References
 
 - Kent Beck, *Test-Driven Development: By Example*
-- `testing/test-contract/` — for protocol-level test suites
-- `testing/test-data-factory/` — for reducing test setup boilerplate
-- `generators/test-generator/` — for standalone test generation
+- `test-contract.md` — for protocol-level test suites
+- `test-data-factory.md` — for reducing test setup boilerplate
+- `../../../apple-generators/references/test-generator/overview.md` — for standalone test generation

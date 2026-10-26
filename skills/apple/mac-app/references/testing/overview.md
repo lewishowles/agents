@@ -2,6 +2,9 @@
 
 ## Topics
 
+- [Coverage ratchet](coverage-ratchet.md)
+- [Fitness functions](fitness-functions.md)
+- [Mutation testing (experimental)](mutation-testing.md)
 - [Characterization test generator](characterization-test-generator.md)
 - [Integration test scaffold](integration-test-scaffold.md)
 - [Snapshot test setup](snapshot-test-setup.md)
@@ -27,6 +30,7 @@ Use this skill when the user:
 - Needs test infrastructure (factories, mocks, contracts)
 - Asks about snapshot/visual regression testing
 - Wants to ensure AI-generated code is correct via tests
+- Wants deterministic gates around agent-written code (architecture invariants, coverage floors, mutation audits)
 
 ## Available Skills
 
@@ -60,20 +64,31 @@ Test fixture factories for your models. Makes writing tests faster by eliminatin
 **integration-test-scaffold/**
 Cross-module test harness with mock servers, in-memory stores, and test configuration. For testing networking + persistence + business logic together.
 
+### Deterministic Gates
+
+**fitness-functions/**
+Architecture fitness functions — tests that enforce a project's hard rules (module import boundaries, offline guarantees, count/copy contracts) from inside its own test target. Turns prose constraints into exit codes.
+
+**coverage-ratchet/**
+Coverage floor that only rises: a committed baseline the app target's line coverage may never drop below, gated by a generated xccov script. Includes an advisory CRAP report (complexity × uncovered).
+
+**mutation-testing/**
+EXPERIMENTAL, advisory-only muter setup scoped to engine targets — surviving mutants reveal covered-but-unasserted code. Never a merge gate; includes the manual deliberate-break fallback.
+
 ## How to Use
 
 1. Identify whether user is working on **new code** or **existing code**
-2. Read the relevant skill's SKILL.md for detailed workflow
+2. Read the linked local reference for the detailed workflow
 3. Detect project context (testing framework, architecture, existing tests)
 4. Generate tests following the skill's workflow
 5. Verify tests compile and run
 
 ## Relationship to test-generator
 
-The `generators/test-generator/` skill generates test boilerplate (unit, integration, UI tests). These testing skills are complementary — they focus on **workflows and methodology** (TDD cycle, characterization testing, contracts) rather than just test file generation.
+The `../../../apple-generators/references/test-generator/overview.md` skill generates test boilerplate (unit, integration, UI tests). These testing skills are complementary — they focus on **workflows and methodology** (TDD cycle, characterization testing, contracts) rather than just test file generation.
 
 Cross-reference:
 - Use `test-generator` for "add tests to this class"
-- Use `testing/tdd-feature` for "I want to TDD this new feature"
-- Use `testing/characterization-test-generator` for "I need to safely refactor this"
-- Use `testing/tdd-bug-fix` for "fix this bug and make sure it never comes back"
+- Use `tdd-feature.md` for "I want to TDD this new feature"
+- Use `characterization-test-generator.md` for "I need to safely refactor this"
+- Use `tdd-bug-fix.md` for "fix this bug and make sure it never comes back"

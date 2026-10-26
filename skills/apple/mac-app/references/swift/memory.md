@@ -1,5 +1,9 @@
 # Memory
 
+## Parts
+
+- [Swift performance](memory-swift-performance.md) (upstream `swift-performance.md`)
+
 <a id="source-swift-memory-skill-md"></a>
 ## Source: `swift/memory/SKILL.md`
 
@@ -78,8 +82,10 @@ What memory optimization do you need?
 | `MutableRawSpan` | Swift 6.2 | Mutable untyped byte access |
 | `UTF8Span` | Swift 6.2 | Unicode-aware text processing |
 | `OutputSpan` | Swift 6.2 | For initializing collection storage |
-| `.span` property on `Array` | Swift 6.2 | Returns `Span<Element>` |
-| `.span` property on `Data` | Swift 6.2 | Returns `Span<UInt8>` |
+| `.span` property on `Array` / `ArraySlice` / `InlineArray` | Swift 6.2 | Returns `Span<Element>` |
+| `.bytes` property on `Data` | Swift 6.2 | Returns `RawSpan` (byte-level access) |
+| `[N of T]` sugar, `InlineArray(repeating:)`, closure init | Swift 6.4 | `[256 of Int]` as a type; `InlineArray { i in … }` (WWDC26 262) |
+| `UniqueArray` / `UniqueBox` / `Ref` / `MutableRef` | Swift 6.4 | Noncopyable containers + single-value spans — see `memory-swift-performance.md` |
 
 ## Top 5 Mistakes
 
@@ -94,8 +100,6 @@ What memory optimization do you need?
 ## InlineArray
 
 ### Declaration
-
-`InlineArray` uses Swift's value generics to encode the count in the type:
 
 ```swift
 @frozen struct InlineArray<let count: Int, Element> where Element: ~Copyable
@@ -199,8 +203,19 @@ Untyped byte-level access for binary data:
 
 ```swift
 let data = Data([0xFF, 0x00, 0xAB, 0xCD])
-let rawSpan = data.span  // Span<UInt8> for byte-level access
+let rawSpan = data.bytes  // RawSpan over the bytes
+let value = rawSpan.unsafeLoadUnaligned(as: UInt8.self)  // loading integers is safe
 ```
+
+For **writing** into uninitialized memory, `OutputRawSpan` builds a `Data` incrementally with no manual offset tracking (WWDC25 312):
+
+```swift
+let output = Data(rawCapacity: totalBytes) { outputSpan in
+    // append bytes; outputSpan.count tracks what's been written
+}
+```
+
+For binary parsers, Apple ships the open-source **swift-binary-parsing** library (`ParserSpan`, overflow-safe parsing initializers by signedness/bit-width/byte-order, validating parsers for RawRepresentable) — already used inside Apple (WWDC25 312).
 
 ### UTF8Span
 
@@ -224,23 +239,6 @@ func processData(_ array: [UInt8]) {
     let span = array.span
     // Use span here
     let sum = span.reduce(0, +)
-}
-```
-
-### Non-Escapable: Cannot Capture in Closures
-
-```swift
-// ❌ Wrong -- Span cannot be captured
-func makeClosure() -> () -> Int {
-    let array: [UInt8] = Array(repeating: 0, count: 128)
-    let span = array.span
-    return { span.count }  // Compiler error
-}
-
-// ✅ Right -- use Span within the local scope only
-func countElements(_ array: [UInt8]) -> Int {
-    let span = array.span
-    return span.count
 }
 ```
 
@@ -347,10 +345,14 @@ let x = span[0]        // Safe
 - [ ] `Span` is used instead of `UnsafeBufferPointer` for safe contiguous access
 - [ ] No premature optimization -- `Array` is correct default for most code
 
+What the payoff can look like when profiling confirms the bottleneck — Apple's QOI-parser case study (WWDC25 312): preallocating one buffer instead of ~1M transient arrays cut execution time over 50%; adopting InlineArray + RawSpan/OutputRawSpan made it another 6× faster by eliminating all retain/release traffic. See **swift-performance.md** for the full cost model (calls, copying, generics/existentials, closures, noncopyable ownership) and the profiling-symptom table.
+
 ## References
 
+- **swift-performance.md** (this skill) — the Swift cost model: allocation, ARC, exclusivity, dispatch, `~Copyable` ownership
 - [Swift Standard Library - InlineArray](https://developer.apple.com/documentation/swift/inlinearray)
 - [Swift Standard Library - Span](https://developer.apple.com/documentation/swift/span)
 - [Value Generics in Swift](https://www.swift.org/blog/value-generics/)
 - [SE-0453: Vector (InlineArray)](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0453-vector.md)
 - [SE-0447: Span](https://github.com/swiftlang/swift-evolution/blob/main/proposals/0447-span-access-shared-contiguous-storage.md)
+- [WWDC25 — Improve memory usage and performance with Swift](https://developer.apple.com/videos/play/wwdc2025/312/)

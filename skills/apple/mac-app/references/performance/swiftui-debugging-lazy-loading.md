@@ -117,8 +117,6 @@ LazyVStack(alignment: .leading, spacing: 8) {
 
 ### Pitfall 1: Child Views That Defeat Laziness
 
-If a child view requests infinite height, the lazy container must measure all children to determine layout, defeating the purpose of laziness:
-
 ```swift
 // ❌ .frame(maxHeight: .infinity) forces the lazy container to measure all children
 ScrollView {
@@ -142,8 +140,6 @@ ScrollView {
 ```
 
 ### Pitfall 2: GeometryReader Inside Lazy Containers
-
-`GeometryReader` proposes `.infinity` to its children. Inside a lazy container, this can cause layout issues:
 
 ```swift
 // ❌ GeometryReader inside LazyVStack: layout problems

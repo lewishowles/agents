@@ -181,7 +181,7 @@ This is the key step. For each test:
 
 1. **Read the source code** to understand what the method actually returns
 2. **Trace the logic** for the given inputs
-3. **Write the assertion with the actual value**, even if it seems wrong
+3. **Write the assertion with the actual value**
 
 ```swift
 // ❌ Wrong — this is what you WANT it to do
@@ -202,7 +202,7 @@ This is the key step. For each test:
 
 1. **Run all characterization tests** — they must ALL pass
 2. **If any fail**, adjust assertions to match actual behavior
-3. **Tag them** so they're easy to find later:
+3. **Tag them:**
 
 ```swift
 @Suite("Characterization: ItemManager")
@@ -261,5 +261,5 @@ Run `xcodebuild test` after each change to verify no behavior changed.
 ## References
 
 - Michael Feathers, *Working Effectively with Legacy Code* — coined "characterization test"
-- `generators/test-generator/` — for standard test generation (not characterization)
-- `testing/tdd-refactor-guard/` — pre-refactor checklist that uses these tests
+- `../../../apple-generators/references/test-generator/overview.md` — for standard test generation (not characterization)
+- `tdd-refactor-guard.md` — pre-refactor checklist that uses these tests

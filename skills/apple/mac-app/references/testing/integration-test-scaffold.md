@@ -440,7 +440,7 @@ Tests/
 
 ## References
 
-- `testing/test-data-factory/` — factories used in integration tests
-- `testing/test-contract/` — protocol contracts tested at integration level
-- `generators/networking-layer/` — networking code being tested
-- `generators/persistence-setup/` — persistence code being tested
+- `test-data-factory.md` — factories used in integration tests
+- `test-contract.md` — protocol contracts tested at integration level
+- `../../../apple-generators/references/networking-layer/overview.md` — networking code being tested
+- `../../../apple-generators/references/persistence-setup/overview.md` — persistence code being tested

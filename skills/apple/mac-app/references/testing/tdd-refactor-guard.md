@@ -239,6 +239,6 @@ Full contract tests recommended:
 
 ## References
 
-- `testing/characterization-test-generator/` — generates tests this guard may require
-- `testing/tdd-feature/` — for building new code during refactor
+- `characterization-test-generator.md` — generates tests this guard may require
+- `tdd-feature.md` — for building new code during refactor
 - Martin Fowler, *Refactoring: Improving the Design of Existing Code*
