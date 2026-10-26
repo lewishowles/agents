@@ -3,6 +3,7 @@ name: accessibility-audit
 description: >
   Use this skill when conducting an accessibility audit of a page, component, or PR — distinct from building accessibly (use the accessibility skill for that). Two modes: quick PR triage or full client audit. Triggers: "audit for accessibility", "a11y check", "WCAG compliance", "is this accessible?", preparing a client accessibility report.
 ---
+
 # Accessibility audit
 
 WCAG 2.2 AA baseline; AAA where feasible. Choose mode by context.
@@ -21,12 +22,12 @@ If `web-audit` is unavailable, stop and ask the user to run it, provide an exist
 
 **Keyboard**
 
-| Check                                      | Pass? |
-| ------------------------------------------ | ----- |
-| All interactive elements reachable via Tab |       |
-| Focus indicator always visible             |       |
-| No keyboard traps                          |       |
-| Logical tab order                          |       |
+| Check                                           | Pass? |
+| ----------------------------------------------- | ----- |
+| All interactive elements reachable via Tab      |       |
+| Focus indicator always visible                  |       |
+| No keyboard traps                               |       |
+| Logical tab order                               |       |
 | Repeated blocks have a working bypass mechanism |       |
 
 **Semantics & labels**
@@ -48,9 +49,9 @@ If `web-audit` is unavailable, stop and ask the user to run it, provide an exist
 
 **Motion & dynamic updates**
 
-| Check                                     | Pass? |
-| ----------------------------------------- | ----- |
-| Non-essential motion follows the project preference |       |
+| Check                                                  | Pass? |
+| ------------------------------------------------------ | ----- |
+| Non-essential motion follows the project preference    |       |
 | Status messages use appropriate programmatic semantics |       |
 
 **Component states**

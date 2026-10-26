@@ -1,6 +1,7 @@
 # Coding best practices: Code organisation
 
 <a id="source-macos-coding-best-practices-code-organization-md"></a>
+
 ## Source: `macos/coding-best-practices/code-organization.md`
 
 # Code Organization Best Practices

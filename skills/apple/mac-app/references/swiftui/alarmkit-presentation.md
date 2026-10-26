@@ -1,6 +1,7 @@
 # AlarmKit: Presentation
 
 <a id="source-swiftui-alarmkit-presentation-md"></a>
+
 ## Source: `swiftui/alarmkit/presentation.md`
 
 # Alarm Presentation
@@ -11,11 +12,11 @@ Customizing the alarm UI for alert, countdown, and paused states. Includes butto
 
 AlarmKit defines three presentation states. Each state has its own UI configuration type.
 
-| State | Type | When Shown |
-|-------|------|------------|
-| Alert | `AlarmPresentation.Alert` | Alarm fires or timer reaches zero |
+| State     | Type                          | When Shown                            |
+| --------- | ----------------------------- | ------------------------------------- |
+| Alert     | `AlarmPresentation.Alert`     | Alarm fires or timer reaches zero     |
 | Countdown | `AlarmPresentation.Countdown` | Timer is counting down (before alert) |
-| Paused | `AlarmPresentation.Paused` | Timer is paused by the user |
+| Paused    | `AlarmPresentation.Paused`    | Timer is paused by the user           |
 
 ## AlarmPresentation.Alert
 
@@ -64,11 +65,11 @@ AlarmPresentation.Alert(
 
 ### Secondary Button Types
 
-| Factory Method | Behavior |
-|---------------|----------|
-| `.snoozeButton()` | Snoozes the alarm for the system default duration |
-| `.openAppButton()` | Dismisses the alarm and opens your app |
-| `.repeatButton()` | Repeats the alarm/timer |
+| Factory Method     | Behavior                                          |
+| ------------------ | ------------------------------------------------- |
+| `.snoozeButton()`  | Snoozes the alarm for the system default duration |
+| `.openAppButton()` | Dismisses the alarm and opens your app            |
+| `.repeatButton()`  | Repeats the alarm/timer                           |
 
 ### Secondary Button Behavior
 
@@ -83,10 +84,10 @@ AlarmPresentation.Alert(
 )
 ```
 
-| Behavior | Effect |
-|----------|--------|
-| `.countdown` | Shows a countdown until the alarm fires again |
-| `.custom` | Custom handling -- your app controls the behavior |
+| Behavior     | Effect                                            |
+| ------------ | ------------------------------------------------- |
+| `.countdown` | Shows a countdown until the alarm fires again     |
+| `.custom`    | Custom handling -- your app controls the behavior |
 
 ### Custom Buttons
 

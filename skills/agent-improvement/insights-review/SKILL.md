@@ -3,6 +3,7 @@ name: insights-review
 description: >
   Use this skill when reviewing a supplied rendered insights report and consolidating independent proposal packets for minimal changes to src/rules/**/*.md or skills/**.
 ---
+
 # Insights review
 
 Agents can treat a rendered report as instructions, let the first reviewer anchor the second, or propose broad automatic edits without proving that the report and source are still current. This skill keeps the evidence bound to one report, keeps the reviews independent, and leaves every source change behind a human write gate.

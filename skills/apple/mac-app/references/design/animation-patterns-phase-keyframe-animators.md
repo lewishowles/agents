@@ -1,6 +1,7 @@
 # Animation patterns: Phase and keyframe animators
 
 <a id="source-design-animation-patterns-phase-keyframe-animators-md"></a>
+
 ## Source: `design/animation-patterns/phase-keyframe-animators.md`
 
 # Phase & Keyframe Animators
@@ -211,12 +212,12 @@ struct BouncingLogo: View {
 
 ### Keyframe Types
 
-| Type | Behavior | Parameters |
-|------|----------|------------|
-| `LinearKeyframe` | Constant-speed interpolation | `(_ value:, duration:)` |
-| `SpringKeyframe` | Spring physics to reach value | `(_ value:, duration:, spring:)` |
-| `CubicKeyframe` | Bezier curve interpolation | `(_ value:, duration:, timingCurve:)` |
-| `MoveKeyframe` | Jump to value instantly (no interpolation) | `(_ value:)` |
+| Type             | Behavior                                   | Parameters                            |
+| ---------------- | ------------------------------------------ | ------------------------------------- |
+| `LinearKeyframe` | Constant-speed interpolation               | `(_ value:, duration:)`               |
+| `SpringKeyframe` | Spring physics to reach value              | `(_ value:, duration:, spring:)`      |
+| `CubicKeyframe`  | Bezier curve interpolation                 | `(_ value:, duration:, timingCurve:)` |
+| `MoveKeyframe`   | Jump to value instantly (no interpolation) | `(_ value:)`                          |
 
 ```swift
 KeyframeTrack(\.opacity) {
@@ -383,20 +384,22 @@ LinearKeyframe(1.0, duration: 0.3)
 
 ## PhaseAnimator vs KeyframeAnimator
 
-| | PhaseAnimator | KeyframeAnimator |
-|---|---|---|
-| **Mental model** | Cycle through states | Timeline with tracks |
-| **Properties** | All change together per phase | Each property has independent timeline |
-| **Timing** | One animation per phase transition | Per-keyframe timing within each track |
-| **Use when** | 2-4 distinct visual states | Complex choreography, physics-based sequences |
-| **Difficulty** | Simpler | More setup, more control |
+|                  | PhaseAnimator                      | KeyframeAnimator                              |
+| ---------------- | ---------------------------------- | --------------------------------------------- |
+| **Mental model** | Cycle through states               | Timeline with tracks                          |
+| **Properties**   | All change together per phase      | Each property has independent timeline        |
+| **Timing**       | One animation per phase transition | Per-keyframe timing within each track         |
+| **Use when**     | 2-4 distinct visual states         | Complex choreography, physics-based sequences |
+| **Difficulty**   | Simpler                            | More setup, more control                      |
 
 ### Choose PhaseAnimator when:
+
 - You have discrete visual states (idle → active → settled)
 - All properties change at the same time
 - You want automatic looping with `CaseIterable`
 
 ### Choose KeyframeAnimator when:
+
 - Properties need different timing (scale peaks before rotation)
 - You need precise timeline control
 - You want spring physics on some properties and linear on others
@@ -437,8 +440,8 @@ withAnimation(Animation(CustomBounce())) {
 
 The protocol hooks map directly onto built-in behavior (WWDC23):
 
-| Hook | Role | How built-ins use it |
-|------|------|----------------------|
-| `animate(value:time:context:)` | Return the interpolated vector for `time`, or `nil` when finished | `value` is the *delta* being animated, not an absolute value |
+| Hook                                        | Role                                                               | How built-ins use it                                                                                                                                       |
+| ------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `animate(value:time:context:)`              | Return the interpolated vector for `time`, or `nil` when finished  | `value` is the _delta_ being animated, not an absolute value                                                                                               |
 | `shouldMerge(previous:value:time:context:)` | Return `true` to take over an in-flight animation of the same type | Springs return `true` — they retarget, preserving state; timing curves return `false`, so old and new run concurrently and their deltas combine additively |
-| `velocity(value:time:context:)` | Report current velocity (has a default implementation) | Lets a merging successor preserve momentum — implement it if your animation may be interrupted |
+| `velocity(value:time:context:)`             | Report current velocity (has a default implementation)             | Lets a merging successor preserve momentum — implement it if your animation may be interrupted                                                             |

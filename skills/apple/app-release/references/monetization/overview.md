@@ -5,6 +5,7 @@ End-to-end monetization guidance for Apple platform apps — from "should I char
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Asks "should I monetize my app?" or "is my app ready to charge?"
 - Wants help choosing between freemium, subscription, or one-time purchase
 - Needs pricing tier recommendations
@@ -20,17 +21,20 @@ Use this skill when the user:
 Before recommending a pricing model, evaluate whether the app is ready to monetize. Ask these questions via AskUserQuestion:
 
 **1. App Stage**
+
 - Pre-launch (idea/prototype)
 - Beta / TestFlight
 - Live with users (< 1K)
 - Live with traction (1K+ users)
 
 **2. Value Proposition**
+
 - What problem does your app solve?
 - Who is the target user?
 - What alternatives exist (including doing nothing)?
 
 **3. Current State**
+
 - Do you have active users?
 - What's your retention like? (Day 1, Day 7, Day 30)
 - Are users asking for features / willing to pay?
@@ -39,16 +43,17 @@ Before recommending a pricing model, evaluate whether the app is ready to moneti
 
 Evaluate against these criteria:
 
-| Signal | Ready | Not Ready |
-|--------|-------|-----------|
-| Core value | Clear, differentiated | Still finding product-market fit |
-| User retention | D7 > 20% | D7 < 10% |
-| User feedback | "I'd pay for this" | Silence or complaints |
-| Feature depth | Enough for free + paid split | Everything feels essential |
-| Competition | You offer something unique | Commodity feature set |
-| Polish | Professional quality | Rough edges everywhere |
+| Signal         | Ready                        | Not Ready                        |
+| -------------- | ---------------------------- | -------------------------------- |
+| Core value     | Clear, differentiated        | Still finding product-market fit |
+| User retention | D7 > 20%                     | D7 < 10%                         |
+| User feedback  | "I'd pay for this"           | Silence or complaints            |
+| Feature depth  | Enough for free + paid split | Everything feels essential       |
+| Competition    | You offer something unique   | Commodity feature set            |
+| Polish         | Professional quality         | Rough edges everywhere           |
 
 **Recommendation thresholds:**
+
 - 5-6 Ready signals → Monetize now
 - 3-4 Ready signals → Soft-launch pricing (low price, gather data)
 - 0-2 Ready signals → Focus on product first, monetize later
@@ -74,6 +79,7 @@ Is the app used daily/weekly?
 #### Model Comparison
 
 Read **pricing-models.md** for detailed comparison of each model:
+
 - Subscriptions (auto-renewable)
 - One-time purchase (paid upfront or freemium unlock)
 - Consumable IAP (credits, tokens)
@@ -84,6 +90,7 @@ Read **pricing-models.md** for detailed comparison of each model:
 #### App-Type Recommendations
 
 Read **app-type-guides.md** for specific guidance by app category:
+
 - Productivity / task management
 - Health / therapy / wellness
 - Kids / education
@@ -99,6 +106,7 @@ Once a model is selected, design the tier structure.
 #### Subscription Tiers (if applicable)
 
 **Two-tier structure** (recommended for most indie apps):
+
 ```
 FREE                    PRO ($X.99/mo or $XX.99/yr)
 ─────────────────────   ─────────────────────────────
@@ -110,6 +118,7 @@ Basic features          Advanced features
 ```
 
 **Three-tier structure** (for apps with clear user segments):
+
 ```
 FREE          PLUS ($X.99/mo)     PRO ($XX.99/mo)
 ────────────  ──────────────────  ──────────────────
@@ -130,22 +139,26 @@ Ads/limits    No ads, more quota  Unlimited + extras
 The hardest decision. Follow these principles:
 
 **Free tier should:**
+
 - Demonstrate the core value proposition
 - Be genuinely useful (not a crippled demo)
 - Create natural upgrade moments ("you've hit the limit")
 - Let users invest time/data before hitting the paywall
 
 **Paid tier should:**
+
 - Unlock power/convenience, not basic functionality
 - Feel like "more of what you love" not "removing annoyances"
 - Include at least one "hero feature" worth paying for alone
 
 **❌ Bad splits:**
+
 - Free: Can view data → Paid: Can edit data (feels hostile)
 - Free: 3-day trial → Paid: Everything (no ongoing free value)
 - Free: Everything → Paid: Remove ads (weak value prop)
 
 **✅ Good splits:**
+
 - Free: 5 projects → Paid: Unlimited projects + templates
 - Free: Basic tracking → Paid: Insights, trends, export
 - Free: Single device → Paid: Sync across devices + widgets
@@ -154,22 +167,22 @@ The hardest decision. Follow these principles:
 
 #### Trial Types
 
-| Type | Best For | Apple Support |
-|------|----------|---------------|
-| Introductory offer (free) | Subscriptions | Built-in via App Store |
+| Type                            | Best For                 | Apple Support          |
+| ------------------------------- | ------------------------ | ---------------------- |
+| Introductory offer (free)       | Subscriptions            | Built-in via App Store |
 | Introductory offer (discounted) | High-value subscriptions | Built-in via App Store |
-| Feature-limited free tier | Freemium apps | N/A (your logic) |
-| Time-limited full access | Productivity apps | Built-in via App Store |
+| Feature-limited free tier       | Freemium apps            | N/A (your logic)       |
+| Time-limited full access        | Productivity apps        | Built-in via App Store |
 
 #### Trial Duration Recommendations
 
-| App Type | Trial Length | Reason |
-|----------|-------------|--------|
-| Daily-use productivity | 7 days | Quick to see value |
-| Health/fitness tracking | 14 days | Need time to build habit |
-| Creative tools | 7 days | One project cycle |
-| Business/professional | 14-30 days | Need to integrate into workflow |
-| Education/learning | 7 days | One learning cycle |
+| App Type                | Trial Length | Reason                          |
+| ----------------------- | ------------ | ------------------------------- |
+| Daily-use productivity  | 7 days       | Quick to see value              |
+| Health/fitness tracking | 14 days      | Need time to build habit        |
+| Creative tools          | 7 days       | One project cycle               |
+| Business/professional   | 14-30 days   | Need to integrate into workflow |
+| Education/learning      | 7 days       | One learning cycle              |
 
 #### Trial Conversion Tactics
 
@@ -185,18 +198,19 @@ After strategy is set, guide implementation.
 
 #### Apple Commission Structure
 
-| Scenario | Apple's Cut | You Keep |
-|----------|-------------|----------|
-| Standard (Year 1) | 30% | 70% |
-| After Year 1 of subscription | 15% | 85% |
-| Small Business Program (< $1M/yr) | 15% | 85% |
-| Small Business + Year 2 subscription | 15% | 85% |
+| Scenario                             | Apple's Cut | You Keep |
+| ------------------------------------ | ----------- | -------- |
+| Standard (Year 1)                    | 30%         | 70%      |
+| After Year 1 of subscription         | 15%         | 85%      |
+| Small Business Program (< $1M/yr)    | 15%         | 85%      |
+| Small Business + Year 2 subscription | 15%         | 85%      |
 
 **Important:** Revenue calculations should always account for Apple's cut. A $9.99/mo subscription with Small Business Program = ~$8.49/mo to you.
 
 #### StoreKit 2 Implementation
 
 For code generation, refer users to the **paywall-generator** skill:
+
 ```
 Use the paywall-generator skill to create:
 - StoreKit 2 subscription management
@@ -208,6 +222,7 @@ Use the paywall-generator skill to create:
 #### Paywall UI Patterns (HIG-Compliant)
 
 **Do:**
+
 - Show feature comparison (free vs. paid)
 - Display price per period clearly
 - Highlight savings on annual plan
@@ -216,6 +231,7 @@ Use the paywall-generator skill to create:
 - Use system subscription views where available (iOS 18.4+)
 
 **Don't:**
+
 - Block the app immediately on launch
 - Use dark patterns (hidden close button, confusing language)
 - Make it hard to dismiss the paywall
@@ -225,6 +241,7 @@ Use the paywall-generator skill to create:
 #### App Store Review Guidelines (Monetization)
 
 Key rules to follow:
+
 - **3.1.1**: In-app purchase required for digital content/features
 - **3.1.2**: Subscriptions must provide ongoing value
 - **3.1.3**: "Reader" apps can link to web for account management

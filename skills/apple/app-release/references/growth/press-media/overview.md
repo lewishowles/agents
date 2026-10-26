@@ -5,6 +5,7 @@ Get press coverage and media attention for your indie Apple app. Covers everythi
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Wants press coverage for their app
 - Is preparing for a launch and wants PR
 - Wants to create a media kit or press kit
@@ -30,17 +31,17 @@ A press kit makes it easy for journalists to write about your app. If they have 
 
 #### Required Assets
 
-| Asset | Specification | Notes |
-|-------|--------------|-------|
-| App icon | 1024x1024 PNG, no rounded corners | Journalists crop it themselves |
-| Screenshots | 5-8 key screens, with and without device frames | Both raw and framed versions |
-| App description (short) | 1 sentence, < 150 characters | For quick mentions |
-| App description (medium) | 1 paragraph, 3-4 sentences | For brief coverage |
-| App description (long) | 3 paragraphs | For feature articles |
-| Developer bio | 2-3 sentences about you | Include relevant background |
-| Developer photo | Headshot, 800x800+ | Professional but approachable |
-| Fact sheet | Structured data | See template below |
-| Promo video | 30-60 seconds (optional) | Dramatically increases coverage odds |
+| Asset                    | Specification                                   | Notes                                |
+| ------------------------ | ----------------------------------------------- | ------------------------------------ |
+| App icon                 | 1024x1024 PNG, no rounded corners               | Journalists crop it themselves       |
+| Screenshots              | 5-8 key screens, with and without device frames | Both raw and framed versions         |
+| App description (short)  | 1 sentence, < 150 characters                    | For quick mentions                   |
+| App description (medium) | 1 paragraph, 3-4 sentences                      | For brief coverage                   |
+| App description (long)   | 3 paragraphs                                    | For feature articles                 |
+| Developer bio            | 2-3 sentences about you                         | Include relevant background          |
+| Developer photo          | Headshot, 800x800+                              | Professional but approachable        |
+| Fact sheet               | Structured data                                 | See template below                   |
+| Promo video              | 30-60 seconds (optional)                        | Dramatically increases coverage odds |
 
 #### Fact Sheet Template
 
@@ -69,13 +70,13 @@ WHAT MAKES IT DIFFERENT:
 
 #### Press Kit Hosting Options
 
-| Option | Cost | Pros | Cons |
-|--------|------|------|------|
-| presskit.html on your website | Free (hosting cost) | Professional, SEO benefits | Requires web dev |
-| Notion page | Free | Easy to update, looks clean | Less professional URL |
-| GitHub repo | Free | Easy asset downloads | Slightly technical feel |
-| presskit() generator | Free | Industry standard format | Template-based |
-| Dedicated presskit page | Free-$10/mo | Purpose-built for press kits | Another service to manage |
+| Option                        | Cost                | Pros                         | Cons                      |
+| ----------------------------- | ------------------- | ---------------------------- | ------------------------- |
+| presskit.html on your website | Free (hosting cost) | Professional, SEO benefits   | Requires web dev          |
+| Notion page                   | Free                | Easy to update, looks clean  | Less professional URL     |
+| GitHub repo                   | Free                | Easy asset downloads         | Slightly technical feel   |
+| presskit() generator          | Free                | Industry standard format     | Template-based            |
+| Dedicated presskit page       | Free-$10/mo         | Purpose-built for press kits | Another service to manage |
 
 **Recommendation:** A simple `/press` page on your website with downloadable ZIP of all assets. Include everything inline so journalists can copy-paste without downloading.
 
@@ -114,6 +115,7 @@ Build a targeted list of 20-30 contacts. Quality over quantity — 20 personaliz
 #### YouTube Reviewers
 
 Search for "best iOS apps" or "best Mac apps" on YouTube. Look for:
+
 - Channels with 10K-500K subscribers (large enough for reach, small enough to respond)
 - Recent uploads (active channel)
 - Previous indie app coverage (not just major apps)
@@ -121,34 +123,36 @@ Search for "best iOS apps" or "best Mac apps" on YouTube. Look for:
 
 #### Podcast Hosts
 
-| Podcast | Focus | Format |
-|---------|-------|--------|
-| AppStories (MacStories) | App discovery and discussion | Weekly discussion |
-| Launched (Charlie Chapman) | Indie developer stories | Interview |
-| Under the Radar (Marco/David) | Indie development | Discussion |
-| Stacktrace | Apple dev and design | Discussion |
-| Core Intuition (Jalkut/Simmons) | Indie Mac/iOS | Discussion |
-| Accidental Tech Podcast | Apple tech (if relevant) | Discussion |
+| Podcast                         | Focus                        | Format            |
+| ------------------------------- | ---------------------------- | ----------------- |
+| AppStories (MacStories)         | App discovery and discussion | Weekly discussion |
+| Launched (Charlie Chapman)      | Indie developer stories      | Interview         |
+| Under the Radar (Marco/David)   | Indie development            | Discussion        |
+| Stacktrace                      | Apple dev and design         | Discussion        |
+| Core Intuition (Jalkut/Simmons) | Indie Mac/iOS                | Discussion        |
+| Accidental Tech Podcast         | Apple tech (if relevant)     | Discussion        |
 
 ### Step 4: Pitch Timing
 
 #### When to Reach Out
 
-| Timing | Action |
-|--------|--------|
+| Timing                  | Action                                            |
+| ----------------------- | ------------------------------------------------- |
 | 3-4 weeks before launch | Reach out to Tier 1 outlets for exclusive/embargo |
-| 2-3 weeks before launch | Broader outreach to Tier 2 and 3 |
-| 1 week before launch | Follow up with non-responders (once only) |
-| Launch day | Share on social media, Product Hunt, Hacker News |
-| 1 week after launch | Thank journalists who covered you |
+| 2-3 weeks before launch | Broader outreach to Tier 2 and 3                  |
+| 1 week before launch    | Follow up with non-responders (once only)         |
+| Launch day              | Share on social media, Product Hunt, Hacker News  |
+| 1 week after launch     | Thank journalists who covered you                 |
 
 #### Best Days and Times
+
 - **Best days:** Tuesday, Wednesday, Thursday
 - **Best time:** 9-11 AM in the journalist's time zone
 - **Worst days:** Monday (inbox overload), Friday (winding down)
 - **Avoid:** Major Apple events (WWDC, iPhone launch, iPad event), CES week, holiday weeks
 
 #### Follow-Up Cadence
+
 - Send initial pitch
 - Wait 5-7 business days
 - Send ONE follow-up (add new info or angle, don't just repeat)
@@ -160,6 +164,7 @@ Search for "best iOS apps" or "best Mac apps" on YouTube. Look for:
 Embargoes let you give journalists early access in exchange for coordinated coverage on launch day.
 
 #### Exclusive Strategy (Tier 1)
+
 1. Pick ONE top-tier outlet that covers your app's category
 2. Offer 1-2 week exclusive access before launch
 3. Provide TestFlight build, press kit, and personal demo offer
@@ -167,12 +172,14 @@ Embargoes let you give journalists early access in exchange for coordinated cove
 5. Benefits: deep review, stronger relationship, headline coverage
 
 #### Broader Embargo (Tier 2-3)
+
 1. After exclusive is confirmed, invite 5-10 outlets under embargo
 2. Set clear embargo lift date and time (usually launch day, 9 AM ET)
 3. Include TestFlight link and press kit
 4. Benefits: wave of coverage on launch day
 
 #### Rules of Embargoes
+
 - Always put embargo date/time in writing
 - Honor the exclusive — don't give the same story to competitors
 - If someone breaks embargo, never work with them again
@@ -185,38 +192,45 @@ Journalists don't write about apps — they write about stories. Frame your pitc
 #### Story Angles That Work for Indie Developers
 
 **The Solo Developer Story**
+
 - "I quit my job at [Big Tech] to build the app I always wanted"
 - "I built this while recovering from [life event]"
 - "A 22-year-old student built a top-rated [category] app"
 - Why it works: readers love underdog stories
 
 **Scratching Your Own Itch**
+
 - "I couldn't find a [category] app that [specific need], so I built one"
 - "As a [profession], I needed [specific tool] — it didn't exist"
 - Why it works: authentic, relatable, shows deep domain knowledge
 
 **Innovative Apple Technology Use**
+
 - "First app to use [new iOS/macOS feature]"
 - "Built entirely with SwiftUI and [new framework]"
 - "Uses on-device ML for [clever application]"
 - Why it works: Apple-focused outlets love showcasing platform capabilities
 
 **Privacy-First Alternative**
+
 - "A [category] app that keeps your data on your device"
 - "No accounts, no servers, no tracking"
 - Why it works: privacy is a hot topic, especially for Apple audience
 
 **Accessibility Champion**
+
 - "Designed VoiceOver-first for visually impaired users"
 - "Built to help people with [condition]"
 - Why it works: feel-good story, Apple values accessibility
 
 **Design Excellence**
+
 - "What happens when a designer builds their own app"
 - Award-worthy UI/UX (Apple Design Awards angle)
 - Why it works: Apple-focused outlets value design deeply
 
 #### Story Angles That Do NOT Work
+
 - "My app is better than [competitor]" — sounds petty
 - "My app has 50 features" — feature lists are boring
 - "My app is the best [category] app" — let reviewers decide
@@ -226,6 +240,7 @@ Journalists don't write about apps — they write about stories. Frame your pitc
 ### Step 7: After Coverage
 
 #### When You Get Coverage
+
 1. Thank the journalist publicly (tweet/post) and privately (email)
 2. Share the article on all your channels
 3. Add "As featured in..." to your App Store description and website
@@ -233,6 +248,7 @@ Journalists don't write about apps — they write about stories. Frame your pitc
 5. Note which angle worked — use it for future pitches
 
 #### When You Don't Get Coverage
+
 - Do NOT send angry or disappointed emails
 - Evaluate: was the pitch personalized? Was the timing right? Was the angle strong?
 - Try a different angle next time (update, milestone, seasonal)
@@ -242,6 +258,7 @@ Journalists don't write about apps — they write about stories. Frame your pitc
 ## Reference Files
 
 See **pitch-templates.md** for:
+
 - Launch pitch email template
 - Update/feature pitch template
 - Story angle pitch template

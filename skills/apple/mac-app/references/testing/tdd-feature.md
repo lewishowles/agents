@@ -1,6 +1,7 @@
 # TDD feature
 
 <a id="source-testing-tdd-feature-skill-md"></a>
+
 ## Source: `testing/tdd-feature/SKILL.md`
 
 # TDD Feature
@@ -10,6 +11,7 @@ Build new features using the red-green-refactor cycle. Tests define the spec, AI
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Wants to "TDD a new feature" or "build test-first"
 - Says "I want tests before code"
 - Asks for "red-green-refactor" workflow
@@ -277,15 +279,16 @@ struct SubscriptionManagerTests {
 
 ## Output Format
 
-```markdown
+````markdown
 ## TDD Feature: [Feature Name]
 
 ### API Design
 ```swift
 // Protocol / public interface
-```
+````
 
 ### Tests Written (RED)
+
 1. `startsEmpty` — Initial state
 2. `addFavorite` — Happy path
 3. `removeFavorite` — State change
@@ -294,17 +297,21 @@ struct SubscriptionManagerTests {
 6. `storageFullError` — Error handling
 
 ### Implementation (GREEN)
+
 **File**: `Sources/Features/FavoriteManager.swift`
 All [X] tests passing.
 
 ### Refactoring Done
+
 - Extracted storage logic to private method
 - Renamed internal property for clarity
 
 ### Next Steps
+
 - [ ] Add integration tests with persistence
 - [ ] Wire up to ViewModel
 - [ ] Add UI for favorite toggle
+
 ```
 
 ## Common Pitfalls
@@ -323,3 +330,4 @@ All [X] tests passing.
 - `test-contract.md` — for protocol-level test suites
 - `test-data-factory.md` — for reducing test setup boilerplate
 - `../../../apple-generators/references/test-generator/overview.md` — for standalone test generation
+```

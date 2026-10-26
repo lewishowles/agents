@@ -4,6 +4,7 @@ description: >
   Use this skill when reviewing committed work across a Git range, especially every commit since the last tag. Assesses per-commit correctness, series coherence, verification, docs, and release readiness without editing files.
 disable-model-invocation: true
 ---
+
 # Project review commits
 
 Review committed repository changes across a Git range. Default to review and recommendations only; do not edit files, stage, commit, tag, rebase, squash, merge, push, or otherwise rewrite history unless the user explicitly asks after the review.

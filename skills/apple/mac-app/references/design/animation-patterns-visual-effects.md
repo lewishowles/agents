@@ -1,6 +1,7 @@
 # Animation patterns: Visual effects
 
 <a id="source-design-animation-patterns-visual-effects-md"></a>
+
 ## Source: `design/animation-patterns/visual-effects.md`
 
 # Visual Effects
@@ -44,7 +45,7 @@ Text(word)
     }
 ```
 
-Use it when an effect depends on *where the view is* (screen position, distance from center) rather than on state.
+Use it when an effect depends on _where the view is_ (screen position, distance from center) rather than on state.
 
 ## MeshGradient (iOS 18+)
 
@@ -110,11 +111,11 @@ struct AppearRenderer: TextRenderer, Animatable {
 
 Call a Metal function via `ShaderLibrary` and attach it with one of three modifiers:
 
-| Modifier | Shader signature (per pixel) | Use |
-|----------|------------------------------|-----|
-| `.colorEffect` | position + color + args → color | Tints, palettes, dissolves |
-| `.distortionEffect` | position + args → new position | Ripples, waves, jelly |
-| `.layerEffect` | position + layer + args → color | Anything — it can *sample* the layer; superset of the other two |
+| Modifier            | Shader signature (per pixel)    | Use                                                             |
+| ------------------- | ------------------------------- | --------------------------------------------------------------- |
+| `.colorEffect`      | position + color + args → color | Tints, palettes, dissolves                                      |
+| `.distortionEffect` | position + args → new position  | Ripples, waves, jelly                                           |
+| `.layerEffect`      | position + layer + args → color | Anything — it can _sample_ the layer; superset of the other two |
 
 ```swift
 Image("cover")
@@ -128,7 +129,7 @@ Rules that keep shaders correct:
 
 - **Shaders are stateless, per-pixel functions.** There is no memory between frames — pass time explicitly, driven by `TimelineView(.animation)` or an `elapsedTime` fed from a keyframe animator, and derive everything from the arguments.
 - **Stay within `maxSampleOffset`.** Sampling farther than declared gets clipped or clamped at the layer edge — declare the true maximum displacement.
-- **Organic motion = noise + domain warping.** Sample a noise texture (pass one with `.image(...)`), then offset the lookup coordinates by *another* noise sample — warped noise reads as smoke/water/aurora rather than an obvious sine wave (WWDC26).
+- **Organic motion = noise + domain warping.** Sample a noise texture (pass one with `.image(...)`), then offset the lookup coordinates by _another_ noise sample — warped noise reads as smoke/water/aurora rather than an obvious sine wave (WWDC26).
 - **Build a debug scrub UI.** Sliders for shader parameters and a scrubber for time turn tuning from recompile-and-squint into direct manipulation — the workflow Apple's own demos use.
 
 ## Composing Effect Pipelines (WWDC26)
@@ -155,4 +156,4 @@ Avatar()
     }
 ```
 
-The badge now overhangs the corner by a third of *its own* size at every Dynamic Type setting.
+The badge now overhangs the corner by a third of _its own_ size at every Dynamic Type setting.

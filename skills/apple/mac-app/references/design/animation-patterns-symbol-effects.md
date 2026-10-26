@@ -1,6 +1,7 @@
 # Animation patterns: Symbol effects
 
 <a id="source-design-animation-patterns-symbol-effects-md"></a>
+
 ## Source: `design/animation-patterns/symbol-effects.md`
 
 # SF Symbol Effects
@@ -9,15 +10,15 @@ Animate SF Symbols using the `.symbolEffect()` modifier (iOS 17+) — not `withA
 
 ## Available Effects
 
-| Effect | Visual | Use Case |
-|--------|--------|----------|
-| `.bounce` | Jumps up once | Tap feedback, notification arrival |
-| `.pulse` | Fades in and out | Ongoing activity, waiting state |
+| Effect           | Visual                     | Use Case                           |
+| ---------------- | -------------------------- | ---------------------------------- |
+| `.bounce`        | Jumps up once              | Tap feedback, notification arrival |
+| `.pulse`         | Fades in and out           | Ongoing activity, waiting state    |
 | `.variableColor` | Animates multi-layer color | Signal strength, download progress |
-| `.replace` | Cross-fades to new symbol | Play/pause toggle, state change |
-| `.wiggle` | Shakes side to side | Attention, error indication |
-| `.breathe` | Gentle scale pulse | Ambient activity, Siri-like |
-| `.rotate` | Rotates the symbol | Loading, refresh, processing |
+| `.replace`       | Cross-fades to new symbol  | Play/pause toggle, state change    |
+| `.wiggle`        | Shakes side to side        | Attention, error indication        |
+| `.breathe`       | Gentle scale pulse         | Ambient activity, Siri-like        |
+| `.rotate`        | Rotates the symbol         | Loading, refresh, processing       |
 
 ## Three Usage Patterns
 

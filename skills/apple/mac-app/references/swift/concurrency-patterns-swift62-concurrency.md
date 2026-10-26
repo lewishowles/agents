@@ -1,6 +1,7 @@
 # Concurrency patterns: Swift 6.2 concurrency
 
 <a id="source-swift-concurrency-patterns-swift62-concurrency-md"></a>
+
 ## Source: `swift/concurrency-patterns/swift62-concurrency.md`
 
 # Swift 6.2 Approachable Concurrency
@@ -17,6 +18,7 @@ Apple prescribes an ordered path — do not skip steps:
 4. **Introduce actors last** — "when you find that storing data on the main actor is causing too much code to run on the main thread." Model classes "should generally be on the main actor with the UI, or kept non-Sendable, so that you don't encourage lots of concurrent accesses to your model."
 
 Two build settings implement this (exact names):
+
 - **"Approachable Concurrency"** — "enables a suite of upcoming features that make it easier to work with concurrency. We recommend that all projects adopt this setting."
 - **"Default Actor Isolation" = MainActor** — module-wide implicit `@MainActor`; on by default for app projects created with Xcode 26. Use for app/UI modules only, not general-purpose libraries.
 
@@ -58,7 +60,7 @@ final class StickerModel {
 
 ### The Mechanism: nonisolated(nonsending)
 
-The formal name for this behavior is **`nonisolated(nonsending)`** — nonisolated async functions run on the *caller's* actor instead of hopping to the concurrent executor. Under the Approachable Concurrency setting (upcoming feature `NonisolatedNonsendingByDefault`) this becomes the default for all nonisolated async functions. Apple's framing (WWDC25 245): Swift 6.2 "eliminates implicit background offloading. Async functions that aren't tied to a specific actor continue running on the actor they were called from." The payoff: arguments never leave the caller's actor, so **non-Sendable values can be passed to nonisolated async functions without data-race errors**.
+The formal name for this behavior is **`nonisolated(nonsending)`** — nonisolated async functions run on the _caller's_ actor instead of hopping to the concurrent executor. Under the Approachable Concurrency setting (upcoming feature `NonisolatedNonsendingByDefault`) this becomes the default for all nonisolated async functions. Apple's framing (WWDC25 245): Swift 6.2 "eliminates implicit background offloading. Async functions that aren't tied to a specific actor continue running on the actor they were called from." The payoff: arguments never leave the caller's actor, so **non-Sendable values can be passed to nonisolated async functions without data-race errors**.
 
 You can also write `nonisolated(nonsending)` explicitly on a single function to opt it into caller-inherited execution without the module-wide setting.
 
@@ -77,6 +79,7 @@ An opt-in build setting that makes all code implicitly `@MainActor` unless expli
 **Xcode:** Build Settings → Swift Compiler - Concurrency → "Default Actor Isolation" → "MainActor"
 
 **Swift Package Manager:**
+
 ```swift
 .executableTarget(
     name: "MyApp",
@@ -118,12 +121,12 @@ final class StickerModel {
 
 ### When to Use
 
-| Target Type | Recommended? | Why |
-|-------------|-------------|-----|
-| App target | Yes | Apps are UI-driven, most code belongs on MainActor |
-| Script target | Yes | Scripts are sequential, MainActor default is natural |
-| Library/framework | No | Libraries should not impose actor isolation on consumers |
-| Package plugin | No | Same as libraries |
+| Target Type       | Recommended? | Why                                                      |
+| ----------------- | ------------ | -------------------------------------------------------- |
+| App target        | Yes          | Apps are UI-driven, most code belongs on MainActor       |
+| Script target     | Yes          | Scripts are sequential, MainActor default is natural     |
+| Library/framework | No           | Libraries should not impose actor isolation on consumers |
+| Package plugin    | No           | Same as libraries                                        |
 
 ### Opting Out
 
@@ -235,12 +238,12 @@ let resized = await ImageProcessor().resize(image: data, to: targetSize)
 
 ### @concurrent vs Task.detached vs Actor
 
-| Mechanism | Use Case |
-|-----------|----------|
-| `@concurrent` | Single function that must run on background thread |
-| `Task.detached` | Fire-and-forget background work, no structured parent |
-| `actor` | Shared mutable state that needs serialized access |
-| `Task {}` | Unstructured task inheriting current actor (usually MainActor) |
+| Mechanism       | Use Case                                                       |
+| --------------- | -------------------------------------------------------------- |
+| `@concurrent`   | Single function that must run on background thread             |
+| `Task.detached` | Fire-and-forget background work, no structured parent          |
+| `actor`         | Shared mutable state that needs serialized access              |
+| `Task {}`       | Unstructured task inheriting current actor (usually MainActor) |
 
 Prefer `@concurrent` for compute-heavy functions. Prefer actors for shared state. Avoid `Task.detached` when structured concurrency works.
 
@@ -249,6 +252,7 @@ Prefer `@concurrent` for compute-heavy functions. Prefer actors for shared state
 The `View` protocol is `@MainActor`-isolated, so every conforming type inherits it — `body`, `@State`, all members, and any `Task {}` created in the body run on the main actor. All SwiftUI action callbacks (button actions, `onTapGesture`, …) are synchronous on the main thread by design.
 
 But SwiftUI calls **some** of your code off the main thread — these closures/requirements are `@Sendable` and may run on background threads:
+
 - `Shape.path(in:)` (called from a background thread during animation)
 - `.visualEffect { }` closures
 - `Layout` protocol method requirements
@@ -285,21 +289,21 @@ func extractColors(from data: Data) async -> ColorScheme {
 }
 ```
 
-The same code-along establishes the offload recipe on a 6.1+ toolchain: mark the helper type `nonisolated` (on the *type* — all members become nonisolated, detaching it from the module's MainActor default), mark the heavy function `@concurrent`, pass Sendable values (like `Data`) across, and verify the hang is gone in Instruments before and after.
+The same code-along establishes the offload recipe on a 6.1+ toolchain: mark the helper type `nonisolated` (on the _type_ — all members become nonisolated, detaching it from the module's MainActor default), mark the heavy function `@concurrent`, pass Sendable values (like `Data`) across, and verify the hang is gone in Instruments before and after.
 
 ## Swift 6.3 / 6.4 Additions (WWDC26 262)
 
 Concurrency-related language changes announced at WWDC26:
 
-| Feature | Version | What it does |
-|---|---|---|
-| Unhandled task error warning | 6.4 | Warning "if you silently ignore an error thrown from a Swift Concurrency task" — handle it inside `Task { do { … } catch { … } }` or store the task and check it later |
-| `async` in `defer` | 6.4 | "The old restriction on calling async functions from a defer block is now gone" |
-| `withTaskCancellationShield {}` | 6.4 | Inside the shield, `Task.isCancelled` reads false — finish or roll back critical work (keep the shielded region short) |
-| `Continuation` type | 6.4 | "Checks at compile time that you only resume it once, making it even safer than a CheckedContinuation but just as efficient as an UnsafeContinuation" (built on noncopyable types) |
-| `weak let` | 6.4 | Immutable weak references — a class previously forced into `@unchecked Sendable` by a `weak var` can keep real Sendable checking |
-| `~Sendable` | 6.4 | Explicitly declare a type non-Sendable; note it "doesn't stop subclasses from being Sendable" |
-| Module selectors `::` | 6.3 | `Rocket::SaturnV()` disambiguates same-named types across modules |
+| Feature                         | Version | What it does                                                                                                                                                                       |
+| ------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Unhandled task error warning    | 6.4     | Warning "if you silently ignore an error thrown from a Swift Concurrency task" — handle it inside `Task { do { … } catch { … } }` or store the task and check it later             |
+| `async` in `defer`              | 6.4     | "The old restriction on calling async functions from a defer block is now gone"                                                                                                    |
+| `withTaskCancellationShield {}` | 6.4     | Inside the shield, `Task.isCancelled` reads false — finish or roll back critical work (keep the shielded region short)                                                             |
+| `Continuation` type             | 6.4     | "Checks at compile time that you only resume it once, making it even safer than a CheckedContinuation but just as efficient as an UnsafeContinuation" (built on noncopyable types) |
+| `weak let`                      | 6.4     | Immutable weak references — a class previously forced into `@unchecked Sendable` by a `weak var` can keep real Sendable checking                                                   |
+| `~Sendable`                     | 6.4     | Explicitly declare a type non-Sendable; note it "doesn't stop subclasses from being Sendable"                                                                                      |
+| Module selectors `::`           | 6.3     | `Rocket::SaturnV()` disambiguates same-named types across modules                                                                                                                  |
 
 ## Mental Model Summary
 

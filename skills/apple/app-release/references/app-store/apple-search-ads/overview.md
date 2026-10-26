@@ -5,6 +5,7 @@ Plan, launch, and optimize Apple Search Ads campaigns that deliver profitable us
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Asks about paid user acquisition or running ads for their app
 - Mentions "Apple Search Ads", "Search Ads", or "ASA"
 - Wants to set up ad campaigns in the App Store
@@ -19,16 +20,17 @@ Before recommending any campaign setup, verify these minimum thresholds. Running
 
 ### Minimum Thresholds
 
-| Requirement | Threshold | Why |
-|-------------|-----------|-----|
-| Organic downloads | 100+/month | Proves baseline demand exists |
-| App Store page CVR | > 20% | Ads amplify your listing — a bad listing wastes spend |
-| Screenshots | 5+ optimized | Paid traffic sees your product page first |
-| Ratings | 3.5+ stars (or none) | Low ratings kill conversion from ads |
-| Crash-free rate | > 99% | Crashes destroy ROAS through refunds and bad reviews |
-| Monetization | Active | No point acquiring users you can't monetize |
+| Requirement        | Threshold            | Why                                                   |
+| ------------------ | -------------------- | ----------------------------------------------------- |
+| Organic downloads  | 100+/month           | Proves baseline demand exists                         |
+| App Store page CVR | > 20%                | Ads amplify your listing — a bad listing wastes spend |
+| Screenshots        | 5+ optimized         | Paid traffic sees your product page first             |
+| Ratings            | 3.5+ stars (or none) | Low ratings kill conversion from ads                  |
+| Crash-free rate    | > 99%                | Crashes destroy ROAS through refunds and bad reviews  |
+| Monetization       | Active               | No point acquiring users you can't monetize           |
 
 **If thresholds are not met:**
+
 - Focus on organic ASO first (use `keyword-optimizer` skill)
 - Fix product page conversion (use `screenshot-planner` and `app-description-writer` skills)
 - Improve app quality and ratings before spending on acquisition
@@ -96,23 +98,27 @@ Stage 4: Search Tab (brand awareness)
 ### Keyword Categories
 
 **1. Brand Keywords (Your App Name)**
+
 - Bid on these ONLY if competitors are bidding on your name
 - Check by searching your app name — if a competitor appears above you, bid
 - Otherwise, save the budget; you already rank #1 organically
 
 **2. Category Keywords (Generic Terms)**
+
 - Examples: "todo app", "weather radar", "habit tracker"
 - High volume, high competition, expensive
 - Target long-tail variants: "simple todo app", "habit tracker no account"
 - These are your bread and butter for growth
 
 **3. Competitor Keywords (Rival App Names)**
+
 - Legal and common practice in Apple Search Ads
 - Lower conversion (users wanted the other app) but can be effective
 - Best when your app has a clear advantage over that competitor
 - Use Custom Product Pages to message directly against competitors
 
 **4. Discovery Keywords (Problem/Solution)**
+
 - Examples: "stop procrastinating", "save money automatically", "focus while studying"
 - Lower volume but very high intent
 - Often cheapest CPT because few advertisers target them
@@ -129,22 +135,22 @@ Stage 4: Search Tab (brand awareness)
 
 ### Keyword Selection Criteria
 
-| Factor | Target | Notes |
-|--------|--------|-------|
-| Relevance | High | Only bid on keywords your app genuinely serves |
-| Search volume | Medium-High | Low volume = too few impressions to matter |
-| Competition | Low-Medium | High competition = expensive CPT |
-| Intent | Transactional | "best X app" > "what is X" |
+| Factor        | Target        | Notes                                          |
+| ------------- | ------------- | ---------------------------------------------- |
+| Relevance     | High          | Only bid on keywords your app genuinely serves |
+| Search volume | Medium-High   | Low volume = too few impressions to matter     |
+| Competition   | Low-Medium    | High competition = expensive CPT               |
+| Intent        | Transactional | "best X app" > "what is X"                     |
 
 ## Budget Planning
 
 ### Budget by App Stage
 
-| Stage | Daily Budget | Monthly Budget | Strategy |
-|-------|-------------|----------------|----------|
-| **Launch** (first 30 days) | $10-30/day | $300-900 | Discovery, keyword validation |
-| **Growth** (months 2-6) | $50-100/day | $1,500-3,000 | Scale winners, cut losers |
-| **Scale** (6+ months) | $100+/day | $3,000+ | Maximize profitable keywords |
+| Stage                      | Daily Budget | Monthly Budget | Strategy                      |
+| -------------------------- | ------------ | -------------- | ----------------------------- |
+| **Launch** (first 30 days) | $10-30/day   | $300-900       | Discovery, keyword validation |
+| **Growth** (months 2-6)    | $50-100/day  | $1,500-3,000   | Scale winners, cut losers     |
+| **Scale** (6+ months)      | $100+/day    | $3,000+        | Maximize profitable keywords  |
 
 ### Launch Budget Allocation
 
@@ -182,37 +188,41 @@ Product Page Ads: $3/day (15%)
 
 These are approximate ranges for the US market. Actual CPT varies by competition and keyword.
 
-| Category | Low CPT | Median CPT | High CPT |
-|----------|---------|------------|----------|
-| Utilities | $0.30 | $0.80 | $2.00 |
-| Productivity | $0.50 | $1.50 | $4.00 |
-| Health & Fitness | $0.60 | $1.80 | $5.00 |
-| Finance | $1.00 | $3.00 | $8.00 |
-| Games (Casual) | $0.20 | $0.60 | $1.50 |
-| Games (Mid-core) | $0.50 | $1.50 | $4.00 |
-| Education | $0.40 | $1.20 | $3.00 |
-| Photo & Video | $0.30 | $1.00 | $3.00 |
-| Social | $0.40 | $1.20 | $3.50 |
-| Shopping | $0.50 | $1.50 | $4.00 |
+| Category         | Low CPT | Median CPT | High CPT |
+| ---------------- | ------- | ---------- | -------- |
+| Utilities        | $0.30   | $0.80      | $2.00    |
+| Productivity     | $0.50   | $1.50      | $4.00    |
+| Health & Fitness | $0.60   | $1.80      | $5.00    |
+| Finance          | $1.00   | $3.00      | $8.00    |
+| Games (Casual)   | $0.20   | $0.60      | $1.50    |
+| Games (Mid-core) | $0.50   | $1.50      | $4.00    |
+| Education        | $0.40   | $1.20      | $3.00    |
+| Photo & Video    | $0.30   | $1.00      | $3.00    |
+| Social           | $0.40   | $1.20      | $3.50    |
+| Shopping         | $0.50   | $1.50      | $4.00    |
 
 ### Bid Strategy
 
 **Starting bids:**
+
 - Set initial bids at the median CPT for your category
 - Let campaigns run for 3-5 days before adjusting
 - Need at least 100 impressions per keyword to evaluate
 
 **Raise bids when:**
+
 - Impression share is low on a profitable keyword (you're being outbid)
 - CVR is high but volume is low (more taps would mean more installs)
 - ROAS is well above target (room to pay more per user)
 
 **Lower bids when:**
+
 - CPT is above your CPA target and CVR is average
 - Impressions are high but TTR is low (keyword may not be relevant)
 - ROAS is negative after 7+ days of data
 
 **Pause keywords when:**
+
 - 1000+ impressions, zero installs
 - CPA is 3x+ your target after 14 days
 - Keyword is clearly irrelevant (check Search Terms report)
@@ -223,12 +233,12 @@ Apple Search Ads supports linking ad groups to Custom Product Pages (CPPs) for t
 
 ### When to Use CPPs with Ads
 
-| Scenario | CPP Strategy |
-|----------|-------------|
-| Competitor keywords | Highlight advantages over that competitor |
-| Feature keywords | Show the specific feature being searched |
-| Audience segments | Different messaging for students vs. professionals |
-| Seasonal campaigns | Holiday or event-themed screenshots/descriptions |
+| Scenario            | CPP Strategy                                       |
+| ------------------- | -------------------------------------------------- |
+| Competitor keywords | Highlight advantages over that competitor          |
+| Feature keywords    | Show the specific feature being searched           |
+| Audience segments   | Different messaging for students vs. professionals |
+| Seasonal campaigns  | Holiday or event-themed screenshots/descriptions   |
 
 ### CPP Setup for Ads
 
@@ -288,44 +298,48 @@ CAMPAIGN: [App Name] - Product Page
 
 ### Key Metrics
 
-| Metric | Definition | Target Range |
-|--------|-----------|--------------|
-| **TTR** (Tap-Through Rate) | Taps / Impressions | 5-12% |
-| **CVR** (Conversion Rate) | Installs / Taps | 30-60% |
-| **CPT** (Cost Per Tap) | Spend / Taps | Category-dependent (see benchmarks) |
-| **CPA** (Cost Per Acquisition) | Spend / Installs | < Customer LTV |
-| **ROAS** (Return on Ad Spend) | Revenue / Spend | > 1.0 (ideally > 2.0) |
+| Metric                         | Definition         | Target Range                        |
+| ------------------------------ | ------------------ | ----------------------------------- |
+| **TTR** (Tap-Through Rate)     | Taps / Impressions | 5-12%                               |
+| **CVR** (Conversion Rate)      | Installs / Taps    | 30-60%                              |
+| **CPT** (Cost Per Tap)         | Spend / Taps       | Category-dependent (see benchmarks) |
+| **CPA** (Cost Per Acquisition) | Spend / Installs   | < Customer LTV                      |
+| **ROAS** (Return on Ad Spend)  | Revenue / Spend    | > 1.0 (ideally > 2.0)               |
 
 ### Interpreting Metrics
 
 **High TTR + Low CVR:**
+
 - Your ad is attractive but your product page doesn't convert
 - Fix: Improve screenshots, description, ratings
 - Check: Is the keyword truly relevant to your app?
 
 **Low TTR + High CVR:**
+
 - Users who do tap convert well, but few are tapping
 - Fix: Raise bid to get better placement, review keyword relevance
 - Consider: Your app name/icon may not stand out in results
 
 **High CPA + High CVR:**
+
 - You're paying too much per tap but converting well
 - Fix: Find cheaper keywords with similar intent
 - Consider: Lower bids and accept fewer impressions
 
 **Low CPA + Low ROAS:**
+
 - Cheap installs but users aren't monetizing
 - Fix: Check onboarding-to-conversion funnel, not the ad
 - Consider: The keyword may attract wrong user segment
 
 ### Reporting Cadence
 
-| Frequency | What to Check | Action |
-|-----------|---------------|--------|
-| Daily | Spend, CPA | Pause runaway spend |
-| Weekly | Keyword performance, Search Terms | Add negatives, find new keywords |
-| Bi-weekly | ROAS, campaign-level metrics | Adjust bids, reallocate budget |
-| Monthly | Overall ROI, LTV/CPA ratio | Strategic changes, new campaigns |
+| Frequency | What to Check                     | Action                           |
+| --------- | --------------------------------- | -------------------------------- |
+| Daily     | Spend, CPA                        | Pause runaway spend              |
+| Weekly    | Keyword performance, Search Terms | Add negatives, find new keywords |
+| Bi-weekly | ROAS, campaign-level metrics      | Adjust bids, reallocate budget   |
+| Monthly   | Overall ROI, LTV/CPA ratio        | Strategic changes, new campaigns |
 
 ## Common Mistakes
 

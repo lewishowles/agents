@@ -3,6 +3,7 @@ name: human-friendly-cli
 description: >
   Use this skill when designing, reviewing, or extending CLI commands. Covers discoverable, restrained human-first CLIs that also work well for agents.
 ---
+
 # Human-friendly CLI
 
 Design CLIs for people first: clear, structured, restrained, discoverable, predictable. These make CLIs reliable for agents too.

@@ -1,6 +1,7 @@
 # TDD bug fix
 
 <a id="source-testing-tdd-bug-fix-skill-md"></a>
+
 ## Source: `testing/tdd-bug-fix/SKILL.md`
 
 # TDD Bug Fix
@@ -10,6 +11,7 @@ Fix bugs the right way: reproduce first, fix second, verify always. Especially c
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Reports a bug and wants it fixed
 - Says "this is broken" or "this doesn't work"
 - Asks to "fix and add a test" or "fix with TDD"
@@ -44,6 +46,7 @@ Read: the suspected file(s)
 ```
 
 Identify:
+
 - [ ] The function/method where the bug lives
 - [ ] The input that triggers the bug
 - [ ] The incorrect output/behavior
@@ -213,7 +216,7 @@ struct BugFix_DiscountCalculationTests {
 
 ## Output Format
 
-```markdown
+````markdown
 ## Bug Fix: [Description]
 
 ### Bug Summary
@@ -224,24 +227,29 @@ struct BugFix_DiscountCalculationTests {
 ### Test (RED)
 ```swift
 // Failing test that reproduces the bug
-```
+````
 
 ### Fix (GREEN)
+
 **File**: `path/to/file.swift:XX`
+
 ```swift
 // Before (buggy)
 // After (fixed)
 ```
 
 ### Verification
+
 - [x] Bug test fails before fix
 - [x] Bug test passes after fix
 - [x] All existing tests still pass
 - [x] Edge cases covered: [list]
 
 ### Regression Prevention
+
 Test added: `Tests/BugFixes/BugFix_DescriptionTests.swift`
 This test will catch any future regression of this bug.
+
 ```
 
 ## Common Pitfalls
@@ -258,3 +266,4 @@ This test will catch any future regression of this bug.
 - `tdd-feature.md` — for new features (not bug fixes)
 - `characterization-test-generator.md` — for capturing existing behavior first
 - `../../../apple-generators/references/test-generator/overview.md` — for general test generation
+```

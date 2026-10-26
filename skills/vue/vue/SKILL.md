@@ -3,6 +3,7 @@ name: vue
 description: >
   Use this skill when working with `.vue` files, Vue components, composables, or templates, even for small edits. For project-specific stack choices, see vue-project-stack.
 ---
+
 # Vue
 
 ## Formatting

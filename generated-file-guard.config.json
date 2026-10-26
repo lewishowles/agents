@@ -36,10 +36,7 @@
 			"label": "Claude hook scripts"
 		},
 		{
-			"generated": [
-				"docs/hooks.md",
-				"docs/skills.md"
-			],
+			"generated": ["docs/hooks.md", "docs/skills.md"],
 			"sources": ["scripts/build/build-docs.py"],
 			"label": "generated docs tables"
 		}

@@ -199,19 +199,19 @@ ProductAgent provides a complete "Idea to App Store" workflow through a combinat
 
 ### Commands and Activation Phrases
 
-| Phase | How to Activate | Output |
-|-------|-----------------|--------|
-| Idea Discovery | Say "I don't know what to build" or "give me app ideas" | idea-shortlist.json |
-| Product Planning | Say "validate this idea" or "should I build..." | product-plan-*.md |
-| Competitive Analysis | Say "analyze competitors" or "competitive analysis" | competitive-analysis.md |
-| Market Research | Say "market research" or "market sizing" | market-research.md |
-| Generate All Specs | Say "generate implementation specifications" | docs/*.md (7 files) |
-| Generate PRD only | Say "generate PRD" | docs/PRD.md |
-| Generate Architecture only | Say "generate architecture" | docs/ARCHITECTURE.md |
-| Generate UX Spec only | Say "generate UX spec" | docs/UX_SPEC.md |
-| Generate Implementation Guide | Say "generate implementation guide" | docs/IMPLEMENTATION_GUIDE.md |
-| Generate Test Spec | Say "generate test spec" | docs/TEST_SPEC.md |
-| Generate Release Spec | Say "generate release spec" | docs/RELEASE_SPEC.md |
+| Phase                         | How to Activate                                         | Output                       |
+| ----------------------------- | ------------------------------------------------------- | ---------------------------- |
+| Idea Discovery                | Say "I don't know what to build" or "give me app ideas" | idea-shortlist.json          |
+| Product Planning              | Say "validate this idea" or "should I build..."         | product-plan-\*.md           |
+| Competitive Analysis          | Say "analyze competitors" or "competitive analysis"     | competitive-analysis.md      |
+| Market Research               | Say "market research" or "market sizing"                | market-research.md           |
+| Generate All Specs            | Say "generate implementation specifications"            | docs/\*.md (7 files)         |
+| Generate PRD only             | Say "generate PRD"                                      | docs/PRD.md                  |
+| Generate Architecture only    | Say "generate architecture"                             | docs/ARCHITECTURE.md         |
+| Generate UX Spec only         | Say "generate UX spec"                                  | docs/UX_SPEC.md              |
+| Generate Implementation Guide | Say "generate implementation guide"                     | docs/IMPLEMENTATION_GUIDE.md |
+| Generate Test Spec            | Say "generate test spec"                                | docs/TEST_SPEC.md            |
+| Generate Release Spec         | Say "generate release spec"                             | docs/RELEASE_SPEC.md         |
 
 ### File Locations
 
@@ -260,56 +260,62 @@ Product Plan (Source)
 
 When you change one spec, here's what might need updating:
 
-| If you change... | Check these specs... |
-|------------------|---------------------|
-| PRD (features) | Architecture, UX, Implementation, Test |
-| Architecture | Implementation Guide |
-| UX Spec | Implementation Guide, Design System |
-| Design System | (usually standalone) |
-| Test Spec | (usually standalone) |
-| Release Spec | (usually standalone) |
+| If you change... | Check these specs...                   |
+| ---------------- | -------------------------------------- |
+| PRD (features)   | Architecture, UX, Implementation, Test |
+| Architecture     | Implementation Guide                   |
+| UX Spec          | Implementation Guide, Design System    |
+| Design System    | (usually standalone)                   |
+| Test Spec        | (usually standalone)                   |
+| Release Spec     | (usually standalone)                   |
 
 ## Estimated Timeline
 
-| Phase | Duration | Notes |
-|-------|----------|-------|
-| Product Planning | 5-10 min | CLI execution + user review |
-| Market Research | 10-15 min | Optional, requires WebSearch |
+| Phase                    | Duration  | Notes                         |
+| ------------------------ | --------- | ----------------------------- |
+| Product Planning         | 5-10 min  | CLI execution + user review   |
+| Market Research          | 10-15 min | Optional, requires WebSearch  |
 | Specification Generation | 10-15 min | User review time at each gate |
-| Implementation | 4-8 weeks | Depends on app complexity |
-| Testing | 2-3 weeks | Including beta testing |
-| App Store Release | 1-2 weeks | Review time varies |
+| Implementation           | 4-8 weeks | Depends on app complexity     |
+| Testing                  | 2-3 weeks | Including beta testing        |
+| App Store Release        | 1-2 weeks | Review time varies            |
 
 **Total: Idea to App Store in 8-14 weeks** (for MVP)
 
 ## Tips for Success
 
 ### Phase 1: Product Planning
+
 - Be specific about your app idea
 - Use `--interactive` flag for decision points
 - Review all agent outputs carefully
 
 ### Phase 2: Market Research
+
 - Don't skip this phase - it significantly improves specs
 - WebSearch may not work in all regions (US recommended)
 - Save research as markdown files for reuse
 
 ### Phase 3: Specification Generation
+
 - Review each phase before approving
 - Request changes early (upstream changes cascade down)
 - Use the dependency graph when making updates
 
 ### Phase 4: Implementation
+
 - Follow IMPLEMENTATION_GUIDE.md step-by-step
 - Implement one feature at a time
 - Write tests as you go (don't defer)
 
 ### Phase 5: Testing
+
 - Target 80%+ code coverage
 - Test on multiple devices and iOS versions
 - Beta test for at least 2 weeks
 
 ### Phase 6: Release
+
 - Prepare all assets before submission
 - Review Apple's latest guidelines
 - Respond to reviews promptly
@@ -317,25 +323,30 @@ When you change one spec, here's what might need updating:
 ## Common Questions
 
 ### Q: Can I skip phases?
+
 Yes, but not recommended. Each phase builds on the previous. Skipping market research means less informed specs. Skipping specs means less structured implementation.
 
 ### Q: What if I want to change features after specs are generated?
+
 Update the PRD first, then regenerate downstream specs as needed. See the Update Impact Matrix above.
 
 ### Q: Can I use this for macOS apps?
+
 Yes! The workflow is designed for iOS/macOS apps. Specify your platform in the product planning phase.
 
 ### Q: What if WebSearch doesn't work in my region?
+
 Competitive analysis and market research are optional. You can proceed with the product plan data only, or manually gather research.
 
 ### Q: How do I implement a specific component?
+
 After specs are generated, ask: "Implement [component name] from the specifications" and Claude will generate actual Swift code following the pseudo-code in IMPLEMENTATION_GUIDE.md.
 
 ## Version History
 
-| Version | Date | Changes |
-|---------|------|---------|
-| 1.0.0 | Initial | Complete workflow documentation |
+| Version | Date    | Changes                         |
+| ------- | ------- | ------------------------------- |
+| 1.0.0   | Initial | Complete workflow documentation |
 
 ---
 

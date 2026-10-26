@@ -1,6 +1,7 @@
 # Profiling: Memory profiling
 
 <a id="source-performance-profiling-memory-profiling-md"></a>
+
 ## Source: `performance/profiling/memory-profiling.md`
 
 # Memory Profiling
@@ -9,11 +10,11 @@
 
 Three categories of memory — only two count against you:
 
-| Category | What it is | Counts toward footprint? |
-|----------|-----------|--------------------------|
-| **Dirty** | Memory your app wrote: heap allocations (malloc), decoded image buffers, frameworks' written pages | Yes |
-| **Compressed** | Dirty pages not recently accessed, compressed by the memory compressor; decompressed on access | Yes |
-| **Clean** | Never written or page-out-able: memory-mapped files, frameworks' clean pages | No |
+| Category       | What it is                                                                                         | Counts toward footprint? |
+| -------------- | -------------------------------------------------------------------------------------------------- | ------------------------ |
+| **Dirty**      | Memory your app wrote: heap allocations (malloc), decoded image buffers, frameworks' written pages | Yes                      |
+| **Compressed** | Dirty pages not recently accessed, compressed by the memory compressor; decompressed on access     | Yes                      |
+| **Clean**      | Never written or page-out-able: memory-mapped files, frameworks' clean pages                       | No                       |
 
 - **The equation: footprint = dirty + compressed.** Clean memory is free (WWDC21 10180).
 - **iOS has no swap** — swap is macOS-specific. In `vmmap` output on iOS, the **"swapped" column means "compressed"**; only the "dirty size" and "swapped size" columns matter for footprint (WWDC21 10180).
@@ -35,22 +36,24 @@ Three categories of memory — only two count against you:
 
 ### Choosing the Right Tool (WWDC24 10173)
 
-| Tool | What it answers | Cost model |
-|------|-----------------|------------|
-| Xcode memory report | "Is memory growing?" — can't say *why* | Free |
-| **Allocations** (template includes VM Tracker) | Full event history of every alloc/free over time — transient *and* persistent growth | Continuous per-event cost |
-| **Leaks** | Periodic snapshots for unreachable memory | Snapshot-based, briefly suspends the app |
-| **Memory Graph Debugger** | One snapshot of all allocations + references — "who is keeping this alive?" | Snapshot-based, briefly suspends the app |
-| CLI: `leaks`, `heap`, `vmmap`, `malloc_history` | Scriptable triage on live processes or memgraphs | Snapshot |
+| Tool                                            | What it answers                                                                      | Cost model                               |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------ | ---------------------------------------- |
+| Xcode memory report                             | "Is memory growing?" — can't say _why_                                               | Free                                     |
+| **Allocations** (template includes VM Tracker)  | Full event history of every alloc/free over time — transient _and_ persistent growth | Continuous per-event cost                |
+| **Leaks**                                       | Periodic snapshots for unreachable memory                                            | Snapshot-based, briefly suspends the app |
+| **Memory Graph Debugger**                       | One snapshot of all allocations + references — "who is keeping this alive?"          | Snapshot-based, briefly suspends the app |
+| CLI: `leaks`, `heap`, `vmmap`, `malloc_history` | Scriptable triage on live processes or memgraphs                                     | Snapshot                                 |
 
 Enable **MallocStackLogging** first (Scheme ▸ Diagnostics) — it records the backtrace + timestamp of every allocation, powers the memory graph's backtraces and `malloc_history`, and gives type context where C/C++ has none (WWDC24 10173). A device is needed for timing work; **Simulator is acceptable for heap-shape analysis**.
 
 ### Allocations Instrument
+
 1. **Xcode > Product > Profile** (Cmd+I)
 2. Choose **Allocations** template
 3. Record, reproduce the issue, stop
 
 ### Leaks Instrument
+
 - Included in the Allocations template by default
 - Runs periodic scans for unreachable memory
 - Red crosses in the Leaks lane indicate detected leaks
@@ -58,21 +61,24 @@ Enable **MallocStackLogging** first (Scheme ▸ Diagnostics) — it records the 
 ## Allocations Instrument
 
 ### Key Metrics
-| Metric | Meaning |
-|--------|---------|
-| All Heap Allocations | Total memory allocated on the heap |
-| Live Bytes | Currently allocated (not freed) memory |
-| Transient Bytes | Allocated and freed during recording |
-| # Living | Count of live allocation objects |
-| # Transient | Count of freed allocations |
+
+| Metric               | Meaning                                |
+| -------------------- | -------------------------------------- |
+| All Heap Allocations | Total memory allocated on the heap     |
+| Live Bytes           | Currently allocated (not freed) memory |
+| Transient Bytes      | Allocated and freed during recording   |
+| # Living             | Count of live allocation objects       |
+| # Transient          | Count of freed allocations             |
 
 ### Reading the Results
+
 - Sort by **Live Bytes** to find largest memory consumers
 - Sort by **# Living** to find most numerous allocations
 - Click a category to see individual allocations with stack traces
 - **Persistent** column shows objects that survive across generations
 
 ### Generation Analysis (Mark Generation)
+
 Track memory growth over repeated operations:
 
 1. Start recording
@@ -83,6 +89,7 @@ Track memory growth over repeated operations:
 6. Compare generations — growth between identical operations = leak or unbounded cache
 
 **What to look for:**
+
 - Stable: Each generation has similar Live Bytes
 - Leaking: Each generation grows — objects from previous generations persist
 - Caching: Growth that plateaus after a few generations (may be intentional)
@@ -159,14 +166,16 @@ func downsample(imageAt url: URL, to pointSize: CGSize, scale: CGFloat) -> UIIma
 ## Leaks Instrument
 
 ### How Leaks Detection Works
+
 - Scans heap at intervals for objects with no root references
 - Detects **unreachable** memory — allocated but no path from stack/globals
 - Does NOT detect **logical leaks** (reachable but never used, like unbounded caches)
 
-**The three reachability states (WWDC24 10173):** **useful** (reachable, will be used), **abandoned** (reachable but never used again — over-caching, fat singletons; wastes footprint and *no tool flags it*), and **leaked** (unreachable — cycles, lost pointers). Leaks-the-tool only finds the third kind. "Strive to have zero leaks in your app" (WWDC21 10180).
+**The three reachability states (WWDC24 10173):** **useful** (reachable, will be used), **abandoned** (reachable but never used again — over-caching, fat singletons; wastes footprint and _no tool flags it_), and **leaked** (unreachable — cycles, lost pointers). Leaks-the-tool only finds the third kind. "Strive to have zero leaks in your app" (WWDC21 10180).
 
 **Leak-tool limits (WWDC24 10173):**
-- Tools classify references as strong / weak / unowned / unmanaged / **conservative** — raw bytes that merely *look* like pointers (all C, and C++ without virtual methods). Conservative references cause **false negatives and non-determinism** (4 leaks one run, 5 the next). Trick: **run the suspect code in a loop ~100×** — multiplied leaks are easy to spot.
+
+- Tools classify references as strong / weak / unowned / unmanaged / **conservative** — raw bytes that merely _look_ like pointers (all C, and C++ without virtual methods). Conservative references cause **false negatives and non-determinism** (4 leaks one run, 5 the next). Trick: **run the suspect code in a loop ~100×** — multiplied leaks are easy to spot.
 - **noreturn gotcha**: locals in a function ending in `dispatchMain()` (noreturn) get their cleanup optimized away and are falsely reported leaked — store app-lifetime objects in a static/global instead.
 - If weak/unowned edges are missing from the memory graph, set build setting **Reflection Metadata Level = All**.
 
@@ -259,7 +268,7 @@ let token = NotificationCenter.default.addObserver(
 #### Closure Contexts and the Implicit-self Trap (WWDC24 10173)
 
 - Every capturing closure allocates a **closure context** on the heap (1:1 with the closure); captures are **strong by default**. The memory graph shows contexts with references labeled only "capture" (no variable names) — double-click one to jump to the closure's source.
-- **Implicit self trap**: assigning a *method* as a closure value (`generator = defaultAction`) strongly captures `self` → self-cycle. Replace with an explicit closure and a capture list.
+- **Implicit self trap**: assigning a _method_ as a closure value (`generator = defaultAction`) strongly captures `self` → self-cycle. Replace with an explicit closure and a capture list.
 
 #### weak vs unowned — Real Costs (WWDC24 10173)
 
@@ -270,30 +279,36 @@ let token = NotificationCenter.default.addObserver(
 ## Xcode Memory Graph Debugger
 
 ### When to Use
+
 - Leaks instrument shows leaks but you need to see **why** objects are retained
 - You suspect retain cycles but can't find them in code review
 - You need to see the **full ownership graph** of an object
 
 ### How to Use
+
 1. Run app in **Debug** mode (not Profile)
 2. Reproduce the state where objects should be deallocated
 3. Click the **Memory Graph** button in Xcode's debug bar (looks like interconnected nodes)
 4. Xcode pauses and captures the heap
 
 ### Reading the Graph
+
 - **Left sidebar**: List of all live objects grouped by type
 - **Purple exclamation marks**: Xcode-detected leaks / retain cycles
 - **Center canvas**: Visual graph of object references
 - Click an object to see its retain graph — who holds a strong reference to it
 
 ### Debugging Tips
+
 - Filter by your module name to ignore system objects
 - Look for **cycles** — two objects pointing at each other
 - Check **backtrace** in the right sidebar to see where the object was allocated
 - Export the graph: **File > Export Memory Graph** for sharing
 
 ### Enable Malloc Stack Logging
+
 For full allocation backtraces in Memory Graph Debugger:
+
 1. **Scheme > Run > Diagnostics**
 2. Enable **Malloc Stack Logging** (Live Allocations Only)
 3. Now the right sidebar shows the exact call stack that allocated each object
@@ -362,6 +377,7 @@ for item in largeDataSet {
 ```
 
 ### When autoreleasepool Matters
+
 - Processing large collections (1000+ items)
 - Creating temporary `NSString`, `NSData`, `NSNumber` objects in loops
 - Image processing pipelines
@@ -393,16 +409,17 @@ func logMemoryFootprint() {
 
 The six termination reasons — rank which actually hits your users with `MXAppExitMetric` (daily counts per exit cause, foreground + background) before debugging locally:
 
-| # | Reason | Key facts | Field diagnostic |
-|---|--------|-----------|------------------|
-| 1 | Crash | Segfaults, illegal instructions, asserts | `MXCrashDiagnostic`, Organizer |
-| 2 | Watchdog | Long hang during launch/background/foreground transitions — time limit on the order of **20 seconds**; never fires with debugger attached | `MXCrashDiagnostic` |
-| 3 | CPU resource limit | Sustained high CPU **in the background** | `MXCPUExceptionDiagnostic`, Organizer energy logs |
-| 4 | Memory footprint limit | Killed as footprint crosses the limit — **the limit is the same in foreground and background**; stay **< 200 MB** to support devices older than iPhone 6s | Allocations/Leaks, Memory Debugger |
-| 5 | Jetsam (memory pressure) | The most common background kill; foreground app evicts backgrounded ones — **inevitable and unpredictable** | `MXAppExitMetric` |
-| 6 | Background task timeout | `beginBackgroundTask` never ended within **30 seconds** of suspension — produces **no crash log**; counts appear only in `MXBackgroundExitData` | `MXAppExitMetric` |
+| #   | Reason                   | Key facts                                                                                                                                                 | Field diagnostic                                  |
+| --- | ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| 1   | Crash                    | Segfaults, illegal instructions, asserts                                                                                                                  | `MXCrashDiagnostic`, Organizer                    |
+| 2   | Watchdog                 | Long hang during launch/background/foreground transitions — time limit on the order of **20 seconds**; never fires with debugger attached                 | `MXCrashDiagnostic`                               |
+| 3   | CPU resource limit       | Sustained high CPU **in the background**                                                                                                                  | `MXCPUExceptionDiagnostic`, Organizer energy logs |
+| 4   | Memory footprint limit   | Killed as footprint crosses the limit — **the limit is the same in foreground and background**; stay **< 200 MB** to support devices older than iPhone 6s | Allocations/Leaks, Memory Debugger                |
+| 5   | Jetsam (memory pressure) | The most common background kill; foreground app evicts backgrounded ones — **inevitable and unpredictable**                                               | `MXAppExitMetric`                                 |
+| 6   | Background task timeout  | `beginBackgroundTask` never ended within **30 seconds** of suspension — produces **no crash log**; counts appear only in `MXBackgroundExitData`           | `MXAppExitMetric`                                 |
 
 Rules that follow:
+
 - **Going to background, aim for < 50 MB** footprint — the smaller, the better. Drop caches and anything re-readable from disk in `didEnterBackground` (WWDC20 10078).
 - ❌ Don't assume a kill will reproduce under the debugger — watchdog and jetsam kills specifically never do.
 - **Save state on going background** (text field content, media playback position — UIKit State Restoration does the heavy lifting) so a jetsam relaunch is invisible: "many users won't even realize the app had been killed."
@@ -433,6 +450,7 @@ upload(data) {
 - iOS 13.4+ prints a console message when a background task is held too long — watch for it during development. In the field, pair os_signpost begin/end events around the handler and compare counts in MetricKit payloads — imbalanced counts mean the handler hung or crashed.
 
 ## Quick Diagnosis Checklist
+
 - [ ] Run Allocations with Generation Analysis — does memory grow across identical operations?
 - [ ] Run Leaks instrument — any detected leaks? (Run suspect code ~100× in a loop to defeat conservative-reference false negatives)
 - [ ] Check Memory Graph Debugger for retain cycles (purple warnings)

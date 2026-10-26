@@ -7,6 +7,7 @@ Comprehensive security review for macOS and iOS applications.
 ### Keychain Usage
 
 #### ✅ Good Patterns
+
 ```swift
 // Store sensitive data in Keychain
 let query: [String: Any] = [
@@ -19,6 +20,7 @@ SecItemAdd(query as CFDictionary, nil)
 ```
 
 #### ❌ Anti-patterns
+
 ```swift
 // Never store credentials in UserDefaults
 UserDefaults.standard.set(apiKey, forKey: "apiKey")
@@ -31,6 +33,7 @@ try apiKey.write(to: credentialsFile, atomically: true, encoding: .utf8)
 ```
 
 ### Checklist
+
 - [ ] API keys stored in Keychain, not UserDefaults
 - [ ] No hardcoded secrets in source code
 - [ ] No secrets in Info.plist
@@ -38,6 +41,7 @@ try apiKey.write(to: credentialsFile, atomically: true, encoding: .utf8)
 - [ ] Credentials cleared on logout/sign-out
 
 ### Search Patterns
+
 ```
 Grep: "UserDefaults.*password|UserDefaults.*token|UserDefaults.*key|UserDefaults.*secret"
 Grep: "sk-ant-|api-key-|Bearer [A-Za-z0-9]"
@@ -49,6 +53,7 @@ Grep: "hardcoded|TODO.*key|FIXME.*secret"
 ### Network Security
 
 #### ✅ Good Patterns
+
 ```swift
 // Use HTTPS
 let url = URL(string: "https://api.example.com")
@@ -62,6 +67,7 @@ request.timeoutInterval = 30
 ```
 
 #### ❌ Anti-patterns
+
 ```swift
 // Never disable SSL validation in production
 class InsecureDelegate: NSObject, URLSessionDelegate {
@@ -78,6 +84,7 @@ let url = URL(string: "http://api.example.com/login")
 ```
 
 ### Checklist
+
 - [ ] All API calls use HTTPS
 - [ ] No disabled SSL certificate validation
 - [ ] Sensitive data not logged to console
@@ -85,6 +92,7 @@ let url = URL(string: "http://api.example.com/login")
 - [ ] Appropriate request timeouts set
 
 ### Search Patterns
+
 ```
 Grep: "http://" (excluding localhost/127.0.0.1)
 Grep: "URLAuthenticationChallenge|serverTrust"
@@ -96,6 +104,7 @@ Grep: "print.*token|print.*password|NSLog.*credential"
 ### User Input
 
 #### ✅ Good Patterns
+
 ```swift
 // Validate and sanitize user input
 func validateEmail(_ email: String) -> Bool {
@@ -108,6 +117,7 @@ let query = "SELECT * FROM users WHERE id = ?"
 ```
 
 #### ❌ Anti-patterns
+
 ```swift
 // String interpolation in queries = SQL injection risk
 let query = "SELECT * FROM users WHERE name = '\(userInput)'"
@@ -117,6 +127,7 @@ webView.loadHTMLString("<div>\(userInput)</div>", baseURL: nil)
 ```
 
 ### Checklist
+
 - [ ] User input validated before use
 - [ ] No string interpolation in database queries
 - [ ] HTML content sanitized before rendering
@@ -128,12 +139,14 @@ webView.loadHTMLString("<div>\(userInput)</div>", baseURL: nil)
 ### macOS Sandbox
 
 #### Checklist
+
 - [ ] App is sandboxed (unless justified exception)
 - [ ] Only necessary entitlements requested
 - [ ] Sandbox exceptions documented and justified
 - [ ] Temporary exception entitlements have migration plan
 
 #### Common Entitlements to Review
+
 ```xml
 <!-- Justify each of these -->
 <key>com.apple.security.files.user-selected.read-write</key>
@@ -145,6 +158,7 @@ webView.loadHTMLString("<div>\(userInput)</div>", baseURL: nil)
 ### iOS Capabilities
 
 #### Checklist
+
 - [ ] Only necessary capabilities enabled
 - [ ] Background modes justified
 - [ ] Push notification entitlement if using push
@@ -153,12 +167,14 @@ webView.loadHTMLString("<div>\(userInput)</div>", baseURL: nil)
 ## Hardened Runtime (macOS)
 
 ### Checklist
+
 - [ ] Hardened Runtime enabled for notarization
 - [ ] Runtime exceptions minimized
 - [ ] JIT exceptions only if absolutely necessary
 - [ ] Unsigned executable memory exceptions justified
 
 ### Search in project.pbxproj
+
 ```
 Grep: "ENABLE_HARDENED_RUNTIME"
 Grep: "CODE_SIGN_INJECT_BASE_ENTITLEMENTS"
@@ -167,12 +183,14 @@ Grep: "CODE_SIGN_INJECT_BASE_ENTITLEMENTS"
 ## Platform-Specific Security
 
 ### macOS
+
 - [ ] Keychain access properly scoped
 - [ ] App Groups used appropriately
 - [ ] XPC services secured
 - [ ] Helper tools signed and validated
 
 ### iOS
+
 - [ ] Keychain access groups configured
 - [ ] App Transport Security not disabled globally
 - [ ] Jailbreak detection considered (if needed)
@@ -181,6 +199,7 @@ Grep: "CODE_SIGN_INJECT_BASE_ENTITLEMENTS"
 ## Common Vulnerabilities
 
 ### Checklist
+
 - [ ] No force unwrapping of security-critical optionals
 - [ ] Cryptographic operations use Security framework
 - [ ] Random numbers use SecRandomCopyBytes for security
@@ -188,6 +207,7 @@ Grep: "CODE_SIGN_INJECT_BASE_ENTITLEMENTS"
 - [ ] Debug code removed from release builds
 
 ### Search Patterns
+
 ```
 Grep: "print.*debug|#if DEBUG.*secret"
 Grep: "arc4random|rand\(\)" (should use SecRandomCopyBytes)

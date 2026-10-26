@@ -1,6 +1,7 @@
 # SwiftUI debugging: View identity
 
 <a id="source-performance-swiftui-debugging-view-identity-md"></a>
+
 ## Source: `performance/swiftui-debugging/view-identity.md`
 
 # View Identity
@@ -37,12 +38,12 @@ DetailView(item: selectedItem)
 
 ## How SwiftUI Uses Identity
 
-| Identity comparison | SwiftUI behavior |
-|--------------------|-----------------|
-| Same identity, same type | **Update** existing view (preserves `@State`) |
-| Same identity, different type | **Destroy** old view, **create** new view |
-| Different identity | **Destroy** old view, **create** new view |
-| No identity change | **Diff** the view's properties and update as needed |
+| Identity comparison           | SwiftUI behavior                                    |
+| ----------------------------- | --------------------------------------------------- |
+| Same identity, same type      | **Update** existing view (preserves `@State`)       |
+| Same identity, different type | **Destroy** old view, **create** new view           |
+| Different identity            | **Destroy** old view, **create** new view           |
+| No identity change            | **Diff** the view's properties and update as needed |
 
 Key consequence: when identity changes, **all `@State` is lost** and the view is recreated from scratch.
 
@@ -107,6 +108,7 @@ if isLoading {
 ```
 
 When `isLoading` changes from `true` to `false`:
+
 - `ProgressView` is destroyed (it existed at the "if-true" branch)
 - `ContentView` is created from scratch (it appears at the "if-else" branch)
 - All `@State` inside `ContentView` resets
@@ -180,6 +182,7 @@ See common-pitfalls.md for more on `AnyView` performance costs.
 ### How ForEach Uses Identifiers
 
 `ForEach` maps each data element to a view using the `id` key path. SwiftUI uses these identifiers to:
+
 - Match existing views to updated data (minimizing recreations)
 - Animate insertions, removals, and reorderings
 - Preserve `@State` in each row
@@ -220,15 +223,15 @@ ForEach(items, id: \.id) { item in
 
 ### Symptoms of Identity Problems
 
-| Symptom | Likely cause |
-|---------|-------------|
-| View `@State` resets unexpectedly | Identity changed, causing view recreation |
-| `onAppear` fires repeatedly on the same view | Identity keeps changing (unstable `.id()`) |
-| Animations show insertion/removal instead of smooth update | View destroyed and recreated instead of updated |
-| Scroll position resets in a list | `ForEach` identifiers changed for existing items |
-| Text fields lose focus and typed content | The `TextField` view got a new identity |
+| Symptom                                                    | Likely cause                                     |
+| ---------------------------------------------------------- | ------------------------------------------------ |
+| View `@State` resets unexpectedly                          | Identity changed, causing view recreation        |
+| `onAppear` fires repeatedly on the same view               | Identity keeps changing (unstable `.id()`)       |
+| Animations show insertion/removal instead of smooth update | View destroyed and recreated instead of updated  |
+| Scroll position resets in a list                           | `ForEach` identifiers changed for existing items |
+| Text fields lose focus and typed content                   | The `TextField` view got a new identity          |
 
-### Using _printChanges to Detect Recreation
+### Using \_printChanges to Detect Recreation
 
 ```swift
 var body: some View {
@@ -254,10 +257,10 @@ If you see rapid appear/disappear cycles for the same content, the identity is u
 
 ## Fix Patterns Summary
 
-| Problem | Fix |
-|---------|-----|
-| `.id(UUID())` or `.id(Date())` | Use a stable model identifier |
-| `if`/`else` toggling modifiers on same view | Use ternary expressions for modifier values |
-| `ForEach` with array index as id | Use `Identifiable` conformance or stable key path |
-| State lost on navigation | Add `.id(item.id)` to force correct recreation timing |
-| Duplicate `ForEach` identifiers | Ensure model has truly unique `id` property |
+| Problem                                     | Fix                                                   |
+| ------------------------------------------- | ----------------------------------------------------- |
+| `.id(UUID())` or `.id(Date())`              | Use a stable model identifier                         |
+| `if`/`else` toggling modifiers on same view | Use ternary expressions for modifier values           |
+| `ForEach` with array index as id            | Use `Identifiable` conformance or stable key path     |
+| State lost on navigation                    | Add `.id(item.id)` to force correct recreation timing |
+| Duplicate `ForEach` identifiers             | Ensure model has truly unique `id` property           |

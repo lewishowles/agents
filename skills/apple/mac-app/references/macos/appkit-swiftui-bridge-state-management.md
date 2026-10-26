@@ -1,6 +1,7 @@
 # AppKit–SwiftUI bridge: State management
 
 <a id="source-macos-appkit-swiftui-bridge-state-management-md"></a>
+
 ## Source: `macos/appkit-swiftui-bridge/state-management.md`
 
 # State Management Across Frameworks
@@ -238,13 +239,13 @@ class DocumentController: NSDocumentController {
 
 ## Choosing the Right Approach
 
-| Approach | macOS Version | Coupling | Best For |
-|----------|--------------|----------|----------|
-| @Observable | 14+ | Tight | Shared view models, closely related views |
-| Combine | 10.15+ | Medium | Reactive data streams, async updates |
-| NotificationCenter | Any | Loose | Cross-module events, fire-and-forget |
-| UserDefaults | Any | Loose | Simple preferences, settings |
-| Responder Chain | Any | Loose | Menu actions, commands |
+| Approach           | macOS Version | Coupling | Best For                                  |
+| ------------------ | ------------- | -------- | ----------------------------------------- |
+| @Observable        | 14+           | Tight    | Shared view models, closely related views |
+| Combine            | 10.15+        | Medium   | Reactive data streams, async updates      |
+| NotificationCenter | Any           | Loose    | Cross-module events, fire-and-forget      |
+| UserDefaults       | Any           | Loose    | Simple preferences, settings              |
+| Responder Chain    | Any           | Loose    | Menu actions, commands                    |
 
 ## Common Mistakes
 

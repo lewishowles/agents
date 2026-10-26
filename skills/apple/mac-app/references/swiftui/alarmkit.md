@@ -7,6 +7,7 @@
 - [Scheduling](alarmkit-scheduling.md) (upstream `scheduling.md`)
 
 <a id="source-swiftui-alarmkit-skill-md"></a>
+
 ## Source: `swiftui/alarmkit/SKILL.md`
 
 # AlarmKit
@@ -16,6 +17,7 @@ Framework for scheduling alarms and countdown timers with custom UI, Live Activi
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Asks to add, fix, or review **alarm** or **timer** functionality
 - Mentions **AlarmKit**, **AlarmManager**, or **AlarmPresentation**
 - Wants to schedule **one-time**, **repeating**, or **countdown** alarms
@@ -56,28 +58,28 @@ What do you need?
 
 ## API Availability
 
-| API | Minimum Version | Reference |
-|-----|----------------|-----------|
-| `AlarmManager` | iOS 26 | scheduling.md |
-| `Alarm` / `Alarm.Schedule` | iOS 26 | scheduling.md |
-| `AlarmPresentation` (.alert, .countdown, .paused) | iOS 26 | presentation.md |
-| `AlarmAttributes` | iOS 26 | live-activities.md |
-| `AlarmMetadata` | iOS 26 | live-activities.md |
-| `AlarmButton` | iOS 26 | presentation.md |
-| `CountdownDuration` | iOS 26 | scheduling.md |
-| `alarmUpdates` async sequence | iOS 26 | scheduling.md |
-| `authorizationUpdates` async sequence | iOS 26 | scheduling.md |
+| API                                               | Minimum Version | Reference          |
+| ------------------------------------------------- | --------------- | ------------------ |
+| `AlarmManager`                                    | iOS 26          | scheduling.md      |
+| `Alarm` / `Alarm.Schedule`                        | iOS 26          | scheduling.md      |
+| `AlarmPresentation` (.alert, .countdown, .paused) | iOS 26          | presentation.md    |
+| `AlarmAttributes`                                 | iOS 26          | live-activities.md |
+| `AlarmMetadata`                                   | iOS 26          | live-activities.md |
+| `AlarmButton`                                     | iOS 26          | presentation.md    |
+| `CountdownDuration`                               | iOS 26          | scheduling.md      |
+| `alarmUpdates` async sequence                     | iOS 26          | scheduling.md      |
+| `authorizationUpdates` async sequence             | iOS 26          | scheduling.md      |
 
 ## Top Mistakes -- Quick Reference
 
-| # | Mistake | Fix | Details |
-|---|---------|-----|---------|
-| 1 | Using `.authorizationStatus` instead of `.authorizationState` | The property is `AlarmManager.shared.authorizationState` -- there is no `authorizationStatus` | scheduling.md |
-| 2 | Forgetting `NSAlarmKitUsageDescription` in Info.plist | Add the key with a user-facing string before calling `requestAuthorization()` | scheduling.md |
-| 3 | Creating countdown timer with a schedule | Timers use `CountdownDuration` only -- do not pass a schedule | scheduling.md |
-| 4 | Missing widget extension for countdown presentations | Countdown and paused UI requires an `ActivityConfiguration(for: AlarmAttributes.self)` widget | live-activities.md |
-| 5 | Not persisting alarm UUIDs | Store the `Alarm.id` (UUID) so you can pause, resume, or cancel later | scheduling.md |
-| 6 | Not observing `alarmUpdates` for state sync | Use the `alarmUpdates` async sequence to keep local state in sync with the system | scheduling.md |
+| #   | Mistake                                                       | Fix                                                                                           | Details            |
+| --- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ------------------ |
+| 1   | Using `.authorizationStatus` instead of `.authorizationState` | The property is `AlarmManager.shared.authorizationState` -- there is no `authorizationStatus` | scheduling.md      |
+| 2   | Forgetting `NSAlarmKitUsageDescription` in Info.plist         | Add the key with a user-facing string before calling `requestAuthorization()`                 | scheduling.md      |
+| 3   | Creating countdown timer with a schedule                      | Timers use `CountdownDuration` only -- do not pass a schedule                                 | scheduling.md      |
+| 4   | Missing widget extension for countdown presentations          | Countdown and paused UI requires an `ActivityConfiguration(for: AlarmAttributes.self)` widget | live-activities.md |
+| 5   | Not persisting alarm UUIDs                                    | Store the `Alarm.id` (UUID) so you can pause, resume, or cancel later                         | scheduling.md      |
+| 6   | Not observing `alarmUpdates` for state sync                   | Use the `alarmUpdates` async sequence to keep local state in sync with the system             | scheduling.md      |
 
 ## Review Checklist
 
@@ -95,8 +97,8 @@ When reviewing AlarmKit code, verify:
 
 ## Reference Files
 
-| File | Content |
-|------|---------|
-| [scheduling.md](alarmkit-scheduling.md#source-swiftui-alarmkit-scheduling-md) | Authorization, one-time/repeating/timer creation, managing alarms, observing updates |
-| [presentation.md](alarmkit-presentation.md#source-swiftui-alarmkit-presentation-md) | Alert, countdown, paused UI customization, buttons, tint color |
-| [live-activities.md](alarmkit-live-activities.md#source-swiftui-alarmkit-live-activities-md) | Widget extension, AlarmAttributes, AlarmMetadata, Dynamic Island |
+| File                                                                                         | Content                                                                              |
+| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| [scheduling.md](alarmkit-scheduling.md#source-swiftui-alarmkit-scheduling-md)                | Authorization, one-time/repeating/timer creation, managing alarms, observing updates |
+| [presentation.md](alarmkit-presentation.md#source-swiftui-alarmkit-presentation-md)          | Alert, countdown, paused UI customization, buttons, tint color                       |
+| [live-activities.md](alarmkit-live-activities.md#source-swiftui-alarmkit-live-activities-md) | Widget extension, AlarmAttributes, AlarmMetadata, Dynamic Island                     |

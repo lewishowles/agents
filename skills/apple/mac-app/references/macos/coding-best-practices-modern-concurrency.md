@@ -1,6 +1,7 @@
 # Coding best practices: Modern concurrency
 
 <a id="source-macos-coding-best-practices-modern-concurrency-md"></a>
+
 ## Source: `macos/coding-best-practices/modern-concurrency.md`
 
 # Modern Concurrency Best Practices

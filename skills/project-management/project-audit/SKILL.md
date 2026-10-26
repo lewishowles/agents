@@ -3,6 +3,7 @@ name: project-audit
 description: >
   Use this skill when auditing a project for setup drift, stale generated output, missing diagnostics, command-safety gaps, or agent-readiness issues. Covers AGENTS.md, agent-run registrations, global doc-paths and friction commands, progress handoff health, validation commands, and generated/source boundaries.
 ---
+
 # Project audit
 
 Audit project agent-readiness and maintenance drift. Default to findings and recommendations, not implementation.

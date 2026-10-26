@@ -3,6 +3,7 @@ name: boilersuit-generator-authoring
 description: >
   Use this skill when creating or editing a project-owned Boilersuit generator under .boilersuit/generators/. Uses the installed CLI contract as the source of truth, plans the generator before writing, runs doctor before preview, and avoids copying schema details that can drift.
 ---
+
 # Boilersuit generator authoring
 
 Create or edit generators using the installed Boilersuit CLI as contract. Do not rely on remembered field types, filters, schema properties, or path behaviour.

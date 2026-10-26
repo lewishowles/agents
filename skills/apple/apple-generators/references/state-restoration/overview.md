@@ -83,12 +83,7 @@ Generate these files:
 
 ### Step 3: Create Feature Files
 
-Based on configuration:
-
-3. `NavigationStateModifier.swift` — If navigation path selected
-4. `ScrollRestorationModifier.swift` — If scroll position selected
-5. `TabRestorationModifier.swift` — If tab selection selected
-6. `FormDraftManager.swift` — If form data selected
+Based on configuration: 3. `NavigationStateModifier.swift` — If navigation path selected 4. `ScrollRestorationModifier.swift` — If scroll position selected 5. `TabRestorationModifier.swift` — If tab selection selected 6. `FormDraftManager.swift` — If form data selected
 
 ### Step 4: Determine File Location
 

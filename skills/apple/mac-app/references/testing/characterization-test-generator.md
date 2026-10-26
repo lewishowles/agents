@@ -1,6 +1,7 @@
 # Characterisation tests
 
 <a id="source-testing-characterization-test-generator-skill-md"></a>
+
 ## Source: `testing/characterization-test-generator/SKILL.md`
 
 # Characterization Test Generator
@@ -10,6 +11,7 @@ Generate tests that document what existing code **actually does** — not what i
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Says "I need to refactor this" or "help me refactor"
 - Wants to "add tests before changing code"
 - Asks for "characterization tests" or "golden master tests"
@@ -20,6 +22,7 @@ Use this skill when the user:
 ## Why This Matters for AI-Generated Code
 
 AI refactoring is powerful but risky:
+
 - AI doesn't remember **why** code works a certain way
 - AI may "improve" code and break subtle behavior
 - Characterization tests freeze current behavior as a regression suite
@@ -35,6 +38,7 @@ Grep: "class |struct |enum |protocol |func " (public API surface)
 ```
 
 Identify:
+
 - [ ] Public types and their public methods
 - [ ] Input types and return types
 - [ ] Side effects (network, disk, UserDefaults, notifications)
@@ -45,14 +49,14 @@ Identify:
 
 For each public method, classify:
 
-| Category | Example | Test Strategy |
-|----------|---------|---------------|
-| Pure computation | `calculate(a, b) -> c` | Input/output pairs |
-| State mutation | `addItem(_:)` modifies array | Before/after state checks |
-| Async operation | `fetchData() async -> [Item]` | Mock dependencies, verify results |
-| Side effect | `save()` writes to disk | Verify mock was called |
-| Event emission | `delegate?.didUpdate()` | Capture delegate calls |
-| Error path | Throws on invalid input | Verify correct error type |
+| Category         | Example                       | Test Strategy                     |
+| ---------------- | ----------------------------- | --------------------------------- |
+| Pure computation | `calculate(a, b) -> c`        | Input/output pairs                |
+| State mutation   | `addItem(_:)` modifies array  | Before/after state checks         |
+| Async operation  | `fetchData() async -> [Item]` | Mock dependencies, verify results |
+| Side effect      | `save()` writes to disk       | Verify mock was called            |
+| Event emission   | `delegate?.didUpdate()`       | Capture delegate calls            |
+| Error path       | Throws on invalid input       | Verify correct error type         |
 
 ### Phase 3: Generate Tests
 
@@ -192,6 +196,7 @@ This is the key step. For each test:
 ```
 
 **Add comments for surprising behavior:**
+
 ```swift
 // CHARACTERIZATION: This returns 11 not 10 due to inclusive range.
 // Don't "fix" this until intentionally changing behavior.
@@ -216,6 +221,7 @@ extension Tag {
 ```
 
 4. **Run selectively:**
+
 ```bash
 # Run only characterization tests
 xcodebuild test -scheme YourApp \
@@ -260,6 +266,6 @@ Run `xcodebuild test` after each change to verify no behavior changed.
 
 ## References
 
-- Michael Feathers, *Working Effectively with Legacy Code* — coined "characterization test"
+- Michael Feathers, _Working Effectively with Legacy Code_ — coined "characterization test"
 - `../../../apple-generators/references/test-generator/overview.md` — for standard test generation (not characterization)
 - `tdd-refactor-guard.md` — pre-refactor checklist that uses these tests

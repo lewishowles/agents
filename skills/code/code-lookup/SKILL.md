@@ -3,6 +3,7 @@ name: code-lookup
 description: >
   Use this skill when locating code, tracing behaviour, choosing between codebase-memory and text search, or when a guard hook blocks a search or file read.
 ---
+
 # Code lookup
 
 Choose one primary lookup tool for the question. The failure this prevents is calling multiple overlapping analysers before the first tool has shown it is insufficient.

@@ -208,6 +208,7 @@ Handle messages from anyone else, including another team's roles, as you would w
   When the cleanup block is present, include "clean up the worktree" after "commit" in that request.
   At a tool-call limit, omit the commit message and cleanup, then ask "Reset the team" or, when checks are listed, "Run the checks, then reset the team".
   End with the **Over to you** blockquote and its → recommendation line; never include Git commands, ask where to read the handoff, offer to continue this Orchestrator, or ask about resetting individual peers.
+
 - On receiving the edits-complete verification handoff, send Scout one packet: the non-mutating checks on the changed paths, plus the formatter when the report says it was not run.
   Evaluate that receipt as the Implementer's verification and re-dispatch only failures touching the task paths.
   Recommend to the human: keep the Implementer until that receipt is evaluated, then reset once it passes, because a fix stays in-context.

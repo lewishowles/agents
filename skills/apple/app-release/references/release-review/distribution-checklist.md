@@ -7,12 +7,14 @@ Release and distribution review for macOS and iOS applications.
 ### Bundle Identifier
 
 #### ✅ Good Pattern
+
 ```
 com.companyname.appname
 com.yourname.AppName
 ```
 
 #### ❌ Anti-patterns
+
 ```
 // Generic or placeholder identifiers
 com.example.app
@@ -25,12 +27,14 @@ app.mycompany
 ```
 
 ### Checklist
+
 - [ ] Bundle identifier uses reverse-domain format
 - [ ] Bundle identifier matches App Store Connect (if applicable)
 - [ ] Bundle identifier is unique (not copied from template)
 - [ ] Team ID configured correctly
 
 ### Search Pattern
+
 ```
 Grep in project.pbxproj: "PRODUCT_BUNDLE_IDENTIFIER"
 ```
@@ -43,6 +47,7 @@ Grep in project.pbxproj: "PRODUCT_BUNDLE_IDENTIFIER"
 - **Build** (CFBundleVersion): Internal, incremented each build
 
 #### ✅ Good Pattern
+
 ```xml
 <key>CFBundleShortVersionString</key>
 <string>1.2.0</string>
@@ -51,6 +56,7 @@ Grep in project.pbxproj: "PRODUCT_BUNDLE_IDENTIFIER"
 ```
 
 ### Checklist
+
 - [ ] Version number follows semantic versioning
 - [ ] Build number increments with each release
 - [ ] Version matches marketing expectations
@@ -106,6 +112,7 @@ If your app requests permissions, these keys are **required** or App Store will 
 ```
 
 ### Checklist
+
 - [ ] All required Info.plist keys present
 - [ ] Usage descriptions for all requested permissions
 - [ ] Usage descriptions are user-friendly (not technical)
@@ -116,11 +123,13 @@ If your app requests permissions, these keys are **required** or App Store will 
 ### macOS
 
 #### Developer ID (Direct Distribution)
+
 ```
 CODE_SIGN_IDENTITY = "Developer ID Application: Your Name (TEAM_ID)"
 ```
 
 #### App Store
+
 ```
 CODE_SIGN_IDENTITY = "Apple Distribution: Your Name (TEAM_ID)"
 ```
@@ -128,22 +137,26 @@ CODE_SIGN_IDENTITY = "Apple Distribution: Your Name (TEAM_ID)"
 ### iOS
 
 #### Development
+
 ```
 CODE_SIGN_IDENTITY = "iPhone Developer"
 ```
 
 #### Distribution
+
 ```
 CODE_SIGN_IDENTITY = "iPhone Distribution"
 ```
 
 ### Checklist
+
 - [ ] Signing certificate valid and not expired
 - [ ] Provisioning profile matches bundle ID
 - [ ] Provisioning profile includes required capabilities
 - [ ] Team selected in Xcode project
 
 ### Search Pattern
+
 ```
 Grep in project.pbxproj: "CODE_SIGN_IDENTITY|PROVISIONING_PROFILE"
 ```
@@ -152,25 +165,26 @@ Grep in project.pbxproj: "CODE_SIGN_IDENTITY|PROVISIONING_PROFILE"
 
 ### macOS Requirements
 
-| Size | Scale | Filename |
-|------|-------|----------|
-| 16x16 | 1x, 2x | icon_16x16.png, icon_16x16@2x.png |
-| 32x32 | 1x, 2x | icon_32x32.png, icon_32x32@2x.png |
+| Size    | Scale  | Filename                              |
+| ------- | ------ | ------------------------------------- |
+| 16x16   | 1x, 2x | icon_16x16.png, icon_16x16@2x.png     |
+| 32x32   | 1x, 2x | icon_32x32.png, icon_32x32@2x.png     |
 | 128x128 | 1x, 2x | icon_128x128.png, icon_128x128@2x.png |
 | 256x256 | 1x, 2x | icon_256x256.png, icon_256x256@2x.png |
 | 512x512 | 1x, 2x | icon_512x512.png, icon_512x512@2x.png |
 
 ### iOS Requirements
 
-| Size | Usage |
-|------|-------|
-| 1024x1024 | App Store |
-| 180x180 | iPhone @3x |
-| 120x120 | iPhone @2x |
-| 167x167 | iPad Pro @2x |
-| 152x152 | iPad @2x |
+| Size      | Usage        |
+| --------- | ------------ |
+| 1024x1024 | App Store    |
+| 180x180   | iPhone @3x   |
+| 120x120   | iPhone @2x   |
+| 167x167   | iPad Pro @2x |
+| 152x152   | iPad @2x     |
 
 ### Checklist
+
 - [ ] All required icon sizes present
 - [ ] Icons are square with no transparency (iOS)
 - [ ] Icons match brand guidelines
@@ -183,11 +197,13 @@ Grep in project.pbxproj: "CODE_SIGN_IDENTITY|PROVISIONING_PROFILE"
 Required for apps distributed outside App Store (macOS 10.15+).
 
 #### Prerequisites
+
 - [ ] Hardened Runtime enabled
 - [ ] Developer ID certificate
 - [ ] App-specific password for notarytool
 
 #### Notarization Script
+
 ```bash
 #!/bin/bash
 APP_PATH="$1"
@@ -210,6 +226,7 @@ xcrun stapler staple "$APP_PATH"
 ```
 
 #### Checklist
+
 - [ ] Hardened Runtime enabled
 - [ ] All binaries signed with Developer ID
 - [ ] App submitted to notarization service
@@ -229,6 +246,7 @@ hdiutil create -volname "AppName" \
 ```
 
 #### Checklist
+
 - [ ] DMG contains app and Applications alias
 - [ ] DMG is signed and notarized
 - [ ] DMG opens cleanly with drag-to-install
@@ -257,6 +275,7 @@ hdiutil create -volname "AppName" \
 ```
 
 #### Checklist
+
 - [ ] Only necessary entitlements requested
 - [ ] Each entitlement justified
 - [ ] Temporary exceptions have migration plan
@@ -266,6 +285,7 @@ hdiutil create -volname "AppName" \
 ### App Store Connect
 
 #### Required Information
+
 - [ ] App name (30 characters max)
 - [ ] Subtitle (30 characters max)
 - [ ] Privacy Policy URL
@@ -275,14 +295,16 @@ hdiutil create -volname "AppName" \
 - [ ] Age rating questionnaire completed
 
 #### Screenshots
-| Device | Size | Required |
-|--------|------|----------|
-| iPhone 6.7" | 1290 x 2796 | Yes |
-| iPhone 6.5" | 1242 x 2688 | Yes |
-| iPhone 5.5" | 1242 x 2208 | Optional |
+
+| Device         | Size        | Required     |
+| -------------- | ----------- | ------------ |
+| iPhone 6.7"    | 1290 x 2796 | Yes          |
+| iPhone 6.5"    | 1242 x 2688 | Yes          |
+| iPhone 5.5"    | 1242 x 2208 | Optional     |
 | iPad Pro 12.9" | 2048 x 2732 | If universal |
 
 #### Checklist
+
 - [ ] All required screenshots uploaded
 - [ ] Screenshots show actual app (not mockups)
 - [ ] App preview video (optional but recommended)
@@ -293,6 +315,7 @@ hdiutil create -volname "AppName" \
 ### TestFlight
 
 #### Checklist
+
 - [ ] Beta App Description provided
 - [ ] What to Test notes included
 - [ ] Test Information contact email
@@ -309,6 +332,7 @@ If your app uses encryption:
 ```
 
 #### Checklist
+
 - [ ] Export compliance question answered in App Store Connect
 - [ ] ITSAppUsesNonExemptEncryption key set correctly
 - [ ] Encryption registration filed (if required)
@@ -316,6 +340,7 @@ If your app uses encryption:
 ### In-App Purchases (if applicable)
 
 #### Checklist
+
 - [ ] Products created in App Store Connect
 - [ ] Products submitted for review
 - [ ] Restore purchases implemented
@@ -327,6 +352,7 @@ If your app uses encryption:
 ### Final Checklist
 
 #### Universal
+
 - [ ] All debug code removed
 - [ ] No test/placeholder content
 - [ ] Crash reporting configured
@@ -334,6 +360,7 @@ If your app uses encryption:
 - [ ] Version/build numbers correct
 
 #### macOS
+
 - [ ] App launches correctly
 - [ ] Menu bar items work
 - [ ] Preferences accessible (Cmd+,)
@@ -341,6 +368,7 @@ If your app uses encryption:
 - [ ] App quits cleanly (Cmd+Q)
 
 #### iOS
+
 - [ ] App launches on all supported devices
 - [ ] Launch screen matches initial UI
 - [ ] All orientations work (if supported)

@@ -48,7 +48,15 @@ generate_memories = true
 use_memories = true
 
 [tui]
-status_line = ["run-state", "project-name", "used-tokens", "context-used", "five-hour-limit", "weekly-limit", "model-with-reasoning"]
+status_line = [
+	"run-state",
+	"project-name",
+	"used-tokens",
+	"context-used",
+	"five-hour-limit",
+	"weekly-limit",
+	"model-with-reasoning",
+]
 status_line_use_colors = true
 alternate_screen = "never"
 

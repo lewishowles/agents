@@ -22,17 +22,20 @@ This document contains the detailed output schema and analysis methodology for t
 ### Field Descriptions
 
 #### `problem_statement`
+
 - **Type:** String
 - **Format:** One sentence
 - **Purpose:** Clear, concise statement of the core problem
 - **Example:** "Users need to capture fleeting thoughts before they're forgotten, but existing note apps have too much friction."
 
 #### `target_users`
+
 - **Type:** String
 - **Purpose:** Describes who experiences this problem most acutely
 - **Example:** "Knowledge workers, writers, and students who have frequent spontaneous ideas throughout the day."
 
 #### `pain_points`
+
 - **Type:** Array of strings
 - **Count:** Typically 4-8 items
 - **Purpose:** Specific, concrete pain points users experience
@@ -46,6 +49,7 @@ This document contains the detailed output schema and analysis methodology for t
   ```
 
 #### `severity_score`
+
 - **Type:** String
 - **Format:** "N/10" where N is 1-10
 - **Interpretation:**
@@ -56,11 +60,13 @@ This document contains the detailed output schema and analysis methodology for t
 - **Example:** "7/10"
 
 #### `frequency`
+
 - **Type:** String
 - **Purpose:** How often users encounter this problem
 - **Example:** "Multiple times per day for target users, but most users have workable alternatives"
 
 #### `current_solutions`
+
 - **Type:** Array of strings
 - **Purpose:** Existing alternatives and their limitations
 - **Format:** Each item typically includes the solution name and its key limitation
@@ -74,12 +80,14 @@ This document contains the detailed output schema and analysis methodology for t
   ```
 
 #### `opportunity`
+
 - **Type:** String
 - **Purpose:** Market opportunity assessment with reasoning
 - **Common Keywords:** WEAK, MODERATE, STRONG, EXCELLENT
 - **Example:** "MODERATE - There's a narrow opportunity IF you can differentiate with fastest possible capture and unique organizing philosophy."
 
 #### `recommendation`
+
 - **Type:** String (often multi-paragraph)
 - **Purpose:** **Most important field** - honest verdict with detailed reasoning
 - **Format:** Often includes:
@@ -118,18 +126,21 @@ When analyzing an idea, search for:
 ### Analysis Framework
 
 **Problem Validation:**
+
 - Is the problem real? (Do people actually complain about this?)
 - Is it frequent? (Daily > weekly > monthly)
 - Is it severe? (Workaround exists vs. no good solution)
 - Are people paying to solve it? (Willingness to pay signals real pain)
 
 **Market Assessment:**
+
 - How many competitors exist?
 - How strong are the incumbents?
 - Is Apple likely to build this natively?
 - What's the differentiation angle?
 
 **Honesty Principles:**
+
 - If Apple already does this well for free, say "don't build"
 - If the market has 10+ strong competitors, say "don't build" unless there's a clear gap
 - If severity is below 4, the problem isn't painful enough
@@ -138,15 +149,19 @@ When analyzing an idea, search for:
 ## Anti-Patterns
 
 ### Ignoring "Don't Build" Recommendations
+
 If the analysis says "don't build", there's usually a strong market reason. Don't override this because "mine will be simpler" or "I'll make a better UI."
 
 ### Not Reading the Full Recommendation
+
 A severity score of 7/10 alone doesn't tell the story. The recommendation field contains the nuanced reasoning.
 
 ### Lack of Context
+
 "Task app" produces a weaker analysis than "Task manager with AI auto-prioritization for busy professionals on iOS." More context = better analysis.
 
 ### Building Despite Weak Validation
+
 Severity 3/10 + WEAK opportunity = months of wasted effort. If it's a learning project, fine. But don't expect commercial success.
 
 ## Integration with Other Skills

@@ -3,6 +3,7 @@ name: web-performance-audit
 description: >
   Use this skill when conducting a performance audit of a page, PR, or app — distinct from building performantly (use the web-performance skill for that). Two modes: quick PR triage or full app audit. Triggers: "performance audit", "check Core Web Vitals", "is this fast enough?", preparing a performance report.
 ---
+
 # Web performance audit
 
 Standalone performance review of a page, PR, or app — distinct from building performantly (use the `web-performance` skill for implementation guidance). Two modes: quick triage or full audit.

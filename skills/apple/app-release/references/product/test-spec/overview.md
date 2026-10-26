@@ -3,6 +3,7 @@
 Generate comprehensive test specification and QA plan for iOS/macOS app testing.
 
 ## Metadata
+
 - **Name**: test-spec
 - **Version**: 1.0.0
 - **Role**: QA Engineer
@@ -11,6 +12,7 @@ Generate comprehensive test specification and QA plan for iOS/macOS app testing.
 ## When This Skill Activates
 
 This skill activates when the user says:
+
 - "generate test spec"
 - "create QA plan"
 - "write testing guide"
@@ -24,6 +26,7 @@ You are a QA Engineer AI agent specializing in iOS/macOS app testing. Your job i
 ## Prerequisites
 
 Before activating this skill, ensure:
+
 1. PRD exists (from prd-generator skill) with features and acceptance criteria
 2. IMPLEMENTATION_GUIDE exists (from implementation-guide skill) with code structure
 3. UX_SPEC exists (from ux-spec skill) for UI testing scenarios
@@ -78,17 +81,20 @@ Structure:
 Our testing approach follows the test pyramid:
 
 ```
+
          /\\
         /  \\  UI Tests (10%)
        /    \\  Critical user journeys, happy paths
       /------\\
      /        \\  Integration Tests (20%)
     /          \\  API integration, data persistence, service layer
-   /------------\\
-  /              \\  Unit Tests (70%)
- /                \\  ViewModels, Models, Utilities, Business Logic
+
+/------------\\
+/ \\ Unit Tests (70%)
+/ \\ ViewModels, Models, Utilities, Business Logic
 /------------------\\
-```
+
+````
 
 **Rationale**:
 - **Unit Tests (70%)**: Fast, reliable, easy to maintain. Focus on business logic.
@@ -294,7 +300,7 @@ final class UserTests: XCTestCase {
         XCTAssertNotNil(json?["id"])
     }
 }
-```
+````
 
 **Repeat for all models**: Item, Category, etc.
 
@@ -305,6 +311,7 @@ final class UserTests: XCTestCase {
 [Similar structure for ItemTests.swift]
 
 **Key Test Cases**:
+
 - Initialization
 - Validation (title not empty, description not empty)
 - Status updates
@@ -321,21 +328,21 @@ Test all ViewModels from IMPLEMENTATION_GUIDE.
 
 **File**: `[AppName]Tests/ViewModelTests/HomeViewModelTests.swift`
 
-| Test Case | Mock Setup | Action | Expected Result | Priority |
-|-----------|------------|--------|-----------------|----------|
-| testInitialState | New ViewModel | None | items empty, isLoading false, showError false | P0 |
-| testLoadItems_Success | Mock API returns 3 items | Call loadItems() | isLoading becomes false, items count = 3, no error | P0 |
-| testLoadItems_Failure | Mock API throws error | Call loadItems() | isLoading false, showError true, errorMessage set | P0 |
-| testLoadItems_EmptyResponse | Mock API returns empty array | Call loadItems() | items empty, no error | P1 |
-| testRefresh | 3 items already loaded | Call refresh() | isLoading true then false, items refreshed | P1 |
-| testDeleteItem_Success | 3 items loaded | Delete item[1] | items count = 2, deleted item removed | P0 |
-| testDeleteItem_Failure | Mock API throws error on delete | Delete item | showError true, item not removed | P1 |
-| testToggleItemStatus_Active | Item with status .active | toggleItemStatus(item) | item.status becomes .completed | P0 |
-| testToggleItemStatus_Completed | Item with status .completed | toggleItemStatus(item) | item.status becomes .active | P0 |
-| testSearchItems_MatchFound | 3 items, searchQuery = "Test" | Set searchQuery | items filtered to matching only | P1 |
-| testSearchItems_NoMatch | 3 items, searchQuery = "XYZ" | Set searchQuery | items empty | P1 |
-| testSearchItems_EmptyQuery | searchQuery was "Test" | Set searchQuery = "" | All items shown again | P1 |
-| testLoadItems_LocalFirst | Mock delays API response | Call loadItems() | Local items shown immediately, then synced | P2 |
+| Test Case                      | Mock Setup                      | Action                 | Expected Result                                    | Priority |
+| ------------------------------ | ------------------------------- | ---------------------- | -------------------------------------------------- | -------- |
+| testInitialState               | New ViewModel                   | None                   | items empty, isLoading false, showError false      | P0       |
+| testLoadItems_Success          | Mock API returns 3 items        | Call loadItems()       | isLoading becomes false, items count = 3, no error | P0       |
+| testLoadItems_Failure          | Mock API throws error           | Call loadItems()       | isLoading false, showError true, errorMessage set  | P0       |
+| testLoadItems_EmptyResponse    | Mock API returns empty array    | Call loadItems()       | items empty, no error                              | P1       |
+| testRefresh                    | 3 items already loaded          | Call refresh()         | isLoading true then false, items refreshed         | P1       |
+| testDeleteItem_Success         | 3 items loaded                  | Delete item[1]         | items count = 2, deleted item removed              | P0       |
+| testDeleteItem_Failure         | Mock API throws error on delete | Delete item            | showError true, item not removed                   | P1       |
+| testToggleItemStatus_Active    | Item with status .active        | toggleItemStatus(item) | item.status becomes .completed                     | P0       |
+| testToggleItemStatus_Completed | Item with status .completed     | toggleItemStatus(item) | item.status becomes .active                        | P0       |
+| testSearchItems_MatchFound     | 3 items, searchQuery = "Test"   | Set searchQuery        | items filtered to matching only                    | P1       |
+| testSearchItems_NoMatch        | 3 items, searchQuery = "XYZ"    | Set searchQuery        | items empty                                        | P1       |
+| testSearchItems_EmptyQuery     | searchQuery was "Test"          | Set searchQuery = ""   | All items shown again                              | P1       |
+| testLoadItems_LocalFirst       | Mock delays API response        | Call loadItems()       | Local items shown immediately, then synced         | P2       |
 
 **Implementation Example**:
 
@@ -512,6 +519,7 @@ Test API client, DataManager, and other services.
 #### Test Suite: APIClient
 
 **Key Test Cases**:
+
 - Successful GET request
 - Successful POST request with body
 - 401 Unauthorized error handling
@@ -524,6 +532,7 @@ Test API client, DataManager, and other services.
 #### Test Suite: DataManager
 
 **Key Test Cases**:
+
 - Create model instance
 - Fetch all instances
 - Fetch with predicate filter
@@ -541,23 +550,23 @@ Test multiple components working together.
 
 ### 3.1 Data Persistence Integration
 
-| Test Case | Setup | Action | Expected Result | Priority |
-|-----------|-------|--------|-----------------|----------|
-| testSaveAndFetch | Empty database | Create user, save, fetch all | User retrieved successfully | P0 |
-| testUpdateAndFetch | User in database | Modify user, save, fetch | Changes persisted | P0 |
-| testDeleteAndFetch | User in database | Delete user, fetch all | User no longer exists | P0 |
-| testRelationshipCascade | User with 3 items | Delete user | All items also deleted | P0 |
-| testQueryWithPredicate | 5 items (2 active, 3 completed) | Fetch active only | Returns 2 items | P1 |
+| Test Case               | Setup                           | Action                       | Expected Result             | Priority |
+| ----------------------- | ------------------------------- | ---------------------------- | --------------------------- | -------- |
+| testSaveAndFetch        | Empty database                  | Create user, save, fetch all | User retrieved successfully | P0       |
+| testUpdateAndFetch      | User in database                | Modify user, save, fetch     | Changes persisted           | P0       |
+| testDeleteAndFetch      | User in database                | Delete user, fetch all       | User no longer exists       | P0       |
+| testRelationshipCascade | User with 3 items               | Delete user                  | All items also deleted      | P0       |
+| testQueryWithPredicate  | 5 items (2 active, 3 completed) | Fetch active only            | Returns 2 items             | P1       |
 
 ### 3.2 API Integration
 
-| Test Case | Setup | Action | Expected Result | Priority |
-|-----------|-------|--------|-----------------|----------|
-| testFetchItems_APIToDatabase | Empty database, mock API returns 3 items | Call fetchItems() | 3 items saved to database | P0 |
-| testCreateItem_DatabaseToAPI | Mock API | Create item locally, sync | POST request sent to API | P0 |
-| testSyncConflict | Local and remote modified same item | Sync | Conflict resolved (last write wins) | P1 |
-| testOfflineMode | No network | Create item locally | Item saved locally, queued for sync | P0 |
-| testOnlineRestore | Previously offline | Network restored | Queued items synced to API | P1 |
+| Test Case                    | Setup                                    | Action                    | Expected Result                     | Priority |
+| ---------------------------- | ---------------------------------------- | ------------------------- | ----------------------------------- | -------- |
+| testFetchItems_APIToDatabase | Empty database, mock API returns 3 items | Call fetchItems()         | 3 items saved to database           | P0       |
+| testCreateItem_DatabaseToAPI | Mock API                                 | Create item locally, sync | POST request sent to API            | P0       |
+| testSyncConflict             | Local and remote modified same item      | Sync                      | Conflict resolved (last write wins) | P1       |
+| testOfflineMode              | No network                               | Create item locally       | Item saved locally, queued for sync | P0       |
+| testOnlineRestore            | Previously offline                       | Network restored          | Queued items synced to API          | P1       |
 
 ---
 
@@ -571,20 +580,20 @@ Test end-to-end user journeys with XCUITest.
 **Estimated Duration**: 30 seconds
 **Frequency**: Run on every release candidate
 
-| Step | User Action | Expected UI State | Assertions | Priority |
-|------|-------------|-------------------|------------|----------|
-| 1 | Launch app (first time) | Welcome screen shown | "Welcome to [AppName]" exists, "Get Started" button exists | P0 |
-| 2 | Tap "Get Started" button | Registration screen shown | Email and name fields visible, "Continue" button exists | P0 |
-| 3 | Enter name: "Test User" | Name field populated | Name field value = "Test User" | P0 |
-| 4 | Enter email: "test@example.com" | Email field populated | Email field value = "test@example.com" | P0 |
-| 5 | Tap "Continue" button | Onboarding Step 1 shown | Progress dots visible, skip button visible, next button exists | P0 |
-| 6 | Swipe left (or tap Next) | Onboarding Step 2 shown | Different content shown, progress indicator updated | P1 |
-| 7 | Tap "Skip" button | Home screen shown with empty state | "No Items Yet" message visible, "+" button in navbar | P0 |
-| 8 | Tap "+" button in navbar | Add Item sheet presented | Title field, description field, save button visible | P0 |
-| 9 | Enter title: "My First Item" | Title populated | Title field value = "My First Item" | P0 |
-| 10 | Enter description: "Test description" | Description populated | Description field value = "Test description" | P0 |
-| 11 | Tap "Save" button | Sheet dismissed, Home screen shown | Item appears in list with title "My First Item" | P0 |
-| 12 | Verify item visible | Item card visible in list | Card contains "My First Item" and "Test description" | P0 |
+| Step | User Action                           | Expected UI State                  | Assertions                                                     | Priority |
+| ---- | ------------------------------------- | ---------------------------------- | -------------------------------------------------------------- | -------- |
+| 1    | Launch app (first time)               | Welcome screen shown               | "Welcome to [AppName]" exists, "Get Started" button exists     | P0       |
+| 2    | Tap "Get Started" button              | Registration screen shown          | Email and name fields visible, "Continue" button exists        | P0       |
+| 3    | Enter name: "Test User"               | Name field populated               | Name field value = "Test User"                                 | P0       |
+| 4    | Enter email: "test@example.com"       | Email field populated              | Email field value = "test@example.com"                         | P0       |
+| 5    | Tap "Continue" button                 | Onboarding Step 1 shown            | Progress dots visible, skip button visible, next button exists | P0       |
+| 6    | Swipe left (or tap Next)              | Onboarding Step 2 shown            | Different content shown, progress indicator updated            | P1       |
+| 7    | Tap "Skip" button                     | Home screen shown with empty state | "No Items Yet" message visible, "+" button in navbar           | P0       |
+| 8    | Tap "+" button in navbar              | Add Item sheet presented           | Title field, description field, save button visible            | P0       |
+| 9    | Enter title: "My First Item"          | Title populated                    | Title field value = "My First Item"                            | P0       |
+| 10   | Enter description: "Test description" | Description populated              | Description field value = "Test description"                   | P0       |
+| 11   | Tap "Save" button                     | Sheet dismissed, Home screen shown | Item appears in list with title "My First Item"                | P0       |
+| 12   | Verify item visible                   | Item card visible in list          | Card contains "My First Item" and "Test description"           | P0       |
 
 **Implementation**:
 
@@ -687,15 +696,15 @@ final class OnboardingUITests: XCTestCase {
 
 **Manual Test Cases**:
 
-| Screen | Element | Expected VoiceOver Label | Expected Behavior | Priority |
-|--------|---------|-------------------------|-------------------|----------|
-| Home | Add button | "Add new item, button" | Announces label, tapping activates button | P0 |
-| Home | Item card | "[Item title], [subtitle], [status], button" | Announces all relevant info, tapping navigates | P0 |
-| Home | Search field | "Search items, search field" | Announces hint, typing works | P1 |
-| Detail | Edit button | "Edit item, button" | Clear action announced | P0 |
-| Add/Edit | Title field | "Title, text field, required" | Indicates required field | P0 |
-| Add/Edit | Save button | "Save item, button" | Clear action, disabled state announced | P0 |
-| Settings | Toggle | "Notifications, on, toggle switch" | State announced, double-tap toggles | P1 |
+| Screen   | Element      | Expected VoiceOver Label                     | Expected Behavior                              | Priority |
+| -------- | ------------ | -------------------------------------------- | ---------------------------------------------- | -------- |
+| Home     | Add button   | "Add new item, button"                       | Announces label, tapping activates button      | P0       |
+| Home     | Item card    | "[Item title], [subtitle], [status], button" | Announces all relevant info, tapping navigates | P0       |
+| Home     | Search field | "Search items, search field"                 | Announces hint, typing works                   | P1       |
+| Detail   | Edit button  | "Edit item, button"                          | Clear action announced                         | P0       |
+| Add/Edit | Title field  | "Title, text field, required"                | Indicates required field                       | P0       |
+| Add/Edit | Save button  | "Save item, button"                          | Clear action, disabled state announced         | P0       |
+| Settings | Toggle       | "Notifications, on, toggle switch"           | State announced, double-tap toggles            | P1       |
 
 **Automated VoiceOver Tests**:
 
@@ -721,12 +730,12 @@ func testVoiceOverLabels() {
 
 **Test Cases**:
 
-| Size | Expected Behavior | Pass Criteria | Priority |
-|------|-------------------|---------------|----------|
-| Extra Small (XS) | All text readable, buttons not truncated | No overlap, all elements visible | P1 |
-| Default | Standard layout | Reference design | P0 |
-| Extra Large (XL) | Text larger, layout adjusts | Scrollable, no truncation | P0 |
-| Accessibility XXL | Text very large, stacked layout | Fully readable, scrollable | P1 |
+| Size              | Expected Behavior                        | Pass Criteria                    | Priority |
+| ----------------- | ---------------------------------------- | -------------------------------- | -------- |
+| Extra Small (XS)  | All text readable, buttons not truncated | No overlap, all elements visible | P1       |
+| Default           | Standard layout                          | Reference design                 | P0       |
+| Extra Large (XL)  | Text larger, layout adjusts              | Scrollable, no truncation        | P0       |
+| Accessibility XXL | Text very large, stacked layout          | Fully readable, scrollable       | P1       |
 
 **Test Implementation**:
 
@@ -752,12 +761,12 @@ func testDynamicType_ExtraLarge() {
 
 **Automated Checks**:
 
-| Element | Foreground | Background | Ratio | WCAG AA Pass | Priority |
-|---------|------------|------------|-------|--------------|----------|
-| Primary button text | #FFFFFF | #007AFF | 4.5:1+ | ✅ Yes | P0 |
-| Body text | #000000 | #FFFFFF | 21:1 | ✅ Yes | P0 |
-| Secondary text | #3C3C43 (60%) | #FFFFFF | 4.6:1 | ✅ Yes | P0 |
-| Link text | #007AFF | #FFFFFF | 4.5:1+ | ✅ Yes | P0 |
+| Element             | Foreground    | Background | Ratio  | WCAG AA Pass | Priority |
+| ------------------- | ------------- | ---------- | ------ | ------------ | -------- |
+| Primary button text | #FFFFFF       | #007AFF    | 4.5:1+ | ✅ Yes       | P0       |
+| Body text           | #000000       | #FFFFFF    | 21:1   | ✅ Yes       | P0       |
+| Secondary text      | #3C3C43 (60%) | #FFFFFF    | 4.6:1  | ✅ Yes       | P0       |
+| Link text           | #007AFF       | #FFFFFF    | 4.5:1+ | ✅ Yes       | P0       |
 
 **Tool**: Xcode Accessibility Inspector → Color Contrast
 
@@ -767,15 +776,15 @@ func testDynamicType_ExtraLarge() {
 
 ### 6.1 Performance Benchmarks
 
-| Metric | Target | Measurement Method | Priority |
-|--------|--------|-------------------|----------|
-| App launch time (cold) | < 1.5s | XCTest measure block | P0 |
-| App launch time (warm) | < 0.5s | XCTest measure block | P1 |
-| Home screen load | < 500ms | Time to first content | P0 |
-| Scroll FPS | 60 fps | Instruments (Core Animation) | P0 |
-| Memory usage (idle) | < 50MB | Instruments (Allocations) | P1 |
-| Memory usage (active) | < 150MB | Instruments (Allocations) | P1 |
-| Network request time | < 2s (95th percentile) | Analytics | P1 |
+| Metric                 | Target                 | Measurement Method           | Priority |
+| ---------------------- | ---------------------- | ---------------------------- | -------- |
+| App launch time (cold) | < 1.5s                 | XCTest measure block         | P0       |
+| App launch time (warm) | < 0.5s                 | XCTest measure block         | P1       |
+| Home screen load       | < 500ms                | Time to first content        | P0       |
+| Scroll FPS             | 60 fps                 | Instruments (Core Animation) | P0       |
+| Memory usage (idle)    | < 50MB                 | Instruments (Allocations)    | P1       |
+| Memory usage (active)  | < 150MB                | Instruments (Allocations)    | P1       |
+| Network request time   | < 2s (95th percentile) | Analytics                    | P1       |
 
 **Test Implementation**:
 
@@ -802,12 +811,12 @@ func testHomeScreenLoadPerformance() {
 
 ### 6.2 Load Testing
 
-| Scenario | Data Volume | Expected Behavior | Pass Criteria | Priority |
-|----------|-------------|-------------------|---------------|----------|
-| Large list | 1000 items | Smooth scrolling, no lag | 60 fps maintained | P1 |
-| Heavy images | 50 high-res images | Progressive loading | No memory warnings | P1 |
-| Large search | Search in 1000 items | Results in < 1s | Fast filtering | P2 |
-| Rapid scrolling | Scroll 100 items quickly | No crashes, smooth | No dropped frames | P1 |
+| Scenario        | Data Volume              | Expected Behavior        | Pass Criteria      | Priority |
+| --------------- | ------------------------ | ------------------------ | ------------------ | -------- |
+| Large list      | 1000 items               | Smooth scrolling, no lag | 60 fps maintained  | P1       |
+| Heavy images    | 50 high-res images       | Progressive loading      | No memory warnings | P1       |
+| Large search    | Search in 1000 items     | Results in < 1s          | Fast filtering     | P2       |
+| Rapid scrolling | Scroll 100 items quickly | No crashes, smooth       | No dropped frames  | P1       |
 
 ---
 
@@ -815,48 +824,48 @@ func testHomeScreenLoadPerformance() {
 
 ### 7.1 Network Conditions
 
-| Condition | User Action | Expected Behavior | Verification | Priority |
-|-----------|-------------|-------------------|--------------|----------|
-| No network (airplane mode) | Launch app | Cached data shown, offline banner | Data visible, banner "No internet connection" | P0 |
-| No network | Tap refresh | Error message, cached data remains | "Can't refresh. Check connection." | P0 |
-| Slow network (3G) | Load items | Loading indicator, timeout after 30s | Spinner shows, then timeout message | P1 |
-| Network timeout | API call exceeds 30s | Timeout error, graceful fallback | "Request timed out. Try again." | P1 |
-| Network restored | Was offline, now online | Auto-sync, banner dismissed | Data refreshes, "Back online" toast | P1 |
-| Intermittent connection | Random disconnects | Retry with exponential backoff | Eventually succeeds or clear error | P2 |
+| Condition                  | User Action             | Expected Behavior                    | Verification                                  | Priority |
+| -------------------------- | ----------------------- | ------------------------------------ | --------------------------------------------- | -------- |
+| No network (airplane mode) | Launch app              | Cached data shown, offline banner    | Data visible, banner "No internet connection" | P0       |
+| No network                 | Tap refresh             | Error message, cached data remains   | "Can't refresh. Check connection."            | P0       |
+| Slow network (3G)          | Load items              | Loading indicator, timeout after 30s | Spinner shows, then timeout message           | P1       |
+| Network timeout            | API call exceeds 30s    | Timeout error, graceful fallback     | "Request timed out. Try again."               | P1       |
+| Network restored           | Was offline, now online | Auto-sync, banner dismissed          | Data refreshes, "Back online" toast           | P1       |
+| Intermittent connection    | Random disconnects      | Retry with exponential backoff       | Eventually succeeds or clear error            | P2       |
 
 **Test with**: Settings → Developer → Network Link Conditioner
 
 ### 7.2 Data Validation
 
-| Invalid Input | User Action | Expected Behavior | Verification | Priority |
-|---------------|-------------|-------------------|--------------|----------|
-| Empty required field | Tap Save with empty title | Error message, save disabled | Red outline, "Title is required" | P0 |
-| Invalid email format | Enter "invalid.com" | Inline error shown | "Please enter a valid email" | P0 |
-| Too long input | Enter 500 character title | Character limit enforced | Max 150 chars, counter shows "150/150" | P1 |
-| Special characters | Enter "Item <script>" in title | Sanitized or rejected | No script execution, saved safely | P0 |
-| Duplicate entry | Create item with existing title | Warning shown, allow override | "Item exists. Continue?" | P1 |
-| Invalid date | Select date in past (if not allowed) | Error shown, date reset | "Date must be in future" | P1 |
+| Invalid Input        | User Action                          | Expected Behavior             | Verification                           | Priority |
+| -------------------- | ------------------------------------ | ----------------------------- | -------------------------------------- | -------- |
+| Empty required field | Tap Save with empty title            | Error message, save disabled  | Red outline, "Title is required"       | P0       |
+| Invalid email format | Enter "invalid.com"                  | Inline error shown            | "Please enter a valid email"           | P0       |
+| Too long input       | Enter 500 character title            | Character limit enforced      | Max 150 chars, counter shows "150/150" | P1       |
+| Special characters   | Enter "Item <script>" in title       | Sanitized or rejected         | No script execution, saved safely      | P0       |
+| Duplicate entry      | Create item with existing title      | Warning shown, allow override | "Item exists. Continue?"               | P1       |
+| Invalid date         | Select date in past (if not allowed) | Error shown, date reset       | "Date must be in future"               | P1       |
 
 ### 7.3 Permission Handling
 
-| Permission | Denied State | User Action | Expected Behavior | Priority |
-|------------|--------------|-------------|-------------------|----------|
-| Camera | Denied | Tap "Add Photo" | Alert: "Camera access needed. Open Settings?" | P0 |
-| Camera | Denied | User opens Settings | Deep link to app settings | P1 |
-| Photos | Denied | Tap "Choose Photo" | Photo picker not shown, request permission | P0 |
-| Notifications | Denied | App needs to notify | App works without notifications | P1 |
-| Location | Denied | Feature requires location | Feature disabled, explanation shown | P1 |
+| Permission    | Denied State | User Action               | Expected Behavior                             | Priority |
+| ------------- | ------------ | ------------------------- | --------------------------------------------- | -------- |
+| Camera        | Denied       | Tap "Add Photo"           | Alert: "Camera access needed. Open Settings?" | P0       |
+| Camera        | Denied       | User opens Settings       | Deep link to app settings                     | P1       |
+| Photos        | Denied       | Tap "Choose Photo"        | Photo picker not shown, request permission    | P0       |
+| Notifications | Denied       | App needs to notify       | App works without notifications               | P1       |
+| Location      | Denied       | Feature requires location | Feature disabled, explanation shown           | P1       |
 
 ### 7.4 Device Conditions
 
-| Condition | Expected Behavior | Verification | Priority |
-|-----------|-------------------|--------------|----------|
-| Low battery mode | Reduced animations, background tasks paused | Respects system setting | P1 |
-| Low storage | Can't save images | Error: "Not enough storage" | P1 |
-| Rotation (if supported) | Layout adapts | No clipping, all elements visible | P1 |
-| Multitasking (iPad) | App works in split view | Responsive layout | P2 |
-| Background mode | App suspended, returns | State preserved | P0 |
-| App killed by system | Force quit, relaunch | State restored from last save | P0 |
+| Condition               | Expected Behavior                           | Verification                      | Priority |
+| ----------------------- | ------------------------------------------- | --------------------------------- | -------- |
+| Low battery mode        | Reduced animations, background tasks paused | Respects system setting           | P1       |
+| Low storage             | Can't save images                           | Error: "Not enough storage"       | P1       |
+| Rotation (if supported) | Layout adapts                               | No clipping, all elements visible | P1       |
+| Multitasking (iPad)     | App works in split view                     | Responsive layout                 | P2       |
+| Background mode         | App suspended, returns                      | State preserved                   | P0       |
+| App killed by system    | Force quit, relaunch                        | State restored from last save     | P0       |
 
 ---
 
@@ -864,21 +873,21 @@ func testHomeScreenLoadPerformance() {
 
 ### 8.1 Data Security
 
-| Test | Action | Expected Result | Priority |
-|------|--------|-----------------|----------|
-| Keychain storage | Store auth token | Token encrypted in Keychain | P0 |
-| API token exposure | Inspect network traffic | Token in Authorization header only | P0 |
-| Sensitive data logging | Check console logs | No passwords/tokens logged | P0 |
-| Screenshot protection | App contains sensitive data | Blur/hide when app switching | P1 |
+| Test                   | Action                      | Expected Result                    | Priority |
+| ---------------------- | --------------------------- | ---------------------------------- | -------- |
+| Keychain storage       | Store auth token            | Token encrypted in Keychain        | P0       |
+| API token exposure     | Inspect network traffic     | Token in Authorization header only | P0       |
+| Sensitive data logging | Check console logs          | No passwords/tokens logged         | P0       |
+| Screenshot protection  | App contains sensitive data | Blur/hide when app switching       | P1       |
 
 ### 8.2 Privacy
 
-| Test | Action | Expected Result | Priority |
-|------|--------|-----------------|----------|
-| Privacy manifest | Check PrivacyInfo.xcprivacy | All data collection disclosed | P0 |
-| Third-party SDKs | Inspect network requests | No unexpected tracking | P0 |
-| Data export | User requests data | All data provided in readable format | P1 |
-| Account deletion | User deletes account | All data removed from server | P0 |
+| Test             | Action                      | Expected Result                      | Priority |
+| ---------------- | --------------------------- | ------------------------------------ | -------- |
+| Privacy manifest | Check PrivacyInfo.xcprivacy | All data collection disclosed        | P0       |
+| Third-party SDKs | Inspect network requests    | No unexpected tracking               | P0       |
+| Data export      | User requests data          | All data provided in readable format | P1       |
+| Account deletion | User deletes account        | All data removed from server         | P0       |
 
 ---
 
@@ -930,12 +939,14 @@ Run before every release to ensure new changes don't break existing functionalit
 **iOS Versions**: iOS 17.0 - latest
 
 **Recruitment**:
+
 - Internal team members
 - Trusted users from target audience
 - Mix of tech-savvy and average users
 - Geographic diversity (if localized)
 
 **Feedback Collection**:
+
 1. **In-app feedback form**: Button in Settings → "Send Feedback"
 2. **TestFlight feedback**: Native TestFlight feedback
 3. **Crash reports**: Automatically collected
@@ -944,12 +955,14 @@ Run before every release to ensure new changes don't break existing functionalit
 ### 10.2 Beta Testing Focus Areas
 
 **Week 1: Functionality Testing**
+
 - [ ] All features work as expected
 - [ ] No critical bugs
 - [ ] Performance is acceptable
 - [ ] UI/UX is intuitive
 
 **Week 2: Real-World Usage**
+
 - [ ] App fits into users' workflow
 - [ ] Identify missing features
 - [ ] Collect feature requests
@@ -958,6 +971,7 @@ Run before every release to ensure new changes don't break existing functionalit
 ### 10.3 Beta Success Criteria
 
 **Before proceeding to App Store submission**:
+
 - [ ] Crash-free rate > 99.5%
 - [ ] Average rating from beta testers > 4.0/5.0
 - [ ] No P0 bugs reported in last 3 days
@@ -966,6 +980,7 @@ Run before every release to ensure new changes don't break existing functionalit
 - [ ] At least 50% of testers used app 3+ times
 
 **Feedback Analysis**:
+
 - Categorize feedback: bug, feature request, UX issue, question
 - Prioritize: P0 (fix before launch), P1 (fix in v1.1), P2 (backlog)
 - Track resolution: open, in progress, fixed, won't fix
@@ -980,6 +995,7 @@ Run before every release to ensure new changes don't break existing functionalit
 **Trigger**: On every pull request and merge to main
 
 **Pipeline**:
+
 ```yaml
 name: iOS CI
 
@@ -1031,6 +1047,7 @@ jobs:
 ### 11.2 Test Reports
 
 **Generate HTML test report**:
+
 ```bash
 xcodebuild test \
   -scheme [AppName] \
@@ -1040,6 +1057,7 @@ xcrun xcresulttool get --format html TestResults.xcresult > test-report.html
 ```
 
 **Code Coverage Report**:
+
 - Target: 80%+ overall coverage
 - Critical paths: 95%+ coverage (authentication, data persistence)
 - View in Xcode: Product → Show Code Coverage
@@ -1083,7 +1101,9 @@ App crashes immediately when tapping item.
 
 **Crash Logs**:
 ```
+
 [Paste crash log from Xcode Organizer]
+
 ```
 
 **Additional Context**:
@@ -1096,6 +1116,7 @@ Add nil check in ItemDetailView line 47.
 ### 12.2 Bug Severity Definitions
 
 **Critical (P0)**:
+
 - App crashes on launch
 - Data loss
 - Security vulnerability
@@ -1103,12 +1124,14 @@ Add nil check in ItemDetailView line 47.
 - Fix immediately, hotfix if needed
 
 **High (P1)**:
+
 - Feature completely broken
 - Frequent crashes (> 1% of sessions)
 - Major UI issues
 - Fix before next release
 
 **Medium (P2)**:
+
 - Feature partially broken
 - Rare crashes (< 0.1% of sessions)
 - Minor UI issues
@@ -1116,6 +1139,7 @@ Add nil check in ItemDetailView line 47.
 - Fix in next minor update
 
 **Low (P3)**:
+
 - Cosmetic issues
 - Feature enhancement
 - Edge case issues
@@ -1128,17 +1152,20 @@ Add nil check in ItemDetailView line 47.
 ### 13.1 Metrics to Track
 
 **Crash Analytics** (Xcode Organizer, Firebase Crashlytics):
+
 - Crash-free rate: Target > 99.5%
 - Top crashes by volume
 - Crash trends over time
 
 **Performance Monitoring**:
+
 - App launch time: p50, p95, p99
 - Screen load time
 - API response time
 - Memory usage
 
 **Usage Analytics** (App Analytics, Firebase Analytics):
+
 - Daily/Monthly Active Users (DAU/MAU)
 - Session length
 - Session frequency
@@ -1146,12 +1173,14 @@ Add nil check in ItemDetailView line 47.
 - Funnel completion rates
 
 **App Store Metrics**:
+
 - Rating: Target > 4.5 stars
 - Reviews: Respond to all reviews
 - Download trends
 - Conversion rate (impressions → downloads)
 
 **User Feedback**:
+
 - Support ticket volume
 - Common complaints
 - Feature requests
@@ -1160,18 +1189,21 @@ Add nil check in ItemDetailView line 47.
 ### 13.2 Alerting Thresholds
 
 **Critical Alerts** (Page immediately):
+
 - Crash rate > 1%
 - App Store rating drops below 3.0
 - API error rate > 5%
 - Server downtime
 
 **High Priority Alerts** (Check within 1 hour):
+
 - Crash rate > 0.5%
 - App Store rating drops below 4.0
 - API error rate > 2%
 - Support ticket spike
 
 **Medium Priority** (Check daily):
+
 - Crash rate > 0.1%
 - Feature usage < 10% of users (for key features)
 - Session length decreasing trend
@@ -1183,6 +1215,7 @@ Add nil check in ItemDetailView line 47.
 ### 14.1 Test Case Format
 
 Each test case should document:
+
 - **ID**: TC-001
 - **Feature**: Feature name from PRD
 - **Priority**: P0/P1/P2
@@ -1198,19 +1231,19 @@ Each test case should document:
 
 **Test Run Spreadsheet**:
 
-| ID | Test Case | Priority | Type | Status | Notes | Date | Tester |
-|----|-----------|----------|------|--------|-------|------|--------|
-| TC-001 | User login success | P0 | UI | Pass | | 2024-01-15 | QA |
-| TC-002 | User login invalid email | P0 | UI | Pass | | 2024-01-15 | QA |
-| TC-003 | Create item success | P0 | UI | Fail | Crash on save | 2024-01-15 | QA |
+| ID     | Test Case                | Priority | Type | Status | Notes         | Date       | Tester |
+| ------ | ------------------------ | -------- | ---- | ------ | ------------- | ---------- | ------ |
+| TC-001 | User login success       | P0       | UI   | Pass   |               | 2024-01-15 | QA     |
+| TC-002 | User login invalid email | P0       | UI   | Pass   |               | 2024-01-15 | QA     |
+| TC-003 | Create item success      | P0       | UI   | Fail   | Crash on save | 2024-01-15 | QA     |
 
 **Test Coverage Matrix**:
 
-| Feature (PRD) | Unit Tests | Integration Tests | UI Tests | Manual Tests | Coverage % |
-|---------------|------------|-------------------|----------|--------------|------------|
-| User registration | 12/12 ✅ | 3/3 ✅ | 2/2 ✅ | 5/5 ✅ | 100% |
-| Item CRUD | 20/20 ✅ | 5/5 ✅ | 8/10 ⚠️ | 10/10 ✅ | 90% |
-| Search | 8/8 ✅ | 2/2 ✅ | 3/3 ✅ | 3/3 ✅ | 100% |
+| Feature (PRD)     | Unit Tests | Integration Tests | UI Tests | Manual Tests | Coverage % |
+| ----------------- | ---------- | ----------------- | -------- | ------------ | ---------- |
+| User registration | 12/12 ✅   | 3/3 ✅            | 2/2 ✅   | 5/5 ✅       | 100%       |
+| Item CRUD         | 20/20 ✅   | 5/5 ✅            | 8/10 ⚠️  | 10/10 ✅     | 90%        |
+| Search            | 8/8 ✅     | 2/2 ✅            | 3/3 ✅   | 3/3 ✅       | 100%       |
 
 ---
 
@@ -1219,6 +1252,7 @@ Each test case should document:
 Before submitting to App Store:
 
 ### 15.1 Testing Complete
+
 - [ ] All P0 unit tests pass (100%)
 - [ ] All P1 unit tests pass (> 95%)
 - [ ] All P0 UI tests pass (100%)
@@ -1231,6 +1265,7 @@ Before submitting to App Store:
 - [ ] Security audit passed
 
 ### 15.2 Manual Testing
+
 - [ ] Full regression suite completed
 - [ ] All critical user journeys tested on real devices
 - [ ] Tested on iPhone SE (smallest screen)
@@ -1242,6 +1277,7 @@ Before submitting to App Store:
 - [ ] Localization tested (all supported languages)
 
 ### 15.3 Beta Testing
+
 - [ ] TestFlight beta completed (2 weeks)
 - [ ] Crash-free rate > 99.5%
 - [ ] Beta tester rating > 4.0/5.0
@@ -1249,6 +1285,7 @@ Before submitting to App Store:
 - [ ] No new crashes in last 48 hours
 
 ### 15.4 Final Checks
+
 - [ ] App Store assets ready (from RELEASE_SPEC)
 - [ ] Privacy manifest accurate
 - [ ] App Store guidelines compliance verified
@@ -1326,6 +1363,7 @@ Before submitting to App Store:
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0.0 | [Date] | QA Engineer AI | Initial test specification created |
+
 ```
 
 ---
@@ -1335,147 +1373,149 @@ Before submitting to App Store:
 When activated, follow these steps:
 
 1. **Read All Specification Documents**
-   ```
-   - Read docs/PRD.md (features, acceptance criteria, user stories)
-   - Read docs/IMPLEMENTATION_GUIDE.md (all ViewModels, models, services)
-   - Read docs/UX_SPEC.md (all screens, user flows, states)
-   - Read docs/ARCHITECTURE.md (testing strategy)
-   ```
+```
+
+- Read docs/PRD.md (features, acceptance criteria, user stories)
+- Read docs/IMPLEMENTATION_GUIDE.md (all ViewModels, models, services)
+- Read docs/UX_SPEC.md (all screens, user flows, states)
+- Read docs/ARCHITECTURE.md (testing strategy)
+
+````
 
 2. **Extract Testing Requirements**
-   - List all features to test (from PRD)
-   - List all ViewModels to unit test (from IMPLEMENTATION_GUIDE)
-   - List all models to unit test
-   - List all user flows to UI test (from UX_SPEC)
-   - Identify edge cases from UX_SPEC error states
+- List all features to test (from PRD)
+- List all ViewModels to unit test (from IMPLEMENTATION_GUIDE)
+- List all models to unit test
+- List all user flows to UI test (from UX_SPEC)
+- Identify edge cases from UX_SPEC error states
 
 3. **Generate Unit Test Cases**
-   - For each Model: test initialization, validation, methods, relationships, Codable
-   - For each ViewModel: test loading, errors, user actions, state management
-   - For each Service: test API calls, error handling, data operations
+- For each Model: test initialization, validation, methods, relationships, Codable
+- For each ViewModel: test loading, errors, user actions, state management
+- For each Service: test API calls, error handling, data operations
 
 4. **Generate Integration Test Cases**
-   - Database + API sync
-   - ViewModel + Service integration
-   - Multi-component workflows
+- Database + API sync
+- ViewModel + Service integration
+- Multi-component workflows
 
 5. **Generate UI Test Cases**
-   - Critical user journeys (from PRD P0 features)
-   - Include all steps with assertions
-   - Provide complete XCUITest implementation
+- Critical user journeys (from PRD P0 features)
+- Include all steps with assertions
+- Provide complete XCUITest implementation
 
 6. **Generate Accessibility Tests**
-   - VoiceOver labels for all interactive elements
-   - Dynamic Type scenarios
-   - Color contrast checks
+- VoiceOver labels for all interactive elements
+- Dynamic Type scenarios
+- Color contrast checks
 
 7. **Generate Performance Tests**
-   - Launch time benchmarks
-   - Load testing scenarios
-   - Memory usage targets
+- Launch time benchmarks
+- Load testing scenarios
+- Memory usage targets
 
 8. **Document Edge Cases**
-   - Network conditions (offline, slow, timeout)
-   - Data validation (empty, invalid, too long)
-   - Permission handling (denied, restricted)
-   - Device conditions (low battery, low storage)
+- Network conditions (offline, slow, timeout)
+- Data validation (empty, invalid, too long)
+- Permission handling (denied, restricted)
+- Device conditions (low battery, low storage)
 
 9. **Create Beta Testing Plan**
-   - Participant criteria
-   - Duration and timeline
-   - Feedback collection methods
-   - Success criteria
+- Participant criteria
+- Duration and timeline
+- Feedback collection methods
+- Success criteria
 
 10. **Write Complete Test Spec**
-    ```
-    Write to: docs/TEST_SPEC.md
-    Target length: 2000-3000 lines
-    Format: Markdown with code examples
-    ```
+ ```
+ Write to: docs/TEST_SPEC.md
+ Target length: 2000-3000 lines
+ Format: Markdown with code examples
+ ```
 
 11. **Present Summary**
-    ```
-    ✅ Test Specification generated!
+ ```
+ ✅ Test Specification generated!
 
-    🧪 **Test Spec Summary**:
-    - Unit test cases: [X] tests across [Y] test suites
-    - Integration test cases: [Z] scenarios
-    - UI test cases: [N] critical user journeys with full implementation
-    - Accessibility tests: VoiceOver, Dynamic Type, Contrast
-    - Performance benchmarks: Launch time, memory, FPS
-    - Edge cases documented: [M] scenarios
-    - Beta testing plan: 2-week plan with [P] participants
+ 🧪 **Test Spec Summary**:
+ - Unit test cases: [X] tests across [Y] test suites
+ - Integration test cases: [Z] scenarios
+ - UI test cases: [N] critical user journeys with full implementation
+ - Accessibility tests: VoiceOver, Dynamic Type, Contrast
+ - Performance benchmarks: Launch time, memory, FPS
+ - Edge cases documented: [M] scenarios
+ - Beta testing plan: 2-week plan with [P] participants
 
-    **Coverage**:
-    - All features from PRD have test cases
-    - All ViewModels have unit tests
-    - All critical flows have UI tests
-    - Accessibility fully covered
-    - Performance targets defined
+ **Coverage**:
+ - All features from PRD have test cases
+ - All ViewModels have unit tests
+ - All critical flows have UI tests
+ - Accessibility fully covered
+ - Performance targets defined
 
-    **Next Steps**:
-    1. Review test cases in docs/TEST_SPEC.md
-    2. Implement unit tests as development progresses
-    3. Set up CI/CD pipeline for automated testing
-    4. Execute manual test cases before release
-    5. Run beta test program via TestFlight
+ **Next Steps**:
+ 1. Review test cases in docs/TEST_SPEC.md
+ 2. Implement unit tests as development progresses
+ 3. Set up CI/CD pipeline for automated testing
+ 4. Execute manual test cases before release
+ 5. Run beta test program via TestFlight
 
-    **Developer can now**:
-    - Write tests alongside implementation
-    - Achieve 80%+ code coverage
-    - Ensure all features are tested
-    - Catch bugs before release
+ **Developer can now**:
+ - Write tests alongside implementation
+ - Achieve 80%+ code coverage
+ - Ensure all features are tested
+ - Catch bugs before release
 
-    Ready to proceed to release specification?
-    ```
+ Ready to proceed to release specification?
+ ```
 
 12. **Iterate Based on Feedback**
-    If user requests changes:
-    - Add missing test cases
-    - Expand specific areas (e.g., more edge cases)
-    - Provide more implementation examples
-    - Adjust priorities
+ If user requests changes:
+ - Add missing test cases
+ - Expand specific areas (e.g., more edge cases)
+ - Provide more implementation examples
+ - Adjust priorities
 
 ---
 
 ## Quality Guidelines
 
 1. **Be Comprehensive**: Cover every feature from PRD
-   - Unit tests for all business logic
-   - UI tests for all critical flows
-   - Integration tests for key workflows
-   - Edge cases for all error scenarios
+- Unit tests for all business logic
+- UI tests for all critical flows
+- Integration tests for key workflows
+- Edge cases for all error scenarios
 
 2. **Be Specific**: Test cases must be actionable
-   - Clear steps
-   - Clear expected results
-   - Clear pass/fail criteria
-   - Include test data
+- Clear steps
+- Clear expected results
+- Clear pass/fail criteria
+- Include test data
 
 3. **Provide Code Examples**: Not just test case descriptions
-   - Show complete XCTest implementations
-   - Show XCUITest implementations
-   - Show mock objects
-   - Show test setup/teardown
+- Show complete XCTest implementations
+- Show XCUITest implementations
+- Show mock objects
+- Show test setup/teardown
 
 4. **Think Like QA**: What could go wrong?
-   - Empty states
-   - Invalid inputs
-   - Network failures
-   - Permission denials
-   - Edge cases
+- Empty states
+- Invalid inputs
+- Network failures
+- Permission denials
+- Edge cases
 
 5. **Consider Real Users**: Beta testing is crucial
-   - Real devices, real usage patterns
-   - Diverse user base
-   - Real-world network conditions
-   - Actual user feedback
+- Real devices, real usage patterns
+- Diverse user base
+- Real-world network conditions
+- Actual user feedback
 
 6. **Enable Automation**: CI/CD integration
-   - Tests should run automatically
-   - Fast feedback loop
-   - Code coverage tracking
-   - Fail fast on critical issues
+- Tests should run automatically
+- Fast feedback loop
+- Code coverage tracking
+- Fail fast on critical issues
 
 ---
 
@@ -1502,3 +1542,4 @@ The test specification ensures the app works correctly and provides confidence f
 - Performance and accessibility are not optional
 - Security testing must be thorough
 - Document all test cases for repeatability
+````

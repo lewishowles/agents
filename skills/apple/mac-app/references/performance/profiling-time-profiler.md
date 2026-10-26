@@ -1,6 +1,7 @@
 # Profiling: Time Profiler
 
 <a id="source-performance-profiling-time-profiler-md"></a>
+
 ## Source: `performance/profiling/time-profiler.md`
 
 # Time Profiler & Hang Detection
@@ -8,11 +9,13 @@
 ## Instruments Setup
 
 ### Time Profiler Template
+
 1. **Xcode > Product > Profile** (Cmd+I) — builds Release and opens Instruments
 2. Choose **Time Profiler** template
 3. Click record, reproduce the slow operation, stop recording
 
 ### Key Settings
+
 - **Recording Mode**: Deferred — analyze after recording stops instead of live; minimizes tool overhead, especially when the workload runs on the same machine as Instruments (WWDC25 308)
 - **Sampling**: Time Profiler samples on a hardware timer at a 1ms default interval; calls that begin and end between samples are never recorded, though frequently-called functions are likelier to be sampled (WWDC26 268)
 - **Record Waiting Threads**: Enable to see threads blocked on locks/IO
@@ -21,19 +24,22 @@
 ## Reading Time Profiler Results
 
 ### Call Tree Navigation
+
 - **Weight**: Total time spent in function + all children
 - **Self Weight**: Time in just that function (no children)
 - **Symbol Name**: Function/method being sampled
 
 ### Essential Filters
-| Filter | Purpose |
-|--------|---------|
-| Separate by Thread | Isolate main thread from background |
-| Invert Call Tree | Show leaf functions first (where time is actually spent) |
-| Hide System Libraries | Focus on your code |
-| Flatten Recursion | Collapse recursive calls into one entry |
+
+| Filter                | Purpose                                                  |
+| --------------------- | -------------------------------------------------------- |
+| Separate by Thread    | Isolate main thread from background                      |
+| Invert Call Tree      | Show leaf functions first (where time is actually spent) |
+| Hide System Libraries | Focus on your code                                       |
+| Flatten Recursion     | Collapse recursive calls into one entry                  |
 
 ### Typical Workflow
+
 1. **Separate by Thread** — find Main Thread
 2. **Invert Call Tree** — heaviest leaf functions appear at top
 3. **Hide System Libraries** — focus on your functions
@@ -44,11 +50,11 @@
 
 Two different sampling models — pick deliberately:
 
-| | Time Profiler | CPU Profiler |
-|---|---|---|
-| Sampling | All CPUs on one shared **timer** | Each CPU independently, driven by that CPU's **cycle counter** |
-| Best for | How work distributes over time; which threads run simultaneously | Measuring and optimizing CPU cost |
-| Weakness | **Aliasing** — periodic work at the same cadence as the timer gets unfairly over-represented | Not a timeline of wall-clock behavior |
+|          | Time Profiler                                                                                | CPU Profiler                                                   |
+| -------- | -------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Sampling | All CPUs on one shared **timer**                                                             | Each CPU independently, driven by that CPU's **cycle counter** |
+| Best for | How work distributes over time; which threads run simultaneously                             | Measuring and optimizing CPU cost                              |
+| Weakness | **Aliasing** — periodic work at the same cadence as the timer gets unfairly over-represented | Not a timeline of wall-clock behavior                          |
 
 - Apple silicon cores are **asymmetric** (E-cores clock slower); CPU Profiler samples faster cores more often, so function weights are fair. **Prefer CPU Profiler over Time Profiler when the goal is CPU optimization** (WWDC25 308).
 - Before optimizing at all, try to **avoid the work**, in this order: delete the code → defer it off the critical path → precompute (even at build time) → cache repeated same-input operations. Only then make the CPU faster (WWDC25 308).
@@ -57,18 +63,20 @@ Two different sampling models — pick deliberately:
 ## Hang Detection
 
 ### What Counts as a Hang
-| Duration | Classification | User Perception |
-|----------|---------------|-----------------|
-| < 100ms | Instant | Feels immediate — keep every main-thread work item under ~100ms (WWDC23 10248) |
-| 100–250ms | Gray zone | Becoming noticeable (WWDC23 10248) |
-| 250–500ms | Micro-hang | Noticeable but easy to miss; 250ms is the OS-level hang reporting threshold (WWDC23 10248, WWDC21 10181) |
-| 500ms–1s | Hang | Clearly noticeable, unacceptable (WWDC23 10248) |
-| > 1s | Severe hang | "A delay of over one second will always look like a hang" (WWDC21 10258) |
-| ~20s during launch/background/foreground transitions | Watchdog kill | System terminates the app; never reproduces with the debugger attached (WWDC20 10078) |
+
+| Duration                                             | Classification | User Perception                                                                                          |
+| ---------------------------------------------------- | -------------- | -------------------------------------------------------------------------------------------------------- |
+| < 100ms                                              | Instant        | Feels immediate — keep every main-thread work item under ~100ms (WWDC23 10248)                           |
+| 100–250ms                                            | Gray zone      | Becoming noticeable (WWDC23 10248)                                                                       |
+| 250–500ms                                            | Micro-hang     | Noticeable but easy to miss; 250ms is the OS-level hang reporting threshold (WWDC23 10248, WWDC21 10181) |
+| 500ms–1s                                             | Hang           | Clearly noticeable, unacceptable (WWDC23 10248)                                                          |
+| > 1s                                                 | Severe hang    | "A delay of over one second will always look like a hang" (WWDC21 10258)                                 |
+| ~20s during launch/background/foreground transitions | Watchdog kill  | System terminates the app; never reproduces with the debugger attached (WWDC20 10078)                    |
 
 Context matters: a half-second delay **while scrolling** is jarring, the same delay entering a view is far less noticeable (WWDC21 10258). Request-response interactions can tolerate ~500ms **if** there's intermediate feedback (e.g. button highlight) before the result (WWDC23 10248). Hang detection flags long main-thread work items regardless of whether input actually arrived — input could come at any time (WWDC23 10248).
 
 ### Using the Hangs Instrument
+
 1. Open Instruments, choose **Time Profiler** (includes Hang detection lane)
 2. Or use the standalone **Animation Hitches** template for scroll/animation stalls — see [hitches.md](profiling-hitches.md) for the render loop, offscreen-pass fixes and Instruments workflow
 3. Record and reproduce the interaction
@@ -83,14 +91,17 @@ Trust the **Hangs instrument** — not the thread state — to decide whether an
 Fix hangs at the earliest stage possible; proactively profile new features rather than waiting for field data.
 
 **Stage 1 — Development (at your desk):**
+
 - **Thread Performance Checker** (Scheme > Run > Diagnostics) — flags priority inversions and non-UI work on the main thread in the Issue navigator, no trace recording needed
 - **Time Profiler / CPU Profiler** — hangs are detected and labeled by default in the process track with their duration; triple-click a hang interval to set a time filter
 
 **Stage 2 — Beta / dogfooding (no Xcode attached):**
-- **On-device hang detection** (iOS 16+): *Settings ▸ Developer ▸ Hang Detection*. Works for **development-signed and TestFlight builds**. Selectable threshold (250ms / 500ms / higher). Shows real-time hang notifications, then produces a **text hang log** (transfer to a Mac to symbolicate) and a **tailspin** (open in Instruments for full thread-interaction detail). Diagnostics process in the background at low priority, best-effort — the notification may arrive later if the system is busy.
+
+- **On-device hang detection** (iOS 16+): _Settings ▸ Developer ▸ Hang Detection_. Works for **development-signed and TestFlight builds**. Selectable threshold (250ms / 500ms / higher). Shows real-time hang notifications, then produces a **text hang log** (transfer to a Mac to symbolicate) and a **tailspin** (open in Instruments for full thread-interaction detail). Diagnostics process in the background at low priority, best-effort — the notification may arrive later if the system is busy.
 - **MetricKit** — per-user (non-aggregated) hang-rate metrics and hang diagnostics; works in beta **and** App Store builds.
 
 **Stage 3 — Public release (App Store):**
+
 - **Xcode Organizer ▸ Hangs** (Xcode 14) — aggregated hang reports from customers who opted in to share analytics. Similar main-thread stacks are grouped into **signatures sorted by user impact**, with per-signature log counts, % of total hang time, OS/device breakdown, and sample logs.
 - **Submit symbols with your build** so Organizer shows function names with one-click jump to source (only function names, file paths, and line numbers are uploaded).
 - Turn on **regression notifications** (Notifications button, top-right of Organizer) to get alerted when hang rate spikes after a release.
@@ -103,7 +114,7 @@ During the hang interval, what is the main thread's CPU doing?
 - **CPU high (~100%) → busy.** The code is a performance bottleneck: optimize the algorithm or offload to a background task. Diagnose with Time Profiler call trees, using the direction rule:
   - Function slow in a **single call** → look **down** at its callees and optimize them
   - Function cheap per call but **called many times** → look **up** at callers and cut the call count (100 calls × 5ms = a 500ms hang)
-  - Use **Heaviest Stack Trace** to jump to the hot node; enable *Call Tree ▸ Hide System Libraries*
+  - Use **Heaviest Stack Trace** to jump to the hot node; enable _Call Tree ▸ Hide System Libraries_
 - **CPU low/idle → blocked.** Optimizing algorithms won't help; the main thread is waiting on file I/O, a lock, or IPC. Time Profiler only sees active CPU cycles and is blind here — use the **Thread State Trace** instrument (its narrative names the blocking syscall; in the backtrace the leaf is the syscall, the parent frames are your cause) or **System Trace**. In Instruments 27, the System Trace **Inspector panel** shows exact syscall arguments — the demo caught a 1.7 GB `write` on the main thread taking > 500ms (WWDC26 268). Note that low-but-nonzero CPU (~20%) can still mean blocked: brief wake-ups between waits produce that shape.
 - Two hang shapes: **synchronous** (the interaction itself triggers the long work) and **asynchronous** (work enqueued earlier via `dispatch_async` / a main-actor Task delays a later event) (WWDC23 10248).
 - Time Profiler is a **sampler** — it cannot distinguish one long call from many short calls. Disambiguate with `os_signpost` or specialized instruments: **SwiftUI View Body** (per-body execution count + duration) and **Swift Concurrency Tasks** (which thread each task runs on — catches tasks unexpectedly on the main thread) (WWDC23 10248).
@@ -113,19 +124,17 @@ During the hang interval, what is the main thread's CPU doing?
 Watch for these in code review — three make the main thread **busy**, four **block** it:
 
 **Busy:**
+
 1. Proactively doing unnecessary work (loading ALL images when the view shows only 4)
 2. Irrelevant work pushed onto main (e.g. via `dispatch_sync` from other queues)
 3. Suboptimal APIs (CPU-based image processing where GPU/Core Animation would do)
 
-**Blocked:**
-4. Synchronous network requests on main
-5. File I/O on main / synchronous APIs with unpredictable duration
-6. Blocking on synchronization primitives: `@synchronized`, `dispatch_sync`, `os_unfair_lock`, POSIX locks — and the named anti-pattern: faking sync by **waiting on a semaphore, which "should always be avoided on the main thread"**
-7. Expensive on-demand queries of frequently-read but rarely-changing values (e.g. querying the contacts database on every tap)
+**Blocked:** 4. Synchronous network requests on main 5. File I/O on main / synchronous APIs with unpredictable duration 6. Blocking on synchronization primitives: `@synchronized`, `dispatch_sync`, `os_unfair_lock`, POSIX locks — and the named anti-pattern: faking sync by **waiting on a semaphore, which "should always be avoided on the main thread"** 7. Expensive on-demand queries of frequently-read but rarely-changing values (e.g. querying the contacts database on every tap)
 
 Also: `dispatch_sync` onto a low-priority serial queue with a backlog stalls main for the **whole backlog**, not just your block.
 
 **The four fix patterns (WWDC21 10258):**
+
 - **Cache** frequently used assets / previously queried values (`NSCache` for formatted image tiles: "the overhead of generating assets is replaced by a quick memory read"). Two obligations: an accurate invalidation mechanism, and cache updates happening asynchronously on a secondary queue. Caches use memory — watch their size.
 - **Notification observers over polling**: register for change notifications (any class can post them; see the `NSNotification.Name` docs for system ones), update a cached value in a handler dispatched to another queue. Filter or coalesce chatty notifications.
 - **Async API counterparts**: spot them by the word "asynchronously" or a completion handler in the method name.
@@ -223,6 +232,7 @@ let decoded = await UIImage(contentsOfFile: path)?
 #### Lazy Singleton Blocking Inside .task (WWDC23 10248)
 
 Two rules that make "async" code hang the main thread anyway:
+
 - `View.body` is `@MainActor`, and `.task {}` / `.onAppear {}` closures **inherit that isolation** — an async task can still run entirely on the main thread.
 - `await` only suspends at calls to `async` functions. `try await Service.shared.doWork()` still runs the synchronous `shared` initializer (e.g. a lazy `static let` loading an ML model) **on the main thread** — the `await` belongs to `doWork`, not `shared`.
 
@@ -295,6 +305,7 @@ os_signpost(.event, log: .performance, name: "CacheMiss")
 ```
 
 ### Viewing Signposts in Instruments
+
 1. Add **os_signpost** instrument to your trace
 2. Filter by subsystem/category to find your markers
 3. Intervals show as bars with duration, events show as points
@@ -317,6 +328,7 @@ For lightweight throughput tests, wrap a repeat-while loop calling the workload 
 Enable in **Scheme > Run > Diagnostics > Thread Performance Checker** (WWDC22 10082).
 
 Detects at runtime:
+
 - **Priority inversions**: High-priority thread (e.g. main) synchronously waiting on a lower-priority thread
 - **Non-UI work on main thread**: Disk I/O, network calls detected on main
 - **Excessive thread creation**: Spawning too many threads
@@ -328,12 +340,14 @@ Issues appear as purple runtime warnings in Xcode's Issue Navigator — no trace
 When sampling profilers aren't enough, escalate in this order: **profilers → Processor Trace → CPU Counters**. Fix software/runtime overheads first, or the CPU-hardware tools are confounded by them.
 
 ### Processor Trace
+
 - Records **every instruction executed in user space** — no sampling bias, ~1% performance impact. Available starting Instruments 16.3.
 - Hardware: Mac and iPad Pro with **M4**, or iPhone with **A18**. Enable via Settings > Privacy & Security > Developer Tools (Mac) or the Developer section (iOS).
 - Data volume can be **gigabytes per second** — limit tracing to a few seconds; a single run of the target code suffices (no batching needed, unlike samplers).
 - UI: a per-thread **function-call flame graph over time** showing calls exactly as executed (inspect a single call that ran a few hundred nanoseconds). Colors: brown = system frameworks, magenta = Swift runtime/stdlib, blue = your code.
 
 ### CPU Counters — Guided Bottleneck Analysis
+
 - Instruments 26 adds **preset modes** with guided, iterative bottleneck analysis. Start in **CPU Bottlenecks** mode: all CPU potential is split into four categories as a stacked bar chart + summary table.
 - A dominant category produces a **remark** in the timeline; the details table's **Suggested Next Mode** column tells you which mode to re-profile in (e.g. "Discarded Sampling" for branch mispredictions, "L1D Cache Miss Sampling" for memory-layout problems). Sampling modes capture the **exact instruction** causing the event, not a call stack.
 - After each fix, return to CPU Bottlenecks mode to see how the change shifted the remaining bottlenecks — and **know when to stop**: once the code no longer impacts the critical path, optimize elsewhere.
@@ -360,18 +374,21 @@ func bar<T: Foo>(_ generic: T) { ... }
 ## Profiling Tips
 
 ### Profile What Matters
+
 - Always profile on **physical device** — Simulator has different CPU/memory characteristics
 - Use **Release** configuration — Debug builds disable compiler optimizations
 - Profile with **realistic data** — 10 items vs 10,000 items reveals different bottlenecks
 - **Warm the app first** — first run includes one-time setup that skews results
 
 ### Interpreting Results
+
 - Focus on **Self Weight** to find actual bottlenecks (not just call tree weight)
 - A function with high weight but low self-weight is just a caller — dig deeper
 - Compare **before/after** traces to validate fixes
 - Look for **repeated patterns** — a function called 1000x at 1ms each = 1s hang
 
 ### Quick Wins Checklist
+
 - [ ] Move all file I/O off main thread
 - [ ] Decode images asynchronously
 - [ ] Use `@MainActor` sparingly — only for actual UI updates

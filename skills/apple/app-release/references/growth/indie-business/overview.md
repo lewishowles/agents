@@ -7,6 +7,7 @@ Business fundamentals for indie Apple app developers. Covers the non-code aspect
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Asks about business setup for their app (LLC, S-Corp)
 - Wants to understand tax implications of app revenue
 - Asks when to form an LLC or incorporate
@@ -31,32 +32,36 @@ Ask the user via AskUserQuestion:
 
 #### United States
 
-| Entity | Setup Cost | Annual Cost | Liability Protection | Tax Complexity | Best For |
-|--------|-----------|-------------|---------------------|---------------|----------|
-| Sole Proprietor | $0 | $0 | None | Lowest (Schedule C) | Hobby / early stage / < $10K/year |
-| Single-Member LLC | $50-500 (state-dependent) | $0-800/year (state-dependent) | Yes | Low (pass-through) | Most indie developers |
-| Multi-Member LLC | $50-500 | $0-800/year | Yes | Medium | Partnerships, co-founders |
-| S-Corporation | $100-500 + legal fees | $500-2,000/year (payroll, filings) | Yes | High (payroll + corp return) | Revenue > $80-100K/year |
+| Entity            | Setup Cost                | Annual Cost                        | Liability Protection | Tax Complexity               | Best For                          |
+| ----------------- | ------------------------- | ---------------------------------- | -------------------- | ---------------------------- | --------------------------------- |
+| Sole Proprietor   | $0                        | $0                                 | None                 | Lowest (Schedule C)          | Hobby / early stage / < $10K/year |
+| Single-Member LLC | $50-500 (state-dependent) | $0-800/year (state-dependent)      | Yes                  | Low (pass-through)           | Most indie developers             |
+| Multi-Member LLC  | $50-500                   | $0-800/year                        | Yes                  | Medium                       | Partnerships, co-founders         |
+| S-Corporation     | $100-500 + legal fees     | $500-2,000/year (payroll, filings) | Yes                  | High (payroll + corp return) | Revenue > $80-100K/year           |
 
 **Sole Proprietor**
+
 - How: Just start earning. Report on Schedule C of personal tax return.
 - Pros: Zero paperwork, zero cost, simplest possible setup.
 - Cons: No personal liability protection. Your personal assets are at risk if someone sues.
 - When to use: Testing the waters, revenue < $10K/year, minimal risk app (no user data, no health claims).
 
 **Single-Member LLC (Recommended for Most Indie Devs)**
+
 - How: File articles of organization with your state. Get an EIN from the IRS (free).
 - Pros: Personal liability protection, flexible tax treatment, professional credibility, separate bank account.
 - Cons: Annual state fees ($0 in many states, $800/year in California), must maintain separation between personal and business finances.
 - When to upgrade from sole proprietor: Revenue exceeds $10-20K/year, OR you handle user data, OR users rely on your app for health/finance/safety.
 
 **S-Corporation Election**
+
 - How: Form an LLC, then file Form 2553 to elect S-Corp tax treatment.
 - Pros: Payroll tax savings on profits above "reasonable salary." At $150K revenue, could save $10-15K/year in self-employment tax.
 - Cons: Must pay yourself a "reasonable salary" with payroll, quarterly payroll tax filings, more complex bookkeeping, annual corporate tax return.
 - When to consider: Net profit consistently exceeds $80-100K/year.
 
 **When to upgrade entity (decision tree):**
+
 ```
 Revenue < $10K/year and low-risk app?
 ├── YES → Sole proprietor is fine
@@ -73,9 +78,9 @@ Already have an LLC and net profit > $80K/year?
 
 #### United Kingdom
 
-| Entity | Best For |
-|--------|----------|
-| Sole Trader | Revenue < GBP 50K, simple setup |
+| Entity                | Best For                                                |
+| --------------------- | ------------------------------------------------------- |
+| Sole Trader           | Revenue < GBP 50K, simple setup                         |
 | Limited Company (Ltd) | Revenue > GBP 50K, liability protection, tax efficiency |
 
 - Sole trader: Register with HMRC for Self Assessment. Simple but no liability protection.
@@ -90,11 +95,11 @@ Already have an LLC and net profit > $80K/year?
 
 #### India
 
-| Entity | Best For |
-|--------|----------|
-| Sole Proprietor | Starting out, simple |
+| Entity                              | Best For                       |
+| ----------------------------------- | ------------------------------ |
+| Sole Proprietor                     | Starting out, simple           |
 | LLP (Limited Liability Partnership) | Liability protection, flexible |
-| Private Limited Company | Scale, investors, credibility |
+| Private Limited Company             | Scale, investors, credibility  |
 
 - GST registration may be required above threshold (currently INR 20 lakh).
 - TDS (Tax Deducted at Source) applies to payments from Apple (check DTAA with Ireland/US).
@@ -112,14 +117,15 @@ Already have an LLC and net profit > $80K/year?
 #### Impact Calculation
 
 | Annual Revenue | Standard (30%) | Small Business (15%) | You Save |
-|---------------|----------------|---------------------|----------|
-| $10,000 | $3,000 | $1,500 | $1,500 |
-| $50,000 | $15,000 | $7,500 | $7,500 |
-| $100,000 | $30,000 | $15,000 | $15,000 |
-| $500,000 | $150,000 | $75,000 | $75,000 |
-| $1,000,000 | $300,000 | $150,000 | $150,000 |
+| -------------- | -------------- | -------------------- | -------- |
+| $10,000        | $3,000         | $1,500               | $1,500   |
+| $50,000        | $15,000        | $7,500               | $7,500   |
+| $100,000       | $30,000        | $15,000              | $15,000  |
+| $500,000       | $150,000       | $75,000              | $75,000  |
+| $1,000,000     | $300,000       | $150,000             | $150,000 |
 
 For year-2+ subscribers, Apple takes only 15% regardless of program enrollment. So the Small Business Program primarily benefits:
+
 - Paid upfront apps
 - One-time IAP revenue
 - First-year subscription revenue
@@ -143,23 +149,23 @@ For year-2+ subscribers, Apple takes only 15% regardless of program enrollment. 
 
 Apple pays you monthly. All payouts are taxable income.
 
-| Entity | How to Report | Tax Form |
-|--------|--------------|----------|
-| Sole Proprietor | Schedule C on personal return (1040) | 1040 + Schedule C + Schedule SE |
+| Entity            | How to Report                                | Tax Form                        |
+| ----------------- | -------------------------------------------- | ------------------------------- |
+| Sole Proprietor   | Schedule C on personal return (1040)         | 1040 + Schedule C + Schedule SE |
 | Single-Member LLC | Same as sole proprietor (disregarded entity) | 1040 + Schedule C + Schedule SE |
-| Multi-Member LLC | Partnership return | 1065 + K-1s |
-| S-Corporation | Corporate return + salary W-2 | 1120-S + W-2 |
+| Multi-Member LLC  | Partnership return                           | 1065 + K-1s                     |
+| S-Corporation     | Corporate return + salary W-2                | 1120-S + W-2                    |
 
 **Quarterly Estimated Taxes (US)**
 
 If you expect to owe more than $1,000 in taxes for the year, you must make quarterly estimated payments. Missing these results in penalties.
 
-| Quarter | Covers | Due Date |
-|---------|--------|----------|
-| Q1 | Jan-Mar | April 15 |
-| Q2 | Apr-May | June 15 |
-| Q3 | Jun-Aug | September 15 |
-| Q4 | Sep-Dec | January 15 (next year) |
+| Quarter | Covers  | Due Date               |
+| ------- | ------- | ---------------------- |
+| Q1      | Jan-Mar | April 15               |
+| Q2      | Apr-May | June 15                |
+| Q3      | Jun-Aug | September 15           |
+| Q4      | Sep-Dec | January 15 (next year) |
 
 **How to estimate:** Take your expected annual net profit, multiply by your effective tax rate (federal + state + self-employment). Divide by 4.
 
@@ -167,20 +173,20 @@ If you expect to owe more than $1,000 in taxes for the year, you must make quart
 
 These reduce your taxable income. Keep receipts and records for everything.
 
-| Expense | Example | Deductible? |
-|---------|---------|------------|
-| Apple Developer Program | $99/year | Yes |
-| Hardware | Mac, iPhone, iPad for development | Yes (may need to depreciate) |
-| Software | Xcode is free, but design tools, analytics, etc. | Yes |
-| Hosting | Server costs, API services, CDN | Yes |
-| Design | Freelance designer for app icon, screenshots | Yes |
-| Marketing | Ad spend, press kit costs | Yes |
-| Home office | Portion of rent/mortgage (if dedicated space) | Yes (with rules) |
-| Conference travel | WWDC, local meetups | Yes |
-| Education | Courses, books, tutorials for development skills | Yes |
-| Professional services | Accountant, lawyer fees | Yes |
-| Internet | Business portion of home internet | Partially |
-| Health insurance (US) | Self-employed health insurance deduction | Yes (if self-employed) |
+| Expense                 | Example                                          | Deductible?                  |
+| ----------------------- | ------------------------------------------------ | ---------------------------- |
+| Apple Developer Program | $99/year                                         | Yes                          |
+| Hardware                | Mac, iPhone, iPad for development                | Yes (may need to depreciate) |
+| Software                | Xcode is free, but design tools, analytics, etc. | Yes                          |
+| Hosting                 | Server costs, API services, CDN                  | Yes                          |
+| Design                  | Freelance designer for app icon, screenshots     | Yes                          |
+| Marketing               | Ad spend, press kit costs                        | Yes                          |
+| Home office             | Portion of rent/mortgage (if dedicated space)    | Yes (with rules)             |
+| Conference travel       | WWDC, local meetups                              | Yes                          |
+| Education               | Courses, books, tutorials for development skills | Yes                          |
+| Professional services   | Accountant, lawyer fees                          | Yes                          |
+| Internet                | Business portion of home internet                | Partially                    |
+| Health insurance (US)   | Self-employed health insurance deduction         | Yes (if self-employed)       |
 
 **International Considerations**
 
@@ -203,6 +209,7 @@ These reduce your taxable income. Keep receipts and records for everything.
 **Option 1: Spreadsheet (Free, < $50K revenue)**
 
 Track monthly:
+
 ```
 Month | Gross Revenue | Apple Commission | Net Revenue | Expenses | Net Profit
 Jan   | $1,200        | $180             | $1,020      | $150     | $870
@@ -211,6 +218,7 @@ Feb   | $1,350        | $203             | $1,148      | $99      | $1,049
 ```
 
 Categories to track:
+
 - Gross revenue (total sales)
 - Apple commission (15% or 30%)
 - Net revenue (what Apple pays you)
@@ -223,24 +231,24 @@ Categories to track:
 
 **Option 2: Accounting Software ($50K+ revenue or if you want automation)**
 
-| Software | Cost | Best For |
-|----------|------|----------|
-| Wave | Free | Simple invoicing and tracking |
-| QuickBooks Self-Employed | $15/mo | US sole proprietors, auto-categorization |
-| QuickBooks Online | $30/mo | LLCs and S-Corps, full accounting |
-| Xero | $13/mo | International, clean interface |
-| Bench | $249/mo | Full bookkeeping service (they do it for you) |
+| Software                 | Cost    | Best For                                      |
+| ------------------------ | ------- | --------------------------------------------- |
+| Wave                     | Free    | Simple invoicing and tracking                 |
+| QuickBooks Self-Employed | $15/mo  | US sole proprietors, auto-categorization      |
+| QuickBooks Online        | $30/mo  | LLCs and S-Corps, full accounting             |
+| Xero                     | $13/mo  | International, clean interface                |
+| Bench                    | $249/mo | Full bookkeeping service (they do it for you) |
 
 **Tax Reserve Rule**
 
 Set aside 25-35% of net revenue (after Apple's cut) for taxes.
 
-| Tax Component (US) | Approximate Rate |
-|--------------------|-----------------|
-| Federal income tax | 12-37% (bracket-dependent) |
-| Self-employment tax | 15.3% (on first ~$160K) |
-| State income tax | 0-13% (state-dependent) |
-| **Combined effective rate** | **25-40%** |
+| Tax Component (US)          | Approximate Rate           |
+| --------------------------- | -------------------------- |
+| Federal income tax          | 12-37% (bracket-dependent) |
+| Self-employment tax         | 15.3% (on first ~$160K)    |
+| State income tax            | 0-13% (state-dependent)    |
+| **Combined effective rate** | **25-40%**                 |
 
 Open a separate savings account. Every time Apple pays you, transfer 30% of the payout into the savings account. Use this account only for quarterly tax payments.
 
@@ -251,17 +259,20 @@ Hiring too early burns cash. Hiring too late burns you out. Use these guidelines
 #### Designers
 
 **When to hire:**
+
 - Your app icon looks amateurish compared to competitors
 - Users comment on visual design in reviews
 - You have maxed out SF Symbols and system UI components
 - You need a marketing website, press kit, or App Store screenshots
 
 **What to pay:**
+
 - App icon: $200-1,000 (one-time)
 - Full app design: $2,000-10,000 (one-time)
 - Ongoing design: $50-150/hour (contract)
 
 **Where to find:**
+
 - Dribbble, Behance (portfolios)
 - Twitter/X indie design community
 - Referrals from other indie developers
@@ -269,15 +280,18 @@ Hiring too early burns cash. Hiring too late burns you out. Use these guidelines
 #### Customer Support
 
 **When to hire:**
+
 - You spend > 5 hours/week on support emails
 - Response time > 48 hours (users notice)
 - Support is taking time away from development
 
 **What to pay:**
+
 - Part-time VA: $15-30/hour
 - Dedicated support: $2,000-4,000/month
 
 **Where to find:**
+
 - Online communities for virtual assistants
 - Referrals from other indie developers
 - Start with a part-time contractor, not full-time
@@ -285,11 +299,13 @@ Hiring too early burns cash. Hiring too late burns you out. Use these guidelines
 #### Marketing
 
 **When to hire:**
+
 - You have confirmed product-market fit (good retention)
 - You know your acquisition cost and LTV
 - Growth is limited by awareness, not product quality
 
 **What to pay:**
+
 - Freelance marketing: $50-150/hour
 - ASO consultant: $500-2,000/month
 - Content creator: $100-500/post
@@ -297,11 +313,13 @@ Hiring too early burns cash. Hiring too late burns you out. Use these guidelines
 #### Contract Developers
 
 **When to hire:**
+
 - One-time platform expansion (watchOS, macOS port, widgets)
 - Feature that requires expertise you lack (ML, AR, accessibility)
 - You want to ship faster for a specific launch window
 
 **What to pay:**
+
 - iOS developer (contract): $75-200/hour
 - Specialized (ML, AR): $100-250/hour
 - Fixed-price project: define scope clearly, include revisions
@@ -344,6 +362,7 @@ Can you pay this person for 3 months from app revenue alone?
 #### Before Going Full-Time Indie
 
 Checklist:
+
 - [ ] 6 months of personal expenses saved (emergency fund)
 - [ ] App revenue covers at least 50% of personal expenses (and growing)
 - [ ] Health insurance sorted (US: marketplace, spouse's plan, or COBRA)
@@ -353,13 +372,13 @@ Checklist:
 
 #### Revenue Milestones
 
-| Monthly Net Revenue | What It Means | Action |
-|--------------------|---------------|--------|
-| $100-500/mo | Hobby money | Reinvest in tools, keep your day job |
-| $500-2,000/mo | Side income | Cover app-related expenses, start saving |
-| $2,000-5,000/mo | Part-time viable | Could reduce day job hours (if flexible) |
-| $5,000-10,000/mo | Full-time viable (LCOL) | Full-time possible with lower cost of living |
-| $10,000+/mo | Full-time viable (most areas) | Sustainable indie business |
+| Monthly Net Revenue | What It Means                 | Action                                       |
+| ------------------- | ----------------------------- | -------------------------------------------- |
+| $100-500/mo         | Hobby money                   | Reinvest in tools, keep your day job         |
+| $500-2,000/mo       | Side income                   | Cover app-related expenses, start saving     |
+| $2,000-5,000/mo     | Part-time viable              | Could reduce day job hours (if flexible)     |
+| $5,000-10,000/mo    | Full-time viable (LCOL)       | Full-time possible with lower cost of living |
+| $10,000+/mo         | Full-time viable (most areas) | Sustainable indie business                   |
 
 Note: These are NET revenue figures (after Apple's cut and expenses, before taxes). Adjust for your location's cost of living.
 
@@ -367,16 +386,17 @@ Note: These are NET revenue figures (after Apple's cut and expenses, before taxe
 
 Do not depend on a single app for your entire income. Strategies for diversification:
 
-| Stream | Effort | Revenue Potential | Risk |
-|--------|--------|-------------------|------|
-| Second app | High | High | Platform risk |
-| Consulting/freelancing | Medium | Medium-High | Time-limited |
-| Technical writing | Low-Medium | Low-Medium | Consistent |
+| Stream                   | Effort         | Revenue Potential  | Risk            |
+| ------------------------ | -------------- | ------------------ | --------------- |
+| Second app               | High           | High               | Platform risk   |
+| Consulting/freelancing   | Medium         | Medium-High        | Time-limited    |
+| Technical writing        | Low-Medium     | Low-Medium         | Consistent      |
 | Course/tutorial creation | High (upfront) | Medium (recurring) | One-time effort |
-| Open source sponsorship | Low | Low | Unpredictable |
-| Conference speaking | Low | Low (+ networking) | Seasonal |
+| Open source sponsorship  | Low            | Low                | Unpredictable   |
+| Conference speaking      | Low            | Low (+ networking) | Seasonal        |
 
 **Recommended portfolio for sustainability:**
+
 - 1-2 apps generating recurring revenue (primary income)
 - Part-time consulting/freelancing (stable fallback)
 - Content creation / writing (builds authority, generates leads for consulting)

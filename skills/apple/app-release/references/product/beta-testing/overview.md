@@ -5,6 +5,7 @@ End-to-end beta testing workflow for Apple platform apps — from TestFlight set
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Wants to run a beta test or plan a beta program
 - Needs to set up TestFlight for internal or external testing
 - Asks how to collect user feedback during beta
@@ -23,32 +24,34 @@ Before recruiting testers, understand Apple's two-tier beta system.
 
 #### Internal Testing
 
-| Attribute | Details |
-|-----------|---------|
-| Max testers | 100 |
-| App Review required | No |
-| Build availability | Immediate after upload |
-| Tester requirement | Must be App Store Connect users |
-| Best for | Team, close collaborators, developer friends |
-| Expiration | 90 days from build upload |
+| Attribute           | Details                                      |
+| ------------------- | -------------------------------------------- |
+| Max testers         | 100                                          |
+| App Review required | No                                           |
+| Build availability  | Immediate after upload                       |
+| Tester requirement  | Must be App Store Connect users              |
+| Best for            | Team, close collaborators, developer friends |
+| Expiration          | 90 days from build upload                    |
 
 **Use internal testing for:**
+
 - Catching crashes and obvious bugs before anyone else sees the app
 - Validating core flows work end-to-end
 - Getting feedback from people who will be honest (friends, fellow devs)
 
 #### External Testing
 
-| Attribute | Details |
-|-----------|---------|
-| Max testers | 10,000 |
-| App Review required | Yes (Beta App Review — usually 24-48 hours) |
-| Build availability | After Beta App Review approval |
-| Tester requirement | Anyone with an email address and iOS/macOS device |
-| Best for | Real users, broader audience, validating product-market fit |
-| Expiration | 90 days from build upload |
+| Attribute           | Details                                                     |
+| ------------------- | ----------------------------------------------------------- |
+| Max testers         | 10,000                                                      |
+| App Review required | Yes (Beta App Review — usually 24-48 hours)                 |
+| Build availability  | After Beta App Review approval                              |
+| Tester requirement  | Anyone with an email address and iOS/macOS device           |
+| Best for            | Real users, broader audience, validating product-market fit |
+| Expiration          | 90 days from build upload                                   |
 
 **Use external testing for:**
+
 - Validating with real users who have no context about your app
 - Stress-testing with diverse devices, OS versions, and usage patterns
 - Gathering signal on whether the value proposition resonates
@@ -57,14 +60,15 @@ Before recruiting testers, understand Apple's two-tier beta system.
 
 Create tester cohorts for targeted feedback:
 
-| Cohort | Size | Purpose | What to Ask |
-|--------|------|---------|-------------|
-| Power Users | 10-20 | Deep feature testing, edge cases | Does this handle your advanced workflows? |
-| Casual Users | 20-50 | First-impression and onboarding quality | Was anything confusing in the first 5 minutes? |
-| Accessibility Testers | 5-10 | VoiceOver, Dynamic Type, color contrast | Can you complete core tasks with accessibility features? |
-| Domain Experts | 5-10 | Validate domain-specific correctness | Is the [domain] logic accurate and trustworthy? |
+| Cohort                | Size  | Purpose                                 | What to Ask                                              |
+| --------------------- | ----- | --------------------------------------- | -------------------------------------------------------- |
+| Power Users           | 10-20 | Deep feature testing, edge cases        | Does this handle your advanced workflows?                |
+| Casual Users          | 20-50 | First-impression and onboarding quality | Was anything confusing in the first 5 minutes?           |
+| Accessibility Testers | 5-10  | VoiceOver, Dynamic Type, color contrast | Can you complete core tasks with accessibility features? |
+| Domain Experts        | 5-10  | Validate domain-specific correctness    | Is the [domain] logic accurate and trustworthy?          |
 
 **TestFlight group tips:**
+
 - Name groups clearly (e.g., "Wave 1 - Power Users", "Wave 2 - General")
 - Use different "What to Test" descriptions per group
 - Stagger group invitations — don't invite everyone at once
@@ -73,18 +77,19 @@ Create tester cohorts for targeted feedback:
 
 #### How Many Testers Per Stage
 
-| Stage | Testers | Duration | Goal |
-|-------|---------|----------|------|
-| Internal alpha | 10-20 | 1-2 weeks | Crash-free, core flows work |
-| External wave 1 | 50-200 | 2 weeks | Validate UX, find confusion points |
-| External wave 2 | 200-1,000 | 2 weeks | Stress-test, validate at scale |
-| Open beta (optional) | 1,000+ | 1-2 weeks | Final validation, build buzz |
+| Stage                | Testers   | Duration  | Goal                               |
+| -------------------- | --------- | --------- | ---------------------------------- |
+| Internal alpha       | 10-20     | 1-2 weeks | Crash-free, core flows work        |
+| External wave 1      | 50-200    | 2 weeks   | Validate UX, find confusion points |
+| External wave 2      | 200-1,000 | 2 weeks   | Stress-test, validate at scale     |
+| Open beta (optional) | 1,000+    | 1-2 weeks | Final validation, build buzz       |
 
 **Rule of thumb:** You need at least 50 external testers to get meaningful signal. Below 50, individual preferences dominate.
 
 #### Where to Find Beta Testers
 
 **High-quality sources (engaged, will give feedback):**
+
 - **Indie dev communities** — Indie Dev Monday, iOS Dev Weekly Slack, Mastodon #iosdev
 - **Reddit communities** — r/iOSBeta, r/apple, domain-specific subreddits (r/productivity, r/fitness, etc.)
 - **Twitter/X** — Post "Looking for beta testers for [one-line pitch]" with a screenshot
@@ -92,23 +97,25 @@ Create tester cohorts for targeted feedback:
 - **Friends and family** — Honest if you tell them honesty matters more than kindness
 
 **Medium-quality sources (volume, less feedback):**
+
 - **BetaList** — Submit for free listing
 - **Beta testing communities** — BetaFamily, ErliBird
 - **Discord servers** — App development and domain-specific servers
 
 **Low-quality sources (avoid for signal):**
+
 - Random giveaway sites (testers who just want free stuff)
 - Paid beta testers (financially motivated, not genuine users)
 
 #### Incentive Strategies
 
-| Incentive | Best For | Notes |
-|-----------|----------|-------|
-| Early access | All testers | The default — being first is often enough |
-| Lifetime free / pro unlock | Power users | Strong motivator, limited cost to you |
-| Credit in app (About screen) | Engaged testers | Recognition matters to some users |
-| Direct access to developer | Power users | They feel heard, you get deep feedback |
-| Discount at launch | Wave 2+ testers | Good for larger cohorts |
+| Incentive                    | Best For        | Notes                                     |
+| ---------------------------- | --------------- | ----------------------------------------- |
+| Early access                 | All testers     | The default — being first is often enough |
+| Lifetime free / pro unlock   | Power users     | Strong motivator, limited cost to you     |
+| Credit in app (About screen) | Engaged testers | Recognition matters to some users         |
+| Direct access to developer   | Power users     | They feel heard, you get deep feedback    |
+| Discount at launch           | Wave 2+ testers | Good for larger cohorts                   |
 
 **What NOT to offer:** Cash payment for testing. It attracts the wrong people and biases feedback.
 
@@ -127,6 +134,7 @@ Build a simple feedback mechanism directly in the app. Three fields are enough:
 ```
 
 **Implementation tips:**
+
 - Add a "Send Feedback" button in Settings (always visible during beta)
 - Include device info, OS version, and app version automatically
 - Attach a screenshot option (but don't require it)
@@ -136,12 +144,14 @@ Build a simple feedback mechanism directly in the app. Three fields are enough:
 #### Channel 2: TestFlight Built-In Feedback
 
 TestFlight's native feedback is surprisingly useful:
+
 - Users take a screenshot, annotate it, and add text
 - Feedback arrives in App Store Connect with device/OS metadata
 - Crash reports are automatic
 - No extra infrastructure needed
 
 **Tip:** In your TestFlight "What to Test" field, be specific:
+
 ```
 This week, please test:
 1. Creating a new [item] from scratch
@@ -164,6 +174,7 @@ Send a survey at the end of each beta wave. Use AskUserQuestion to help design s
 5. **How likely are you to recommend this to a friend?** (0-10 NPS scale)
 
 **Survey rules:**
+
 - Maximum 5 questions — completion rate drops 20% per additional question
 - Always include one open-ended question (the best insights come from free text)
 - Send via email, not in-app (don't interrupt usage)
@@ -174,11 +185,13 @@ Send a survey at the end of each beta wave. Use AskUserQuestion to help design s
 The highest-signal feedback channel. Do 5-8 interviews per beta wave.
 
 **Who to interview:**
+
 - 2-3 testers who used the app heavily (understand power user needs)
 - 2-3 testers who tried it once and stopped (understand drop-off reasons)
 - 1-2 testers from the accessibility cohort
 
 **Logistics:**
+
 - 20-30 minutes via video call or phone
 - Record with permission (for your notes, not public)
 - Take written notes even if recording
@@ -212,6 +225,7 @@ Ask these in order. Each builds on the previous:
 #### How to Listen (Interview Discipline)
 
 **Do:**
+
 - Nod and say "Tell me more about that"
 - Ask "Why?" at least twice to get past surface answers
 - Take notes on exact phrases they use (their words, not your interpretation)
@@ -219,6 +233,7 @@ Ask these in order. Each builds on the previous:
 - Ask "What else?" after they finish answering
 
 **Don't:**
+
 - Defend your design decisions ("Well, the reason it works that way is...")
 - Explain how to use the feature ("Oh, you just need to swipe left")
 - Lead the witness ("Don't you think the onboarding was clear?")
@@ -233,12 +248,12 @@ Ask these in order. Each builds on the previous:
 
 Not all feedback is equal. Use frequency to determine priority:
 
-| Frequency | Classification | Action |
-|-----------|---------------|--------|
-| 1 person mentions it | Anecdote | Note it, don't act yet |
-| 3 people mention it | Pattern | Investigate, consider fixing |
-| 5+ people mention it | Must-fix | Fix before launch |
-| 10+ people mention it | Showstopper | Fix immediately, send new build |
+| Frequency             | Classification | Action                          |
+| --------------------- | -------------- | ------------------------------- |
+| 1 person mentions it  | Anecdote       | Note it, don't act yet          |
+| 3 people mention it   | Pattern        | Investigate, consider fixing    |
+| 5+ people mention it  | Must-fix       | Fix before launch               |
+| 10+ people mention it | Showstopper    | Fix immediately, send new build |
 
 **Important:** Weight feedback by tester quality. One thoughtful power user's detailed report is worth more than ten casual testers saying "looks good."
 
@@ -246,23 +261,25 @@ Not all feedback is equal. Use frequency to determine priority:
 
 Assign every piece of feedback to a priority level:
 
-| Priority | Category | Examples | Action |
-|----------|----------|----------|--------|
+| Priority      | Category          | Examples                                                            | Action                                          |
+| ------------- | ----------------- | ------------------------------------------------------------------- | ----------------------------------------------- |
 | P0 — Critical | Crash / data loss | App crashes on launch, saved data disappears, sync destroys content | Fix immediately, push new build within 24 hours |
-| P1 — High | Broken flow | Cannot complete core task, flow dead-ends, save doesn't work | Fix before next beta wave |
-| P2 — Medium | UX confusion | Users don't find feature, misunderstand UI, take wrong path | Fix before launch |
-| P3 — Low | Nice-to-have | Feature requests, polish suggestions, "it would be cool if..." | Add to backlog, consider for v1.1 |
+| P1 — High     | Broken flow       | Cannot complete core task, flow dead-ends, save doesn't work        | Fix before next beta wave                       |
+| P2 — Medium   | UX confusion      | Users don't find feature, misunderstand UI, take wrong path         | Fix before launch                               |
+| P3 — Low      | Nice-to-have      | Feature requests, polish suggestions, "it would be cool if..."      | Add to backlog, consider for v1.1               |
 
 #### Distinguishing Problem Types
 
 Two types of negative feedback require different solutions:
 
 **"I don't understand how to do X"** = UX problem
+
 - The feature exists but is hard to find or use
 - Solution: Redesign the flow, add onboarding hints, improve labels
 - Usually cheaper and faster to fix
 
 **"I don't need X"** = Feature/product problem
+
 - The feature exists but doesn't match user needs
 - Solution: Rethink whether this feature belongs in v1, or pivot the approach
 - More expensive to fix — may require cutting or rebuilding
@@ -357,15 +374,15 @@ Use this checklist format to present the decision:
 
 #### Recommended 7-Week Schedule
 
-| Week | Phase | Activities | Deliverables |
-|------|-------|------------|-------------|
-| 1 | Setup | Configure TestFlight groups, write "What to Test" descriptions, prepare feedback form | TestFlight ready, feedback channels set up |
-| 2 | Internal Alpha | Invite 10-20 internal testers, fix crash-level bugs daily | Crash-free build, core flows validated |
-| 3 | External Wave 1 | Invite 50-200 external testers, monitor crash reports | First external feedback collected |
-| 4 | Wave 1 Analysis | Send survey, conduct 5-8 user interviews, categorize feedback | Feedback report, prioritized bug/UX list |
-| 5 | External Wave 2 | Fix P0/P1 issues, push new build, invite 200-1,000 testers | Improved build validated at scale |
-| 6 | Wave 2 Analysis | Send final survey, conduct 3-5 follow-up interviews | Final feedback report, NPS score |
-| 7 | Go/No-Go | Evaluate all data against decision framework, make launch call | Go/No-Go decision document |
+| Week | Phase           | Activities                                                                            | Deliverables                               |
+| ---- | --------------- | ------------------------------------------------------------------------------------- | ------------------------------------------ |
+| 1    | Setup           | Configure TestFlight groups, write "What to Test" descriptions, prepare feedback form | TestFlight ready, feedback channels set up |
+| 2    | Internal Alpha  | Invite 10-20 internal testers, fix crash-level bugs daily                             | Crash-free build, core flows validated     |
+| 3    | External Wave 1 | Invite 50-200 external testers, monitor crash reports                                 | First external feedback collected          |
+| 4    | Wave 1 Analysis | Send survey, conduct 5-8 user interviews, categorize feedback                         | Feedback report, prioritized bug/UX list   |
+| 5    | External Wave 2 | Fix P0/P1 issues, push new build, invite 200-1,000 testers                            | Improved build validated at scale          |
+| 6    | Wave 2 Analysis | Send final survey, conduct 3-5 follow-up interviews                                   | Final feedback report, NPS score           |
+| 7    | Go/No-Go        | Evaluate all data against decision framework, make launch call                        | Go/No-Go decision document                 |
 
 **Compressed schedule (4 weeks):** Combine weeks 1-2, skip wave 2, use wave 1 data for go/no-go. Only recommended if the app is simple (< 5 screens) and developer has shipped before.
 
@@ -439,11 +456,13 @@ This skill fits in the product development pipeline after implementation and bef
 ```
 
 **Inputs from other skills:**
+
 - `test-spec` provides automated test coverage (should be solid before beta)
 - `implementation-guide` provides the feature list to test against
 - `prd-generator` provides the user stories to validate
 
 **Outputs to other skills:**
+
 - Feedback data informs `release-review` checklist
 - NPS and user quotes feed into `app-store` description and marketing
 - Go/no-go decision determines if `release-review` proceeds
@@ -451,12 +470,14 @@ This skill fits in the product development pipeline after implementation and bef
 ## Common Mistakes to Avoid
 
 ### Inviting too many testers too early
+
 ```
 Bad:  Invite 500 external testers on day 1
 Good: Start with 15 internal testers, fix crashes, THEN go external
 ```
 
 ### Not giving testers direction
+
 ```
 Bad:  "Please test the app and let me know what you think"
 Good: "Please try creating a new project, adding 3 tasks, and marking one
@@ -464,18 +485,21 @@ Good: "Please try creating a new project, adding 3 tasks, and marking one
 ```
 
 ### Ignoring negative feedback
+
 ```
 Bad:  "That tester just doesn't get it"
 Good: "If 3 testers don't get it, my onboarding doesn't get it"
 ```
 
 ### Running beta too short
+
 ```
 Bad:  3 days of testing, then ship
 Good: Minimum 2 weeks external testing with at least 50 testers
 ```
 
 ### Not acting on feedback
+
 ```
 Bad:  Collect feedback, file it away, ship unchanged
 Good: Fix P0/P1 between waves, push new build, re-test

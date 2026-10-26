@@ -1,9 +1,10 @@
 ---
 name: bash
 description: >
-  Use this skill when writing shell scripts, zsh functions, bash utilities, .env files, or config files. Apply even for short scripts or helper functions — covers bash patterns, minimal documentation style, and config file conventions.
+    Use this skill when writing shell scripts, zsh functions, bash utilities, .env files, or config files. Apply even for short scripts or helper functions — covers bash patterns, minimal documentation style, and config file conventions.
 ---
-# Bash
+
+# Bash and Python scripts
 
 Use this skill for shell scripts and configuration. Use `python` for Python files, including Python embedded in a shell script.
 

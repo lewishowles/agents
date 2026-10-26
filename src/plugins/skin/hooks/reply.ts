@@ -18,7 +18,8 @@ const OVER_TO_YOU_LABEL = /^\*\*Over to you(?::\*\*|\*\*)/;
  * Characters most terminals draw two cells wide (East Asian scripts and emoji), which would push table borders out of line.
  * The emoji range also matches some narrow symbols such as © and ™, so tables holding those keep Claude Code's drawing too.
  */
-const WIDE_CHARACTER = /[\u1100-\u115F\u2E80-\uA4CF\uAC00-\uD7A3\uF900-\uFAFF\uFE10-\uFE6F\uFF01-\uFF60\uFFE0-\uFFE6\u{20000}-\u{3FFFD}]|\p{Extended_Pictographic}/u;
+const WIDE_CHARACTER =
+	/[\u1100-\u115F\u2E80-\uA4CF\uAC00-\uD7A3\uF900-\uFAFF\uFE10-\uFE6F\uFF01-\uFF60\uFFE0-\uFFE6\u{20000}-\u{3FFFD}]|\p{Extended_Pictographic}/u;
 
 /**
  * Split a reply into prose, tables and a final Over to you quote, so the skin
@@ -56,10 +57,11 @@ export function replySegments(text: string, columns: number): ReplySegment[] | n
 		cardStart = index;
 	}
 
-	const quoted = lines.slice(cardStart).map(line => line.replace(/^>\s?/, ""));
-	const card = cardStart < lines.length && OVER_TO_YOU_LABEL.test(quoted[0])
-		? [quoted[0].replace(OVER_TO_YOU_LABEL, ""), ...quoted.slice(1)].join("\n").trim()
-		: null;
+	const quoted = lines.slice(cardStart).map((line) => line.replace(/^>\s?/, ""));
+	const card =
+		cardStart < lines.length && OVER_TO_YOU_LABEL.test(quoted[0])
+			? [quoted[0].replace(OVER_TO_YOU_LABEL, ""), ...quoted.slice(1)].join("\n").trim()
+			: null;
 	const body = card === null ? lines : lines.slice(0, cardStart);
 	const segments: ReplySegment[] = [];
 	let proseStart = 0;
@@ -87,7 +89,11 @@ export function replySegments(text: string, columns: number): ReplySegment[] | n
 		if (marker) {
 			if (fence === null) {
 				fence = { character: marker[1][0], length: marker[1].length };
-			} else if (marker[1][0] === fence.character && marker[1].length >= fence.length && /^\s*$/.test(marker[2])) {
+			} else if (
+				marker[1][0] === fence.character &&
+				marker[1].length >= fence.length &&
+				/^\s*$/.test(marker[2])
+			) {
 				fence = null;
 			}
 
@@ -101,8 +107,12 @@ export function replySegments(text: string, columns: number): ReplySegment[] | n
 		const header = cells(body[index]);
 		const divider = cells(body[index + 1]);
 
-		if (!header || !divider || header.length !== divider.length ||
-			!divider.every(cell => /^:?-{3,}:?$/.test(cell))) {
+		if (
+			!header ||
+			!divider ||
+			header.length !== divider.length ||
+			!divider.every((cell) => /^:?-{3,}:?$/.test(cell))
+		) {
 			continue;
 		}
 
@@ -138,7 +148,7 @@ export function replySegments(text: string, columns: number): ReplySegment[] | n
 		segments.push({ kind: "card", text: card });
 	}
 
-	return segments.some(segment => segment.kind !== "prose") ? segments : null;
+	return segments.some((segment) => segment.kind !== "prose") ? segments : null;
 }
 
 /**
@@ -152,19 +162,20 @@ export function replySegments(text: string, columns: number): ReplySegment[] | n
  */
 export function tableLines(rows: string[][], widths: number[]): TableLine[] {
 	const border = (left: string, middle: string, right: string) =>
-		left + widths.map(width => "─".repeat(width + 2)).join(middle) + right;
+		left + widths.map((width) => "─".repeat(width + 2)).join(middle) + right;
 	const lines: TableLine[] = [{ kind: "border", text: border("╭", "┬", "╮") }];
 
 	for (const [rowIndex, row] of rows.entries()) {
 		const wrapped = row.map((cell, index) => wrap(inlineSpans(cell), widths[index]));
-		const height = Math.max(...wrapped.map(cell => cell.length));
+		const height = Math.max(...wrapped.map((cell) => cell.length));
 
 		for (let line = 0; line < height; line++) {
 			lines.push({
 				kind: "cells",
 				cells: wrapped.map((cell, index) => {
 					const spans = cell[line] ?? [];
-					const padding = widths[index] - spans.reduce((length, span) => length + span.text.length, 0);
+					const padding =
+						widths[index] - spans.reduce((length, span) => length + span.text.length, 0);
 
 					return [...spans, { text: " ".repeat(padding), bold: false, code: false }];
 				}),
@@ -196,10 +207,13 @@ function cells(line: string): string[] | null {
 	}
 
 	const trimmed = line.trim();
-	const parts = trimmed.replace(/^\|/, "").replace(/\|$/, "").split(/(?<!\\)\|/);
+	const parts = trimmed
+		.replace(/^\|/, "")
+		.replace(/\|$/, "")
+		.split(/(?<!\\)\|/);
 
 	return parts.length > 1 || trimmed.startsWith("|")
-		? parts.map(part => part.trim().replace(/\\\|/g, "|"))
+		? parts.map((part) => part.trim().replace(/\\\|/g, "|"))
 		: null;
 }
 
@@ -215,7 +229,7 @@ function cells(line: string): string[] | null {
  *     The width the reply is drawn into, in character cells.
  */
 function tableWidths(rows: string[][], columns: number): number[] | null {
-	if (rows.some(row => row.some(cell => WIDE_CHARACTER.test(cell)))) {
+	if (rows.some((row) => row.some((cell) => WIDE_CHARACTER.test(cell)))) {
 		return null;
 	}
 
@@ -223,9 +237,21 @@ function tableWidths(rows: string[][], columns: number): number[] | null {
 	const available = columns - (3 * count + 1);
 
 	const widths = Array.from({ length: count }, (_, index) =>
-		Math.max(1, ...rows.map(row => visibleText(inlineSpans(row[index])).length)));
+		Math.max(1, ...rows.map((row) => visibleText(inlineSpans(row[index])).length)),
+	);
 	const floors = Array.from({ length: count }, (_, index) =>
-		Math.min(6, Math.max(1, ...rows.flatMap(row => visibleText(inlineSpans(row[index])).split(/\s+/).map(word => word.length)))));
+		Math.min(
+			6,
+			Math.max(
+				1,
+				...rows.flatMap((row) =>
+					visibleText(inlineSpans(row[index]))
+						.split(/\s+/)
+						.map((word) => word.length),
+				),
+			),
+		),
+	);
 
 	while (widths.reduce((sum, width) => sum + width, 0) > available) {
 		let widest = -1;
@@ -263,7 +289,11 @@ function inlineSpans(text: string): CellSpan[] {
 			spans.push({ text: text.slice(start, match.index), bold: false, code: false });
 		}
 
-		spans.push({ text: match[2] ?? match[3], bold: match[2] !== undefined, code: match[3] !== undefined });
+		spans.push({
+			text: match[2] ?? match[3],
+			bold: match[2] !== undefined,
+			code: match[3] !== undefined,
+		});
 		start = match.index + match[0].length;
 	}
 
@@ -281,7 +311,7 @@ function inlineSpans(text: string): CellSpan[] {
  *     The cell's spans.
  */
 function visibleText(spans: CellSpan[]): string {
-	return spans.map(span => span.text).join("");
+	return spans.map((span) => span.text).join("");
 }
 
 /**

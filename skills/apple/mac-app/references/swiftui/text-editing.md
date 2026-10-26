@@ -1,6 +1,7 @@
 # Text editing
 
 <a id="source-swiftui-text-editing-skill-md"></a>
+
 ## Source: `swiftui/text-editing/SKILL.md`
 
 # Styled Text Editing
@@ -10,6 +11,7 @@ Patterns for displaying styled text and building rich text editors in SwiftUI. C
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Wants to display styled or formatted text
 - Needs rich text editing with bold/italic/underline controls
 - Asks about AttributedString or TextEditor
@@ -39,29 +41,29 @@ What text feature do you need?
 
 ## API Availability
 
-| API | Minimum Version | Notes |
-|-----|----------------|-------|
-| `Text` with modifiers | iOS 13 | .font(), .bold(), .italic() |
-| `TextEditor(text:)` | iOS 14 | Plain string binding |
-| `.foregroundStyle()` | iOS 15 | Preferred over .foregroundColor() |
-| `AttributedString` | iOS 15 | Rich text model |
-| `.bold(condition)` | iOS 16 | Conditional bold/italic |
-| `.underline(pattern:)` | iOS 16 | Dash, dot patterns |
-| `TextEditor(text:selection:)` | iOS 18 | AttributedString + selection |
-| `AttributedTextSelection` | iOS 18 | Selection-based formatting |
-| `text.transformAttributes(in:)` | iOS 18 | Modify attributes in selection |
-| `AttributedTextFormattingDefinition` | iOS 18 | Custom formatting constraints |
-| `@Environment(\.fontResolutionContext)` | iOS 18 | Resolve font properties |
+| API                                     | Minimum Version | Notes                             |
+| --------------------------------------- | --------------- | --------------------------------- |
+| `Text` with modifiers                   | iOS 13          | .font(), .bold(), .italic()       |
+| `TextEditor(text:)`                     | iOS 14          | Plain string binding              |
+| `.foregroundStyle()`                    | iOS 15          | Preferred over .foregroundColor() |
+| `AttributedString`                      | iOS 15          | Rich text model                   |
+| `.bold(condition)`                      | iOS 16          | Conditional bold/italic           |
+| `.underline(pattern:)`                  | iOS 16          | Dash, dot patterns                |
+| `TextEditor(text:selection:)`           | iOS 18          | AttributedString + selection      |
+| `AttributedTextSelection`               | iOS 18          | Selection-based formatting        |
+| `text.transformAttributes(in:)`         | iOS 18          | Modify attributes in selection    |
+| `AttributedTextFormattingDefinition`    | iOS 18          | Custom formatting constraints     |
+| `@Environment(\.fontResolutionContext)` | iOS 18          | Resolve font properties           |
 
 ## Top 5 Mistakes
 
-| # | Mistake | Fix |
-|---|---------|-----|
-| 1 | Using `.foregroundColor()` on new projects | Use `.foregroundStyle()` — supports gradients and ShapeStyle |
-| 2 | `.animation(.spring())` without `value:` on text | Deprecated in iOS 15 — always pass `value:` parameter |
-| 3 | Expecting full Markdown in `Text` | Text only supports inline Markdown: **bold**, *italic*, [links]. No lists, tables, code blocks, images |
-| 4 | Creating new AttributedString instances on every body evaluation | Cache complex AttributedString objects in @State or computed properties outside body |
-| 5 | Using `TextEditor(text: $string)` for rich text | Use `TextEditor(text: $attributedString, selection: $selection)` with AttributedString binding (iOS 18+) |
+| #   | Mistake                                                          | Fix                                                                                                      |
+| --- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| 1   | Using `.foregroundColor()` on new projects                       | Use `.foregroundStyle()` — supports gradients and ShapeStyle                                             |
+| 2   | `.animation(.spring())` without `value:` on text                 | Deprecated in iOS 15 — always pass `value:` parameter                                                    |
+| 3   | Expecting full Markdown in `Text`                                | Text only supports inline Markdown: **bold**, _italic_, [links]. No lists, tables, code blocks, images   |
+| 4   | Creating new AttributedString instances on every body evaluation | Cache complex AttributedString objects in @State or computed properties outside body                     |
+| 5   | Using `TextEditor(text: $string)` for rich text                  | Use `TextEditor(text: $attributedString, selection: $selection)` with AttributedString binding (iOS 18+) |
 
 ## Text Styling Quick Reference
 
@@ -111,15 +113,15 @@ Text(text)
 
 ### Available Attributes
 
-| Attribute | Type | Example |
-|-----------|------|---------|
-| `.font` | Font | `.headline` |
-| `.foregroundColor` | Color | `.red` |
-| `.backgroundColor` | Color | `.yellow` |
-| `.underlineStyle` | UnderlineStyle | `.single` |
-| `.underlineColor` | Color | `.blue` |
-| `.strikethroughStyle` | UnderlineStyle | `.single` |
-| `.strikethroughColor` | Color | `.red` |
+| Attribute                   | Type                     | Example                                              |
+| --------------------------- | ------------------------ | ---------------------------------------------------- |
+| `.font`                     | Font                     | `.headline`                                          |
+| `.foregroundColor`          | Color                    | `.red`                                               |
+| `.backgroundColor`          | Color                    | `.yellow`                                            |
+| `.underlineStyle`           | UnderlineStyle           | `.single`                                            |
+| `.underlineColor`           | Color                    | `.blue`                                              |
+| `.strikethroughStyle`       | UnderlineStyle           | `.single`                                            |
+| `.strikethroughColor`       | Color                    | `.red`                                               |
 | `.inlinePresentationIntent` | InlinePresentationIntent | `.stronglyEmphasized` (bold), `.emphasized` (italic) |
 
 ## Rich Text Editing (iOS 18+)
@@ -221,29 +223,34 @@ Text("Code: `inline code`")
 ### Markdown Limitations
 
 Text supports only **inline** Markdown:
+
 - ✅ Bold (`**text**`), italic (`*text*`), links, inline code
 - ❌ Line breaks, block formatting, lists, tables, code blocks, images, block quotes
 
 ## Review Checklist
 
 ### Text Display
+
 - [ ] Using `.foregroundStyle()` instead of deprecated `.foregroundColor()`
 - [ ] `.lineLimit()` paired with `.help()` tooltip or `.textSelection(.enabled)` for truncated text
 - [ ] Dynamic Type supported — using system font styles, not hardcoded sizes
 - [ ] Colors adapt to dark mode — using system colors or semantic styles
 
 ### AttributedString
+
 - [ ] Complex AttributedString cached in @State, not recreated in body
 - [ ] Range lookups use safe `if let range = text.range(of:)` pattern
 - [ ] Appropriate attributes used (`.inlinePresentationIntent` for semantic bold/italic)
 
 ### TextEditor
+
 - [ ] Rich text uses `TextEditor(text: $attributedString, selection: $selection)` (iOS 18+)
 - [ ] Formatting toolbar uses `text.transformAttributes(in: &selection)` pattern
 - [ ] Font resolution uses `@Environment(\.fontResolutionContext)` for toggle logic
 - [ ] Accessibility labels provided for formatting buttons
 
 ### Localization
+
 - [ ] User-facing strings use `LocalizedStringKey`
 - [ ] Markdown in localized strings uses `Text(LocalizedStringKey("**Bold** text"))`
 

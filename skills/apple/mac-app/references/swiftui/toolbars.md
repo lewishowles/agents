@@ -1,6 +1,7 @@
 # Toolbars
 
 <a id="source-swiftui-toolbars-skill-md"></a>
+
 ## Source: `swiftui/toolbars/SKILL.md`
 
 # SwiftUI Toolbars
@@ -10,6 +11,7 @@ Modern toolbar patterns for SwiftUI apps. Covers customizable toolbars, enhanced
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Wants to add or customize toolbars
 - Asks about customizable/user-configurable toolbars
 - Needs search field in toolbar with specific placement
@@ -43,19 +45,19 @@ What toolbar feature do you need?
 
 ## API Availability
 
-| API | Minimum Version | Notes |
-|-----|----------------|-------|
-| `.toolbar { }` | iOS 14 | Basic toolbar |
-| `ToolbarItem(placement:)` | iOS 14 | Standard placements |
-| `.toolbar(id:)` | iOS 16 | Customizable toolbars |
-| `ToolbarItem(id:)` | iOS 16 | Items in customizable toolbars |
-| `ToolbarSpacer` | iOS 16 | Fixed and flexible spacers |
-| `.searchable()` | iOS 15 | Search integration |
-| `.searchToolbarBehavior(.minimize)` | iOS 17 | Minimized search button |
-| `DefaultToolbarItem(kind:placement:)` | iOS 18 | Reposition system items |
-| `ToolbarItem(placement: .largeSubtitle)` | iOS 18 | Subtitle area content |
-| `.matchedTransitionSource(id:in:)` | iOS 18 | Toolbar transition source |
-| `.sharedBackgroundVisibility()` | iOS 18 | Glass background control |
+| API                                      | Minimum Version | Notes                          |
+| ---------------------------------------- | --------------- | ------------------------------ |
+| `.toolbar { }`                           | iOS 14          | Basic toolbar                  |
+| `ToolbarItem(placement:)`                | iOS 14          | Standard placements            |
+| `.toolbar(id:)`                          | iOS 16          | Customizable toolbars          |
+| `ToolbarItem(id:)`                       | iOS 16          | Items in customizable toolbars |
+| `ToolbarSpacer`                          | iOS 16          | Fixed and flexible spacers     |
+| `.searchable()`                          | iOS 15          | Search integration             |
+| `.searchToolbarBehavior(.minimize)`      | iOS 17          | Minimized search button        |
+| `DefaultToolbarItem(kind:placement:)`    | iOS 18          | Reposition system items        |
+| `ToolbarItem(placement: .largeSubtitle)` | iOS 18          | Subtitle area content          |
+| `.matchedTransitionSource(id:in:)`       | iOS 18          | Toolbar transition source      |
+| `.sharedBackgroundVisibility()`          | iOS 18          | Glass background control       |
 
 ## Customizable Toolbars
 
@@ -220,41 +222,45 @@ ContentView()
 
 ## Top 5 Mistakes
 
-| # | Mistake | Fix |
-|---|---------|-----|
-| 1 | Missing `id` on ToolbarItem in customizable toolbar | Every item in `.toolbar(id:)` must have its own `id` parameter |
-| 2 | Using `.searchToolbarBehavior(.minimize)` without `.searchable()` | Must pair with `.searchable()` modifier — `.minimize` only affects rendering |
-| 3 | Putting `.matchedTransitionSource` on the Button instead of ToolbarItem | Apply `.matchedTransitionSource(id:in:)` on the `ToolbarItem`, not its content |
-| 4 | Using `.largeSubtitle` alongside `.navigationSubtitle()` expecting both to show | `.largeSubtitle` takes precedence — the subtitle modifier value is hidden |
-| 5 | Forgetting `placement:` on DefaultToolbarItem | Without explicit placement, system items use their default position |
+| #   | Mistake                                                                         | Fix                                                                            |
+| --- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| 1   | Missing `id` on ToolbarItem in customizable toolbar                             | Every item in `.toolbar(id:)` must have its own `id` parameter                 |
+| 2   | Using `.searchToolbarBehavior(.minimize)` without `.searchable()`               | Must pair with `.searchable()` modifier — `.minimize` only affects rendering   |
+| 3   | Putting `.matchedTransitionSource` on the Button instead of ToolbarItem         | Apply `.matchedTransitionSource(id:in:)` on the `ToolbarItem`, not its content |
+| 4   | Using `.largeSubtitle` alongside `.navigationSubtitle()` expecting both to show | `.largeSubtitle` takes precedence — the subtitle modifier value is hidden      |
+| 5   | Forgetting `placement:` on DefaultToolbarItem                                   | Without explicit placement, system items use their default position            |
 
 ## Platform Considerations
 
-| Platform | Recommendations |
-|----------|----------------|
-| **iOS** | Bottom bar useful on iPhones. Use `.searchToolbarBehavior(.minimize)` for space efficiency. |
-| **iPadOS** | Customizable toolbars valuable in productivity apps. Consider keyboard shortcuts. |
-| **macOS** | Users expect toolbar customization. Use spacers for logical groupings. |
+| Platform   | Recommendations                                                                             |
+| ---------- | ------------------------------------------------------------------------------------------- |
+| **iOS**    | Bottom bar useful on iPhones. Use `.searchToolbarBehavior(.minimize)` for space efficiency. |
+| **iPadOS** | Customizable toolbars valuable in productivity apps. Consider keyboard shortcuts.           |
+| **macOS**  | Users expect toolbar customization. Use spacers for logical groupings.                      |
 
 ## Review Checklist
 
 ### Customizable Toolbars
+
 - [ ] `.toolbar(id:)` has a unique, stable string identifier
 - [ ] Every `ToolbarItem` within has its own unique `id`
 - [ ] Spacers used to create logical groups of related items
 - [ ] Toolbar tested with customization panel (long-press on iPadOS, right-click on macOS)
 
 ### Search Integration
+
 - [ ] `.searchable()` paired with appropriate `.searchToolbarBehavior()`
 - [ ] Search placement makes sense for the platform (bottom bar on iOS, toolbar on macOS)
 - [ ] `DefaultToolbarItem(kind: .search)` used when repositioning is needed
 
 ### Transitions
+
 - [ ] `.matchedTransitionSource` applied to `ToolbarItem`, not its content view
 - [ ] Namespace declared with `@Namespace` at the view level
 - [ ] Source ID matches between `.matchedTransitionSource` and `.navigationTransition(.zoom)`
 
 ### Platform
+
 - [ ] Toolbar layouts tested on both iOS and macOS (if multiplatform)
 - [ ] Bottom bar items appropriate for small screens
 - [ ] Customizable toolbars provided for complex macOS apps

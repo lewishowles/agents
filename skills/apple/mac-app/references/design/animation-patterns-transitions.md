@@ -1,6 +1,7 @@
 # Animation patterns: Transitions
 
 <a id="source-design-animation-patterns-transitions-md"></a>
+
 ## Source: `design/animation-patterns/transitions.md`
 
 # Transitions
@@ -132,7 +133,7 @@ DetailView()
     .transition(Twirl())
 ```
 
-The three-case `TransitionPhase` (`.willAppear`, `.identity`, `.didDisappear`) expresses what the `active`/`identity` modifier pair can't: insertion and removal can move in the *same* visual direction — e.g. content always exits downward instead of playing its entrance in reverse (WWDC24).
+The three-case `TransitionPhase` (`.willAppear`, `.identity`, `.didDisappear`) expresses what the `active`/`identity` modifier pair can't: insertion and removal can move in the _same_ visual direction — e.g. content always exits downward instead of playing its entrance in reverse (WWDC24).
 
 ## matchedGeometryEffect (iOS 14+)
 

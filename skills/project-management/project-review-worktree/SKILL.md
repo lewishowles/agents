@@ -3,6 +3,7 @@ name: project-review-worktree
 description: >
   Use this skill when reviewing uncommitted work before commit, especially requests like "review the working tree", "check this before commit", "is this ready to commit", or "review these changes against PROGRESS.md". Assesses correctness, completeness, plan alignment, maintainability, tests, docs, and commit readiness without editing files.
 ---
+
 # Project review worktree
 
 Review uncommitted repository changes before commit. Default to review and recommendations only; do not edit files unless the user explicitly asks after the review.

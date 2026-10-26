@@ -12,6 +12,16 @@ Use this skill when the user:
 - Asks about "subscription management"
 - Mentions "premium features" or "pro version"
 
+## Paywall Design Principles (Apple's Data)
+
+- **Keep sign-up to 3-4 taps.** Per Apple's Tech Talk: 61% conversion at 3 taps, 48% at 4 — collapsing to 7% at 9 taps.
+- **Make the paywall glanceable** — value proposition, price, and renewal/trial terms in one view, no scrolling to find the price.
+- **Show clear renewal and trial terms everywhere you pitch** the subscription, not just on the paywall.
+- **Persistent entry point over pop-ups** — a tasteful, always-available subscribe button (plus subscribe/manage in Settings). Pop-ups train users to dismiss.
+- **Trigger the offer at moments of interest** — when the user taps locked content, not on a timer.
+- **Offer 3-4 duration tiers** so users self-select their commitment level.
+- **Let users experience value first** — free trial (works best for known brands), freemium, or content sampling (e.g., N free articles per month).
+
 ## Pre-Generation Checks
 
 ### 1. Project Context Detection
@@ -37,11 +47,11 @@ If found, ask user:
 
 ## Apple Docs Reference
 
-**Latest StoreKit Updates (iOS 18.4+):**
+**StoreKit subscription APIs (iOS 18.4+):**
 
 - `SubscriptionOfferView` - New SwiftUI view for merchandising subscriptions
 - `subscriptionStatusTask` modifier for tracking subscription state
-- `Transaction.currentEntitlements(for:)` - New API for entitlements
+- `Transaction.currentEntitlements(for:)` - per-product entitlement check (iOS 18.4+)
 - `RenewalInfo` enhancements for expiration reasons
 
 ## Configuration Questions
@@ -120,7 +130,7 @@ Sources/Store/
 └── Views/
     ├── PaywallView.swift        # Full paywall screen
     ├── SubscriptionButton.swift # Plan selection button
-    └── SubscriptionOfferCard.swift # New iOS 18.4+ view
+    └── SubscriptionOfferCard.swift # iOS 18.4+ view
 ```
 
 ### Integration Steps
@@ -166,7 +176,7 @@ struct ContentView: View {
 }
 ```
 
-**New iOS 18.4+ SubscriptionOfferView:**
+**SubscriptionOfferView (iOS 18.4+):**
 
 ```swift
 // Simple merchandising view

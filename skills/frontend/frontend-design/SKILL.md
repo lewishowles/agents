@@ -3,6 +3,7 @@ name: frontend-design
 description: >
   Use this skill before public-facing UI where visual quality or brand distinctiveness matters. Covers typography, colour, surfaces, icons, motion, and composition. Distinct from accessibility and web-performance.
 ---
+
 # Frontend design
 
 Before UI code, establish design direction. Aesthetic decisions are cheap upfront; mismatched typography and colour are expensive after implementation.

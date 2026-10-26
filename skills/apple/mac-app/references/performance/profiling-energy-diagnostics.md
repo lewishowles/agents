@@ -1,11 +1,13 @@
 # Profiling: Energy diagnostics
 
 <a id="source-performance-profiling-energy-diagnostics-md"></a>
+
 ## Source: `performance/profiling/energy-diagnostics.md`
 
 # Energy Diagnostics
 
 ## Why Energy Matters
+
 - Battery drain is the #1 reason users delete apps
 - Excessive energy use triggers **App Store review flags**
 - iOS throttles apps with high energy impact in the background
@@ -14,30 +16,33 @@
 ## Energy Impact Instrument
 
 ### Setup
+
 1. **Xcode > Product > Profile** (Cmd+I)
 2. Choose **Energy Log** template (iOS) or **Activity Monitor** template (macOS)
 3. Record on **physical device** (energy profiling requires real hardware)
 4. Reproduce typical usage patterns
 
 ### Reading the Energy Log
+
 The Energy Impact gauge shows a composite score:
 
-| Level | Score | Meaning |
-|-------|-------|---------|
-| Low | 0-3 | Good — minimal battery drain |
-| Medium | 3-8 | Acceptable for active use, not idle |
-| High | 8+ | Investigate — significant drain |
-| Overhead | Red bar | System overhead from your app |
+| Level    | Score   | Meaning                             |
+| -------- | ------- | ----------------------------------- |
+| Low      | 0-3     | Good — minimal battery drain        |
+| Medium   | 3-8     | Acceptable for active use, not idle |
+| High     | 8+      | Investigate — significant drain     |
+| Overhead | Red bar | System overhead from your app       |
 
 ### Component Breakdown
-| Component | What It Measures |
-|-----------|-----------------|
-| CPU | Processing time (biggest energy consumer) |
-| GPU | Graphics rendering, Metal, animations |
-| Network | Radio usage (cellular is most expensive) |
-| Location | GPS, Wi-Fi, cell tower ranging |
-| Display | Screen brightness influence (indirect) |
-| Overhead | System services your app triggers |
+
+| Component | What It Measures                          |
+| --------- | ----------------------------------------- |
+| CPU       | Processing time (biggest energy consumer) |
+| GPU       | Graphics rendering, Metal, animations     |
+| Network   | Radio usage (cellular is most expensive)  |
+| Location  | GPS, Wi-Fi, cell tower ranging            |
+| Display   | Screen brightness influence (indirect)    |
+| Overhead  | System services your app triggers         |
 
 ## Power Profiler Instrument (WWDC25 226)
 
@@ -341,6 +346,7 @@ func didReceive(_ payloads: [MXMetricPayload]) {
 ## Xcode Energy Organizer
 
 Access in **Xcode > Window > Organizer > Energy**:
+
 - Shows energy reports from **real users** via TestFlight and App Store
 - Breaks down by: CPU, Location, Display, Network, GPU, Accessories
 - Filter by app version to track regressions
@@ -348,46 +354,52 @@ Access in **Xcode > Window > Organizer > Energy**:
 
 ## The Energy Toolchain Ladder (WWDC25 226)
 
-| Stage | Tool |
-|-------|------|
+| Stage        | Tool                                                                                                                                                                                                       |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | While coding | Xcode **Energy Gauges** (instant feedback in the Debug navigator; can jump straight to Time Profiler, and the Location Energy Model verifies Core Location isn't running when it shouldn't — WWDC21 10181) |
-| Deep dive | Instruments **Power Profiler** (+ on-device Performance Trace for field conditions) |
-| CI | Automated **XCTests** to catch energy regressions early |
-| Post-ship | **Xcode Organizer** field reports, **MetricKit** battery metrics, **App Store Connect API** for dashboards |
+| Deep dive    | Instruments **Power Profiler** (+ on-device Performance Trace for field conditions)                                                                                                                        |
+| CI           | Automated **XCTests** to catch energy regressions early                                                                                                                                                    |
+| Post-ship    | **Xcode Organizer** field reports, **MetricKit** battery metrics, **App Store Connect API** for dashboards                                                                                                 |
 
 Expectation to hold your code to: CPU spikes are normal while drawing UI or processing data, but **once tasks complete and the app is waiting for user input, CPU should be at or near zero** (WWDC21 10181).
 
 ## Energy Optimization Checklist
 
 ### CPU
+
 - [ ] No polling timers without `tolerance` set
 - [ ] Background work uses `BGTaskScheduler`, not continuous timers
 - [ ] Heavy computation offloaded and cancellable
 - [ ] Idle state truly idle — no periodic wake-ups without reason
 
 ### Network
+
 - [ ] Requests batched when possible (single endpoint > multiple calls)
 - [ ] Reduced data on cellular (lower image quality, less prefetch)
 - [ ] No redundant requests (proper caching with `URLCache` / ETags)
 - [ ] Background uploads use `URLSession` background configuration
 
 ### Location
+
 - [ ] Accuracy matches actual need (`kCLLocationAccuracyKilometer` for weather)
 - [ ] `requestLocation()` for one-shot needs, not `startUpdatingLocation()`
 - [ ] `distanceFilter` set to avoid unnecessary updates
 - [ ] `pausesLocationUpdatesAutomatically = true` when appropriate
 
 ### GPU / Animations
+
 - [ ] Animations pause when app enters background
 - [ ] No offscreen rendering (shadow, cornerRadius + clipsToBounds)
 - [ ] Metal workloads respect thermal state
 - [ ] Continuous animations stop when not visible
 
 ### Thermal
+
 - [ ] App monitors `ProcessInfo.thermalState`
 - [ ] Graceful degradation at `.serious` and `.critical` states
 - [ ] Heavy features disabled proactively, not reactively
 
 ### Methodology
+
 - [ ] No expensive work re-run on high-frequency triggers (location updates, timers, scroll callbacks) — parse/compute once, cache
 - [ ] A/B implementation choices backed by averaged multi-run power profiles with controlled thermals/device/network, never a single run

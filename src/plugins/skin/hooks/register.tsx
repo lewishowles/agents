@@ -11,13 +11,19 @@ const toolCount = atom({ plugin: "skin", key: "toolCount" } as const, 0);
  * The tool count of each finished main turn, so older footers keep their own number. Footers carry no turn ID,
  * so turns are keyed by their length in milliseconds; two turns of exactly the same length share an entry.
  */
-const footerCounts = atom({ plugin: "skin", key: "footerCounts" } as const, {} as Record<string, number>);
+const footerCounts = atom(
+	{ plugin: "skin", key: "footerCounts" } as const,
+	{} as Record<string, number>,
+);
 
 /** The palette picked when the session started, or null until it has been picked. */
-const paletteName = atom({ plugin: "skin", key: "paletteName" } as const, null as "mocha" | "latte" | null);
+const paletteName = atom(
+	{ plugin: "skin", key: "paletteName" } as const,
+	null as "mocha" | "latte" | null,
+);
 
 /** Register the skin's reply, tool, and footer drawing. */
-export const register: Register = on => {
+export const register: Register = (on) => {
 	on("session.start", async ($, event, next) => {
 		const selected = await resolvePaletteName($);
 
@@ -34,7 +40,7 @@ export const register: Register = on => {
 
 	on("tool.call", async ($, event, next) => {
 		if (event.agentId === undefined) {
-			await update($, toolCount, count => count + 1);
+			await update($, toolCount, (count) => count + 1);
 		}
 
 		return next(event);
@@ -44,7 +50,7 @@ export const register: Register = on => {
 		if (event.agentId === undefined) {
 			const count = await read($, toolCount);
 
-			await update($, footerCounts, counts => ({ ...counts, [String(event.durationMs)]: count }));
+			await update($, footerCounts, (counts) => ({ ...counts, [String(event.durationMs)]: count }));
 		}
 
 		return next(event);
@@ -74,8 +80,19 @@ export const register: Register = on => {
 				content = <Markdown text={segment.text} />;
 			} else if (segment.kind === "card") {
 				content = (
-					<Box key={`card-${index}`} position="relative" borderStyle="round" borderColor={palette.accent} paddingX={1}>
-						<Box key={`card-title-${index}`} position="absolute" top={-1} left={2}><Text color={palette.accent} bold> Over to you </Text></Box>
+					<Box
+						key={`card-${index}`}
+						position="relative"
+						borderStyle="round"
+						borderColor={palette.accent}
+						paddingX={1}
+					>
+						<Box key={`card-title-${index}`} position="absolute" top={-1} left={2}>
+							<Text color={palette.accent} bold>
+								{" "}
+								Over to you{" "}
+							</Text>
+						</Box>
 						<Markdown text={segment.text} />
 					</Box>
 				);
@@ -84,18 +101,31 @@ export const register: Register = on => {
 					<Box flexDirection="column">
 						{tableLines(segment.rows, segment.widths).map((line, lineIndex) => {
 							if (line.kind === "border") {
-								return <Text key={lineIndex} color={palette.border}>{line.text}</Text>;
+								return (
+									<Text key={lineIndex} color={palette.border}>
+										{line.text}
+									</Text>
+								);
 							}
 
 							const cells = line.cells.map((cell, cellIndex) => {
 								const spans = cell.map((span, spanIndex) => (
-									<Text key={spanIndex} color={line.header || span.code ? palette.accent : undefined} bold={line.header || span.bold}>
+									<Text
+										key={spanIndex}
+										color={line.header || span.code ? palette.accent : undefined}
+										bold={line.header || span.bold}
+									>
 										{span.text}
 									</Text>
 								));
 								const divider = cellIndex < line.cells.length - 1 ? " │ " : " │";
 
-								return <Text key={cellIndex}>{spans}<Text color={palette.border}>{divider}</Text></Text>;
+								return (
+									<Text key={cellIndex}>
+										{spans}
+										<Text color={palette.border}>{divider}</Text>
+									</Text>
+								);
 							});
 
 							return (
@@ -109,7 +139,11 @@ export const register: Register = on => {
 				);
 			}
 
-			return <Box key={`segment-${index}`} flexDirection="column" marginTop={index > 0 ? 1 : 0}>{content}</Box>;
+			return (
+				<Box key={`segment-${index}`} flexDirection="column" marginTop={index > 0 ? 1 : 0}>
+					{content}
+				</Box>
+			);
 		});
 
 		return (
@@ -117,7 +151,9 @@ export const register: Register = on => {
 				<Box width={2} flexShrink={0}>
 					{event.props.isFirstOfReply && <Text>⏺ </Text>}
 				</Box>
-				<Box flexDirection="column" flexGrow={1}>{rows}</Box>
+				<Box flexDirection="column" flexGrow={1}>
+					{rows}
+				</Box>
 			</Box>
 		);
 	});
@@ -127,15 +163,24 @@ export const register: Register = on => {
 		const { Box, Text } = $.ui.resolve(event);
 		const palette = await activePalette($);
 		const { input, isErrored, isInterrupted, isRunning, tool } = event.props;
-		const fields = input !== null && typeof input === "object" ? input as Record<string, unknown> : {};
+		const fields =
+			input !== null && typeof input === "object" ? (input as Record<string, unknown>) : {};
 		const summary = toolSummary(fields);
-		const status = isRunning ? palette.running : isInterrupted ? palette.muted : isErrored ? palette.failed : palette.done;
+		const status = isRunning
+			? palette.running
+			: isInterrupted
+				? palette.muted
+				: isErrored
+					? palette.failed
+					: palette.done;
 
 		return (
 			<Box marginTop={1}>
 				<Text wrap="truncate-end">
 					<Text color={status}>●─ </Text>
-					<Text color={palette.accent} bold>{tool}</Text>
+					<Text color={palette.accent} bold>
+						{tool}
+					</Text>
 					{summary && <Text color={palette.muted}>{`  ${summary}`}</Text>}
 					{isInterrupted && <Text color={palette.muted}> interrupted</Text>}
 				</Text>
@@ -152,7 +197,11 @@ export const register: Register = on => {
 		const { Box } = $.ui.resolve(event);
 		const palette = await activePalette($);
 
-		return <Box borderStyle="round" borderColor={palette.border} paddingX={1}>{await next(event)}</Box>;
+		return (
+			<Box borderStyle="round" borderColor={palette.border} paddingX={1}>
+				{await next(event)}
+			</Box>
+		);
 	});
 
 	// Replaces the closing line of a turn with `◆ Done in <duration> · <N> tools`.
@@ -160,13 +209,15 @@ export const register: Register = on => {
 		const { Box, Text } = $.ui.resolve(event);
 		const palette = await activePalette($);
 		const counts = await read($, footerCounts);
-		const count = counts[String(event.props.durationMs)] ?? await read($, toolCount);
+		const count = counts[String(event.props.durationMs)] ?? (await read($, toolCount));
 		const tools = count === 1 ? "tool" : "tools";
 
 		return (
 			<Box marginTop={1}>
 				<Text color={palette.accent}>◆ </Text>
-				<Text color={palette.muted}>{`Done in ${formatDuration(event.props.durationMs)} · ${count} ${tools}`}</Text>
+				<Text
+					color={palette.muted}
+				>{`Done in ${formatDuration(event.props.durationMs)} · ${count} ${tools}`}</Text>
 			</Box>
 		);
 	});
@@ -180,7 +231,16 @@ export const register: Register = on => {
  *     The tool call's input. Returns an empty string when none of the fields is a non-empty string.
  */
 function toolSummary(fields: Record<string, unknown>): string {
-	for (const key of ["command", "file_path", "notebook_path", "path", "pattern", "query", "url", "description"]) {
+	for (const key of [
+		"command",
+		"file_path",
+		"notebook_path",
+		"path",
+		"pattern",
+		"query",
+		"url",
+		"description",
+	]) {
 		const value = fields[key];
 
 		if (typeof value === "string" && value.trim()) {
@@ -228,7 +288,7 @@ async function activePalette($: EngineInterface) {
  *     The engine for the current hook.
  */
 async function resolvePaletteName($: EngineInterface): Promise<"mocha" | "latte"> {
-	const theme = (await $.config.list()).find(row => row.key === "theme")?.value;
+	const theme = (await $.config.list()).find((row) => row.key === "theme")?.value;
 	const colourHint = await $.env.get("COLORFGBG");
 
 	return paletteFor(theme, colourHint) === palettes.latte ? "latte" : "mocha";

@@ -5,6 +5,7 @@ Generate complete In-App Event metadata ready for App Store Connect upload, incl
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Asks to "create in-app events" or "add App Store events"
 - Mentions "event cards" or "App Store event metadata"
 - Wants to create seasonal campaigns or challenges on the App Store
@@ -14,6 +15,7 @@ Use this skill when the user:
 ## How In-App Events Work
 
 In-App Events appear on:
+
 - Your product page (up to 5 events visible)
 - Search results (when relevant to search term)
 - Editorial features and collections
@@ -50,6 +52,7 @@ Ask user via AskUserQuestion:
 ### Step 1: Gather Event Details
 
 For each event, collect:
+
 - Event concept and theme
 - Start and end dates
 - Target audience (new users, existing users, lapsed users)
@@ -58,6 +61,7 @@ For each event, collect:
 ### Step 2: Generate Metadata
 
 For each event, produce:
+
 1. **Event Reference Name** (internal, not shown to users)
 2. **Event Badge** (one of the 7 badge types)
 3. **Event Name** (30 characters max, shown on event card)
@@ -69,6 +73,7 @@ For each event, produce:
 ### Step 3: Generate Image Specs
 
 Provide exact image specifications for event cards:
+
 - **Event Card Image**: 1080 x 1920 pixels (portrait) or 1920 x 1080 (landscape)
 - **Format**: PNG or JPEG
 - **Safe zones**: Keep critical content within center 80%
@@ -79,31 +84,34 @@ Write a markdown document with all metadata ready for copy/paste into App Store 
 
 ## Event Badge Reference
 
-| Badge | Use For | Examples |
-|-------|---------|---------|
-| **Challenge** | Goal-based activities users can complete | "30-Day Fitness Challenge", "Photography Week" |
-| **Competition** | Ranked or scored events against other users | "Weekly Leaderboard", "Speed Run Contest" |
-| **Live Event** | Real-time events at a specific time | "Live Q&A with Creator", "Launch Party" |
-| **Special Event** | Limited-time features, offers, or content | "Holiday Collection", "Anniversary Sale" |
-| **Major Update** | Significant new app version | "Version 3.0 — Complete Redesign" |
-| **New Season** | Seasonal content refreshes | "Winter Season", "Chapter 3" |
-| **Premiere** | First-time content or feature debut | "Introducing Dark Mode", "New Game Mode" |
+| Badge             | Use For                                     | Examples                                       |
+| ----------------- | ------------------------------------------- | ---------------------------------------------- |
+| **Challenge**     | Goal-based activities users can complete    | "30-Day Fitness Challenge", "Photography Week" |
+| **Competition**   | Ranked or scored events against other users | "Weekly Leaderboard", "Speed Run Contest"      |
+| **Live Event**    | Real-time events at a specific time         | "Live Q&A with Creator", "Launch Party"        |
+| **Special Event** | Limited-time features, offers, or content   | "Holiday Collection", "Anniversary Sale"       |
+| **Major Update**  | Significant new app version                 | "Version 3.0 — Complete Redesign"              |
+| **New Season**    | Seasonal content refreshes                  | "Winter Season", "Chapter 3"                   |
+| **Premiere**      | First-time content or feature debut         | "Introducing Dark Mode", "New Game Mode"       |
 
 ## Metadata Best Practices
 
 ### Event Name (30 chars)
+
 - **DO**: Use action-oriented language ("Join the Challenge", "Explore New Features")
 - **DO**: Include time urgency ("This Week Only", "24-Hour Event")
 - **DON'T**: Use generic names ("Special Event", "Update")
 - **DON'T**: Include app name (it's already shown)
 
 ### Short Description (50 chars)
+
 - **DO**: Explain the core value or action
 - **DO**: Create urgency or excitement
 - **DON'T**: Repeat the event name
 - **DON'T**: Use marketing fluff
 
 ### Long Description (120 chars)
+
 - **DO**: Provide specific details about what users will experience
 - **DO**: Include clear call to action
 - **DON'T**: List features — describe the experience

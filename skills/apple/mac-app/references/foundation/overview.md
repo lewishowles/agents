@@ -1,6 +1,7 @@
 # Foundation overview
 
 <a id="source-foundation-skill-md"></a>
+
 ## Source: `foundation/SKILL.md`
 
 # Foundation Skills
@@ -10,6 +11,7 @@ Foundation framework patterns for Apple platforms.
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Works with **AttributedString** (formatting, attributes, runs)
 - Needs **rich text** alignment, selection, or styling logic
 - Integrates attributed text with **SwiftUI**
@@ -18,8 +20,8 @@ Use this skill when the user:
 
 The links below point to this skill's local references.
 
-| Skill | Read | Covers |
-|-------|------|--------|
+| Skill             | Read                                       | Covers                                                                 |
+| ----------------- | ------------------------------------------ | ---------------------------------------------------------------------- |
 | attributed-string | [Attributed strings](attributed-string.md) | AttributedString formatting, alignment, selection, SwiftUI integration |
 
 ## How to Route

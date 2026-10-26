@@ -1,6 +1,7 @@
 # SwiftData architecture: Repository pattern
 
 <a id="source-macos-swiftdata-architecture-repository-pattern-md"></a>
+
 ## Source: `macos/swiftdata-architecture/repository-pattern.md`
 
 # Repository Pattern with SwiftData
@@ -9,12 +10,12 @@ Protocol-based data abstraction for testable, flexible data access. The reposito
 
 ## Why Use a Repository
 
-| Without Repository | With Repository |
-|-------------------|-----------------|
-| ViewModel talks directly to ModelContext | ViewModel talks to a protocol |
-| Can't unit test without SwiftData | Can test with mock/in-memory implementations |
-| Locked to SwiftData | Can swap to Core Data, network, or file-based storage |
-| ModelContext leaks into view layer | Clean separation of concerns |
+| Without Repository                       | With Repository                                       |
+| ---------------------------------------- | ----------------------------------------------------- |
+| ViewModel talks directly to ModelContext | ViewModel talks to a protocol                         |
+| Can't unit test without SwiftData        | Can test with mock/in-memory implementations          |
+| Locked to SwiftData                      | Can swap to Core Data, network, or file-based storage |
+| ModelContext leaks into view layer       | Clean separation of concerns                          |
 
 ## Basic Repository Protocol
 
@@ -361,12 +362,14 @@ import Testing
 ## When to Use (and Not Use) Repository Pattern
 
 ### Use When
+
 - You need unit-testable ViewModels
 - You might swap data sources (SwiftData, network, file)
 - Multiple ViewModels access the same data
 - You want to add caching or transformation layers
 
 ### Skip When
+
 - Simple CRUD app with 1-2 screens
 - @Query in views is sufficient
 - You won't write tests for the data layer

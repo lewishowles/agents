@@ -1,6 +1,7 @@
 # TDD refactor guard
 
 <a id="source-testing-tdd-refactor-guard-skill-md"></a>
+
 ## Source: `testing/tdd-refactor-guard/SKILL.md`
 
 # TDD Refactor Guard
@@ -10,6 +11,7 @@ A safety gate that runs before any AI-assisted refactoring. Ensures tests exist 
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Says "refactor this" or "clean this up"
 - Wants AI to "restructure" or "reorganize" code
 - Asks to "extract", "inline", "rename", or "simplify" existing code
@@ -38,12 +40,14 @@ Ask user: "Which files/classes are you planning to refactor?"
 ```
 
 Or detect from context:
+
 ```
 Glob: [files mentioned in conversation]
 Read: each file to understand scope
 ```
 
 Determine:
+
 - [ ] Files involved
 - [ ] Public API surface (methods, properties)
 - [ ] Dependencies (what calls this code, what it calls)
@@ -58,12 +62,12 @@ Grep: "@Test|func test" that reference the classes being refactored
 
 #### Coverage Assessment
 
-| Level | Criteria | Action |
-|-------|----------|--------|
-| Good (> 80%) | Most public methods have tests for happy + error paths | Proceed with refactoring |
-| Partial (40-80%) | Some methods tested, missing edge cases | Add characterization tests for uncovered methods |
-| Minimal (< 40%) | Few or no tests | Generate full characterization test suite first |
-| None (0%) | No test file exists | STOP — create characterization tests before any refactoring |
+| Level            | Criteria                                               | Action                                                      |
+| ---------------- | ------------------------------------------------------ | ----------------------------------------------------------- |
+| Good (> 80%)     | Most public methods have tests for happy + error paths | Proceed with refactoring                                    |
+| Partial (40-80%) | Some methods tested, missing edge cases                | Add characterization tests for uncovered methods            |
+| Minimal (< 40%)  | Few or no tests                                        | Generate full characterization test suite first             |
+| None (0%)        | No test file exists                                    | STOP — create characterization tests before any refactoring |
 
 ### Step 3: Evaluate Test Quality
 
@@ -97,6 +101,7 @@ func testLoadsItems() async {
 ```
 
 **Quality checklist:**
+
 - [ ] Tests verify **outputs/state**, not implementation details
 - [ ] Both happy path and error paths covered
 - [ ] Edge cases (empty, nil, boundary) tested
@@ -189,6 +194,7 @@ xcodebuild test -scheme YourApp \
 ### Safe Refactorings (Low Risk)
 
 These typically don't change behavior:
+
 - Rename variable/method/type
 - Extract method/function
 - Inline temporary variable
@@ -198,6 +204,7 @@ These typically don't change behavior:
 ### Risky Refactorings (Need Good Coverage)
 
 These can change behavior:
+
 - Change method signature
 - Reorder operations
 - Replace algorithm
@@ -209,6 +216,7 @@ These can change behavior:
 ### Migration Refactorings (Need Comprehensive Coverage)
 
 Full contract tests recommended:
+
 - Architecture change (MVC → MVVM)
 - Framework migration (UIKit → SwiftUI)
 - Storage migration (UserDefaults → SwiftData)
@@ -241,4 +249,4 @@ Full contract tests recommended:
 
 - `characterization-test-generator.md` — generates tests this guard may require
 - `tdd-feature.md` — for building new code during refactor
-- Martin Fowler, *Refactoring: Improving the Design of Existing Code*
+- Martin Fowler, _Refactoring: Improving the Design of Existing Code_

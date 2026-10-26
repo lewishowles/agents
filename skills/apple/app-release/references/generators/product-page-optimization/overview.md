@@ -5,6 +5,7 @@ Create structured A/B test plans for App Store Product Page Optimization (PPO), 
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Asks to "optimize product page" or "A/B test App Store page"
 - Mentions "product page optimization" or "PPO"
 - Wants to improve "App Store conversion rate"
@@ -21,20 +22,22 @@ Use this skill when the user:
 - Localization: Tests can run in specific localizations
 
 ### Important Limitations
+
 - Cannot test: app name, subtitle, description, keyword field, or price
 - One test at a time per localization
 - Results apply to organic App Store traffic only
 - Minimum traffic required for statistical significance
 
 ### Minimum Traffic Thresholds
+
 **PPO requires sufficient impression volume to produce meaningful results.** If the app doesn't meet these thresholds, skip A/B testing and make direct qualitative improvements instead.
 
-| Monthly Impressions | Can You PPO? | Recommendation |
-|--------------------|--------------|----|
-| **Under 1,000** | No | Don't bother — tests will never reach significance. Apply screenshot best practices directly. |
-| **1,000-5,000** | Barely | Test ONE element at a time with only 1 variant (A/B, not A/B/C). Expect 4-8 week test cycles. |
-| **5,000-20,000** | Yes | Standard testing. Run 2 variants per test, 2-4 week cycles. |
-| **20,000+** | Aggressively | Test 3 variants, rapid iteration. Can test icon + screenshots sequentially. |
+| Monthly Impressions | Can You PPO? | Recommendation                                                                                |
+| ------------------- | ------------ | --------------------------------------------------------------------------------------------- |
+| **Under 1,000**     | No           | Don't bother — tests will never reach significance. Apply screenshot best practices directly. |
+| **1,000-5,000**     | Barely       | Test ONE element at a time with only 1 variant (A/B, not A/B/C). Expect 4-8 week test cycles. |
+| **5,000-20,000**    | Yes          | Standard testing. Run 2 variants per test, 2-4 week cycles.                                   |
+| **20,000+**         | Aggressively | Test 3 variants, rapid iteration. Can test icon + screenshots sequentially.                   |
 
 **If below threshold:** Focus on qualitative improvements (follow the Quick Win Checklist in the output) rather than running inconclusive A/B tests.
 
@@ -65,6 +68,7 @@ Ask user via AskUserQuestion:
 ### Step 1: Audit Current Page
 
 Review the existing product page:
+
 - Current screenshot sequence and messaging
 - Icon design and distinctiveness
 - App preview presence and quality
@@ -73,6 +77,7 @@ Review the existing product page:
 ### Step 2: Generate Test Plan
 
 Produce a structured test plan with:
+
 - Hypothesis for each test
 - Variant descriptions
 - Expected impact
@@ -81,6 +86,7 @@ Produce a structured test plan with:
 ### Step 3: Design Variant Specs
 
 For each variant, specify:
+
 - What changes from control
 - Design direction and mockup description
 - Why this variant might outperform
@@ -154,38 +160,41 @@ While waiting for PPO results, implement these proven improvements:
 ## Common Test Ideas
 
 ### Icon Tests
-| Test | Control | Variant | Expected Impact |
-|------|---------|---------|----------------|
-| Color | Current color | Contrasting color | Higher tap-through from search |
-| Style | 3D/detailed | Flat/minimal | Modernized perception |
-| Element | Full logo | Key symbol only | Better small-size recognition |
-| Background | Solid | Gradient | Shelf standout |
+
+| Test       | Control       | Variant           | Expected Impact                |
+| ---------- | ------------- | ----------------- | ------------------------------ |
+| Color      | Current color | Contrasting color | Higher tap-through from search |
+| Style      | 3D/detailed   | Flat/minimal      | Modernized perception          |
+| Element    | Full logo     | Key symbol only   | Better small-size recognition  |
+| Background | Solid         | Gradient          | Shelf standout                 |
 
 ### Screenshot Tests
-| Test | Control | Variant | Expected Impact |
-|------|---------|---------|----------------|
-| First screenshot | Feature-focused | Benefit-focused | Higher engagement |
-| Layout | Device frames | Full-bleed | More immersive |
-| Text | Feature names | User outcomes | Stronger conversion |
-| Order | Standard flow | Problem→Solution | Better storytelling |
-| Social proof | None | Reviews/awards | Trust building |
+
+| Test             | Control         | Variant          | Expected Impact     |
+| ---------------- | --------------- | ---------------- | ------------------- |
+| First screenshot | Feature-focused | Benefit-focused  | Higher engagement   |
+| Layout           | Device frames   | Full-bleed       | More immersive      |
+| Text             | Feature names   | User outcomes    | Stronger conversion |
+| Order            | Standard flow   | Problem→Solution | Better storytelling |
+| Social proof     | None            | Reviews/awards   | Trust building      |
 
 ### App Preview Tests
-| Test | Control | Variant | Expected Impact |
-|------|---------|---------|----------------|
-| Hook | Slow intro | Immediate action | Higher watch-through |
-| Length | 30 seconds | 15 seconds | Less drop-off |
-| Style | Screen recording | Lifestyle + UI | Emotional connection |
+
+| Test   | Control          | Variant          | Expected Impact      |
+| ------ | ---------------- | ---------------- | -------------------- |
+| Hook   | Slow intro       | Immediate action | Higher watch-through |
+| Length | 30 seconds       | 15 seconds       | Less drop-off        |
+| Style  | Screen recording | Lifestyle + UI   | Emotional connection |
 
 ## Seasonal Optimization Calendar
 
-| Season | Focus | Screenshot Refresh |
-|--------|-------|-------------------|
-| Jan | New Year energy, fresh starts | Resolution-themed captions |
-| Mar-Apr | Spring cleaning, organization | Productivity-focused |
-| Jun | WWDC, new OS features | "Updated for iOS [X]" |
-| Aug-Sep | Back to school | Student/education focus |
-| Nov-Dec | Holiday, gift-giving | Gift-worthy messaging |
+| Season  | Focus                         | Screenshot Refresh         |
+| ------- | ----------------------------- | -------------------------- |
+| Jan     | New Year energy, fresh starts | Resolution-themed captions |
+| Mar-Apr | Spring cleaning, organization | Productivity-focused       |
+| Jun     | WWDC, new OS features         | "Updated for iOS [X]"      |
+| Aug-Sep | Back to school                | Student/education focus    |
+| Nov-Dec | Holiday, gift-giving          | Gift-worthy messaging      |
 
 ## References
 

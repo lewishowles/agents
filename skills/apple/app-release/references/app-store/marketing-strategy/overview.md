@@ -5,6 +5,7 @@ Analyzes your app's type, monetization model, audience, and lifecycle stage, the
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Asks "how should I market my app?" or "what App Store features should I use?"
 - Wants a promotional strategy for launch, growth, or re-engagement
 - Mentions "App Store promotion", "user acquisition", or "app marketing"
@@ -20,11 +21,13 @@ Use this skill when the user:
 Gather information via AskUserQuestion:
 
 **1. App Identity**
+
 - App name and one-line description
 - App Store category (primary + secondary)
 - Platform(s): iOS, macOS, iPadOS, watchOS, visionOS
 
 **2. Monetization Model**
+
 - Free (ad-supported)
 - Freemium (free + IAP/subscription)
 - Paid upfront
@@ -32,11 +35,13 @@ Gather information via AskUserQuestion:
 - Free (no monetization yet)
 
 **3. Target Audience**
+
 - Primary demographic (age, role, context)
 - Secondary audience (if any)
 - Geographic focus
 
 **4. Lifecycle Stage**
+
 - Pre-launch (building / TestFlight)
 - Launch (first 30 days)
 - Growth (active, adding users)
@@ -44,6 +49,7 @@ Gather information via AskUserQuestion:
 - Re-engagement (declining, need to win back users)
 
 **5. Current State**
+
 - Monthly active users (approximate)
 - Existing promotional features already configured
 - Upcoming updates or milestones
@@ -54,6 +60,7 @@ Gather information via AskUserQuestion:
 Read [**decision-matrix.md**](decision-matrix.md) to map the app profile to recommended features.
 
 The decision matrix evaluates these dimensions:
+
 - Monetization model → Which offer types apply
 - Lifecycle stage → Which tactics are highest priority
 - App category → Which featuring angles work
@@ -67,6 +74,7 @@ Not every feature makes sense at every scale. The decision matrix (Dimension 6) 
 ### Phase 3: Strategy Generation
 
 Based on the analysis, read the appropriate strategy template:
+
 - [strategy-templates/subscription-app.md](strategy-templates/subscription-app.md) — For subscription-based apps
 - [strategy-templates/paid-app.md](strategy-templates/paid-app.md) — For paid upfront apps
 - [strategy-templates/freemium-app.md](strategy-templates/freemium-app.md) — For freemium with IAP
@@ -77,6 +85,7 @@ Customize the template with the app's specific details.
 ### Phase 4: Implementation Roadmap
 
 For each recommended feature, provide:
+
 1. **Priority** (High / Medium / Low)
 2. **Effort** (Quick win / Moderate / Significant)
 3. **Expected impact** on the primary goal (downloads, retention, revenue)
@@ -84,22 +93,23 @@ For each recommended feature, provide:
 
 #### Available Sub-Skills
 
-| Feature | Generator Skill | What It Produces |
-|---------|----------------|------------------|
-| Introductory/promotional offers | `generators/subscription-offers` | StoreKit 2 offer code + eligibility |
-| Win-back campaigns | `generators/win-back-offers` | Win-back flow + Message API handling |
-| Promoted IAP on product page | `generators/promoted-iap` | StoreKit 2 promoted purchase setup |
-| In-App Events | `generators/in-app-events` | Event metadata + image specs |
-| Custom Product Pages | `generators/custom-product-pages` | Page metadata + screenshot strategy |
-| Product Page Optimization | `generators/product-page-optimization` | A/B test plan + optimization checklist |
-| App Store featuring | `generators/featuring-nomination` | Nomination form + pitch template |
-| Offer codes distribution | `generators/offer-codes-setup` | Distribution strategy + configuration |
-| Pre-launch / pre-orders | `generators/pre-orders` | Pre-order setup + launch timeline |
-| Promotional assets | `generators/app-store-assets` | Asset specs + guidelines |
+| Feature                         | Generator Skill                        | What It Produces                       |
+| ------------------------------- | -------------------------------------- | -------------------------------------- |
+| Introductory/promotional offers | `generators/subscription-offers`       | StoreKit 2 offer code + eligibility    |
+| Win-back campaigns              | `generators/win-back-offers`           | Win-back flow + Message API handling   |
+| Promoted IAP on product page    | `generators/promoted-iap`              | StoreKit 2 promoted purchase setup     |
+| In-App Events                   | `generators/in-app-events`             | Event metadata + image specs           |
+| Custom Product Pages            | `generators/custom-product-pages`      | Page metadata + screenshot strategy    |
+| Product Page Optimization       | `generators/product-page-optimization` | A/B test plan + optimization checklist |
+| App Store featuring             | `generators/featuring-nomination`      | Nomination form + pitch template       |
+| Offer codes distribution        | `generators/offer-codes-setup`         | Distribution strategy + configuration  |
+| Pre-launch / pre-orders         | `generators/pre-orders`                | Pre-order setup + launch timeline      |
+| Promotional assets              | `generators/app-store-assets`          | Asset specs + guidelines               |
 
 ### Phase 5: Timeline & Calendar
 
 Build a promotional calendar based on:
+
 - App launch date or next update
 - Seasonal opportunities (back to school, holidays, New Year)
 - Apple events (WWDC, iPhone launch, etc.)
@@ -181,8 +191,10 @@ Present the strategy as:
 ## Strategy Examples
 
 ### Example: Speech Therapy App (Subscription, Growth Stage)
+
 **Profile**: Blow Quest, freemium + subscription, targeting parents of kids in speech therapy
 **Recommended**:
+
 - 🔴 In-App Events → Weekly breath challenges to drive engagement
 - 🔴 Custom Product Pages → One for parents, one for SLPs (speech-language pathologists)
 - 🟠 Win-Back Offers → Re-engage churned subscribers with 50% off
@@ -191,8 +203,10 @@ Present the strategy as:
 - 🟢 Offer Codes → Partner with SLP clinics for distribution
 
 ### Example: Watch Meditation App (Subscription, Launch Stage)
+
 **Profile**: ChantFlow, Apple Watch, paid + subscription, meditation
 **Recommended**:
+
 - 🔴 Introductory Offer → 7-day free trial for subscription
 - 🔴 App Store Assets → watchOS screenshots + short-form video
 - 🟠 Product Page Optimization → A/B test meditation vs. mindfulness positioning
@@ -201,8 +215,10 @@ Present the strategy as:
 - 🟢 In-App Events → Monthly meditation challenges
 
 ### Example: Productivity App (Freemium, Mature Stage)
+
 **Profile**: TaskFlow, freemium with premium unlock, 50K MAU, stable
 **Recommended**:
+
 - 🔴 Win-Back Offers → Re-engage lapsed premium users
 - 🔴 Product Page Optimization → Test benefit-led vs. feature-led screenshots
 - 🟠 Custom Product Pages → Pages for students, freelancers, teams

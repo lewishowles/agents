@@ -37,13 +37,16 @@ Before writing, ask about:
 Generate all three text types:
 
 ### 1. Promotional Text (170 characters)
+
 - First thing users see
 - Should create curiosity or urgency
 - Can be updated without app review
 - Good for seasonal/sale messaging
 
 ### 2. Full Description (4000 characters max)
+
 Structure:
+
 ```
 [Opening Hook - 1-2 sentences, problem/benefit focused]
 
@@ -62,7 +65,9 @@ Structure:
 ```
 
 ### 3. What's New (4000 characters)
+
 For updates:
+
 ```
 [Version X.X highlights]
 
@@ -81,6 +86,7 @@ Thank you for your feedback!
 ## Best Practices
 
 ### Do's
+
 - Lead with the biggest benefit
 - Use short paragraphs (2-3 lines max)
 - Include relevant keywords naturally
@@ -89,6 +95,7 @@ Thank you for your feedback!
 - Mention if there's a free trial/tier
 
 ### Don'ts
+
 - Don't start with "Welcome to..."
 - Don't use ALL CAPS excessively
 - Don't mention prices (they change)
@@ -101,16 +108,19 @@ Thank you for your feedback!
 ### Promotional Text Examples
 
 **Productivity App:**
+
 ```
 Transform chaos into clarity. The task manager that adapts to how YOU work.
 ```
 
 **Weather App:**
+
 ```
 Know before you go. Hyperlocal forecasts down to your street corner. ⛅️
 ```
 
 **Finance App:**
+
 ```
 Your money, finally making sense. Budgeting that doesn't feel like homework.
 ```
@@ -118,18 +128,21 @@ Your money, finally making sense. Budgeting that doesn't feel like homework.
 ### Description Opening Examples
 
 **Problem-First:**
+
 ```
 Tired of losing track of important tasks? [App] turns your scattered thoughts
 into organized action plans in seconds.
 ```
 
 **Benefit-First:**
+
 ```
 Capture ideas the moment they strike. [App] is the fastest way to go from
 thought to organized note, anywhere.
 ```
 
 **Curiosity-First:**
+
 ```
 What if your to-do list actually helped you get things done? Introducing
 a smarter way to manage your day.
@@ -138,6 +151,7 @@ a smarter way to manage your day.
 ## Localization Tips
 
 When localizing descriptions:
+
 - Don't just translate—adapt to cultural context
 - Research local competitors' descriptions
 - Adjust feature emphasis by market
@@ -146,18 +160,19 @@ When localizing descriptions:
 
 ## Character Limits Reference
 
-| Field | Limit |
-|-------|-------|
-| App Name | 30 characters |
-| Subtitle | 30 characters |
-| Promotional Text | 170 characters |
-| Description | 4000 characters |
-| What's New | 4000 characters |
-| Keywords | 100 characters |
+| Field            | Limit           |
+| ---------------- | --------------- |
+| App Name         | 30 characters   |
+| Subtitle         | 30 characters   |
+| Promotional Text | 170 characters  |
+| Description      | 4000 characters |
+| What's New       | 4000 characters |
+| Keywords         | 100 characters  |
 
 ## Templates
 
 ### Template: Utility App
+
 ```
 [One-line value proposition]
 
@@ -188,6 +203,7 @@ Questions? We're here to help: [support email]
 ```
 
 ### Template: Creative App
+
 ```
 [Evocative opening that sparks imagination]
 
@@ -214,6 +230,7 @@ Join [X] creators already using [App Name].
 ```
 
 ### Template: What's New
+
 ```
 Thanks for using [App Name]! Here's what's new in version X.X:
 

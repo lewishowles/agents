@@ -7,6 +7,7 @@
 - [WebView basics](webkit-webview-basics.md) (upstream `webview-basics.md`)
 
 <a id="source-swiftui-webkit-skill-md"></a>
+
 ## Source: `swiftui/webkit/SKILL.md`
 
 # WebKit Integration for SwiftUI
@@ -55,15 +56,15 @@ What do you need?
 
 ## API Availability
 
-| API | Minimum OS | Import |
-|-----|-----------|--------|
-| `WebView` | iOS 26 / macOS 26 | `SwiftUI` + `WebKit` |
-| `WebPage` | iOS 26 / macOS 26 | `WebKit` |
-| `WebPage.Configuration` | iOS 26 / macOS 26 | `WebKit` |
-| `NavigationDeciding` | iOS 26 / macOS 26 | `WebKit` |
-| `WKContentWorld` | iOS 14 / macOS 11 | `WebKit` |
-| `WKSnapshotConfiguration` | iOS 11 / macOS 10.13 | `WebKit` |
-| `WKPDFConfiguration` | iOS 14 / macOS 11 | `WebKit` |
+| API                       | Minimum OS           | Import               |
+| ------------------------- | -------------------- | -------------------- |
+| `WebView`                 | iOS 26 / macOS 26    | `SwiftUI` + `WebKit` |
+| `WebPage`                 | iOS 26 / macOS 26    | `WebKit`             |
+| `WebPage.Configuration`   | iOS 26 / macOS 26    | `WebKit`             |
+| `NavigationDeciding`      | iOS 26 / macOS 26    | `WebKit`             |
+| `WKContentWorld`          | iOS 14 / macOS 11    | `WebKit`             |
+| `WKSnapshotConfiguration` | iOS 11 / macOS 10.13 | `WebKit`             |
+| `WKPDFConfiguration`      | iOS 14 / macOS 11    | `WebKit`             |
 
 ## Quick Start
 
@@ -100,15 +101,15 @@ struct ControlledBrowserView: View {
 
 ## Top Mistakes
 
-| Mistake | Problem | Fix |
-|---------|---------|-----|
-| Using `WebView(url:)` when you need navigation control | No access to back/forward, reload, or events | Use `WebPage` + `WebView(page)` |
-| Forgetting `import WebKit` alongside `import SwiftUI` | `WebView` is in SwiftUI but `WebPage` requires WebKit | Always import both |
-| Not observing `currentNavigationEvent` | Missing loading states, errors go unnoticed | Use `onChange(of: page.currentNavigationEvent)` |
-| Calling `callJavaScript` before page finishes loading | Script fails because DOM is not ready | Wait for `.finished` navigation event |
-| Using persistent data store for private browsing | User data is saved to disk | Use `.nonPersistent()` on `WebsiteDataStore` |
-| Not handling `nil` return from `decidePolicyFor(navigationAction:)` | Navigation proceeds when it should be cancelled | Return `nil` to cancel, return `NavigationPreferences` to allow |
-| Passing JavaScript without argument binding | Vulnerable to injection, hard to debug | Use `arguments:` parameter for named values |
+| Mistake                                                             | Problem                                               | Fix                                                             |
+| ------------------------------------------------------------------- | ----------------------------------------------------- | --------------------------------------------------------------- |
+| Using `WebView(url:)` when you need navigation control              | No access to back/forward, reload, or events          | Use `WebPage` + `WebView(page)`                                 |
+| Forgetting `import WebKit` alongside `import SwiftUI`               | `WebView` is in SwiftUI but `WebPage` requires WebKit | Always import both                                              |
+| Not observing `currentNavigationEvent`                              | Missing loading states, errors go unnoticed           | Use `onChange(of: page.currentNavigationEvent)`                 |
+| Calling `callJavaScript` before page finishes loading               | Script fails because DOM is not ready                 | Wait for `.finished` navigation event                           |
+| Using persistent data store for private browsing                    | User data is saved to disk                            | Use `.nonPersistent()` on `WebsiteDataStore`                    |
+| Not handling `nil` return from `decidePolicyFor(navigationAction:)` | Navigation proceeds when it should be cancelled       | Return `nil` to cancel, return `NavigationPreferences` to allow |
+| Passing JavaScript without argument binding                         | Vulnerable to injection, hard to debug                | Use `arguments:` parameter for named values                     |
 
 ## Review Checklist
 
@@ -126,11 +127,11 @@ struct ControlledBrowserView: View {
 
 ## Reference Files
 
-| File | Contents |
-|------|----------|
-| `webview-basics.md` | WebView creation, WebPage setup, configuration, find-in-page, customization modifiers |
-| `navigation.md` | Loading content, back/forward list, navigation events, NavigationDeciding protocol |
-| `javascript-advanced.md` | JavaScript execution, content worlds, snapshots, PDF export, custom URL schemes |
+| File                     | Contents                                                                              |
+| ------------------------ | ------------------------------------------------------------------------------------- |
+| `webview-basics.md`      | WebView creation, WebPage setup, configuration, find-in-page, customization modifiers |
+| `navigation.md`          | Loading content, back/forward list, navigation events, NavigationDeciding protocol    |
+| `javascript-advanced.md` | JavaScript execution, content worlds, snapshots, PDF export, custom URL schemes       |
 
 ## Cross-References
 

@@ -1,6 +1,7 @@
 # macOS Tahoe APIs
 
 <a id="source-macos-macos-tahoe-apis-skill-md"></a>
+
 ## Source: `macos/macos-tahoe-apis/SKILL.md`
 
 # macOS Tahoe APIs
@@ -46,6 +47,7 @@ Guide developers in using macOS 26 (Tahoe) specific features and APIs effectivel
 Begin by asking about the project's requirements and target macOS version.
 
 <a id="source-macos-macos-tahoe-apis-apple-intelligence-md"></a>
+
 ## Source: `macos/macos-tahoe-apis/apple-intelligence.md`
 
 # Apple Intelligence on macOS
@@ -95,6 +97,7 @@ case .unavailable(let reason):
 - [Foundation Models](../../../apple-frameworks/references/apple-intelligence/foundation-models.md) — the canonical reference
 
 <a id="source-macos-macos-tahoe-apis-continuity-md"></a>
+
 ## Source: `macos/macos-tahoe-apis/continuity.md`
 
 # Continuity Features
@@ -168,6 +171,7 @@ func application(_ application: NSApplication, open urls: [URL]) {
 - [Continuity Documentation](https://developer.apple.com/documentation/foundation/nsuseractivity)
 
 <a id="source-macos-macos-tahoe-apis-mlx-framework-md"></a>
+
 ## Source: `macos/macos-tahoe-apis/mlx-framework.md`
 
 # MLX Framework
@@ -229,6 +233,7 @@ func trainModel() async throws {
 - [M5 Neural Engine Guide](https://developer.apple.com/documentation/coreml)
 
 <a id="source-macos-macos-tahoe-apis-tahoe-features-md"></a>
+
 ## Source: `macos/macos-tahoe-apis/tahoe-features.md`
 
 # macOS Tahoe Features
@@ -485,6 +490,7 @@ func createHighPriorityReminder() async throws {
 - [WidgetKit Documentation](https://developer.apple.com/documentation/widgetkit)
 
 <a id="source-macos-macos-tahoe-apis-xcode16-md"></a>
+
 ## Source: `macos/macos-tahoe-apis/xcode16.md`
 
 # Xcode 16 Features

@@ -3,6 +3,7 @@ name: vue-pinia-colada
 description: >
   Use this skill when working with @pinia/colada for async data fetching and server state in Vue projects. TRIGGER when: code imports from `@pinia/colada`, uses `useQuery`, `useMutation`, `defineQuery`, `defineMutation`, `useQueryCache`, or `invalidateQueries`; when setting up async data fetching in a Vue project; when working in `src/queries/`.
 ---
+
 # Pinia Colada
 
 Pinia Colada manages Vue server state: caching, deduplication, background revalidation, and mutation coordination. It sits above fetch/API functions.

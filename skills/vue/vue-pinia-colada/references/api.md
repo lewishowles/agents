@@ -152,10 +152,10 @@ export const useContactSearch = defineQuery(() => {
 
 ## refresh() vs refetch()
 
-| Method | Behaviour |
-|--------|-----------|
+| Method      | Behaviour                                                                              |
+| ----------- | -------------------------------------------------------------------------------------- |
 | `refresh()` | Reuses any in-flight request; skips if data is still fresh (`staleTime`). Prefer this. |
-| `refetch()` | Always triggers a new network request regardless of cache state. |
+| `refetch()` | Always triggers a new network request regardless of cache state.                       |
 
 Pass `true` when the caller handles failures with `try/catch`:
 
@@ -165,9 +165,9 @@ await currentUser.refetch(true);
 
 ## State and status
 
-| Property | Values | What it tells you |
-|----------|--------|-------------------|
-| `state.status` | `'pending'` → `'success'` \| `'error'` | Whether data has ever resolved |
-| `asyncStatus` | `'idle'` \| `'loading'` | Whether a fetch is currently in progress |
+| Property       | Values                                 | What it tells you                        |
+| -------------- | -------------------------------------- | ---------------------------------------- |
+| `state.status` | `'pending'` → `'success'` \| `'error'` | Whether data has ever resolved           |
+| `asyncStatus`  | `'idle'` \| `'loading'`                | Whether a fetch is currently in progress |
 
 These are separate. A query can have `state.status === 'success'` from earlier data and `asyncStatus === 'loading'` while refreshing.

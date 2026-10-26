@@ -1,6 +1,7 @@
 # Concurrency
 
 <a id="source-swift-concurrency-skill-md"></a>
+
 ## Source: `swift/concurrency/SKILL.md`
 
 # Swift 6.2 Concurrency Updates
@@ -23,13 +24,13 @@ This skill covers only the Swift 6.2 specific changes. For general concurrency p
 
 ### Swift 6.2 Changes at a Glance
 
-| Feature | Before (6.0/6.1) | After (6.2) |
-|---------|------------------|-------------|
-| Default isolation | Nothing inferred; manual `@MainActor` everywhere | Opt-in mode infers `@MainActor` on everything |
-| Async function execution | Hops to generic concurrent executor | Stays on calling actor |
-| `@MainActor` type conforming to protocol | Compiler error for non-isolated protocols | Isolated conformances: `@MainActor Protocol` |
-| Background execution | `Task.detached` or manual nonisolated functions | `@concurrent` attribute |
-| Global/static mutable state | Required `@MainActor` annotation or Sendable | Default MainActor mode handles it automatically |
+| Feature                                  | Before (6.0/6.1)                                 | After (6.2)                                     |
+| ---------------------------------------- | ------------------------------------------------ | ----------------------------------------------- |
+| Default isolation                        | Nothing inferred; manual `@MainActor` everywhere | Opt-in mode infers `@MainActor` on everything   |
+| Async function execution                 | Hops to generic concurrent executor              | Stays on calling actor                          |
+| `@MainActor` type conforming to protocol | Compiler error for non-isolated protocols        | Isolated conformances: `@MainActor Protocol`    |
+| Background execution                     | `Task.detached` or manual nonisolated functions  | `@concurrent` attribute                         |
+| Global/static mutable state              | Required `@MainActor` annotation or Sendable     | Default MainActor mode handles it automatically |
 
 ---
 
@@ -62,12 +63,12 @@ With this enabled, app-level types no longer need explicit `@MainActor` annotati
 
 ### When to Use Default MainActor Inference
 
-| Target Type | Recommended? | Reason |
-|-------------|-------------|--------|
-| App target | Yes | Apps are UI-driven; most code belongs on MainActor |
-| Script / executable | Yes | Scripts are sequential; MainActor default is natural |
-| Library / framework | No | Libraries must not impose actor isolation on consumers |
-| Package plugin | No | Same reasoning as libraries |
+| Target Type         | Recommended? | Reason                                                 |
+| ------------------- | ------------ | ------------------------------------------------------ |
+| App target          | Yes          | Apps are UI-driven; most code belongs on MainActor     |
+| Script / executable | Yes          | Scripts are sequential; MainActor default is natural   |
+| Library / framework | No           | Libraries must not impose actor isolation on consumers |
+| Package plugin      | No           | Same reasoning as libraries                            |
 
 ### Opting Out with nonisolated
 
@@ -152,12 +153,12 @@ let resized = await ImageProcessor().resize(image: data, to: targetSize)
 
 ### @concurrent vs Task.detached vs actor
 
-| Mechanism | Use Case | Structured? |
-|-----------|----------|-------------|
-| `@concurrent` | Single function that must run on background thread | Yes (inherits task context) |
-| `Task.detached` | Fire-and-forget background work, no structured parent | No |
-| `actor` | Shared mutable state needing serialized access | N/A (isolation, not scheduling) |
-| `Task {}` | Unstructured task inheriting current actor | No |
+| Mechanism       | Use Case                                              | Structured?                     |
+| --------------- | ----------------------------------------------------- | ------------------------------- |
+| `@concurrent`   | Single function that must run on background thread    | Yes (inherits task context)     |
+| `Task.detached` | Fire-and-forget background work, no structured parent | No                              |
+| `actor`         | Shared mutable state needing serialized access        | N/A (isolation, not scheduling) |
+| `Task {}`       | Unstructured task inheriting current actor            | No                              |
 
 ### When NOT to Use @concurrent
 
@@ -337,28 +338,33 @@ class ViewModel {
 When reviewing code that uses or should use Swift 6.2 concurrency features:
 
 ### Build Configuration
+
 - [ ] Swift language version is set to 6.2
 - [ ] Default MainActor inference is enabled for app/executable targets only (not libraries)
 - [ ] Libraries and frameworks do NOT use `.defaultIsolation(MainActor.self)`
 
 ### Actor Isolation
+
 - [ ] Redundant `@MainActor` annotations removed (if default MainActor inference is enabled)
 - [ ] `nonisolated` applied to types/functions that must run off the main actor
 - [ ] CPU-intensive work marked `nonisolated` and uses `@concurrent`
 - [ ] No heavy computation running implicitly on MainActor
 
 ### @concurrent Usage
+
 - [ ] `@concurrent` only used for genuinely expensive operations
 - [ ] `@concurrent` functions are `async`
 - [ ] Containing type is `nonisolated` (for structs/classes)
 - [ ] `Task.detached` replaced with `@concurrent` where structured concurrency is preferable
 
 ### Isolated Conformances
+
 - [ ] `@MainActor Protocol` syntax used for MainActor types conforming to non-isolated protocols
 - [ ] Isolated conformances only consumed from matching isolation contexts
 - [ ] No `@unchecked Sendable` workarounds that isolated conformances can replace
 
 ### Migration Hygiene
+
 - [ ] No leftover `@unchecked Sendable` conformances from pre-6.2 workarounds
 - [ ] No unnecessary `Task.detached` calls (prefer `@concurrent` or structured concurrency)
 - [ ] Async functions that previously caused data-race errors re-tested without workarounds

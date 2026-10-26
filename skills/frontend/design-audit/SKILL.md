@@ -3,6 +3,7 @@ name: design-audit
 description: >
   Use this skill for design feedback on a screenshot, URL, rendered page, or UI source path: "feels off", "polish review", "make it feel better", "review this screenshot", or "design audit". Review visual details and motion only when the supplied evidence can show them. Do not use for accessibility reviews or fixes, performance work, or building or fixing UI; use the matching specialist skill.
 ---
+
 # Design audit
 
 Review an existing interface against [frontend-design](../frontend-design/SKILL.md). Report what the supplied evidence shows and name the checks it cannot support. Use [writing](../../writing/writing/SKILL.md) for clear findings.

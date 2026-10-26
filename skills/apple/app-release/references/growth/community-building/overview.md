@@ -5,6 +5,7 @@ Build and engage a community around your indie Apple app. Practical strategies f
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Wants to build a community around their app
 - Asks about growing their social media presence
 - Wants to start building in public
@@ -31,6 +32,7 @@ Choose 1-2 platforms to focus on. Spreading across 5 platforms with weak presenc
 #### Platform Comparison
 
 **Twitter/X**
+
 - Audience: Large Apple developer community, tech enthusiasts
 - Strengths: Fast feedback loops, viral potential, networking with other devs
 - Weaknesses: Noisy, algorithm-dependent, declining trust among some users
@@ -39,6 +41,7 @@ Choose 1-2 platforms to focus on. Spreading across 5 platforms with weak presenc
 - Growth speed: Moderate (1-3 months to gain traction)
 
 **Mastodon (mastodon.social / indieweb.social)**
+
 - Audience: Growing indie dev community, privacy-conscious users
 - Strengths: No algorithm (chronological), supportive community, less noise
 - Weaknesses: Smaller audience, less viral potential, fragmented servers
@@ -47,6 +50,7 @@ Choose 1-2 platforms to focus on. Spreading across 5 platforms with weak presenc
 - Growth speed: Slow but genuine (3-6 months)
 
 **Reddit**
+
 - Audience: Highly engaged niche communities
 - Strengths: Targeted subreddits, long-form discussion, SEO value
 - Weaknesses: Anti-self-promotion rules, can be hostile, requires genuine participation
@@ -56,6 +60,7 @@ Choose 1-2 platforms to focus on. Spreading across 5 platforms with weak presenc
 - Growth speed: Moderate if you contribute genuinely
 
 **Discord**
+
 - Audience: Power users, beta testers, engaged community members
 - Strengths: Real-time interaction, deep engagement, beta testing hub
 - Weaknesses: Requires active moderation, conversations are ephemeral, onboarding friction
@@ -64,6 +69,7 @@ Choose 1-2 platforms to focus on. Spreading across 5 platforms with weak presenc
 - Growth speed: Slow (requires seeding initial members)
 
 **Threads**
+
 - Audience: Growing, overlaps with Instagram audience
 - Strengths: Growing platform, casual tone, integrated with Instagram
 - Weaknesses: Still maturing, less developer-focused, algorithm-driven
@@ -72,6 +78,7 @@ Choose 1-2 platforms to focus on. Spreading across 5 platforms with weak presenc
 - Growth speed: Moderate (riding platform growth)
 
 **Blog / Newsletter (Owned Platform)**
+
 - Audience: Subscribers who opted in — highest intent
 - Strengths: You own the audience, SEO benefits, long-form depth, email is reliable
 - Weaknesses: Slow to build, requires consistent writing, higher effort per post
@@ -82,13 +89,13 @@ Choose 1-2 platforms to focus on. Spreading across 5 platforms with weak presenc
 
 #### Recommended Combinations
 
-| Audience | Primary | Secondary |
-|----------|---------|-----------|
-| Developers | Twitter/X | Blog/newsletter |
-| General consumers | Threads or Twitter/X | Newsletter |
-| Privacy-conscious | Mastodon | Blog |
-| Niche category | Reddit | Newsletter |
-| Power users | Discord | Twitter/X |
+| Audience          | Primary              | Secondary       |
+| ----------------- | -------------------- | --------------- |
+| Developers        | Twitter/X            | Blog/newsletter |
+| General consumers | Threads or Twitter/X | Newsletter      |
+| Privacy-conscious | Mastodon             | Blog            |
+| Niche category    | Reddit               | Newsletter      |
+| Power users       | Discord              | Twitter/X       |
 
 ### Step 3: Building in Public Strategy
 
@@ -97,6 +104,7 @@ Building in public means sharing your development journey transparently. It buil
 #### What to Share
 
 **High engagement (share often):**
+
 - Progress updates with screenshots or short videos
 - Design decisions and iterations (before/after)
 - Milestones: download counts, revenue milestones, ratings
@@ -105,6 +113,7 @@ Building in public means sharing your development journey transparently. It buil
 - Weekly/monthly progress summaries
 
 **Medium engagement (share periodically):**
+
 - Revenue numbers and growth metrics (if comfortable)
 - Lessons learned from mistakes
 - Tools and processes you use
@@ -112,6 +121,7 @@ Building in public means sharing your development journey transparently. It buil
 - User testimonials and reviews
 
 **Use sparingly:**
+
 - Technical deep-dives (save for blog posts)
 - Long threads (1-3 per month maximum)
 - Philosophical musings about indie development
@@ -129,12 +139,12 @@ Building in public means sharing your development journey transparently. It buil
 
 Choose your comfort level:
 
-| Level | What You Share | Example |
-|-------|---------------|---------|
-| Fully transparent | Revenue, downloads, expenses, decisions | "March: $3,200 MRR, 847 subscribers, $400 in expenses" |
-| Mostly transparent | Growth trends, decisions, learnings | "Crossed 800 subscribers this month, up 15% from February" |
-| Selectively transparent | Progress, design, features | "Shipped the new dashboard this week, here's how it looks" |
-| Journey-focused | Process, challenges, milestones | "Working on search — here's my approach to full-text indexing" |
+| Level                   | What You Share                          | Example                                                        |
+| ----------------------- | --------------------------------------- | -------------------------------------------------------------- |
+| Fully transparent       | Revenue, downloads, expenses, decisions | "March: $3,200 MRR, 847 subscribers, $400 in expenses"         |
+| Mostly transparent      | Growth trends, decisions, learnings     | "Crossed 800 subscribers this month, up 15% from February"     |
+| Selectively transparent | Progress, design, features              | "Shipped the new dashboard this week, here's how it looks"     |
+| Journey-focused         | Process, challenges, milestones         | "Working on search — here's my approach to full-text indexing" |
 
 All levels work. Pick what you are genuinely comfortable with and stay consistent.
 
@@ -144,19 +154,19 @@ This calendar assumes 3-5 hours per week total for community building.
 
 #### Weekly Rhythm
 
-| Day | Content Type | Time | Example |
-|-----|-------------|------|---------|
-| Monday | What I'm working on this week | 10 min | "This week: finishing the share sheet extension and fixing 3 bugs from user reports" |
-| Wednesday | Tip, tutorial, or behind-the-scenes | 15 min | Screenshot of a SwiftUI trick, design iteration, or tool recommendation |
-| Friday | Progress update or shipped feature | 15 min | "Shipped! Here's what's new in v2.3" or "Week in review: here's what got done" |
+| Day       | Content Type                        | Time   | Example                                                                              |
+| --------- | ----------------------------------- | ------ | ------------------------------------------------------------------------------------ |
+| Monday    | What I'm working on this week       | 10 min | "This week: finishing the share sheet extension and fixing 3 bugs from user reports" |
+| Wednesday | Tip, tutorial, or behind-the-scenes | 15 min | Screenshot of a SwiftUI trick, design iteration, or tool recommendation              |
+| Friday    | Progress update or shipped feature  | 15 min | "Shipped! Here's what's new in v2.3" or "Week in review: here's what got done"       |
 
 #### Monthly Additions
 
-| Cadence | Content Type | Time | Example |
-|---------|-------------|------|---------|
-| 1st of month | Revenue/growth update | 30 min | Monthly metrics recap with takeaways |
-| Mid-month | Blog post or tutorial | 2-3 hours | Technical post, lesson learned, or app development guide |
-| End of month | Retrospective | 30 min | "What worked, what didn't, what's next" |
+| Cadence      | Content Type          | Time      | Example                                                  |
+| ------------ | --------------------- | --------- | -------------------------------------------------------- |
+| 1st of month | Revenue/growth update | 30 min    | Monthly metrics recap with takeaways                     |
+| Mid-month    | Blog post or tutorial | 2-3 hours | Technical post, lesson learned, or app development guide |
+| End of month | Retrospective         | 30 min    | "What worked, what didn't, what's next"                  |
 
 #### Batching Strategy
 
@@ -223,20 +233,22 @@ Do not create content in real-time throughout the week. Instead:
 
 #### Social Proof Collection
 
-| Source | How to Collect | How to Display |
-|--------|---------------|----------------|
-| App Store reviews | Screenshot 5-star reviews | App Store screenshots, website |
-| Twitter/X testimonials | Screenshot positive tweets | Website testimonials section |
-| Beta tester quotes | Ask directly during beta | App Store description, press kit |
-| Usage milestones | Track in analytics | Social media posts ("10K users!") |
+| Source                 | How to Collect             | How to Display                    |
+| ---------------------- | -------------------------- | --------------------------------- |
+| App Store reviews      | Screenshot 5-star reviews  | App Store screenshots, website    |
+| Twitter/X testimonials | Screenshot positive tweets | Website testimonials section      |
+| Beta tester quotes     | Ask directly during beta   | App Store description, press kit  |
+| Usage milestones       | Track in analytics         | Social media posts ("10K users!") |
 
 **When to ask for testimonials:**
+
 - After a user complements your app (strike while the iron is hot)
 - After successfully resolving a support request
 - After a user shares your app organically
 - After a major update that users are excited about
 
 **How to ask:**
+
 - "Thanks so much! Would you mind if I shared your kind words on our website?"
 - "Would you be willing to leave a review on the App Store? It really helps indie apps like mine."
 - Keep it low-pressure. Never guilt or pressure users.
@@ -248,17 +260,20 @@ A blog is the highest-effort but highest-long-term-value community asset.
 #### Content Types That Work
 
 **Technical blog posts** (attract developer respect and SEO traffic):
+
 - "How I built [feature] with SwiftUI"
 - "Migrating from UIKit to SwiftUI: lessons learned"
 - "Using Core ML to [interesting use case]"
 - These get shared on Twitter, Hacker News, and iOS Dev Weekly
 
 **Behind-the-scenes posts** (attract potential users):
+
 - "Designing [App Name]'s onboarding"
 - "Why I chose subscription pricing"
 - "How I reduced my app's launch time by 60%"
 
 **User-focused posts** (attract end-user awareness):
+
 - "[App Name] tips and tricks you might not know"
 - "How to [solve specific problem] with [App Name]"
 - "What's coming in [App Name] 3.0"
@@ -272,6 +287,7 @@ A blog is the highest-effort but highest-long-term-value community asset.
 #### Distribution
 
 After publishing a blog post:
+
 1. Share on Twitter/X with a hook and key takeaway
 2. Share on Mastodon
 3. Submit to relevant newsletters (iOS Dev Weekly, Swift Weekly Brief)

@@ -1,6 +1,7 @@
 # SwiftUI debugging: Common pitfalls
 
 <a id="source-performance-swiftui-debugging-common-pitfalls-md"></a>
+
 ## Source: `performance/swiftui-debugging/common-pitfalls.md`
 
 # Common SwiftUI Performance Pitfalls
@@ -74,6 +75,7 @@ struct ItemView: View {
 ### When AnyView Is Acceptable
 
 `AnyView` has negligible cost in these cases:
+
 - A single view used once (not in a list or `ForEach`)
 - Prototyping / throwaway code
 - Bridging to UIKit hosting controllers where type erasure is required
@@ -96,16 +98,16 @@ var body: some View {
 
 ### Expensive Objects to Watch For
 
-| Object | Cost of creation | Alternative |
-|--------|-----------------|-------------|
-| `DateFormatter` | ~5-10 microseconds | `static let` shared instance |
-| `NumberFormatter` | ~5-10 microseconds | `static let` shared instance |
-| `JSONDecoder` / `JSONEncoder` | Moderate | `static let` shared instance |
-| `NSRegularExpression` | Moderate (compiles regex) | `static let` or Swift `Regex` literal |
-| `NSPredicate` | Moderate | `static let` or reuse via `@State` |
-| `URLSession` | Heavy | Use `URLSession.shared` or inject |
-| View models / controllers | Heavy | `@State` or `@StateObject` |
-| `AttributedString` with markdown | Moderate (parses markdown) | Cache in model or `@State` |
+| Object                           | Cost of creation           | Alternative                           |
+| -------------------------------- | -------------------------- | ------------------------------------- |
+| `DateFormatter`                  | ~5-10 microseconds         | `static let` shared instance          |
+| `NumberFormatter`                | ~5-10 microseconds         | `static let` shared instance          |
+| `JSONDecoder` / `JSONEncoder`    | Moderate                   | `static let` shared instance          |
+| `NSRegularExpression`            | Moderate (compiles regex)  | `static let` or Swift `Regex` literal |
+| `NSPredicate`                    | Moderate                   | `static let` or reuse via `@State`    |
+| `URLSession`                     | Heavy                      | Use `URLSession.shared` or inject     |
+| View models / controllers        | Heavy                      | `@State` or `@StateObject`            |
+| `AttributedString` with markdown | Moderate (parses markdown) | Cache in model or `@State`            |
 
 ### After (Fast)
 
@@ -488,12 +490,12 @@ Note: this changes the view's structural identity (see view-identity.md). Use `o
 
 ## Quick Diagnosis Table
 
-| Symptom | Likely pitfall | Fix |
-|---------|---------------|-----|
-| Entire screen re-renders on any state change | Over-observation (#3) | Migrate to `@Observable` or split stores |
-| List scrolling stutters | Eager loading, images (#5) | Use `LazyVStack`, async image loading |
-| View body runs 100+ times/second | Unnecessary state updates (#6) | Guard against redundant state changes |
-| Memory climbs while scrolling | Full-resolution images (#5) | Use thumbnails, `AsyncImage` |
-| Initial load takes seconds | Eager container (#1 in lazy-loading.md) | Switch to lazy container |
-| Type checker hangs during build | Large `@ViewBuilder` switch | Extract cases into separate view structs |
-| Animation stutters | Expensive computation in body (#4) | Move to `.task {}` or `onChange` |
+| Symptom                                      | Likely pitfall                          | Fix                                      |
+| -------------------------------------------- | --------------------------------------- | ---------------------------------------- |
+| Entire screen re-renders on any state change | Over-observation (#3)                   | Migrate to `@Observable` or split stores |
+| List scrolling stutters                      | Eager loading, images (#5)              | Use `LazyVStack`, async image loading    |
+| View body runs 100+ times/second             | Unnecessary state updates (#6)          | Guard against redundant state changes    |
+| Memory climbs while scrolling                | Full-resolution images (#5)             | Use thumbnails, `AsyncImage`             |
+| Initial load takes seconds                   | Eager container (#1 in lazy-loading.md) | Switch to lazy container                 |
+| Type checker hangs during build              | Large `@ViewBuilder` switch             | Extract cases into separate view structs |
+| Animation stutters                           | Expensive computation in body (#4)      | Move to `.task {}` or `onChange`         |

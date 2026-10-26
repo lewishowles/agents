@@ -3,6 +3,7 @@ name: component-library
 description: >
   Use this skill when choosing, reusing, or wrapping components from @lewishowles/components, including sibling components inside the library. Prefer its CLI and docs before source searches.
 ---
+
 # Component library
 
 Use @lewishowles/components discovery (CLI, live docs) before source files when the component or API is unclear. Apply this when composing sibling components inside the library as well as when consuming the published package elsewhere.

@@ -9,6 +9,7 @@
 - [Time Profiler](profiling-time-profiler.md) (upstream `time-profiler.md`)
 
 <a id="source-performance-profiling-skill-md"></a>
+
 ## Source: `performance/profiling/SKILL.md`
 
 # Performance Profiling
@@ -18,6 +19,7 @@ Systematic guide for profiling Apple platform apps using Instruments, Xcode diag
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Reports app hangs, stutters, or dropped frames
 - Needs to profile CPU usage or find hot code paths
 - Has memory leaks, high memory usage, or OOM crashes
@@ -56,32 +58,32 @@ What performance problem are you investigating?
 
 ## Quick Reference
 
-| Problem | Instrument / Tool | Key Metric | Reference |
-|---------|-------------------|------------|-----------|
-| UI hangs > 250ms | Time Profiler + Hangs | Hang duration, main thread stack | time-profiler.md |
-| Scroll/animation hitches | Animation Hitches template | Hitch time ratio (< 5 ms/s good, > 10 critical) | profiling-hitches.md |
-| High CPU usage | Time Profiler / CPU Profiler | CPU % by function, call tree weight | time-profiler.md |
-| Memory leak | Leaks + Memory Graph | Leaked bytes, retain cycle paths | memory-profiling.md |
-| Memory growth | Allocations | Live bytes, generation analysis | memory-profiling.md |
-| Slow launch | App Launch | Time to first frame (pre-main + post-main) | launch-optimization.md |
-| Battery drain | Energy Log / Power Profiler | Energy Impact score, CPU/GPU/network | energy-diagnostics.md |
-| Thermal issues | Activity Monitor | Thermal state transitions | energy-diagnostics.md |
-| Network waste | Network profiler | Redundant fetches, large payloads | energy-diagnostics.md |
+| Problem                  | Instrument / Tool            | Key Metric                                      | Reference              |
+| ------------------------ | ---------------------------- | ----------------------------------------------- | ---------------------- |
+| UI hangs > 250ms         | Time Profiler + Hangs        | Hang duration, main thread stack                | time-profiler.md       |
+| Scroll/animation hitches | Animation Hitches template   | Hitch time ratio (< 5 ms/s good, > 10 critical) | profiling-hitches.md   |
+| High CPU usage           | Time Profiler / CPU Profiler | CPU % by function, call tree weight             | time-profiler.md       |
+| Memory leak              | Leaks + Memory Graph         | Leaked bytes, retain cycle paths                | memory-profiling.md    |
+| Memory growth            | Allocations                  | Live bytes, generation analysis                 | memory-profiling.md    |
+| Slow launch              | App Launch                   | Time to first frame (pre-main + post-main)      | launch-optimization.md |
+| Battery drain            | Energy Log / Power Profiler  | Energy Impact score, CPU/GPU/network            | energy-diagnostics.md  |
+| Thermal issues           | Activity Monitor             | Thermal state transitions                       | energy-diagnostics.md  |
+| Network waste            | Network profiler             | Redundant fetches, large payloads               | energy-diagnostics.md  |
 
 ## The 8 Key Metrics (WWDC21 10181)
 
 Apple enumerates exactly eight things to track for app performance, all coverable with five tools (Xcode Organizer, MetricKit, Instruments, XCTest, App Store Connect API):
 
-| # | Metric | Threshold / signal | Tool |
-|---|--------|--------------------|------|
-| 1 | Battery usage | Energy Gauge flags **CPU use > 20%** as High CPU, plus CPU Wake Overhead regions; top subsystems to watch: CPU, Networking, Location | Energy Gauge → Time Profiler |
-| 2 | Launch time | Time between icon tap and first frame rendered | App Launch template, XCTApplicationLaunchMetric |
-| 3 | Hang rate | Unresponsive to input for **≥ 250ms** | Hangs instrument, Organizer |
-| 4 | Memory | Organizer charts **peak memory** and **memory at suspension**; a spike with no termination spike yet is your early warning | Allocations, Leaks, VM Tracker |
-| 5 | Disk writes | Exception report when the app writes **> 1 GB in 24 hours** (with stack trace + Insights annotations) | File Activity template, XCTStorageMetric |
-| 6 | Scrolling | Red bars in the Organizer scrolling chart = poor scroll experience, fix immediately | Animation Hitches, XCTOSSignpostMetric.scrollDecelerationMetric |
-| 7 | Terminations | Every termination forces a slow cold launch next time and loses user state | MXAppExitMetric, Organizer |
-| 8 | MXSignposts | Custom marked intervals for your critical code sections | MetricKit |
+| #   | Metric        | Threshold / signal                                                                                                                   | Tool                                                            |
+| --- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------- |
+| 1   | Battery usage | Energy Gauge flags **CPU use > 20%** as High CPU, plus CPU Wake Overhead regions; top subsystems to watch: CPU, Networking, Location | Energy Gauge → Time Profiler                                    |
+| 2   | Launch time   | Time between icon tap and first frame rendered                                                                                       | App Launch template, XCTApplicationLaunchMetric                 |
+| 3   | Hang rate     | Unresponsive to input for **≥ 250ms**                                                                                                | Hangs instrument, Organizer                                     |
+| 4   | Memory        | Organizer charts **peak memory** and **memory at suspension**; a spike with no termination spike yet is your early warning           | Allocations, Leaks, VM Tracker                                  |
+| 5   | Disk writes   | Exception report when the app writes **> 1 GB in 24 hours** (with stack trace + Insights annotations)                                | File Activity template, XCTStorageMetric                        |
+| 6   | Scrolling     | Red bars in the Organizer scrolling chart = poor scroll experience, fix immediately                                                  | Animation Hitches, XCTOSSignpostMetric.scrollDecelerationMetric |
+| 7   | Terminations  | Every termination forces a slow cold launch next time and loses user state                                                           | MXAppExitMetric, Organizer                                      |
+| 8   | MXSignposts   | Custom marked intervals for your critical code sections                                                                              | MetricKit                                                       |
 
 The Organizer aggregates all of these from consented user devices across the **last 16 app versions**; the **Regressions pane** (Xcode 13) isolates every metric that increased significantly in the most recent version, in one place. The same data is available as JSON via the **App Store Connect API** (WWDC21 10181).
 
@@ -90,6 +92,7 @@ The Organizer aggregates all of these from consented user devices across the **l
 ### 1. Identify the Problem Category
 
 Ask the user or inspect their description to classify the issue:
+
 - **Responsiveness**: Hangs, stutters, animation drops
 - **Memory**: Leaks, growth, OOM crashes
 - **Launch**: Slow cold/warm start
@@ -98,6 +101,7 @@ Ask the user or inspect their description to classify the issue:
 ### 2. Read the Appropriate Reference File
 
 Each file contains:
+
 - Which Instruments template to use
 - Step-by-step profiling workflow
 - How to interpret results
@@ -106,6 +110,7 @@ Each file contains:
 ### 3. Profile on Real Hardware
 
 Always remind users:
+
 - **Profile on device**, not Simulator (Simulator uses host CPU/memory)
 - Use **Release** build configuration (optimizations change behavior)
 - Profile with **representative data** (empty databases hide real perf)
@@ -114,6 +119,7 @@ Always remind users:
 ### 4. Apply Fixes and Verify
 
 After identifying bottlenecks:
+
 - Apply targeted fix from the reference file
 - Re-profile to confirm improvement
 - Add `os_signpost` markers for ongoing monitoring
@@ -122,13 +128,13 @@ After identifying bottlenecks:
 
 Recommend enabling these in **Scheme > Run > Diagnostics**:
 
-| Setting | What It Catches |
-|---------|-----------------|
-| Main Thread Checker | UI work off main thread |
-| Thread Sanitizer | Data races |
-| Address Sanitizer | Buffer overflows, use-after-free |
-| Malloc Stack Logging | Memory allocation call stacks |
-| Zombie Objects | Messages to deallocated objects |
+| Setting              | What It Catches                  |
+| -------------------- | -------------------------------- |
+| Main Thread Checker  | UI work off main thread          |
+| Thread Sanitizer     | Data races                       |
+| Address Sanitizer    | Buffer overflows, use-after-free |
+| Malloc Stack Logging | Memory allocation call stacks    |
+| Zombie Objects       | Messages to deallocated objects  |
 
 ## MetricKit Integration
 
@@ -181,6 +187,7 @@ final class PerformanceReporter: NSObject, MXMetricManagerSubscriber {
 ```
 
 Key facts (WWDC20 10081, WWDC21 10181):
+
 - ❌ Subscribing lazily (e.g. in a settings screen) silently misses delivered payloads — ✅ subscribe in App/AppDelegate init; the previous day's payloads are handed to you on launch.
 - Metrics arrive as **24-hour payloads**, at most once per day, in three aggregation forms: cumulative, averaged, and bucketized (`MXHistogram`). On iOS 15+/macOS 12+, **all diagnostics are delivered immediately after the issue occurs** instead of daily.
 - Termination and memory telemetry arrive in the daily metric payload by default — no extra instrumentation.
@@ -198,6 +205,7 @@ mxSignpost(OSSignpostType.end, log: handle, name: "custom_animation")
 ## Review Checklist
 
 ### Responsiveness
+
 - [ ] No synchronous work on main thread > 100ms
 - [ ] No file I/O or network calls on main thread
 - [ ] Core Data / SwiftData fetches use background contexts for large queries
@@ -205,18 +213,21 @@ mxSignpost(OSSignpostType.end, log: handle, name: "custom_animation")
 - [ ] `@MainActor` only on code that truly needs UI access
 
 ### Memory
+
 - [ ] No retain cycles (check delegate patterns, closures with `self`)
 - [ ] Large resources freed when not visible (images, caches)
 - [ ] Collections don't grow unbounded (capped caches, pagination)
 - [ ] `autoreleasepool` used in tight loops creating ObjC objects
 
 ### Launch Time
+
 - [ ] No heavy work in `init()` of `@main App` struct
 - [ ] Deferred non-essential initialization (analytics, prefetch)
 - [ ] Minimal dynamic frameworks (prefer static linking)
 - [ ] No synchronous network calls at launch
 
 ### Energy
+
 - [ ] Background tasks use `BGProcessingTaskRequest` appropriately
 - [ ] Location accuracy matches actual need (not always `.best`)
 - [ ] Timers use `tolerance` to allow coalescing

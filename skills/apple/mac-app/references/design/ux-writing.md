@@ -1,6 +1,7 @@
 # UX writing
 
 <a id="source-design-ux-writing-skill-md"></a>
+
 ## Source: `design/ux-writing/SKILL.md`
 
 # UX Writing
@@ -51,7 +52,7 @@ Run every screen's copy through four questions:
 ## Alert anatomy (Writing Great Alerts)
 
 First: should this be an alert at all? Alerts interrupt by design — reserve them for things
-the user must know *now*.
+the user must know _now_.
 
 - **Title**: the main point, one sentence or less. **Message**: only if needed.
 - **The scannability test**: title + buttons alone must convey the situation.
@@ -65,7 +66,7 @@ markets, platforms).
 
 - Process: **Think / Feel / Do** — what should the audience think, feel, and do? Group the
   answers into themes; name from the themes; test candidates in natural sentences ("just
-  search for ___").
+  search for \_\_\_").
 - ✅ Industry-standard words in high-stakes domains: "Balance," not "Spending Power."
 - ✅ Compounds are fine when the parts self-explain ("AutoMix"); emotional names win where the
   moment is emotional ("Memories").

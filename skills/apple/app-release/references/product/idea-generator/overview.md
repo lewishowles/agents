@@ -5,6 +5,7 @@ Generates a ranked shortlist of 3-5 app ideas tailored to the developer's skills
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Doesn't have an app idea yet
 - Says "what should I build?" or "I don't know what to build"
 - Wants to brainstorm app ideas
@@ -20,6 +21,7 @@ Use this skill when the user:
 ### 1. Developer Profile Elicitation
 
 Gathers context about the developer to personalize ideas:
+
 - **Technical skills** — Languages, frameworks, platforms (Swift, SwiftUI, UIKit, CloudKit, etc.)
 - **Domain interests** — Health, finance, productivity, education, creativity, etc.
 - **Platform preference** — iOS, macOS, iPadOS, watchOS, visionOS, or multi-platform
@@ -40,31 +42,32 @@ Each lens generates 5-8 raw ideas. Lenses are applied in order:
 
 Each raw idea is evaluated against five filters:
 
-| Filter | Question |
-|--------|----------|
-| Solo Dev Scope | Can one developer ship an MVP in 4-8 weeks? |
-| Platform API Fit | Does this leverage Apple platform APIs well? |
-| Monetization Viability | Is there a clear path to revenue? |
-| Competition Density | How crowded is this space? |
-| Technical Complexity | Does the developer have the skills to build this? |
+| Filter                 | Question                                          |
+| ---------------------- | ------------------------------------------------- |
+| Solo Dev Scope         | Can one developer ship an MVP in 4-8 weeks?       |
+| Platform API Fit       | Does this leverage Apple platform APIs well?      |
+| Monetization Viability | Is there a clear path to revenue?                 |
+| Competition Density    | How crowded is this space?                        |
+| Technical Complexity   | Does the developer have the skills to build this? |
 
 ### 4. Scoring and Ranking
 
 Each surviving idea is scored across five dimensions:
 
-| Dimension | WEAK (1-2) | MODERATE (3-5) | STRONG (6-8) | EXCELLENT (9-10) |
-|-----------|------------|----------------|--------------|------------------|
-| Solo Dev Scope | 6+ months | 3-6 months | 4-8 weeks | 2-4 weeks |
-| Platform API Fit | Generic/cross-platform | Some native APIs | Good platform integration | Deep Apple API usage |
-| Monetization | Unclear model | Ad-supported or low ARPU | Subscription viable | Premium pricing justified |
-| Competition | Dominated by incumbents | Crowded but fragmented | Few quality options | Blue ocean |
-| Technical Fit | Major skill gaps | Some learning needed | Good skill match | Perfect skill match |
+| Dimension        | WEAK (1-2)              | MODERATE (3-5)           | STRONG (6-8)              | EXCELLENT (9-10)          |
+| ---------------- | ----------------------- | ------------------------ | ------------------------- | ------------------------- |
+| Solo Dev Scope   | 6+ months               | 3-6 months               | 4-8 weeks                 | 2-4 weeks                 |
+| Platform API Fit | Generic/cross-platform  | Some native APIs         | Good platform integration | Deep Apple API usage      |
+| Monetization     | Unclear model           | Ad-supported or low ARPU | Subscription viable       | Premium pricing justified |
+| Competition      | Dominated by incumbents | Crowded but fragmented   | Few quality options       | Blue ocean                |
+| Technical Fit    | Major skill gaps        | Some learning needed     | Good skill match          | Perfect skill match       |
 
 **Overall Score** = weighted average on 1-10 scale (Solo Dev Scope and Technical Fit weighted 1.5x).
 
 ### 5. Shortlist Output
 
 Final output is a ranked list of 3-5 ideas, each with:
+
 - One-liner description
 - Which lens generated it
 - Problem statement and target user
@@ -179,6 +182,7 @@ Final output is a ranked list of 3-5 ideas, each with:
 If the user hasn't provided context, ask using AskUserQuestion:
 
 **Questions to ask:**
+
 - What programming languages and frameworks do you know? (Swift, SwiftUI, UIKit, etc.)
 - What topics or domains interest you? (health, finance, productivity, etc.)
 - Which Apple platforms do you want to target?
@@ -192,6 +196,7 @@ If the user provides partial info, infer reasonable defaults and state assumptio
 Generate 5-8 ideas from the intersection of what the developer knows and cares about.
 
 **Process:**
+
 1. List the developer's top 3-5 skills
 2. List their top 3-5 interests
 3. For each skill-interest pair, ask: "What app could a developer with [skill] build for people interested in [interest]?"
@@ -204,6 +209,7 @@ Generate 5-8 ideas from the intersection of what the developer knows and cares a
 Find real problems worth solving.
 
 **Process:**
+
 1. Ask the developer: "What took 30 seconds today that should take 5?"
 2. Think about common daily friction points in their domain
 3. Search for complaint threads: `"[domain] app sucks" OR "[domain] app wish" site:reddit.com`
@@ -216,6 +222,7 @@ Find real problems worth solving.
 Identify Apple frameworks with few quality indie apps.
 
 **High-opportunity frameworks (2026):**
+
 - **Foundation Models** — On-device LLM, few indie apps yet
 - **ActivityKit / Live Activities** — Sports, cooking, transit, workout tracking
 - **WidgetKit** — Glanceable info apps (many categories underserved)
@@ -225,6 +232,7 @@ Identify Apple frameworks with few quality indie apps.
 - **DeviceActivity / Screen Time API** — Digital wellness, parental controls
 
 **Process:**
+
 1. Pick 2-3 frameworks matching the developer's platform preference
 2. Search App Store for apps using that framework
 3. Identify gaps — what should exist but doesn't?
@@ -234,6 +242,7 @@ Identify Apple frameworks with few quality indie apps.
 Use WebSearch to find underserved App Store categories.
 
 **Searches to run:**
+
 ```
 "underserved App Store categories 2026"
 "indie app opportunities iOS 2026"
@@ -242,6 +251,7 @@ Use WebSearch to find underserved App Store categories.
 ```
 
 **Signals of opportunity:**
+
 - Top apps haven't been updated in 12+ months
 - Reviews complain about the same issues across multiple apps
 - Premium pricing ($9.99+) with mediocre ratings (< 4.0)
@@ -252,6 +262,7 @@ Use WebSearch to find underserved App Store categories.
 Identify macro trends creating new app opportunities.
 
 **Current trends (2026):**
+
 - **AI-native apps** — Apps that couldn't exist without on-device AI
 - **Privacy-first** — Apps that explicitly don't collect data (selling point)
 - **Health & wellness** — Mental health, sleep, nutrition, fitness
@@ -261,6 +272,7 @@ Identify macro trends creating new app opportunities.
 - **Creator economy** — Tools for content creators, freelancers
 
 **Process:**
+
 1. Pick 2-3 trends relevant to the developer's interests
 2. For each trend, generate 2-3 ideas that serve the trend
 3. Prefer trend + skill intersections
@@ -268,17 +280,20 @@ Identify macro trends creating new app opportunities.
 ### Step 7: Filter, Score, and Rank
 
 **Filter phase:**
+
 1. Collect all raw ideas from Steps 2-6 (typically 25-40 ideas)
 2. Apply the five feasibility filters (see Section 3)
 3. Remove any idea that scores WEAK on Solo Dev Scope or Technical Fit
 4. Remove any idea that scores WEAK on 3+ dimensions
 
 **Score phase:**
+
 1. Score each surviving idea on all five dimensions
 2. Calculate overall score (Solo Dev Scope and Technical Fit weighted 1.5x)
 3. Rank by overall score descending
 
 **Output phase:**
+
 1. Take the top 3-5 ideas
 2. Write full entries with all fields from Output Structure
 3. Format `next_step` as description for the product-agent skill
@@ -288,6 +303,7 @@ Identify macro trends creating new app opportunities.
 ## End-to-End Example
 
 **Developer profile:**
+
 > Maya, backend engineer (Python, some Swift), interested in nutrition and cooking. Wants to build her first iOS app as a side project (8 hrs/week). No design skills. Comfortable with APIs but no HealthKit experience.
 
 **Lens application:**
@@ -300,11 +316,11 @@ Identify macro trends creating new app opportunities.
 
 **After filtering and scoring:**
 
-| Rank | Idea | Score | Key Strength |
-|------|------|-------|-------------|
-| 1 | AI Leftover Recipe Finder | 8.1 | Foundation Models + cooking interest, blue ocean |
-| 2 | Photo Macro Tracker | 7.4 | Problem-first (everyone hates manual logging) |
-| 3 | Smart Grocery List | 6.9 | Simple scope, clear monetization |
+| Rank | Idea                      | Score | Key Strength                                     |
+| ---- | ------------------------- | ----- | ------------------------------------------------ |
+| 1    | AI Leftover Recipe Finder | 8.1   | Foundation Models + cooking interest, blue ocean |
+| 2    | Photo Macro Tracker       | 7.4   | Problem-first (everyone hates manual logging)    |
+| 3    | Smart Grocery List        | 6.9   | Simple scope, clear monetization                 |
 
 **Recommendation:** "Start with AI Leftover Recipe Finder. It uses Foundation Models (few competitors), aligns with your cooking interest, and can ship a basic version in 5 weeks. Run the product-agent skill to validate demand."
 
@@ -350,6 +366,7 @@ At the end of this skill, you should have:
 ## Output File Location
 
 Save results to:
+
 - [idea-shortlist.json](examples/idea-shortlist.json) (project root)
 
 **Format:** Use the JSON structure from the Output Structure section.

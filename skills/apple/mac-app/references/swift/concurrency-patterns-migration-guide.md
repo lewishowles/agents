@@ -1,6 +1,7 @@
 # Concurrency patterns: Migration guide
 
 <a id="source-swift-concurrency-patterns-migration-guide-md"></a>
+
 ## Source: `swift/concurrency-patterns/migration-guide.md`
 
 # Swift 6 Strict Concurrency Migration
@@ -11,12 +12,12 @@ Step-by-step guide for incrementally adopting Swift 6 strict concurrency checkin
 
 - **Migrate per target, one at a time**: enable complete checking (warnings) → resolve all warnings → flip that target to Swift 6 language mode (locks in enforcement) → next target.
 - **Start with the UI/app target and work top-down.** The UI layer mostly runs on the main thread against SDK APIs already annotated `@MainActor`, and going app → your frameworks handles not-yet-migrated dependencies gracefully.
-- **Don't refactor while migrating.** Verbatim: "resist the temptation to blend together both significant refactoring and enabling data race safety. Try to do one at a time. If you try to do both at once, you'll probably find it too much change at once, and have to backtrack." Whole-app refactors (e.g. moving `nonisolated(unsafe)` state into actors) come *after* all targets are migrated.
+- **Don't refactor while migrating.** Verbatim: "resist the temptation to blend together both significant refactoring and enabling data race safety. Try to do one at a time. If you try to do both at once, you'll probably find it too much change at once, and have to backtrack." Whole-app refactors (e.g. moving `nonisolated(unsafe)` state into actors) come _after_ all targets are migrated.
 - **Don't pre-audit — let the compiler drive.** Skip the manual `@MainActor`/`Sendable` audit; turn on complete checking and follow the diagnostics ("like a pair programmer pointing out potential bugs").
 - **Don't panic at the warning count.** Warnings cluster: a few root issues produce many knock-on diagnostics. Hunt quick wins first (`var`→`let` on a global, one `@MainActor`, one `Sendable` conformance can clear dozens of sites).
 - **Migration is pausable.** You can turn complete checking back off to ship; every fix already made remains a valid improvement to commit.
 - **Re-check against the latest SDKs before fixing.** Newer SDKs added `@MainActor` annotations (the SwiftUI `View` protocol, many delegate protocols) — annotations you added under older SDKs may now be inferable and removable.
-- Building with a Swift 6 compiler changes nothing by itself — data-race enforcement is the *only* thing gated by the language mode; all other Swift 6 features are on regardless (WWDC24 10136).
+- Building with a Swift 6 compiler changes nothing by itself — data-race enforcement is the _only_ thing gated by the language mode; all other Swift 6 features are on regardless (WWDC24 10136).
 - If you maintain a public package, migrate it ASAP — downstream migrators benefit from Swift-6-clean dependencies.
 
 ## Migration Strategy
@@ -41,6 +42,7 @@ Start with minimal concurrency warnings to find the most obvious issues.
 **Xcode:** Build Settings → "Strict Concurrency Checking" → "Minimal"
 
 **Package.swift:**
+
 ```swift
 .target(
     name: "MyTarget",
@@ -51,6 +53,7 @@ Start with minimal concurrency warnings to find the most obvious issues.
 ```
 
 Fix issues like:
+
 - Global/static `var` without isolation
 - Non-Sendable types used in `@Sendable` closures
 
@@ -65,6 +68,7 @@ This warns about code that interacts with concurrency features (async functions,
 **Xcode:** Build Settings → "Strict Concurrency Checking" → "Complete"
 
 **Package.swift:**
+
 ```swift
 .target(
     name: "MyTarget",
@@ -83,6 +87,7 @@ Now promote all warnings to errors:
 **Xcode:** Build Settings → "Swift Language Version" → "6"
 
 **Package.swift:**
+
 ```swift
 // swift-tools-version: 6.0
 let package = Package(
@@ -219,11 +224,11 @@ import CoreLocation
 
 Every callback API falls into one of three isolation contracts (WWDC24 10169):
 
-| Contract | Example | Migration move |
-|---|---|---|
-| Guaranteed main thread | Most UI frameworks | Rely on / add `@MainActor` |
-| Arbitrary thread | Backend-style callbacks (e.g. HealthKit) | Receiver `nonisolated`, re-dispatch explicitly |
-| Dynamic guarantee | `CLLocationManager` (calls back on the thread that created it) | `nonisolated` + `MainActor.assumeIsolated` (below) |
+| Contract               | Example                                                        | Migration move                                     |
+| ---------------------- | -------------------------------------------------------------- | -------------------------------------------------- |
+| Guaranteed main thread | Most UI frameworks                                             | Rely on / add `@MainActor`                         |
+| Arbitrary thread       | Backend-style callbacks (e.g. HealthKit)                       | Receiver `nonisolated`, re-dispatch explicitly     |
+| Dynamic guarantee      | `CLLocationManager` (calls back on the thread that created it) | `nonisolated` + `MainActor.assumeIsolated` (below) |
 
 ```swift
 // ❌ Delegate callback crosses isolation
@@ -304,11 +309,13 @@ nonisolated(unsafe) static var shared = LegacyManager()
 ```
 
 **When it's acceptable:**
+
 - Bridging with C/ObjC singletons that are known thread-safe
 - Third-party library types that are thread-safe but not Sendable-annotated
 - Temporary escape hatch during incremental migration
 
 **When it's NOT acceptable:**
+
 - To silence warnings you don't understand
 - For mutable state without synchronization
 - As a permanent solution (always plan to remove it)

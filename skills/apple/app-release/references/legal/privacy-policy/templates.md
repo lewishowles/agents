@@ -6,13 +6,13 @@ Ready-to-use legal document templates for Apple platform apps. Replace placehold
 
 Use these placeholders throughout all templates. The generator fills them automatically based on project context and user answers.
 
-| Placeholder | Description | Example |
-|-------------|-------------|---------|
-| `[APP_NAME]` | App display name | "FocusTimer" |
-| `[DEVELOPER_NAME]` | Developer or company name | "Jane Smith" or "Acme LLC" |
-| `[CONTACT_EMAIL]` | Privacy/support email | "privacy@example.com" |
-| `[EFFECTIVE_DATE]` | Document effective date | "January 1, 2026" |
-| `[WEBSITE_URL]` | Developer website or app page | "https://example.com" |
+| Placeholder        | Description                   | Example                    |
+| ------------------ | ----------------------------- | -------------------------- |
+| `[APP_NAME]`       | App display name              | "FocusTimer"               |
+| `[DEVELOPER_NAME]` | Developer or company name     | "Jane Smith" or "Acme LLC" |
+| `[CONTACT_EMAIL]`  | Privacy/support email         | "privacy@example.com"      |
+| `[EFFECTIVE_DATE]` | Document effective date       | "January 1, 2026"          |
+| `[WEBSITE_URL]`    | Developer website or app page | "https://example.com"      |
 
 ---
 
@@ -510,13 +510,13 @@ For questions about this EULA, contact:
 
 Not all sections apply to every app. Use these guidelines:
 
-| App Type | Include | Exclude |
-|----------|---------|---------|
-| Offline utility, no accounts | "Information We Do NOT Collect" | Account sections, third-party services, user content |
-| Analytics-only app | Auto-collected data, third-party services table | Account sections, user content |
-| Account-based app | All data collection sections | "Information We Do NOT Collect" |
-| Subscription app | All sections including subscription terms | None |
-| Kids app | COPPA sections | Standard children's privacy section |
+| App Type                     | Include                                         | Exclude                                              |
+| ---------------------------- | ----------------------------------------------- | ---------------------------------------------------- |
+| Offline utility, no accounts | "Information We Do NOT Collect"                 | Account sections, third-party services, user content |
+| Analytics-only app           | Auto-collected data, third-party services table | Account sections, user content                       |
+| Account-based app            | All data collection sections                    | "Information We Do NOT Collect"                      |
+| Subscription app             | All sections including subscription terms       | None                                                 |
+| Kids app                     | COPPA sections                                  | Standard children's privacy section                  |
 
 ### Placeholder Checklist
 

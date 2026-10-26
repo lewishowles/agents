@@ -40,6 +40,7 @@ is in [`app-release`](../app-release/SKILL.md).
 - [offline-queue](references/offline-queue/overview.md): Build an offline operation queue with persistence, automatic retry on connectivity, and conflict resolution.
 - [pagination](references/pagination/overview.md): Build pagination infrastructure with offset or cursor-based patterns, infinite scroll, and search support.
 - [persistence-setup](references/persistence-setup/overview.md): Build a SwiftData or Core Data persistence layer with optional iCloud sync.
+- [preview-data-generator](references/preview-data-generator/overview.md): Build sample data and a multi-variant SwiftUI preview matrix for data states, appearance, text sizes, and locales.
 - [push-notifications](references/push-notifications/overview.md): Build push notification infrastructure with APNs registration, handling, and rich notifications.
 - [state-restoration](references/state-restoration/overview.md): Build state preservation and restoration infrastructure for navigation paths, tab selection, scroll positions, and form data across app launches and background termination.
 - [widget-generator](references/widget-generator/overview.md): Build WidgetKit widgets for iOS/macOS home screen and lock screen with timeline providers, interactive elements, and App Intent configuration.

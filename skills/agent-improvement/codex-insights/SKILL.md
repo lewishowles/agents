@@ -3,6 +3,7 @@ name: codex-insights
 description: >
   Use this skill when turning bounded Codex rollout extraction JSON into conversation facets, repeated-behaviour findings, and an evidence-backed narrative usage report.
 ---
+
 # Codex insights
 
 Use this skill to turn one bounded `codex_insights_extract.py` JSON document into traceable

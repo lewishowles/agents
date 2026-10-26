@@ -88,16 +88,11 @@ Generate these files:
 
 ### Step 3: Create Format-Specific Files
 
-Based on configuration:
-
-3. `CSVExporter.swift` -- If CSV format selected
-4. `PDFExporter.swift` -- If PDF format selected
+Based on configuration: 3. `CSVExporter.swift` -- If CSV format selected 4. `PDFExporter.swift` -- If PDF format selected
 
 ### Step 4: Create Import Files
 
-If import capability selected:
-
-5. `DataImporter.swift` -- File picker and format parser
+If import capability selected: 5. `DataImporter.swift` -- File picker and format parser
 
 ### Step 5: Determine File Location
 
@@ -325,22 +320,17 @@ For GDPR Article 20 compliance, export must include:
 
 - All personal data the user provided
 - All data generated about the user
-- In a structured, machine-readable format (JSON recommended)
 - With clear field descriptions
 
 ### CSV Must Handle Special Characters
 
-Commas, quotes, and newlines in field values must be properly escaped:
-
-- Fields containing commas: wrap in double quotes
-- Fields containing quotes: escape with double-double quotes
-- Fields containing newlines: wrap in double quotes
+Wrap fields containing commas, quotes, or newlines in double quotes; escape internal quotes by doubling them.
 
 ## Gotchas
 
 ### Temporary Files Cleanup
 
-Files in `FileManager.default.temporaryDirectory` are cleaned up by the system periodically, but not immediately. For large exports, delete the file after sharing completes to free disk space.
+Delete large export files after sharing completes rather than relying on the system's periodic cleanup.
 
 ### PDF Rendering on Background Thread
 
@@ -352,11 +342,11 @@ For exporting thousands of records, stream the output instead of building the en
 
 ### ShareLink vs UIActivityViewController
 
-SwiftUI `ShareLink` (iOS 16+) is simpler but less configurable. `UIActivityViewController` gives full control over excluded activities, completion handlers, and custom activities.
+Use `ShareLink` for the simple case; use `UIActivityViewController` when you need excluded activities, completion handlers, or custom activities.
 
 ### File Import Security Scoped URLs
 
-When using `.fileImporter`, the returned URL is security-scoped. You must call `url.startAccessingSecurityScopedResource()` before reading and `url.stopAccessingSecurityScopedResource()` after.
+`.fileImporter` URLs are security-scoped: call `url.startAccessingSecurityScopedResource()` before reading, `url.stopAccessingSecurityScopedResource()` after.
 
 ## References
 

@@ -7,6 +7,7 @@ Privacy and data handling review for macOS and iOS applications.
 ### What to Document
 
 Users should understand:
+
 1. **What** data is collected
 2. **Why** it's collected
 3. **Where** it's stored (local vs. cloud)
@@ -16,6 +17,7 @@ Users should understand:
 ### In-App Transparency
 
 #### ✅ Good Pattern
+
 ```swift
 // Privacy section in Settings
 Section("Privacy & Data") {
@@ -40,6 +42,7 @@ Section("Privacy & Data") {
 ```
 
 ### Checklist
+
 - [ ] App explains what data it collects (in Settings or onboarding)
 - [ ] Data usage is justified and proportionate
 - [ ] Users can see what data is stored
@@ -67,6 +70,7 @@ If your app uses these APIs, you need a Privacy Manifest:
 ```
 
 ### APIs Requiring Declaration
+
 - UserDefaults
 - File timestamp APIs
 - System boot time APIs
@@ -74,6 +78,7 @@ If your app uses these APIs, you need a Privacy Manifest:
 - Active keyboard APIs
 
 ### Checklist
+
 - [ ] Privacy Manifest created if using required APIs
 - [ ] All required API reasons documented
 - [ ] Third-party SDK privacy manifests included
@@ -83,6 +88,7 @@ If your app uses these APIs, you need a Privacy Manifest:
 ### Permission Requests
 
 #### ✅ Good Patterns
+
 ```swift
 // Request permission with context
 Button("Enable Notifications") {
@@ -96,6 +102,7 @@ Alert("Location Access",
 ```
 
 #### ❌ Anti-patterns
+
 ```swift
 // Don't request on launch without context
 func application(_ application: UIApplication, didFinishLaunchingWithOptions...) {
@@ -105,6 +112,7 @@ func application(_ application: UIApplication, didFinishLaunchingWithOptions...)
 ```
 
 ### Checklist
+
 - [ ] Permissions requested in context (not on first launch)
 - [ ] Clear explanation before each permission request
 - [ ] App works (with reduced functionality) if permission denied
@@ -115,6 +123,7 @@ func application(_ application: UIApplication, didFinishLaunchingWithOptions...)
 ### User Control
 
 #### ✅ Good Pattern
+
 ```swift
 // Clear data option in Settings
 Button("Delete All Data", role: .destructive) {
@@ -130,6 +139,7 @@ Button("Export My Data") {
 ```
 
 ### Checklist
+
 - [ ] Users can delete their data
 - [ ] Data deletion is complete (including Keychain, caches)
 - [ ] Users can export their data
@@ -138,6 +148,7 @@ Button("Export My Data") {
 ## Third-Party SDKs
 
 ### Audit Checklist
+
 - [ ] List all third-party SDKs used
 - [ ] Understand what data each SDK collects
 - [ ] SDK privacy policies reviewed
@@ -145,6 +156,7 @@ Button("Export My Data") {
 - [ ] No unnecessary analytics SDKs
 
 ### Common SDKs to Review
+
 - Analytics (Firebase, Mixpanel, Amplitude)
 - Crash reporting (Crashlytics, Sentry)
 - Advertising (AdMob, Facebook)
@@ -155,13 +167,16 @@ Button("Export My Data") {
 ### macOS
 
 #### Checklist
+
 - [ ] App doesn't access files outside sandbox without permission
 - [ ] Keychain access explained to users
 - [ ] No silent background data collection
 - [ ] Menu bar apps explain their persistent presence
 
 #### Keychain Access Dialog
+
 When accessing another app's Keychain item:
+
 ```swift
 // Users will see: "[App] wants to access [Item] in your keychain"
 // Prepare users in onboarding:
@@ -171,6 +186,7 @@ Text("On first launch, macOS will ask to access credentials from your Keychain. 
 ### iOS
 
 #### App Tracking Transparency (ATT)
+
 ```swift
 // Required if tracking users across apps
 import AppTrackingTransparency
@@ -181,7 +197,9 @@ ATTrackingManager.requestTrackingAuthorization { status in
 ```
 
 #### Privacy Nutrition Labels
+
 Checklist for App Store Connect:
+
 - [ ] Data types collected documented
 - [ ] Data linked to user identity marked
 - [ ] Data used for tracking marked
@@ -190,6 +208,7 @@ Checklist for App Store Connect:
 ## GDPR Compliance Basics
 
 ### Checklist
+
 - [ ] Privacy policy accessible in app
 - [ ] Consent obtained before data collection
 - [ ] Users can access their data
@@ -197,6 +216,7 @@ Checklist for App Store Connect:
 - [ ] Data processing purposes documented
 
 ### Privacy Policy Link
+
 ```swift
 Link("Privacy Policy", destination: URL(string: "https://yourapp.com/privacy")!)
 ```

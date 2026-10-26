@@ -1,6 +1,7 @@
 # Fitness functions
 
 <a id="source-testing-fitness-functions-skill-md"></a>
+
 ## Source: `testing/fitness-functions/SKILL.md`
 
 # Architecture Fitness Functions
@@ -10,6 +11,7 @@ A fitness function is an ordinary test that enforces an architectural rule inste
 ## When This Skill Activates
 
 Use this skill when:
+
 - A project hard rule exists only in prose — CLAUDE.md constraints, file-header comments, review checklists ("deck games must run fully offline", "only the sync layer may import CloudKit")
 - A code review keeps re-checking the same structural rule by hand
 - An `/apple:review` structural finding is being graduated into permanent enforcement
@@ -17,39 +19,41 @@ Use this skill when:
 
 ## Why a Test, Not a Lint Rule
 
-A per-line regex (SwiftLint `custom_rules`) can flag a *line*. A fitness function can assert a *set*: "the files importing MusicKit are exactly these four", "the mode registry has exactly 21 entries", "every case's copy fits the format". Sets, counts, and cross-file facts need code, and putting that code in the test target means no new tooling, no CI wiring — it rides the `test` gate that already exists.
+A per-line regex (SwiftLint `custom_rules`) can flag a _line_. A fitness function can assert a _set_: "the files importing MusicKit are exactly these four", "the mode registry has exactly 21 entries", "every case's copy fits the format". Sets, counts, and cross-file facts need code, and putting that code in the test target means no new tooling, no CI wiring — it rides the `test` gate that already exists.
 
 ## The Three Patterns
 
 ### Pattern 1: Import-Boundary Allowlist Scan
 
-Enforces "only these files may import X." The test walks the shipped source tree and compares the *actual* importer set against an allowlist — so a fifth importer fails a test, not a code review.
+Enforces "only these files may import X." The test walks the shipped source tree and compares the _actual_ importer set against an allowlist — so a fifth importer fails a test, not a code review.
 
 Key rules (learned in production):
+
 - **Resolve the source root from `#filePath`**, never a hardcoded path — the test stays correct wherever the repo is checked out.
 - **Match exact trimmed lines** (`line == "import X"`), not `contains` — comments documenting the contract itself must not count as hits.
 - **Compare full sets, not counts** — the failure message then names the drifted file.
 - **Exclude non-shipping directories deliberately** (DEBUG-only spikes, generated code) and say why in a comment: the guarantee is about what ships.
-- **The allowlist is a fence, not a headcount.** Widening it is a legitimate, *documented* decision: when a new file genuinely belongs inside the boundary, the test failing is the system working — record why in the allowlist comment, then add it.
+- **The allowlist is a fence, not a headcount.** Widening it is a legitimate, _documented_ decision: when a new file genuinely belongs inside the boundary, the test failing is the system working — record why in the allowlist comment, then add it.
 - **Add a companion API-surface scan** for bypass routes the import check can't see. An import-only check misses a file calling the underlying API directly (every file already imports Foundation, which is enough to reach `URLSession` without importing the fenced framework). Scan for the raw API strings (`URLSession(`, `URLSession.shared`) outside the boundary too.
 
 Template: `fitness-functions/ImportBoundaryTests.swift`
 
 ### Pattern 2: Runtime Sentinel
 
-Enforces "this code path never *attempts* X" — stronger than "happens to succeed without X." The canonical case is an offline guarantee: register a `URLProtocol` subclass that intercepts, counts, and fails every network request, drive the real production path, and assert the counter stayed at zero.
+Enforces "this code path never _attempts_ X" — stronger than "happens to succeed without X." The canonical case is an offline guarantee: register a `URLProtocol` subclass that intercepts, counts, and fails every network request, drive the real production path, and assert the counter stayed at zero.
 
 Key rules:
+
 - Register the sentinel per-test and unregister in `defer`.
 - The sentinel **fails** requests loudly (never lets them reach the network) — a regression fails in CI instead of silently succeeding against a live server.
-- Assert `interceptedRequestCount == 0`: the contract is *zero attempts*, not zero successes.
+- Assert `interceptedRequestCount == 0`: the contract is _zero attempts_, not zero successes.
 - Drive the real path (real service, real composition), with only storage in-memory.
 
 Template: `fitness-functions/NetworkSentinelTests.swift`
 
 ### Pattern 3: Contract Pins
 
-Pins facts that must change *deliberately*, never by drift.
+Pins facts that must change _deliberately_, never by drift.
 
 **Count pins** — registry and configuration sizes:
 
@@ -81,15 +85,15 @@ Template: `fitness-functions/ContractPinTests.swift`
 
 ### Phase 1: Identify the Invariant
 
-Read CLAUDE.md / APP.md / file-header comments for hard rules currently enforced by nothing. Good candidates state a *set or bound*: "only", "never", "exactly", "at most", "every".
+Read CLAUDE.md / APP.md / file-header comments for hard rules currently enforced by nothing. Good candidates state a _set or bound_: "only", "never", "exactly", "at most", "every".
 
 ### Phase 2: Pick the Pattern
 
-| The rule is about… | Pattern |
-|---|---|
-| Which files may use a framework/API | 1 — import-boundary scan (+ API-surface companion) |
-| What a code path may *do* at runtime | 2 — runtime sentinel |
-| A size, format, or exact content | 3 — contract pins |
+| The rule is about…                   | Pattern                                            |
+| ------------------------------------ | -------------------------------------------------- |
+| Which files may use a framework/API  | 1 — import-boundary scan (+ API-surface companion) |
+| What a code path may _do_ at runtime | 2 — runtime sentinel                               |
+| A size, format, or exact content     | 3 — contract pins                                  |
 
 ### Phase 3: Write the Suite
 
@@ -122,14 +126,14 @@ The suite ships in the normal test target. No special CI wiring — every existi
 
 ## Common Pitfalls
 
-| Pitfall | Problem | Solution |
-|---------|---------|----------|
-| `contains("import X")` matching | Comments about the rule count as violations | Compare exact trimmed lines |
-| Hardcoded source paths | Breaks on other checkouts/CI | Derive root from `#filePath` |
-| Pinning counts without history | Updating the pin becomes a mindless chore | Comment trail explaining every number |
-| Import check only | Direct API calls bypass the fence | Add the API-surface companion scan |
-| Never proven red | Scan bug silently passes everything | Deliberate-break drill before commit |
-| Allowlist grows without comment | Fence decays into a headcount | Each entry documents why it's inside the boundary |
+| Pitfall                         | Problem                                     | Solution                                          |
+| ------------------------------- | ------------------------------------------- | ------------------------------------------------- |
+| `contains("import X")` matching | Comments about the rule count as violations | Compare exact trimmed lines                       |
+| Hardcoded source paths          | Breaks on other checkouts/CI                | Derive root from `#filePath`                      |
+| Pinning counts without history  | Updating the pin becomes a mindless chore   | Comment trail explaining every number             |
+| Import check only               | Direct API calls bypass the fence           | Add the API-surface companion scan                |
+| Never proven red                | Scan bug silently passes everything         | Deliberate-break drill before commit              |
+| Allowlist grows without comment | Fence decays into a headcount               | Each entry documents why it's inside the boundary |
 
 ## References
 

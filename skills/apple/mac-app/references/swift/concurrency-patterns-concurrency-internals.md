@@ -1,6 +1,7 @@
 # Concurrency patterns concurrency internals
 
 <a id="source-swift-concurrency-patterns-concurrency-internals-md"></a>
+
 ## Source: `swift/concurrency-patterns/concurrency-internals.md`
 
 # Concurrency Runtime Internals and Profiling
@@ -9,7 +10,7 @@ How Swift concurrency actually executes — the cooperative thread pool, the for
 
 ## The Runtime Contract: Forward Progress
 
-The entire cooperative pool design depends on one invariant (WWDC21 10254): **threads must always be able to make forward progress**. `await` does not block a thread — it suspends the *task* and frees the thread for other work. Code that *blocks* a cooperative-pool thread (GCD `sync`, semaphores, long-held locks) violates the contract the runtime is built on.
+The entire cooperative pool design depends on one invariant (WWDC21 10254): **threads must always be able to make forward progress**. `await` does not block a thread — it suspends the _task_ and frees the thread for other work. Code that _blocks_ a cooperative-pool thread (GCD `sync`, semaphores, long-held locks) violates the contract the runtime is built on.
 
 - "Swift makes no guarantee that the thread which executed the code before the await is the same thread which will pick up the continuation… await is an explicit point in your code which indicates that atomicity is broken since the task may be voluntarily descheduled."
 - Any code assuming thread locality — thread-local storage, run-loop affinity, `Thread.current` checks — must be revisited: none of it survives an `await`.
@@ -55,12 +56,12 @@ Pool size scales with hardware — "for smaller devices like a watch, there migh
 
 From WWDC21 10254, verbatim doctrine:
 
-| Primitive | Verdict | Why |
-|---|---|---|
-| `DispatchSemaphore`, condition variables | ❌ **Unsafe with Swift concurrency, always** | "They hide dependency information from the Swift runtime, but introduce a dependency in execution" |
-| Semaphore to make a `Task` synchronous | ❌ **Never** | "A thread can block indefinitely against the semaphore… This violates the runtime contract of forward progress" |
-| `os_unfair_lock`, `NSLock` in synchronous code | ⚠️ Safe **only** around a tight, well-known critical section | The thread holding the lock can always make progress toward releasing it |
-| Any lock held across an `await` | ❌ Never | The resuming thread may differ from the locking thread; the pool can deadlock |
+| Primitive                                      | Verdict                                                      | Why                                                                                                             |
+| ---------------------------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| `DispatchSemaphore`, condition variables       | ❌ **Unsafe with Swift concurrency, always**                 | "They hide dependency information from the Swift runtime, but introduce a dependency in execution"              |
+| Semaphore to make a `Task` synchronous         | ❌ **Never**                                                 | "A thread can block indefinitely against the semaphore… This violates the runtime contract of forward progress" |
+| `os_unfair_lock`, `NSLock` in synchronous code | ⚠️ Safe **only** around a tight, well-known critical section | The thread holding the lock can always make progress toward releasing it                                        |
+| Any lock held across an `await`                | ❌ Never                                                     | The resuming thread may differ from the locking thread; the pool can deadlock                                   |
 
 ```swift
 // ❌ Never: blocks a cooperative-pool thread on work the pool may never get to schedule
@@ -120,6 +121,7 @@ Rule: "Code running on the main Actor must finish quickly, and either complete i
 Symptom: UI responsive but no parallel speedup; "Task Summary view shows us that our concurrency code is spending an alarming amount of time in the **Enqueued** state. This means we have a lot of Tasks waiting to get exclusive access to an Actor."
 
 ✅ Fix, two parts (WWDC22 110350):
+
 1. Make the hot function `nonisolated func compressFile(url: URL) async -> Data` — it leaves the actor and runs freely on the pool, hopping back (`await log(…)`) only to touch actor state.
 2. Create the work with `Task.detached` "to ensure the Task does not inherit the Actor-context that it was created in" — the original bug was plain `Task {}` inside a `@MainActor` type, so every task started on the main actor.
 

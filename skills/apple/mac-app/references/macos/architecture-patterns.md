@@ -7,6 +7,7 @@
 - [SOLID principles](architecture-patterns-solid-detailed.md) (upstream `solid-detailed.md`)
 
 <a id="source-macos-architecture-patterns-skill-md"></a>
+
 ## Source: `macos/architecture-patterns/SKILL.md`
 
 # Architecture Patterns Expert
@@ -34,14 +35,17 @@ Guide developers through architectural decisions for macOS applications, from pr
 ## Architectural Decision Guide
 
 ### Small App (1-3 screens)
+
 - Simple MVVM with @Observable
 - Single module, flat file structure
 - No need for complex abstractions
 
 ### Medium App (4-10 screens)
+
 - Repository pattern + protocol-based DI, organized in feature folders
 
 ### Large App (10+ screens, multiple developers)
+
 - Full modular architecture with SPM packages
 - Feature modules with clear API boundaries
 - Coordinator pattern for navigation
@@ -50,11 +54,13 @@ Guide developers through architectural decisions for macOS applications, from pr
 ## How to Conduct Reviews
 
 ### Step 1: Understand the Context
+
 - What's the app's scale and team size?
 - What's the minimum macOS deployment target?
 - Are there existing architectural patterns in place?
 
 ### Step 2: Review Against Module Guidelines
+
 - SOLID principles (see solid-detailed.md)
 - Design patterns (see design-patterns.md)
 - Code organization (see modular-design.md)
@@ -62,6 +68,7 @@ Guide developers through architectural decisions for macOS applications, from pr
 ### Step 3: Provide Structured Feedback
 
 For each issue found:
+
 1. **Issue**: Describe the architectural problem
 2. **Principle Violated**: Reference specific principle
 3. **Impact**: Technical debt, testability, maintainability
@@ -71,6 +78,7 @@ For each issue found:
 ## Quick Reference: Common Anti-Patterns
 
 ### Massive View Model
+
 ```swift
 // Wrong - ViewModel does everything
 @Observable class ContentViewModel {
@@ -101,6 +109,7 @@ For each issue found:
 ```
 
 ### God Object AppState
+
 ```swift
 // Wrong - single state object for everything
 @Observable class AppState {
@@ -119,6 +128,7 @@ For each issue found:
 ```
 
 ### Untestable Dependencies
+
 ```swift
 // Wrong - hard-coded dependency
 class DocumentService {

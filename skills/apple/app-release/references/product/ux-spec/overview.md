@@ -3,6 +3,7 @@
 Generate comprehensive UI/UX specifications with wireframes and design system for iOS/macOS apps.
 
 ## Metadata
+
 - **Name**: ux-spec
 - **Version**: 1.0.0
 - **Role**: UI/UX Designer
@@ -11,6 +12,7 @@ Generate comprehensive UI/UX specifications with wireframes and design system fo
 ## When This Skill Activates
 
 This skill activates when the user says:
+
 - "generate UI spec"
 - "create UX specification"
 - "design wireframes"
@@ -24,6 +26,7 @@ You are a UI/UX Designer AI agent specializing in iOS/macOS app design. Your job
 ## Prerequisites
 
 Before activating this skill, ensure:
+
 1. PRD exists (from prd-generator skill)
 2. ARCHITECTURE.md exists (from architecture-spec skill)
 3. Product development plan with positioning and brand personality
@@ -31,6 +34,7 @@ Before activating this skill, ensure:
 ## Input Sources
 
 Read and extract information from:
+
 1. **docs/PRD.md**
    - All features and requirements
    - User flows and user stories
@@ -42,7 +46,7 @@ Read and extract information from:
    - Data models (to understand what to display)
    - Platform (iOS/macOS)
 
-3. **Product development plan** (product-plan-*.md)
+3. **Product development plan** (product-plan-\*.md)
    - Positioning and brand personality
    - Value proposition
    - Target market
@@ -95,21 +99,23 @@ Generate two comprehensive documents:
 
 **Screen Hierarchy**:
 ```
+
 App Root
 ├── Tab 1: [Home]
-│   ├── [Home Screen]
-│   ├── [Item Detail Screen]
-│   └── [Edit Item Screen]
+│ ├── [Home Screen]
+│ ├── [Item Detail Screen]
+│ └── [Edit Item Screen]
 ├── Tab 2: [Discover]
-│   ├── [Discover Screen]
-│   └── [Category Detail Screen]
+│ ├── [Discover Screen]
+│ └── [Category Detail Screen]
 ├── Tab 3: [Profile]
-│   ├── [Profile Screen]
-│   └── [Settings Screen]
+│ ├── [Profile Screen]
+│ └── [Settings Screen]
 └── Shared
-    ├── [Login Screen]
-    ├── [Onboarding Flow]
-    └── [Error/Empty States]
+├── [Login Screen]
+├── [Onboarding Flow]
+└── [Error/Empty States]
+
 ```
 
 ### 2.2 Screen Inventory
@@ -126,14 +132,16 @@ App Root
 ### 2.3 Navigation Flow Diagram
 
 ```
+
 [Splash] → [Onboarding] → [Home (Tab 1)]
-                              ↓
-                         [Item Detail]
-                              ↓
-                         [Edit Item]
+↓
+[Item Detail]
+↓
+[Edit Item]
 
 [Profile (Tab 3)] → [Settings]
-                  → [Account]
+→ [Account]
+
 ```
 
 ---
@@ -150,24 +158,26 @@ App Root
 
 **Layout** (ASCII wireframe):
 ```
+
 ┌─────────────────────────────────────┐
-│                                     │
-│                                     │
-│          [App Icon/Logo]            │
-│                                     │
-│                                     │
-│         Welcome to [AppName]        │
-│                                     │
-│      [One-line value proposition]   │
-│                                     │
-│                                     │
-│                                     │
-│         [Get Started Button]        │
-│                                     │
-│      Already have an account?       │
-│             [Sign In]               │
-│                                     │
+│ │
+│ │
+│ [App Icon/Logo] │
+│ │
+│ │
+│ Welcome to [AppName] │
+│ │
+│ [One-line value proposition] │
+│ │
+│ │
+│ │
+│ [Get Started Button] │
+│ │
+│ Already have an account? │
+│ [Sign In] │
+│ │
 └─────────────────────────────────────┘
+
 ```
 
 **Components**:
@@ -198,27 +208,29 @@ App Root
 
 **Layout**:
 ```
+
 ┌─────────────────────────────────────┐
-│  ○ ● ○                     [Skip]   │  (Progress + Skip)
+│ ○ ● ○ [Skip] │ (Progress + Skip)
 ├─────────────────────────────────────┤
-│                                     │
-│                                     │
-│         [Feature Illustration]      │
-│              or Screenshot          │
-│                                     │
-│                                     │
+│ │
+│ │
+│ [Feature Illustration] │
+│ or Screenshot │
+│ │
+│ │
 ├─────────────────────────────────────┤
-│                                     │
-│       [Headline - Feature Name]     │
-│                                     │
-│     [Description - 2-3 lines        │
-│      explaining the benefit]        │
-│                                     │
+│ │
+│ [Headline - Feature Name] │
+│ │
+│ [Description - 2-3 lines │
+│ explaining the benefit] │
+│ │
 ├─────────────────────────────────────┤
-│                                     │
-│            [Next Button]            │
-│                                     │
+│ │
+│ [Next Button] │
+│ │
 └─────────────────────────────────────┘
+
 ```
 
 **Components**:
@@ -253,35 +265,37 @@ App Root
 
 **Layout** (iPhone Portrait):
 ```
+
 ┌─────────────────────────────────────┐
-│  ←  Home              [+]  [⚙️]     │  (Navigation Bar)
+│ ← Home [+] [⚙️] │ (Navigation Bar)
 ├─────────────────────────────────────┤
-│                                     │
-│  Search...                    [🔍]  │  (Search Bar)
-│                                     │
+│ │
+│ Search... [🔍] │ (Search Bar)
+│ │
 ├─────────────────────────────────────┤
-│                                     │
-│  ┌───────────────────────────────┐ │
-│  │  [Thumbnail]  Card Title      │ │  (Card Component)
-│  │               Subtitle • Meta │ │
-│  │               [Status Badge]  │ │
-│  └───────────────────────────────┘ │
-│                                     │
-│  ┌───────────────────────────────┐ │
-│  │  [Thumbnail]  Card Title      │ │
-│  │               Subtitle • Meta │ │
-│  │               [Status Badge]  │ │
-│  └───────────────────────────────┘ │
-│                                     │
-│  ┌───────────────────────────────┐ │
-│  │  [Thumbnail]  Card Title      │ │
-│  │               Subtitle • Meta │ │
-│  │               [Status Badge]  │ │
-│  └───────────────────────────────┘ │
-│                                     │
+│ │
+│ ┌───────────────────────────────┐ │
+│ │ [Thumbnail] Card Title │ │ (Card Component)
+│ │ Subtitle • Meta │ │
+│ │ [Status Badge] │ │
+│ └───────────────────────────────┘ │
+│ │
+│ ┌───────────────────────────────┐ │
+│ │ [Thumbnail] Card Title │ │
+│ │ Subtitle • Meta │ │
+│ │ [Status Badge] │ │
+│ └───────────────────────────────┘ │
+│ │
+│ ┌───────────────────────────────┐ │
+│ │ [Thumbnail] Card Title │ │
+│ │ Subtitle • Meta │ │
+│ │ [Status Badge] │ │
+│ └───────────────────────────────┘ │
+│ │
 ├─────────────────────────────────────┤
-│  [Tab1]  [Tab2]  [Tab3]  [Tab4]    │  (Tab Bar)
+│ [Tab1] [Tab2] [Tab3] [Tab4] │ (Tab Bar)
 └─────────────────────────────────────┘
+
 ```
 
 **Components**:
@@ -324,19 +338,21 @@ App Root
 
 **Empty State**:
 ```
+
 ┌─────────────────────────────────────┐
-│                                     │
-│                                     │
-│           [Empty Icon]              │
-│              (tray)                 │
-│                                     │
-│          No Items Yet               │
-│                                     │
-│     Get started by tapping the      │
-│           + button above            │
-│                                     │
-│                                     │
+│ │
+│ │
+│ [Empty Icon] │
+│ (tray) │
+│ │
+│ No Items Yet │
+│ │
+│ Get started by tapping the │
+│ + button above │
+│ │
+│ │
 └─────────────────────────────────────┘
+
 ```
 - Use ContentUnavailableView (iOS 17+)
 - Icon: SF Symbol related to content type
@@ -345,14 +361,16 @@ App Root
 
 **Loading State**:
 ```
+
 ┌─────────────────────────────────────┐
-│                                     │
-│                                     │
-│       [Loading Spinner]             │
-│          Loading...                 │
-│                                     │
-│                                     │
+│ │
+│ │
+│ [Loading Spinner] │
+│ Loading... │
+│ │
+│ │
 └─────────────────────────────────────┘
+
 ```
 - Full-screen overlay with .ultraThinMaterial background
 - Activity indicator (.large size)
@@ -360,18 +378,20 @@ App Root
 
 **Error State**:
 ```
+
 ┌─────────────────────────────────────┐
-│                                     │
-│                                     │
-│      [Error Icon] (exclamationmark) │
-│                                     │
-│       Couldn't load items           │
-│                                     │
-│   [Error description message]       │
-│                                     │
-│         [Try Again Button]          │
-│                                     │
+│ │
+│ │
+│ [Error Icon] (exclamationmark) │
+│ │
+│ Couldn't load items │
+│ │
+│ [Error description message] │
+│ │
+│ [Try Again Button] │
+│ │
 └─────────────────────────────────────┘
+
 ```
 - ContentUnavailableView with error styling
 - Clear error message (user-friendly, not technical)
@@ -379,16 +399,18 @@ App Root
 
 **Skeleton/Shimmer State** (Alternative to loading spinner):
 ```
+
 ┌─────────────────────────────────────┐
-│  ┌───────────────────────────────┐ │
-│  │  [▓▓▓]  ▓▓▓▓▓▓▓▓▓▓           │ │  (Shimmer effect)
-│  │         ▓▓▓▓▓▓▓ • ▓▓▓         │ │
-│  └───────────────────────────────┘ │
-│  ┌───────────────────────────────┐ │
-│  │  [▓▓▓]  ▓▓▓▓▓▓▓▓▓▓           │ │
-│  │         ▓▓▓▓▓▓▓ • ▓▓▓         │ │
-│  └───────────────────────────────┘ │
+│ ┌───────────────────────────────┐ │
+│ │ [▓▓▓] ▓▓▓▓▓▓▓▓▓▓ │ │ (Shimmer effect)
+│ │ ▓▓▓▓▓▓▓ • ▓▓▓ │ │
+│ └───────────────────────────────┘ │
+│ ┌───────────────────────────────┐ │
+│ │ [▓▓▓] ▓▓▓▓▓▓▓▓▓▓ │ │
+│ │ ▓▓▓▓▓▓▓ • ▓▓▓ │ │
+│ └───────────────────────────────┘ │
 └─────────────────────────────────────┘
+
 ```
 - Show 3-5 placeholder cards
 - Animated shimmer effect (subtle, not distracting)
@@ -415,50 +437,52 @@ App Root
 
 **Layout**:
 ```
+
 ┌─────────────────────────────────────┐
-│  ← [Item Title]          [Edit]     │  (Navigation Bar)
+│ ← [Item Title] [Edit] │ (Navigation Bar)
 ├─────────────────────────────────────┤
-│                                     │
-│        [Hero Image/Thumbnail]       │
-│              (Full width)           │
-│                                     │
+│ │
+│ [Hero Image/Thumbnail] │
+│ (Full width) │
+│ │
 ├─────────────────────────────────────┤
-│                                     │
-│  [Item Title]                       │
-│  [Subtitle or Category]             │
-│                                     │
-│  [Status Badge]  [Metadata]         │
-│                                     │
+│ │
+│ [Item Title] │
+│ [Subtitle or Category] │
+│ │
+│ [Status Badge] [Metadata] │
+│ │
 ├─────────────────────────────────────┤
-│                                     │
-│  Description                        │
-│  ─────────────                      │
-│  [Full description text, can be     │
-│   multiple paragraphs. Lorem ipsum  │
-│   dolor sit amet...]                │
-│                                     │
+│ │
+│ Description │
+│ ───────────── │
+│ [Full description text, can be │
+│ multiple paragraphs. Lorem ipsum │
+│ dolor sit amet...] │
+│ │
 ├─────────────────────────────────────┤
-│                                     │
-│  Details                            │
-│  ────────                           │
-│  Created: [Date]                    │
-│  Modified: [Date]                   │
-│  Author: [Name]                     │
-│                                     │
+│ │
+│ Details │
+│ ──────── │
+│ Created: [Date] │
+│ Modified: [Date] │
+│ Author: [Name] │
+│ │
 ├─────────────────────────────────────┤
-│                                     │
-│  Related Items                      │
-│  ──────────────                     │
-│  ┌─────────┐ ┌─────────┐           │
-│  │ [Item1] │ │ [Item2] │           │
-│  └─────────┘ └─────────┘           │
-│                                     │
+│ │
+│ Related Items │
+│ ────────────── │
+│ ┌─────────┐ ┌─────────┐ │
+│ │ [Item1] │ │ [Item2] │ │
+│ └─────────┘ └─────────┘ │
+│ │
 ├─────────────────────────────────────┤
-│                                     │
-│         [Primary Action]            │
-│         [Secondary Action]          │
-│                                     │
+│ │
+│ [Primary Action] │
+│ [Secondary Action] │
+│ │
 └─────────────────────────────────────┘
+
 ```
 
 **Components**:
@@ -493,38 +517,40 @@ App Root
 
 **Layout** (Sheet/Modal):
 ```
+
 ┌─────────────────────────────────────┐
-│  [Cancel]  Add Item        [Save]   │  (Modal Header)
+│ [Cancel] Add Item [Save] │ (Modal Header)
 ├─────────────────────────────────────┤
-│                                     │
-│  ┌───────────────────────────────┐ │
-│  │   + Add Photo                 │ │  (Image Picker)
-│  └───────────────────────────────┘ │
-│                                     │
-│  Title                              │
-│  ┌───────────────────────────────┐ │
-│  │ [Enter title...]              │ │
-│  └───────────────────────────────┘ │
-│                                     │
-│  Category                           │
-│  ┌───────────────────────────────┐ │
-│  │ [Select category]       [▼]   │ │
-│  └───────────────────────────────┘ │
-│                                     │
-│  Description                        │
-│  ┌───────────────────────────────┐ │
-│  │ [Enter description...]        │ │
-│  │                               │ │
-│  │                               │ │
-│  └───────────────────────────────┘ │
-│                                     │
-│  Status                             │
-│  ○ Active    ○ Pending    ○ Done   │
-│                                     │
-│                                     │
-│         [Delete Item]               │  (Edit only)
-│                                     │
+│ │
+│ ┌───────────────────────────────┐ │
+│ │ + Add Photo │ │ (Image Picker)
+│ └───────────────────────────────┘ │
+│ │
+│ Title │
+│ ┌───────────────────────────────┐ │
+│ │ [Enter title...] │ │
+│ └───────────────────────────────┘ │
+│ │
+│ Category │
+│ ┌───────────────────────────────┐ │
+│ │ [Select category] [▼] │ │
+│ └───────────────────────────────┘ │
+│ │
+│ Description │
+│ ┌───────────────────────────────┐ │
+│ │ [Enter description...] │ │
+│ │ │ │
+│ │ │ │
+│ └───────────────────────────────┘ │
+│ │
+│ Status │
+│ ○ Active ○ Pending ○ Done │
+│ │
+│ │
+│ [Delete Item] │ (Edit only)
+│ │
 └─────────────────────────────────────┘
+
 ```
 
 **Components**:
@@ -563,42 +589,44 @@ App Root
 
 **Layout**:
 ```
+
 ┌─────────────────────────────────────┐
-│  ← Settings                         │
+│ ← Settings │
 ├─────────────────────────────────────┤
-│                                     │
-│  Account                            │
-│  ┌───────────────────────────────┐ │
-│  │  [👤]  [User Name]        [>] │ │
-│  │        user@email.com          │ │
-│  └───────────────────────────────┘ │
-│                                     │
-│  Preferences                        │
-│  ┌───────────────────────────────┐ │
-│  │  Notifications          [○●]  │ │  (Toggle)
-│  │  Dark Mode              [○●]  │ │
-│  │  Language               [>]   │ │
-│  └───────────────────────────────┘ │
-│                                     │
-│  Data & Privacy                     │
-│  ┌───────────────────────────────┐ │
-│  │  Privacy Policy         [>]   │ │
-│  │  Terms of Service       [>]   │ │
-│  │  Delete Account         [>]   │ │
-│  └───────────────────────────────┘ │
-│                                     │
-│  About                              │
-│  ┌───────────────────────────────┐ │
-│  │  App Version      1.0.0       │ │
-│  │  Rate Us                [>]   │ │
-│  │  Contact Support        [>]   │ │
-│  └───────────────────────────────┘ │
-│                                     │
-│                                     │
-│          [Sign Out]                 │
-│                                     │
+│ │
+│ Account │
+│ ┌───────────────────────────────┐ │
+│ │ [👤] [User Name] [>] │ │
+│ │ user@email.com │ │
+│ └───────────────────────────────┘ │
+│ │
+│ Preferences │
+│ ┌───────────────────────────────┐ │
+│ │ Notifications [○●] │ │ (Toggle)
+│ │ Dark Mode [○●] │ │
+│ │ Language [>] │ │
+│ └───────────────────────────────┘ │
+│ │
+│ Data & Privacy │
+│ ┌───────────────────────────────┐ │
+│ │ Privacy Policy [>] │ │
+│ │ Terms of Service [>] │ │
+│ │ Delete Account [>] │ │
+│ └───────────────────────────────┘ │
+│ │
+│ About │
+│ ┌───────────────────────────────┐ │
+│ │ App Version 1.0.0 │ │
+│ │ Rate Us [>] │ │
+│ │ Contact Support [>] │ │
+│ └───────────────────────────────┘ │
+│ │
+│ │
+│ [Sign Out] │
+│ │
 └─────────────────────────────────────┘
-```
+
+````
 
 **Components**:
 - **Section Headers**: .caption uppercase, secondary color, 24pt top padding
@@ -643,10 +671,12 @@ App Root
 .background(Color.brandPrimary)
 .cornerRadius(12)
 .shadow(radius: 4, y: 2)
-```
+````
 
 #### Secondary Button
+
 **Style**:
+
 - Background: Clear
 - Border: 2pt, Brand Primary color
 - Text: Brand Primary color, .headline
@@ -656,13 +686,16 @@ App Root
 **States**: Same as Primary Button
 
 #### Text Button
+
 **Style**:
+
 - Background: None
 - Text: Brand Primary color, .body or .callout
 - No border
 - Height: Auto (text height + padding)
 
 **States**:
+
 - Normal: Primary color
 - Pressed: Opacity 0.6
 - Disabled: Secondary color, no interaction
@@ -672,7 +705,9 @@ App Root
 ### 4.2 Cards
 
 #### Standard Card
+
 **Style**:
+
 - Background: White (light mode) / .secondarySystemBackground (dark mode)
 - Corner radius: 12pt
 - Padding: 16pt
@@ -680,6 +715,7 @@ App Root
 - Border: None (use shadow for elevation)
 
 **Layout**:
+
 ```
 ┌───────────────────────────────┐
 │  [Thumbnail]  Title           │
@@ -689,12 +725,15 @@ App Root
 ```
 
 **Spacing**:
+
 - Thumbnail to text: 12pt
 - Title to subtitle: 4pt
 - Text to edge: 16pt
 
 #### Highlighted Card
+
 **Differences from Standard**:
+
 - Border: 2pt, Brand Primary color
 - Background: Tinted (Primary color at 5% opacity)
 - Shadow: Slightly larger (radius 10)
@@ -704,7 +743,9 @@ App Root
 ### 4.3 Forms
 
 #### Text Input
+
 **Style**:
+
 - Height: 50pt
 - Padding: 16pt horizontal
 - Background: .secondarySystemBackground
@@ -713,16 +754,19 @@ App Root
 - Font: .body
 
 **States**:
+
 - Default: Gray background, no border
 - Focused: White background, blue border
 - Error: Red border, red tint
 - Disabled: Reduced opacity, no interaction
 
 **With Label**:
+
 - Label above input, .caption size, secondary color
 - 8pt spacing between label and input
 
 **With Error**:
+
 - Error message below input, .caption size, red color
 - Error icon (exclamationmark.circle) leading
 
@@ -731,6 +775,7 @@ App Root
 ### 4.4 Typography Styles
 
 **Usage Guide**:
+
 - **Large Title**: Screen titles (Home, Settings)
 - **Title**: Section headers
 - **Title 2**: Card titles, detail screen main heading
@@ -748,30 +793,33 @@ App Root
 
 ### 5.1 Gestures
 
-| Gesture | Use Case | Feedback |
-|---------|----------|----------|
-| Tap | Primary action, select, open | Visual (highlight), Haptic (light) |
-| Long Press | Context menu, preview | Visual (scale up), Haptic (medium) |
-| Swipe Left | Delete, remove | Visual (red background), Haptic (none) |
-| Swipe Right | Archive, mark done | Visual (green background), Haptic (success) |
-| Pull Down | Refresh content | Visual (activity indicator), Haptic (light when triggered) |
-| Pinch | Zoom image, map | Visual (scale), Haptic (none) |
-| Edge Swipe | Back navigation | Visual (screen slide), Haptic (none) |
+| Gesture     | Use Case                     | Feedback                                                   |
+| ----------- | ---------------------------- | ---------------------------------------------------------- |
+| Tap         | Primary action, select, open | Visual (highlight), Haptic (light)                         |
+| Long Press  | Context menu, preview        | Visual (scale up), Haptic (medium)                         |
+| Swipe Left  | Delete, remove               | Visual (red background), Haptic (none)                     |
+| Swipe Right | Archive, mark done           | Visual (green background), Haptic (success)                |
+| Pull Down   | Refresh content              | Visual (activity indicator), Haptic (light when triggered) |
+| Pinch       | Zoom image, map              | Visual (scale), Haptic (none)                              |
+| Edge Swipe  | Back navigation              | Visual (screen slide), Haptic (none)                       |
 
 ### 5.2 Animations
 
 #### Screen Transitions
+
 - **Push/Pop**: Native NavigationStack animation (slide from right)
 - **Modal**: Sheet from bottom, 0.3s ease-in-out
 - **Full Screen**: Fade in, 0.2s
 
 #### Element Animations
+
 - **List Item Appear**: Fade + slide up, 0.3s, staggered by 0.05s
 - **Button Press**: Scale to 0.95, 0.1s
 - **Toggle**: Native iOS switch animation
 - **Skeleton → Content**: Fade out skeleton, fade in content, 0.2s
 
 #### Loading States
+
 - **Spinner**: Continuous rotation, native iOS style
 - **Progress Bar**: Fill animation, 0.5s per segment
 - **Shimmer**: Gradient sweep, 1.5s repeat
@@ -779,6 +827,7 @@ App Root
 ### 5.3 Haptic Feedback
 
 **When to Use**:
+
 - ✅ Button taps (light)
 - ✅ Toggle switches (light)
 - ✅ Pull-to-refresh triggered (medium)
@@ -789,6 +838,7 @@ App Root
 - ❌ Standard navigation (no haptic)
 
 **Implementation**:
+
 ```swift
 import CoreHaptics
 
@@ -808,18 +858,21 @@ notification.notificationOccurred(.success)
 ### 6.1 VoiceOver
 
 **Requirements**:
+
 - All interactive elements must have labels
 - Labels should describe action, not appearance
 - Images need descriptions (decorative = empty label)
 - Status changes should be announced
 
 **Examples**:
+
 - Button: "Add new item" (not "Plus button")
 - Card: "Meeting notes, Created 2 hours ago, Tap to view details"
 - Image: "Profile photo of John Doe" or "" if decorative
 - Toggle: "Notifications, On, Toggle switch" (system provides toggle part)
 
 **Testing**:
+
 - Enable VoiceOver in Simulator (Cmd+F5)
 - Navigate with swipe gestures
 - Verify all elements are reachable and labeled
@@ -829,6 +882,7 @@ notification.notificationOccurred(.success)
 **Support all text sizes**: Extra Small to Accessibility XXL
 
 **Implementation**:
+
 ```swift
 Text("Title")
     .font(.title)  // Automatically scales
@@ -837,27 +891,32 @@ Text("Title")
 ```
 
 **Layout Adjustments**:
+
 - Stack elements vertically at larger sizes
 - Increase spacing proportionally
 - Ensure minimum tap targets (44x44pt)
 
 **Testing**:
+
 - Settings → Accessibility → Display & Text Size → Larger Text
 - Test at XS, default, and XXL sizes
 
 ### 6.3 Color Contrast
 
 **WCAG AA Standards**:
+
 - Text: 4.5:1 minimum contrast ratio
 - Large text (18pt+): 3:1 minimum
 - UI elements: 3:1 minimum
 
 **Testing Tools**:
+
 - Xcode Accessibility Inspector
 - Online: WebAIM Contrast Checker
 - Test in both light and dark modes
 
 **Common Issues**:
+
 - Light gray text on white background (increase contrast)
 - Color-only indicators (add icon or label)
 - Low opacity overlays (ensure text remains readable)
@@ -865,6 +924,7 @@ Text("Title")
 ### 6.4 Reduced Motion
 
 **Respect System Setting**:
+
 ```swift
 @Environment(\.accessibilityReduceMotion) var reduceMotion
 
@@ -876,6 +936,7 @@ if reduceMotion {
 ```
 
 **Alternatives**:
+
 - Replace slide animations with instant transitions
 - Replace complex spring animations with linear fades
 - Reduce animation duration by 50%
@@ -888,11 +949,13 @@ if reduceMotion {
 ### 7.1 Color Adaptation
 
 **Semantic Colors** (Automatic):
+
 - Use system colors when possible (they adapt automatically)
 - `.primary`, `.secondary` for text
 - `.background`, `.secondaryBackground` for surfaces
 
 **Custom Colors**:
+
 - Define in Assets.xcassets with Appearances: "Any, Dark"
 - Provide separate values for each mode
 - Test all screens in both modes
@@ -900,6 +963,7 @@ if reduceMotion {
 ### 7.2 Image Adaptation
 
 **Techniques**:
+
 - Template images (tint to match color scheme)
 - Separate dark mode assets (image_name~dark.png)
 - Reduce opacity of photos in dark mode (optional)
@@ -907,12 +971,14 @@ if reduceMotion {
 ### 7.3 Dark Mode Best Practices
 
 **Do**:
+
 - Use true black (#000000) sparingly (only for OLED optimization)
 - Use elevated surfaces (lighter) for cards/modals
 - Maintain visual hierarchy (contrast between levels)
 - Test with "Increase Contrast" enabled
 
 **Don't**:
+
 - Don't invert light mode colors (design separately)
 - Don't use pure white text (#FFFFFF) - use slightly off-white
 - Don't forget shadows (they disappear on dark backgrounds)
@@ -924,11 +990,13 @@ if reduceMotion {
 ### 8.1 iPhone Sizes
 
 **Layouts to Support**:
+
 - **iPhone SE (3rd gen)**: 375pt width (smallest)
 - **iPhone 15**: 393pt width
 - **iPhone 15 Pro Max**: 430pt width (largest)
 
 **Adaptation Strategy**:
+
 - Use flexible layouts (HStack, VStack, Grid)
 - Set minimum widths, allow expansion
 - Test safe area insets (notch, Dynamic Island)
@@ -936,12 +1004,14 @@ if reduceMotion {
 ### 8.2 iPad (Optional)
 
 **Layout Changes**:
+
 - Sidebar navigation instead of tabs
 - Multi-column layouts (master-detail)
 - Larger cards (2-3 columns in grid)
 - Utilize horizontal space
 
 **Keyboard Support**:
+
 - Cmd+N: New item
 - Cmd+F: Focus search
 - Cmd+S: Save
@@ -951,6 +1021,7 @@ if reduceMotion {
 
 **Portrait**: Default, all screens optimized
 **Landscape**:
+
 - iPhone: Optional (usually lock to portrait)
 - iPad: Required, adjust layout
 
@@ -960,36 +1031,36 @@ if reduceMotion {
 
 ### 9.1 Network States
 
-| State | User Experience | System Behavior |
-|-------|-----------------|-----------------|
-| No connection | "No internet connection. Showing saved data." banner at top | Use cached data, disable sync, queue changes |
-| Slow connection | Loading indicator, timeout after 30s | Show skeleton screens, async load images |
-| Connection restored | "Back online" banner (auto-dismiss 3s) | Trigger sync, upload queued changes |
+| State               | User Experience                                             | System Behavior                              |
+| ------------------- | ----------------------------------------------------------- | -------------------------------------------- |
+| No connection       | "No internet connection. Showing saved data." banner at top | Use cached data, disable sync, queue changes |
+| Slow connection     | Loading indicator, timeout after 30s                        | Show skeleton screens, async load images     |
+| Connection restored | "Back online" banner (auto-dismiss 3s)                      | Trigger sync, upload queued changes          |
 
 ### 9.2 Data States
 
-| State | User Experience | System Behavior |
-|-------|-----------------|-----------------|
-| Empty list | ContentUnavailableView with CTA | Hide list, show empty state |
-| Single item | Show list with one item (not special case) | Same as multiple items |
+| State              | User Experience                            | System Behavior                      |
+| ------------------ | ------------------------------------------ | ------------------------------------ |
+| Empty list         | ContentUnavailableView with CTA            | Hide list, show empty state          |
+| Single item        | Show list with one item (not special case) | Same as multiple items               |
 | Thousands of items | Paginated, lazy loading, search encouraged | Load 50 at a time, virtual scrolling |
 
 ### 9.3 Input Validation
 
-| Invalid Input | User Experience | Prevention |
-|---------------|-----------------|------------|
-| Empty required field | Red outline, "This field is required" below | Disable Save button |
-| Invalid email | "Please enter a valid email" | Real-time validation |
-| Duplicate entry | Alert: "Item already exists. Continue?" | Check on save, allow override |
+| Invalid Input        | User Experience                             | Prevention                    |
+| -------------------- | ------------------------------------------- | ----------------------------- |
+| Empty required field | Red outline, "This field is required" below | Disable Save button           |
+| Invalid email        | "Please enter a valid email"                | Real-time validation          |
+| Duplicate entry      | Alert: "Item already exists. Continue?"     | Check on save, allow override |
 
 ### 9.4 Permission States
 
-| Permission | Denied | Granted |
-|------------|--------|---------|
-| Camera | Show alert: "Camera access needed. Open Settings?" | Open camera picker |
-| Photos | Show placeholder, "Tap to allow photo access" | Open photo picker |
-| Notifications | App works without, show banner once | Send notifications |
-| Location | Feature disabled, show upgrade message | Show map with location |
+| Permission    | Denied                                             | Granted                |
+| ------------- | -------------------------------------------------- | ---------------------- |
+| Camera        | Show alert: "Camera access needed. Open Settings?" | Open camera picker     |
+| Photos        | Show placeholder, "Tap to allow photo access"      | Open photo picker      |
+| Notifications | App works without, show banner once                | Send notifications     |
+| Location      | Feature disabled, show upgrade message             | Show map with location |
 
 ---
 
@@ -998,6 +1069,7 @@ if reduceMotion {
 ### 10.1 iOS Human Interface Guidelines
 
 **Follow These Patterns**:
+
 - Navigation: Use NavigationStack, not custom
 - Tabs: Max 5 tabs, use "More" tab if needed
 - Modals: Sheet for forms, fullScreenCover for immersive
@@ -1007,6 +1079,7 @@ if reduceMotion {
 - Context menus: Long press for actions
 
 **Avoid**:
+
 - Custom navigation that doesn't follow back button patterns
 - Non-standard gestures (users expect iOS conventions)
 - Hamburger menus (use tabs or sidebar on iPad)
@@ -1015,6 +1088,7 @@ if reduceMotion {
 ### 10.2 iOS 17+ Features to Leverage
 
 **Adopt New APIs**:
+
 - ContentUnavailableView for empty states
 - @Observable for view models (instead of ObservableObject)
 - SwiftData for persistence (instead of Core Data)
@@ -1055,15 +1129,17 @@ Use this template for additional screens not detailed above:
 
 **Layout** (ASCII wireframe):
 ```
+
 ┌─────────────────────────────────────┐
-│  [Navigation Bar]                   │
+│ [Navigation Bar] │
 ├─────────────────────────────────────┤
-│                                     │
-│  [Main Content Area]                │
-│                                     │
+│ │
+│ [Main Content Area] │
+│ │
 ├─────────────────────────────────────┤
-│  [Bottom Bar / Actions]             │
+│ [Bottom Bar / Actions] │
 └─────────────────────────────────────┘
+
 ```
 
 **Components**:
@@ -1093,7 +1169,8 @@ Use this template for additional screens not detailed above:
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0.0 | [Date] | UX Designer AI | Initial UX specification |
-```
+
+````
 
 ### 2. docs/DESIGN_SYSTEM.md
 
@@ -1144,9 +1221,10 @@ static let brandPrimary = Color(hex: "#007AFF")  // iOS Blue
 
 // Dark mode
 static let brandPrimaryDark = Color(hex: "#0A84FF")  // Lighter blue
-```
+````
 
 **Brand Secondary** (Accents, highlights):
+
 ```swift
 // Light mode
 static let brandSecondary = Color(hex: "#5856D6")  // Purple
@@ -1156,6 +1234,7 @@ static let brandSecondaryDark = Color(hex: "#5E5CE6")
 ```
 
 **Brand Accent** (Destructive actions, warnings):
+
 ```swift
 // Light mode
 static let brandAccent = Color(hex: "#FF3B30")  // Red
@@ -1167,21 +1246,25 @@ static let brandAccentDark = Color(hex: "#FF453A")
 ### 2.2 Semantic Colors
 
 **Success** (Confirmation, completion):
+
 ```swift
 static let success = Color(hex: "#34C759")  // Green
 ```
 
 **Warning** (Caution, attention needed):
+
 ```swift
 static let warning = Color(hex: "#FF9500")  // Orange
 ```
 
 **Error** (Errors, destructive actions):
+
 ```swift
 static let error = Color(hex: "#FF3B30")  // Red (same as accent)
 ```
 
 **Info** (Tips, information):
+
 ```swift
 static let info = Color(hex: "#007AFF")  // Blue (same as primary)
 ```
@@ -1189,6 +1272,7 @@ static let info = Color(hex: "#007AFF")  // Blue (same as primary)
 ### 2.3 Neutral Colors
 
 **Backgrounds**:
+
 ```swift
 // Light mode
 static let background = Color.white
@@ -1202,6 +1286,7 @@ static let tertiaryBackgroundDark = Color(hex: "#2C2C2E")
 ```
 
 **Text**:
+
 ```swift
 // Light mode
 static let textPrimary = Color(hex: "#000000")
@@ -1215,6 +1300,7 @@ static let textTertiaryDark = Color(hex: "#EBEBF5", opacity: 0.3)
 ```
 
 **Borders & Dividers**:
+
 ```swift
 static let separator = Color(hex: "#3C3C43", opacity: 0.36)
 static let border = Color(hex: "#C7C7CC")
@@ -1223,22 +1309,26 @@ static let border = Color(hex: "#C7C7CC")
 ### 2.4 Usage Guidelines
 
 **Primary Color**:
+
 - Primary CTAs (Save, Submit, Continue)
 - Active tab bar items
 - Selected state
 - Links
 
 **Secondary Color**:
+
 - Secondary actions
 - Highlights
 - Badges (non-critical)
 
 **Accent Color**:
+
 - Delete buttons
 - Error states
 - Critical alerts
 
 **Backgrounds**:
+
 - background: Screen background
 - secondaryBackground: Card backgrounds, input fields
 - tertiaryBackground: Nested cards, elevated surfaces
@@ -1273,6 +1363,7 @@ static let border = Color(hex: "#C7C7CC")
 ### 3.2 Font Family
 
 **Default**: System Font (SF Pro)
+
 - No custom fonts needed (SF Pro is optimized for iOS)
 - If custom font required: Choose legible, web-safe fallback
 
@@ -1294,6 +1385,7 @@ static let border = Color(hex: "#C7C7CC")
 
 **Default**: SwiftUI handles automatically
 **Custom** (if needed):
+
 ```swift
 .lineSpacing(4)  // Add 4pt between lines (for dense text)
 ```
@@ -1302,16 +1394,16 @@ static let border = Color(hex: "#C7C7CC")
 
 ### 3.5 Usage Guidelines
 
-| Element | Style | Use Case |
-|---------|-------|----------|
-| Screen Title | .largeTitle | Home, Settings navigation bar |
-| Section Header | .title2 | "Recent Items", "Profile" |
-| Card Title | .headline | Item name in list |
-| Body Text | .body | Descriptions, paragraphs |
-| Metadata | .footnote | Timestamps, "Created 2h ago" |
-| Button Label | .headline | All buttons |
-| Input Label | .caption | Above text fields |
-| Placeholder | .body + opacity 0.5 | Text field placeholder |
+| Element        | Style               | Use Case                      |
+| -------------- | ------------------- | ----------------------------- |
+| Screen Title   | .largeTitle         | Home, Settings navigation bar |
+| Section Header | .title2             | "Recent Items", "Profile"     |
+| Card Title     | .headline           | Item name in list             |
+| Body Text      | .body               | Descriptions, paragraphs      |
+| Metadata       | .footnote           | Timestamps, "Created 2h ago"  |
+| Button Label   | .headline           | All buttons                   |
+| Input Label    | .caption            | Above text fields             |
+| Placeholder    | .body + opacity 0.5 | Text field placeholder        |
 
 ---
 
@@ -1337,17 +1429,20 @@ enum Spacing {
 ### 4.2 Usage Guidelines
 
 **Padding** (Inside components):
+
 - Cards: 16pt all sides
 - Buttons: 16pt horizontal, 12pt vertical
 - Text fields: 16pt horizontal, 12pt vertical
 - List rows: 16pt horizontal, 8pt vertical
 
 **Margins** (Between components):
+
 - List items: 8pt vertical
 - Sections: 24pt vertical
 - Screen edges: 16pt horizontal
 
 **Stack Spacing**:
+
 ```swift
 VStack(spacing: 12) { ... }  // Default
 HStack(spacing: 8) { ... }   // Tight
@@ -1365,19 +1460,20 @@ VStack(spacing: 24) { ... }  // Loose
 **Margins**: 16pt (iPhone), 20pt (iPad)
 
 **Usage**:
+
 - Single column: Full width (12/12)
 - Two columns: 6/12 each (rare on iPhone)
 - Three columns: 4/12 each (iPad only)
 
 ### 5.2 Breakpoints
 
-| Device | Width (pt) | Columns | Margins |
-|--------|-----------|---------|---------|
-| iPhone SE | 375 | 1 | 16pt |
-| iPhone 15 | 393 | 1 | 16pt |
-| iPhone Pro Max | 430 | 1 | 16pt |
-| iPad Portrait | 768 | 2 | 20pt |
-| iPad Landscape | 1024 | 3 | 20pt |
+| Device         | Width (pt) | Columns | Margins |
+| -------------- | ---------- | ------- | ------- |
+| iPhone SE      | 375        | 1       | 16pt    |
+| iPhone 15      | 393        | 1       | 16pt    |
+| iPhone Pro Max | 430        | 1       | 16pt    |
+| iPad Portrait  | 768        | 2       | 20pt    |
+| iPad Landscape | 1024       | 3       | 20pt    |
 
 ---
 
@@ -1400,6 +1496,7 @@ VStack(spacing: 24) { ... }  // Loose
 ### 6.3 Icon Weights
 
 **Match text weight**:
+
 - Body text (.regular) → .regular weight icon
 - Headline (.semibold) → .semibold weight icon
 - Title (.bold) → .bold weight icon
@@ -1418,23 +1515,23 @@ Image(systemName: "star.fill")
 
 ### 6.5 Common Icons
 
-| Use Case | SF Symbol | Alternative |
-|----------|-----------|-------------|
-| Add | plus | plus.circle.fill |
-| Delete | trash | trash.fill |
-| Edit | pencil | pencil.circle |
-| Search | magnifyingglass | - |
-| Settings | gearshape | gearshape.fill |
-| Profile | person | person.circle |
-| Home | house | house.fill |
-| Favorites | star | star.fill |
-| Share | square.and.arrow.up | - |
-| Close | xmark | xmark.circle.fill |
-| Back | chevron.left | arrow.left |
-| Success | checkmark.circle.fill | - |
-| Error | xmark.circle.fill | exclamationmark.triangle.fill |
-| Warning | exclamationmark.triangle | - |
-| Info | info.circle | questionmark.circle |
+| Use Case  | SF Symbol                | Alternative                   |
+| --------- | ------------------------ | ----------------------------- |
+| Add       | plus                     | plus.circle.fill              |
+| Delete    | trash                    | trash.fill                    |
+| Edit      | pencil                   | pencil.circle                 |
+| Search    | magnifyingglass          | -                             |
+| Settings  | gearshape                | gearshape.fill                |
+| Profile   | person                   | person.circle                 |
+| Home      | house                    | house.fill                    |
+| Favorites | star                     | star.fill                     |
+| Share     | square.and.arrow.up      | -                             |
+| Close     | xmark                    | xmark.circle.fill             |
+| Back      | chevron.left             | arrow.left                    |
+| Success   | checkmark.circle.fill    | -                             |
+| Error     | xmark.circle.fill        | exclamationmark.triangle.fill |
+| Warning   | exclamationmark.triangle | -                             |
+| Info      | info.circle              | questionmark.circle           |
 
 ---
 
@@ -1443,16 +1540,19 @@ Image(systemName: "star.fill")
 ### 7.1 Shadow Levels
 
 **Level 1** (Cards, subtle elevation):
+
 ```swift
 .shadow(color: .black.opacity(0.1), radius: 8, y: 2)
 ```
 
 **Level 2** (Modals, popovers):
+
 ```swift
 .shadow(color: .black.opacity(0.15), radius: 16, y: 4)
 ```
 
 **Level 3** (Dropdowns, tooltips):
+
 ```swift
 .shadow(color: .black.opacity(0.2), radius: 24, y: 8)
 ```
@@ -1460,12 +1560,14 @@ Image(systemName: "star.fill")
 ### 7.2 Usage Guidelines
 
 **When to Use Shadows**:
+
 - Cards on plain background (differentiation)
 - Floating action buttons
 - Modals and sheets
 - Popovers and dropdowns
 
 **When NOT to Use**:
+
 - Dark mode (use borders or different background colors)
 - List items (use dividers instead)
 - Flat design (intentionally no elevation)
@@ -1473,6 +1575,7 @@ Image(systemName: "star.fill")
 ### 7.3 Dark Mode Adaptation
 
 **Replace shadows with borders**:
+
 ```swift
 if colorScheme == .dark {
     .border(Color.white.opacity(0.1), width: 1)
@@ -1500,15 +1603,15 @@ enum CornerRadius {
 
 ### 8.2 Usage Guidelines
 
-| Element | Radius | Rationale |
-|---------|--------|-----------|
-| Buttons | 12pt | iOS standard, comfortable |
-| Text inputs | 10pt | Slightly less than buttons (visual distinction) |
-| Cards | 12pt | Consistent with buttons |
-| Modals/Sheets | 16pt | Larger surface, more prominence |
-| Badges | 8pt or full | Depends on style (rounded or pill) |
-| Avatars | full | Circular |
-| Thumbnails | 8pt | Subtle rounding |
+| Element       | Radius      | Rationale                                       |
+| ------------- | ----------- | ----------------------------------------------- |
+| Buttons       | 12pt        | iOS standard, comfortable                       |
+| Text inputs   | 10pt        | Slightly less than buttons (visual distinction) |
+| Cards         | 12pt        | Consistent with buttons                         |
+| Modals/Sheets | 16pt        | Larger surface, more prominence                 |
+| Badges        | 8pt or full | Depends on style (rounded or pill)              |
+| Avatars       | full        | Circular                                        |
+| Thumbnails    | 8pt         | Subtle rounding                                 |
 
 ---
 
@@ -1534,11 +1637,13 @@ enum AnimationDuration {
 ```
 
 **Spring**: For playful, bouncy effects
+
 ```swift
 .animation(.spring(response: 0.3, dampingFraction: 0.7), value: someValue)
 ```
 
 **Linear**: For progress bars, loaders
+
 ```swift
 .animation(.linear(duration: 2.0), value: progress)
 ```
@@ -1546,12 +1651,14 @@ enum AnimationDuration {
 ### 9.3 Common Animations
 
 **Fade In/Out**:
+
 ```swift
 .opacity(isVisible ? 1 : 0)
 .animation(.easeInOut(duration: 0.3), value: isVisible)
 ```
 
 **Slide In**:
+
 ```swift
 .offset(y: isVisible ? 0 : 50)
 .opacity(isVisible ? 1 : 0)
@@ -1559,12 +1666,14 @@ enum AnimationDuration {
 ```
 
 **Scale (Button Press)**:
+
 ```swift
 .scaleEffect(isPressed ? 0.95 : 1.0)
 .animation(.easeInOut(duration: 0.1), value: isPressed)
 ```
 
 **Rotation**:
+
 ```swift
 .rotationEffect(.degrees(isLoading ? 360 : 0))
 .animation(.linear(duration: 1.0).repeatForever(autoreverses: false), value: isLoading)
@@ -1573,6 +1682,7 @@ enum AnimationDuration {
 ### 9.4 Reduced Motion
 
 **Respect accessibility setting**:
+
 ```swift
 @Environment(\.accessibilityReduceMotion) var reduceMotion
 
@@ -1660,6 +1770,7 @@ TextField("Enter name", text: $name)
 **Location**: `Assets.xcassets/Colors/`
 
 **Naming Convention**:
+
 - `BrandPrimary` (with Light + Dark appearances)
 - `BrandSecondary`
 - `TextPrimary`
@@ -1670,11 +1781,13 @@ TextField("Enter name", text: $name)
 **Location**: `Assets.xcassets/Images/`
 
 **Naming Convention**:
+
 - `icon-name` (lowercase, hyphen-separated)
 - `illustration-onboarding-1`
 - `placeholder-avatar`
 
 **Formats**:
+
 - Icons: PDF (vector) or PNG @2x, @3x
 - Photos: PNG or JPEG @2x, @3x
 - Illustrations: PDF (preferred) or PNG
@@ -1682,6 +1795,7 @@ TextField("Enter name", text: $name)
 ### 11.3 SF Symbols
 
 **No need to add to assets** - use directly by name:
+
 ```swift
 Image(systemName: "star.fill")
 ```
@@ -1782,6 +1896,7 @@ Before considering design system complete:
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
 | 1.0.0 | [Date] | UX Designer AI | Initial design system |
+
 ```
 
 ---
@@ -1791,81 +1906,90 @@ Before considering design system complete:
 When activated, follow these steps:
 
 1. **Locate and Read Input Documents**
-   ```
-   - Read docs/PRD.md (all features and user flows)
-   - Read docs/ARCHITECTURE.md (app structure, data models)
-   - Read product-plan-*.md (positioning, brand personality)
-   If any missing, ask user for file path
-   ```
+```
+
+- Read docs/PRD.md (all features and user flows)
+- Read docs/ARCHITECTURE.md (app structure, data models)
+- Read product-plan-\*.md (positioning, brand personality)
+  If any missing, ask user for file path
+
+```
 
 2. **Extract Key Information**
-   From inputs, extract:
-   - All screens needed (from PRD features)
-   - Navigation structure (from architecture)
-   - Brand personality (from positioning)
-   - Core features to design (from PRD MVP scope)
-   - Platform (iOS/macOS)
+From inputs, extract:
+- All screens needed (from PRD features)
+- Navigation structure (from architecture)
+- Brand personality (from positioning)
+- Core features to design (from PRD MVP scope)
+- Platform (iOS/macOS)
 
 3. **Design Information Architecture**
-   - List all screens
-   - Determine navigation pattern (tabs, stack, sidebar)
-   - Create navigation flow diagram
-   - Prioritize screens (P0, P1, P2)
+- List all screens
+- Determine navigation pattern (tabs, stack, sidebar)
+- Create navigation flow diagram
+- Prioritize screens (P0, P1, P2)
 
 4. **Create Wireframes for Core Screens**
-   For each P0 screen:
-   - Draw ASCII wireframe (clear layout)
-   - Specify all components
-   - Document all interactions
-   - Define states (empty, loading, error)
-   - List data requirements
+For each P0 screen:
+- Draw ASCII wireframe (clear layout)
+- Specify all components
+- Document all interactions
+- Define states (empty, loading, error)
+- List data requirements
 
 5. **Define Design System**
-   Based on brand personality:
-   - Choose color palette (align with positioning)
-   - Define typography scale (iOS standard)
-   - Set spacing system (8pt grid)
-   - Specify component styles (buttons, cards, inputs)
-   - Document animation timings
+Based on brand personality:
+- Choose color palette (align with positioning)
+- Define typography scale (iOS standard)
+- Set spacing system (8pt grid)
+- Specify component styles (buttons, cards, inputs)
+- Document animation timings
 
 6. **Generate Output Files**
-   ```
-   Write comprehensive UX_SPEC.md to: docs/UX_SPEC.md
-   Write complete DESIGN_SYSTEM.md to: docs/DESIGN_SYSTEM.md
-   ```
+```
+
+Write comprehensive UX_SPEC.md to: docs/UX_SPEC.md
+Write complete DESIGN_SYSTEM.md to: docs/DESIGN_SYSTEM.md
+
+```
 
 7. **Present to User**
-   After generating files, present summary:
+After generating files, present summary:
 
-   ```
-   ✅ UI/UX Specifications generated!
+```
 
-   📱 **UX_SPEC.md Summary**:
-   - Screens designed: [X] screens with wireframes
-   - User flows documented: [Y] flows
-   - Interaction patterns: Defined for all screens
-   - Accessibility: VoiceOver labels, Dynamic Type, contrast ratios
+✅ UI/UX Specifications generated!
 
-   🎨 **DESIGN_SYSTEM.md Summary**:
-   - Color palette: [X] colors (light + dark mode)
-   - Typography: iOS Dynamic Type scale
-   - Component library: [Y] reusable components
-   - Animation guidelines: Timings and easing curves
+📱 **UX_SPEC.md Summary**:
 
-   **Next Steps**:
-   1. Review the wireframes in docs/UX_SPEC.md
-   2. Check the design system in docs/DESIGN_SYSTEM.md
-   3. Provide feedback on any screens or components
-   4. Once approved, we can proceed to implementation guide
+- Screens designed: [X] screens with wireframes
+- User flows documented: [Y] flows
+- Interaction patterns: Defined for all screens
+- Accessibility: VoiceOver labels, Dynamic Type, contrast ratios
 
-   Would you like me to make any changes to the UI design?
-   ```
+🎨 **DESIGN_SYSTEM.md Summary**:
+
+- Color palette: [X] colors (light + dark mode)
+- Typography: iOS Dynamic Type scale
+- Component library: [Y] reusable components
+- Animation guidelines: Timings and easing curves
+
+**Next Steps**:
+
+1.  Review the wireframes in docs/UX_SPEC.md
+2.  Check the design system in docs/DESIGN_SYSTEM.md
+3.  Provide feedback on any screens or components
+4.  Once approved, we can proceed to implementation guide
+
+Would you like me to make any changes to the UI design?
+
+```
 
 8. **Iterate Based on Feedback**
-   If user requests changes:
-   - Ask clarifying questions
-   - Update UX_SPEC.md and/or DESIGN_SYSTEM.md
-   - Maintain consistency across both documents
+If user requests changes:
+- Ask clarifying questions
+- Update UX_SPEC.md and/or DESIGN_SYSTEM.md
+- Maintain consistency across both documents
 
 ---
 
@@ -1874,38 +1998,38 @@ When activated, follow these steps:
 When generating the UX specifications:
 
 1. **Be Visual**: ASCII wireframes should be clear and detailed
-   - BAD: Just describe "A list of items"
-   - GOOD: Draw the actual layout with boxes, labels, and spacing
+- BAD: Just describe "A list of items"
+- GOOD: Draw the actual layout with boxes, labels, and spacing
 
 2. **Be Specific**: Every interaction should be defined
-   - BAD: "User can tap the button"
-   - GOOD: "Tap 'Save' button → Validate fields → Show loading spinner → Dismiss sheet → Return to Home with success toast"
+- BAD: "User can tap the button"
+- GOOD: "Tap 'Save' button → Validate fields → Show loading spinner → Dismiss sheet → Return to Home with success toast"
 
 3. **Be Complete**: Cover all states
-   - Happy path (default)
-   - Empty state (no data)
-   - Loading state (data fetching)
-   - Error state (failed to load)
-   - Skeleton/placeholder (progressive loading)
+- Happy path (default)
+- Empty state (no data)
+- Loading state (data fetching)
+- Error state (failed to load)
+- Skeleton/placeholder (progressive loading)
 
 4. **Follow iOS HIG**: Use native patterns
-   - NavigationStack for hierarchical navigation
-   - TabView for flat navigation
-   - Sheet for forms/modals
-   - List for collections
-   - SwiftUI standard components
+- NavigationStack for hierarchical navigation
+- TabView for flat navigation
+- Sheet for forms/modals
+- List for collections
+- SwiftUI standard components
 
 5. **Design for Accessibility**: Not an afterthought
-   - VoiceOver labels for every element
-   - Dynamic Type support
-   - Color contrast 4.5:1 minimum
-   - Reduced motion alternatives
+- VoiceOver labels for every element
+- Dynamic Type support
+- Color contrast 4.5:1 minimum
+- Reduced motion alternatives
 
 6. **Be Consistent**: Reference design system
-   - Use defined colors (don't introduce new ones)
-   - Use spacing scale (not random values)
-   - Use typography scale (not arbitrary sizes)
-   - Reuse components (don't create one-offs)
+- Use defined colors (don't introduce new ones)
+- Use spacing scale (not random values)
+- Use typography scale (not arbitrary sizes)
+- Reuse components (don't create one-offs)
 
 ---
 
@@ -1945,3 +2069,4 @@ The UX specifications serve as the visual blueprint that developers use to imple
 - Ensure all specifications are actionable and unambiguous
 - Keep design system tokens consistent across both documents
 - Test all designs mentally for accessibility before documenting
+```

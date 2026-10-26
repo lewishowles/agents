@@ -5,6 +5,7 @@ Generate metadata templates for Custom Product Pages (CPPs) — targeted App Sto
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Asks to create "custom product pages" or "targeted App Store pages"
 - Mentions "different App Store pages for different audiences"
 - Wants to create pages for specific ad campaigns (Apple Search Ads, social media)
@@ -15,12 +16,12 @@ Use this skill when the user:
 
 **CPPs only make sense when you have enough traffic to meaningfully split across pages.**
 
-| Monthly Impressions | Recommendation |
-|--------------------|----|
-| **Under 2,000** | Don't create CPPs. Focus on optimizing your single default page. You won't have enough traffic per page to know if it's working. |
-| **2,000-10,000** | Create 1 CPP max for your most distinct audience segment or highest-spend ad campaign. Monitor for 4+ weeks. |
-| **10,000-50,000** | Create 2-3 CPPs. Enough traffic to compare performance across pages. |
-| **50,000+** | Full CPP strategy. Multiple pages per segment, ad campaign-specific pages, seasonal variants. |
+| Monthly Impressions | Recommendation                                                                                                                   |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| **Under 2,000**     | Don't create CPPs. Focus on optimizing your single default page. You won't have enough traffic per page to know if it's working. |
+| **2,000-10,000**    | Create 1 CPP max for your most distinct audience segment or highest-spend ad campaign. Monitor for 4+ weeks.                     |
+| **10,000-50,000**   | Create 2-3 CPPs. Enough traffic to compare performance across pages.                                                             |
+| **50,000+**         | Full CPP strategy. Multiple pages per segment, ad campaign-specific pages, seasonal variants.                                    |
 
 **Exception:** If you're running paid Apple Search Ads campaigns, CPPs are valuable even at lower organic volume because ad traffic is directed specifically to your CPP — you're not splitting organic impressions.
 
@@ -34,13 +35,14 @@ Use this skill when the user:
 - Available on iOS 15+ and macOS 12+
 
 ### CPP vs Product Page Optimization (PPO)
-| Feature | Custom Product Pages | Product Page Optimization |
-|---------|---------------------|--------------------------|
-| Purpose | Targeted pages for specific audiences | A/B test default page |
-| Count | Up to 35 pages | Up to 3 treatments |
-| Elements | Screenshots, previews, promo text | Icon, screenshots, previews |
-| URL | Unique URL per page | Same URL, random distribution |
-| Use with ads | Yes (assign to ad groups) | No |
+
+| Feature      | Custom Product Pages                  | Product Page Optimization     |
+| ------------ | ------------------------------------- | ----------------------------- |
+| Purpose      | Targeted pages for specific audiences | A/B test default page         |
+| Count        | Up to 35 pages                        | Up to 3 treatments            |
+| Elements     | Screenshots, previews, promo text     | Icon, screenshots, previews   |
+| URL          | Unique URL per page                   | Same URL, random distribution |
+| Use with ads | Yes (assign to ad groups)             | No                            |
 
 ## Configuration Questions
 
@@ -76,6 +78,7 @@ Ask user via AskUserQuestion:
 ### Step 1: Audience Analysis
 
 For each audience segment:
+
 - Define the primary value proposition
 - Identify pain points this audience has
 - Determine which features matter most
@@ -84,6 +87,7 @@ For each audience segment:
 ### Step 2: Generate Page Metadata
 
 For each custom page:
+
 1. **Page name** (internal reference)
 2. **Promotional text** (170 characters, customizable per page)
 3. **Screenshot strategy** (which features to highlight, in what order)
@@ -93,6 +97,7 @@ For each custom page:
 ### Step 3: Screenshot Sequencing
 
 Design the screenshot order for each page to match the audience's priorities:
+
 - **Screenshot 1**: The hook — the single most compelling feature for this audience
 - **Screenshot 2-3**: Core value proof — features that solve their specific problem
 - **Screenshot 4-5**: Depth and trust — breadth of features, social proof
@@ -165,44 +170,49 @@ Keywords this audience is likely searching for:
 ## Strategy Templates by Use Case
 
 ### Multi-Persona App
+
 Example: Productivity app for students, freelancers, and teams
 
-| Page | Audience | Screenshot Focus | Promo Text Angle |
-|------|----------|-----------------|-----------------|
-| Default | General | Overview of all features | Broad appeal |
-| CPP 1 | Students | Note-taking, study tools, price | "The study companion that..." |
-| CPP 2 | Freelancers | Time tracking, invoicing, clients | "Manage your freelance..." |
-| CPP 3 | Teams | Collaboration, sharing, admin | "Team productivity that..." |
+| Page    | Audience    | Screenshot Focus                  | Promo Text Angle              |
+| ------- | ----------- | --------------------------------- | ----------------------------- |
+| Default | General     | Overview of all features          | Broad appeal                  |
+| CPP 1   | Students    | Note-taking, study tools, price   | "The study companion that..." |
+| CPP 2   | Freelancers | Time tracking, invoicing, clients | "Manage your freelance..."    |
+| CPP 3   | Teams       | Collaboration, sharing, admin     | "Team productivity that..."   |
 
 ### Campaign-Specific Pages
+
 Example: Fitness app running ads on multiple channels
 
-| Page | Channel | Visual Style | Messaging |
-|------|---------|-------------|-----------|
-| Default | Organic | Clean, professional | Feature-focused |
-| CPP 1 | Instagram | Lifestyle, aspirational | Transformation stories |
-| CPP 2 | Google Search | Results-oriented | Data and progress tracking |
-| CPP 3 | Podcast | Social proof | "As heard on [podcast]" |
+| Page    | Channel       | Visual Style            | Messaging                  |
+| ------- | ------------- | ----------------------- | -------------------------- |
+| Default | Organic       | Clean, professional     | Feature-focused            |
+| CPP 1   | Instagram     | Lifestyle, aspirational | Transformation stories     |
+| CPP 2   | Google Search | Results-oriented        | Data and progress tracking |
+| CPP 3   | Podcast       | Social proof            | "As heard on [podcast]"    |
 
 ### Feature-Specific Pages
+
 Example: Photo editing app with multiple use cases
 
-| Page | Feature | Target Search Terms |
-|------|---------|-------------------|
-| Default | All features | "photo editor" |
-| CPP 1 | Portrait mode | "portrait editor", "selfie" |
-| CPP 2 | Filters | "photo filters", "instagram" |
-| CPP 3 | Collage maker | "photo collage", "grid" |
+| Page    | Feature       | Target Search Terms          |
+| ------- | ------------- | ---------------------------- |
+| Default | All features  | "photo editor"               |
+| CPP 1   | Portrait mode | "portrait editor", "selfie"  |
+| CPP 2   | Filters       | "photo filters", "instagram" |
+| CPP 3   | Collage maker | "photo collage", "grid"      |
 
 ## Measurement & Optimization
 
 ### Key Metrics per Page
+
 - **Impressions**: How many people see the page
 - **Conversion rate**: Impressions → Downloads
 - **Retention**: Do users from this page stick around?
 - **Revenue**: Do users from this page convert to paid?
 
 ### Optimization Cadence
+
 1. **Week 1-2**: Launch all pages, gather baseline data
 2. **Week 3-4**: Identify best and worst performing pages
 3. **Month 2**: Iterate screenshots on underperforming pages

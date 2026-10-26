@@ -3,6 +3,7 @@ name: source-extraction
 description: >
   Use this skill when asked to extract raw material from an external page or artefact — for another agent to run, or before feeding the result into project-learn-from-source — without summarising away meaning.
 ---
+
 # Source extraction
 
 Extracting a page for later analysis is not the same task as summarising it for a human. The failure this skill prevents: a "summary" pass quietly drops the caveats, config, and dependent links that a downstream analysis (like `project-learn-from-source`) actually needs, and by the time that's discovered the meaning is already gone. The full extraction stays in a temporary file; the learner receives an index first and requests only the excerpts it needs.

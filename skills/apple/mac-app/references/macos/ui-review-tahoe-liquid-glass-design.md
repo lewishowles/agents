@@ -1,6 +1,7 @@
 # Tahoe UI review: Liquid Glass design
 
 <a id="source-macos-ui-review-tahoe-liquid-glass-design-md"></a>
+
 ## Source: `macos/ui-review-tahoe/liquid-glass-design.md`
 
 # Liquid Glass Design System

@@ -1,6 +1,7 @@
 # SwiftUI debugging: Lazy loading
 
 <a id="source-performance-swiftui-debugging-lazy-loading-md"></a>
+
 ## Source: `performance/swiftui-debugging/lazy-loading.md`
 
 # Lazy vs Eager Loading
@@ -52,12 +53,12 @@ List(items) { item in
 
 ## When to Use Each Container
 
-| Container | Use when | Creates views |
-|-----------|----------|---------------|
-| `VStack` / `HStack` | Few items (< 50) or all must render at once | All immediately |
-| `LazyVStack` / `LazyHStack` | Many items in a `ScrollView` | On demand |
-| `LazyVGrid` / `LazyHGrid` | Grid layout with many items | On demand |
-| `List` | Scrollable list with system styling (swipe actions, separators) | On demand |
+| Container                   | Use when                                                        | Creates views   |
+| --------------------------- | --------------------------------------------------------------- | --------------- |
+| `VStack` / `HStack`         | Few items (< 50) or all must render at once                     | All immediately |
+| `LazyVStack` / `LazyHStack` | Many items in a `ScrollView`                                    | On demand       |
+| `LazyVGrid` / `LazyHGrid`   | Grid layout with many items                                     | On demand       |
+| `List`                      | Scrollable list with system styling (swipe actions, separators) | On demand       |
 
 Rule of thumb: if you have a `ForEach` with more than ~50 items inside a `ScrollView`, use a lazy container.
 
@@ -67,21 +68,21 @@ Rule of thumb: if you have a `ForEach` with more than ~50 items inside a `Scroll
 
 For a list of 1,000 items, each with a moderately complex row:
 
-| Metric | `VStack` | `LazyVStack` |
-|--------|----------|-------------|
-| Views created on appear | 1,000 | ~20-30 |
-| Time to first frame | Seconds (hang) | Milliseconds |
-| Memory at rest | All 1,000 rows in memory | Only visible rows |
-| Scroll start latency | None (already created) | Small (creates as you scroll) |
+| Metric                  | `VStack`                 | `LazyVStack`                  |
+| ----------------------- | ------------------------ | ----------------------------- |
+| Views created on appear | 1,000                    | ~20-30                        |
+| Time to first frame     | Seconds (hang)           | Milliseconds                  |
+| Memory at rest          | All 1,000 rows in memory | Only visible rows             |
+| Scroll start latency    | None (already created)   | Small (creates as you scroll) |
 
 ### Practical Threshold
 
-| Item count | Recommendation |
-|-----------|---------------|
-| 1-20 | `VStack` is fine |
-| 20-50 | Either works; use `LazyVStack` if rows are complex |
-| 50+ | Always use `LazyVStack` or `List` |
-| 500+ | `List` or `LazyVStack` mandatory; consider pagination |
+| Item count | Recommendation                                        |
+| ---------- | ----------------------------------------------------- |
+| 1-20       | `VStack` is fine                                      |
+| 20-50      | Either works; use `LazyVStack` if rows are complex    |
+| 50+        | Always use `LazyVStack` or `List`                     |
+| 500+       | `List` or `LazyVStack` mandatory; consider pagination |
 
 ## LazyVStack Configuration
 
@@ -252,11 +253,11 @@ ScrollView {
 
 ### Fixed vs Adaptive vs Flexible Columns
 
-| Column type | Behavior | Performance note |
-|------------|----------|-----------------|
-| `.fixed(200)` | Exact width | Fastest layout calculation |
-| `.flexible(minimum: 100, maximum: 300)` | Fills available space | Moderate layout cost |
-| `.adaptive(minimum: 150)` | As many as fit | Most layout calculation |
+| Column type                             | Behavior              | Performance note           |
+| --------------------------------------- | --------------------- | -------------------------- |
+| `.fixed(200)`                           | Exact width           | Fastest layout calculation |
+| `.flexible(minimum: 100, maximum: 300)` | Fills available space | Moderate layout cost       |
+| `.adaptive(minimum: 150)`               | As many as fit        | Most layout calculation    |
 
 For large grids (500+ items), prefer `.fixed()` columns to minimize layout computation.
 
@@ -265,6 +266,7 @@ For large grids (500+ items), prefer `.fixed()` columns to minimize layout compu
 ### Built-in Optimizations
 
 `List` provides features that lazy stacks do not:
+
 - Cell reuse (like `UITableView`)
 - Built-in swipe actions
 - Separator management
@@ -282,14 +284,14 @@ List(items) { item in
 
 ### When to Use List vs LazyVStack
 
-| Feature | `List` | `LazyVStack` in `ScrollView` |
-|---------|--------|------------------------------|
-| Cell reuse | Yes | No (but still lazy creation) |
-| Custom styling | Limited | Full control |
-| Swipe actions | Built-in | Manual implementation |
-| Section headers | Built-in | Manual with `pinnedViews` |
-| Scroll performance | Generally better for 1000+ items | Good for most cases |
-| Pull to refresh | `.refreshable()` works | `.refreshable()` works |
+| Feature            | `List`                           | `LazyVStack` in `ScrollView` |
+| ------------------ | -------------------------------- | ---------------------------- |
+| Cell reuse         | Yes                              | No (but still lazy creation) |
+| Custom styling     | Limited                          | Full control                 |
+| Swipe actions      | Built-in                         | Manual implementation        |
+| Section headers    | Built-in                         | Manual with `pinnedViews`    |
+| Scroll performance | Generally better for 1000+ items | Good for most cases          |
+| Pull to refresh    | `.refreshable()` works           | `.refreshable()` works       |
 
 ## Scroll Position and Prefetching
 

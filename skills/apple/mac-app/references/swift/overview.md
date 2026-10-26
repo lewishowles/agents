@@ -7,6 +7,7 @@
 - [Memory](memory.md)
 
 <a id="source-swift-skill-md"></a>
+
 ## Source: `swift/SKILL.md`
 
 # Swift Development
@@ -16,6 +17,7 @@ Swift language-level guidance that applies across all Apple platforms.
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Asks about Swift concurrency (async/await, actors, Sendable, TaskGroup)
 - Needs help with Swift 6 strict concurrency migration
 - Has data race or actor isolation errors
@@ -27,7 +29,9 @@ Use this skill when the user:
 ## Available Modules
 
 ### concurrency-patterns/
+
 Swift concurrency architecture and patterns.
+
 - Swift 6.2 approachable concurrency features (incl. `nonisolated(nonsending)`, Apple's adoption doctrine)
 - Structured concurrency (async let, TaskGroup, .task modifier, task-local values)
 - Actors, isolation, reentrancy, @MainActor, Sendable
@@ -36,13 +40,17 @@ Swift concurrency architecture and patterns.
 - Swift 6 strict concurrency migration guide
 
 ### concurrency/
+
 Swift 6.2 concurrency **updates** reference — the what-changed view (async-stays-on-caller, default MainActor inference, isolated conformances, @concurrent) with migration steps from 6.0/6.1 and top mistakes. Overlaps `concurrency-patterns-swift62-concurrency.md` by design: use this file when the question is "what changed in 6.2?", use concurrency-patterns when building or reviewing async code.
 
 ### code-size/
+
 Complexity and size limits for Swift code — SwiftLint threshold rules (cyclomatic complexity, function/type/file length, parameter count) with a violations-baseline adoption path so existing code never blocks. Part of the deterministic gauntlet with `../testing/fitness-functions.md` and `../testing/coverage-ratchet.md`.
 
 ### memory/
+
 InlineArray, Span, and the Swift performance cost model.
+
 - InlineArray: fixed-size, stack-allocated collections with zero heap overhead
 - Span family: safe, non-escapable access to contiguous memory (+ OutputRawSpan, swift-binary-parsing)
 - Lifetime dependencies and non-escapable type constraints

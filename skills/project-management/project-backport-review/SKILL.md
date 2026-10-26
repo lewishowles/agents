@@ -3,6 +3,7 @@ name: project-backport-review
 description: >
   Use this skill when comparing a client/consumer project against the boilerplate template it started from, to find backport candidates and then improve boilerplate itself for the next project.
 ---
+
 # Project backport review
 
 Compare a client/consumer project against the boilerplate template it started from. The failure this skill prevents is a one-directional, ad hoc diff: skimming the consumer project for ideas, missing the second pass that improves boilerplate itself, and backporting client-specific code that has no business in a shared template.

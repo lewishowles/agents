@@ -5,6 +5,7 @@ Generate pre-order configuration guides, launch timeline templates, and marketin
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Asks about "pre-orders" or "App Store pre-order"
 - Wants to "build anticipation" before a launch
 - Mentions "pre-launch strategy" or "launch countdown"
@@ -21,12 +22,14 @@ Use this skill when the user:
 - Price can be set to "Free" or any paid tier during pre-order
 
 ### Key Benefits
+
 1. **Accumulate downloads**: Pre-orders count toward day-one velocity
 2. **Search visibility**: App is searchable before release
 3. **Featuring eligibility**: Apple can feature pre-order apps
 4. **Marketing anchor**: Give audiences a concrete action ("Pre-order now")
 
 ### Limitations
+
 - Cannot change app name or primary category after pre-order starts
 - Price increases require 7-day notice to pre-order customers
 - App must be ready for review before pre-order goes live
@@ -147,20 +150,22 @@ Ask user via AskUserQuestion:
 ## Pre-Order Best Practices
 
 ### Timing
-| Scenario | Recommended Duration | Reason |
-|----------|---------------------|--------|
-| Indie app, small audience | 2-4 weeks | Short attention span, limited reach |
-| Established brand, new app | 4-8 weeks | Time for press and marketing |
-| Seasonal launch | Align with season start | Holiday: early Nov, Back to school: mid-Aug |
-| WWDC tie-in | Start at WWDC, launch with OS | Ride the hype wave |
+
+| Scenario                   | Recommended Duration          | Reason                                      |
+| -------------------------- | ----------------------------- | ------------------------------------------- |
+| Indie app, small audience  | 2-4 weeks                     | Short attention span, limited reach         |
+| Established brand, new app | 4-8 weeks                     | Time for press and marketing                |
+| Seasonal launch            | Align with season start       | Holiday: early Nov, Back to school: mid-Aug |
+| WWDC tie-in                | Start at WWDC, launch with OS | Ride the hype wave                          |
 
 ### Pricing Strategy
-| Model | During Pre-Order | After Launch | Best For |
-|-------|-----------------|-------------|----------|
-| Free launch | Free | Free | Freemium apps, maximum pre-orders |
-| Introductory price | $0.99-2.99 | $4.99-9.99 | Create urgency, reward early adopters |
-| Full price | $X.99 | $X.99 | Premium apps with strong demand |
-| Free then paid | Free | $X.99 | Controversial — may frustrate expectations |
+
+| Model              | During Pre-Order | After Launch | Best For                                   |
+| ------------------ | ---------------- | ------------ | ------------------------------------------ |
+| Free launch        | Free             | Free         | Freemium apps, maximum pre-orders          |
+| Introductory price | $0.99-2.99       | $4.99-9.99   | Create urgency, reward early adopters      |
+| Full price         | $X.99            | $X.99        | Premium apps with strong demand            |
+| Free then paid     | Free             | $X.99        | Controversial — may frustrate expectations |
 
 ## References
 

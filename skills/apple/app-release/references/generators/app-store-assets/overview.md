@@ -5,6 +5,7 @@ Generate complete asset specifications, design guidelines, and checklists for al
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Asks about "App Store asset specs" or "screenshot sizes"
 - Mentions "app preview" video requirements
 - Wants to know "what images do I need" for App Store

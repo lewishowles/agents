@@ -5,6 +5,7 @@ Generate a compelling App Store featuring nomination ready for submission, inclu
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Asks to "get featured" or "submit for App Store featuring"
 - Mentions "featuring nomination" or "editorial feature"
 - Wants help with "App Store editorial" pitch
@@ -14,21 +15,24 @@ Use this skill when the user:
 ## How App Store Featuring Works
 
 Apple's editorial team hand-picks apps for featuring based on:
+
 - **Quality**: Design, performance, and polish
 - **Innovation**: Novel use of Apple technologies
 - **Relevance**: Timely content or seasonal alignment
 - **Story**: Compelling developer or user narrative
 
 ### Featuring Placements
-| Placement | Visibility | Requirements |
-|-----------|-----------|-------------|
-| Today tab story | Highest | Exceptional quality + narrative |
-| App of the Day | Very high | Outstanding app + timing |
-| Collection feature | High | Fits a themed collection |
-| Category feature | Medium | Top quality in category |
-| Search result boost | Medium | Relevance + quality |
+
+| Placement           | Visibility | Requirements                    |
+| ------------------- | ---------- | ------------------------------- |
+| Today tab story     | Highest    | Exceptional quality + narrative |
+| App of the Day      | Very high  | Outstanding app + timing        |
+| Collection feature  | High       | Fits a themed collection        |
+| Category feature    | Medium     | Top quality in category         |
+| Search result boost | Medium     | Relevance + quality             |
 
 ### Submission Timeline
+
 - Submit **6-8 weeks** before desired featuring date
 - Apple reviews and plans editorial calendar in advance
 - Seasonal features are planned months ahead
@@ -69,6 +73,7 @@ Ask user via AskUserQuestion:
 ### Step 1: Gather App Details
 
 Collect comprehensive information:
+
 - App name, description, and category
 - What's new in this version (if update)
 - Apple technologies used with specific details
@@ -83,6 +88,7 @@ Collect comprehensive information:
 Read [nomination-template.md](nomination-template.md) for the angle selection framework.
 
 Strong angles by category:
+
 - **Accessibility**: Apps that serve underserved communities
 - **Health**: Mental health, physical wellness, therapy tools
 - **Education**: Learning innovation, kids' safety

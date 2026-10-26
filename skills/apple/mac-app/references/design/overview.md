@@ -9,6 +9,7 @@
 - [UX writing](ux-writing.md)
 
 <a id="source-design-skill-md"></a>
+
 ## Source: `design/SKILL.md`
 
 # Design Skills
@@ -18,6 +19,7 @@ Skills for implementing Apple's modern design systems across platforms.
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Asks about Liquid Glass design
 - Wants to implement modern Apple UI effects
 - Needs guidance on visual design patterns
@@ -35,7 +37,9 @@ Use this skill when the user:
 ## Available Skills
 
 ### liquid-glass/
+
 Comprehensive Liquid Glass implementation for iOS 26+, macOS 26+.
+
 - SwiftUI `.glassEffect()` API
 - AppKit `NSGlassEffectView`
 - GlassEffectContainer patterns
@@ -44,7 +48,9 @@ Comprehensive Liquid Glass implementation for iOS 26+, macOS 26+.
 - Button styles
 
 ### animation-patterns/
+
 SwiftUI animation patterns for iOS 13–18+.
+
 - Spring configurations (3 API generations)
 - PhaseAnimator and KeyframeAnimator (iOS 17+)
 - View transitions, matched geometry, navigation transitions
@@ -52,27 +58,33 @@ SwiftUI animation patterns for iOS 13–18+.
 - Animation completions, transactions, timing curves
 
 ### ux-writing/
+
 Interface copy that works — voice/tone, the PACE framework, alert anatomy, feature naming, empty states, and the small-word edits that measurably improve UX.
 
 ### sf-symbols/
+
 SF Symbols end-to-end — choosing/configuring system symbols (rendering modes, variable color/draw), authoring custom symbols that interpolate across weights, and the animation preset vocabulary.
 
 ### typography/
+
 UI typography — text styles and Dynamic Type, the San Francisco family with its width axis, optical sizes, tracking vs kerning, and custom-font scaling obligations.
 
 ## Key Principles
 
 ### 1. Platform Consistency
+
 - Follow Apple Human Interface Guidelines
 - Use system-provided APIs
 - Respect user appearance preferences
 
 ### 2. Performance
+
 - Use GlassEffectContainer for multiple effects
 - Limit number of glass effects per view
 - Consider GPU resources
 
 ### 3. Visual Hierarchy
+
 - Glass effects create depth and layering
 - Use tints to indicate prominence
 - Combine with appropriate shadows

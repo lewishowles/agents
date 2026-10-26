@@ -13,6 +13,7 @@ User experience review for macOS and iOS applications.
 5. **Get started** - Clear call to action
 
 #### ✅ Good Pattern
+
 ```swift
 struct WelcomeView: View {
     var body: some View {
@@ -37,6 +38,7 @@ struct WelcomeView: View {
 ```
 
 ### Checklist
+
 - [ ] Onboarding shown on first launch
 - [ ] Clear value proposition
 - [ ] Features explained concisely
@@ -55,6 +57,7 @@ struct WelcomeView: View {
 4. **Cleared** - User deleted data
 
 #### ✅ Good Pattern
+
 ```swift
 if items.isEmpty {
     ContentUnavailableView {
@@ -68,6 +71,7 @@ if items.isEmpty {
 ```
 
 #### ❌ Anti-pattern
+
 ```swift
 // Empty view with no guidance
 if items.isEmpty {
@@ -76,6 +80,7 @@ if items.isEmpty {
 ```
 
 ### Checklist
+
 - [ ] All lists have empty states
 - [ ] Empty states explain why it's empty
 - [ ] Empty states provide actionable guidance
@@ -90,6 +95,7 @@ if items.isEmpty {
 3. **What to do** - Actionable next step
 
 #### ✅ Good Pattern
+
 ```swift
 enum AppError: LocalizedError {
     case tokenExpired
@@ -107,6 +113,7 @@ enum AppError: LocalizedError {
 ```
 
 #### ❌ Anti-pattern
+
 ```swift
 // Unhelpful error messages
 case .error:
@@ -118,6 +125,7 @@ case .httpError(let code):
 ```
 
 ### Checklist
+
 - [ ] All errors have user-friendly messages
 - [ ] Error messages explain what to do
 - [ ] No technical jargon in user-facing errors
@@ -129,6 +137,7 @@ case .httpError(let code):
 ### Guidelines
 
 #### ✅ Good Pattern
+
 ```swift
 // Show loading indicator
 if isLoading {
@@ -143,6 +152,7 @@ ForEach(0..<5) { _ in
 ```
 
 ### Checklist
+
 - [ ] Loading states shown for async operations
 - [ ] Loading indicators have context (what's loading)
 - [ ] Long operations show progress (not just spinner)
@@ -153,6 +163,7 @@ ForEach(0..<5) { _ in
 ### Text Truncation
 
 #### ✅ Good Pattern
+
 ```swift
 Text(longText)
     .lineLimit(2)
@@ -164,6 +175,7 @@ Text(longText)
 ```
 
 #### ❌ Anti-pattern
+
 ```swift
 // Truncated with no way to see full text
 Text(longText)
@@ -172,6 +184,7 @@ Text(longText)
 ```
 
 ### Checklist
+
 - [ ] Truncated text has tooltip (`.help()`) or expansion
 - [ ] Dynamic Type supported (iOS)
 - [ ] VoiceOver labels for all interactive elements
@@ -179,6 +192,7 @@ Text(longText)
 - [ ] No information conveyed by color alone
 
 ### Search Patterns
+
 ```
 Grep: "lineLimit.*[^help]" (truncation without tooltip)
 Grep: "accessibilityLabel|accessibilityHint"
@@ -187,12 +201,14 @@ Grep: "accessibilityLabel|accessibilityHint"
 ## Dark Mode
 
 ### Checklist
+
 - [ ] App supports dark mode
 - [ ] Uses system colors (not hardcoded)
 - [ ] Images/icons adapt to color scheme
 - [ ] No readability issues in either mode
 
 #### ✅ Good Pattern
+
 ```swift
 // Use system colors
 Color(nsColor: .controlBackgroundColor)
@@ -202,6 +218,7 @@ Color.secondary
 ```
 
 #### ❌ Anti-pattern
+
 ```swift
 // Hardcoded colors
 Color.white
@@ -213,6 +230,7 @@ Color(red: 0.2, green: 0.2, blue: 0.2)
 ### macOS
 
 #### Menu Bar Apps
+
 ```swift
 // Window activation - activate BEFORE dismissing menu
 Button("Open Dashboard") {
@@ -223,12 +241,14 @@ Button("Open Dashboard") {
 ```
 
 #### Keyboard Navigation
+
 - [ ] Tab navigation works
 - [ ] Keyboard shortcuts for common actions
 - [ ] Focus rings visible
 - [ ] Escape closes modals/popovers
 
 #### Checklist
+
 - [ ] Windows activate properly from menu bar
 - [ ] Keyboard navigation complete
 - [ ] Standard shortcuts work (Cmd+W, Cmd+Q, etc.)
@@ -237,15 +257,18 @@ Button("Open Dashboard") {
 ### iOS
 
 #### Launch Screen
+
 - [ ] Launch screen matches initial UI
 - [ ] No jarring transition from launch to app
 
 #### Orientation
+
 - [ ] Supported orientations declared
 - [ ] UI adapts to orientation changes
 - [ ] iPad multitasking supported (if applicable)
 
 #### Safe Areas
+
 - [ ] Content respects safe areas
 - [ ] No content under notch/Dynamic Island
 - [ ] Home indicator area respected
@@ -253,12 +276,14 @@ Button("Open Dashboard") {
 ## Interactive Feedback
 
 ### Checklist
+
 - [ ] Buttons show pressed state
 - [ ] Destructive actions require confirmation
 - [ ] Success/failure feedback provided
 - [ ] Animations are subtle and purposeful
 
 #### ✅ Good Pattern
+
 ```swift
 Button("Delete", role: .destructive) { ... }
     .confirmationDialog("Delete this item?", isPresented: $showConfirm) {
@@ -270,6 +295,7 @@ Button("Delete", role: .destructive) { ... }
 ## Performance UX
 
 ### Checklist
+
 - [ ] App launches quickly (< 2 seconds)
 - [ ] UI remains responsive during background work
 - [ ] No spinning beach ball (macOS)

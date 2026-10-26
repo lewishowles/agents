@@ -1,6 +1,7 @@
 # Concurrency patterns: Actors and isolation
 
 <a id="source-swift-concurrency-patterns-actors-and-isolation-md"></a>
+
 ## Source: `swift/concurrency-patterns/actors-and-isolation.md`
 
 # Actors and Isolation
@@ -12,7 +13,8 @@ Actors serialize access to mutable state, preventing data races at compile time.
 Apple's canonical picture: **tasks are boats, actors are islands, non-isolated code is the open sea** (the global cooperative pool). "Each island is self-contained, with its own state that is isolated from everything else in the sea… Only one boat can visit the island to run code at a time." Every value that crosses a boat↔boat or boat↔island boundary — task-creation captures, task return values, actor call arguments and results — goes through **Sendable checking**.
 
 Three doctrine points that follow:
-- A **data race** needs shared *mutable* state: "If your data doesn't change or it isn't shared across multiple concurrent tasks, you can't have a data race on it" (WWDC21 10133). Races are nondeterministic and demand nonlocal reasoning — which is why the compiler, not review, must catch them.
+
+- A **data race** needs shared _mutable_ state: "If your data doesn't change or it isn't shared across multiple concurrent tasks, you can't have a data race on it" (WWDC21 10133). Races are nondeterministic and demand nonlocal reasoning — which is why the compiler, not review, must catch them.
 - Architecture: views and view controllers on the main actor, business logic on other actors, tasks shuttling **Sendable** data between them — "all of your concurrent code should primarily communicate in terms of Sendable types."
 - Actors are **not FIFO** — unlike serial Dispatch queues, they run highest-priority work first. Never port order-dependent serial-queue code onto an actor; for strict ordering, use a single task or an `AsyncStream`.
 
@@ -307,7 +309,7 @@ await withTaskGroup(of: Void.self) { group in
 
 Most closure parameters in the concurrency APIs are already marked `@Sendable`. You typically only need the annotation when the compiler can't infer it.
 
-The three `@Sendable` closure rules (WWDC21 10133, verbatim): they cannot capture mutable local variables ("that would allow data races on the local variable"); everything they capture must be Sendable; and a synchronous `@Sendable` closure cannot be actor-isolated ("that would allow code to be run on the actor from the outside"). Corollary: a non-Sendable closure formed *inside* an actor method (e.g. passed to `reduce` and run inline) stays actor-isolated and may call actor methods synchronously; the same-looking closure passed to `Task.detached` is `@Sendable` and must `await`.
+The three `@Sendable` closure rules (WWDC21 10133, verbatim): they cannot capture mutable local variables ("that would allow data races on the local variable"); everything they capture must be Sendable; and a synchronous `@Sendable` closure cannot be actor-isolated ("that would allow code to be run on the actor from the outside"). Corollary: a non-Sendable closure formed _inside_ an actor method (e.g. passed to `reduce` and run inline) stays actor-isolated and may call actor methods synchronously; the same-looking closure passed to `Task.detached` is `@Sendable` and must `await`.
 
 ### Sendable Inference Is Not Public
 

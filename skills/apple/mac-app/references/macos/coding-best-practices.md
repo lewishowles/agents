@@ -9,6 +9,7 @@
 - [Swift language](coding-best-practices-swift-language.md) (upstream `swift-language.md`)
 
 <a id="source-macos-coding-best-practices-skill-md"></a>
+
 ## Source: `macos/coding-best-practices/SKILL.md`
 
 # Coding Best Practices for macOS Development
@@ -38,12 +39,15 @@ Review Swift and macOS code against modern idioms, design principles, and best p
 ## How to Conduct Reviews
 
 ### Step 1: Understand Context
+
 - Ask about the code's purpose and requirements
 - Identify the target macOS version and minimum deployment target
 - Understand existing architecture and patterns in use
 
 ### Step 2: Systematic Review
+
 Review code against each module's guidelines:
+
 - Swift language patterns (see swift-language.md)
 - Architecture principles (see architecture-principles.md)
 - Data persistence approach (see data-persistence.md)
@@ -53,6 +57,7 @@ Review code against each module's guidelines:
 ### Step 3: Provide Structured Feedback
 
 For each issue found:
+
 1. **Issue**: Clearly state what's wrong
 2. **Principle Violated**: Reference specific principle (SOLID, DRY, etc.)
 3. **Impact**: Explain why it matters
@@ -62,6 +67,7 @@ For each issue found:
 ### Step 4: Prioritize Recommendations
 
 Categorize feedback:
+
 - 🔴 **Critical**: Security issues, crashes, memory leaks
 - 🟡 **Important**: Architecture violations, maintainability issues
 - 🟢 **Nice-to-have**: Style improvements, minor optimizations
@@ -86,23 +92,28 @@ Before completing review, ensure you've checked:
 The Mac-specific defaults to expect during review — flag hand-rolled equivalents.
 
 **App shell & windows**
+
 - `NavigationSplitView` is the default shell — sidebar + content + detail, with column visibility control
 - `MenuBarExtra` for menu bar apps; `Window(id:)` + `openWindow` for auxiliary windows, with `defaultPosition` / `defaultSize` declared on the scene
 - Window styling belongs on the scene, not in AppKit hacks: `windowStyle(.plain)`, `windowLevel(.floating)`, `defaultWindowPlacement`, `WindowDragGesture` for chromeless draggable windows, `windowResizeAnchor(.top)`
 
 **Standard surfaces**
+
 - `formStyle(.grouped)` + `LabeledContent` for settings panes — matches System Settings without custom grids
 - `Table` for multi-column data, with `TableColumnCustomization` (user-reorderable/hideable columns) and `DisclosureTableRow` for hierarchy
 
 **Performance**
+
 - SwiftUI `List` was rewritten with large-list performance roughly 6x faster at 100k+ rows (WWDC25) — before reaching for `NSTableView`, profile with the SwiftUI instrument in Instruments
 
 **Focus & keyboard (where Mac reviews earn their keep)**
+
 - macOS Sonoma changed `focusable()` semantics: it now grants click-to-focus by default — audit adopters and add `focusable(interactions: .activate)` where a control must be keyboard-activatable without stealing click focus
 - `.activate`-only controls are reachable via Tab only when System Settings keyboard navigation is on — test both states
 - Always test with Keyboard Navigation enabled (System Settings > Keyboard)
 
 **AppKit interop**
+
 - Scene bridging lets an AppKit app host SwiftUI scenes (windows, menu bar extras) directly; `NSGestureRecognizerRepresentable` bridges AppKit gestures into SwiftUI; `NSHostingView` is usable straight from Interface Builder
 
 ## Module References

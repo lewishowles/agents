@@ -1,6 +1,7 @@
 # AlarmKit: Live Activities
 
 <a id="source-swiftui-alarmkit-live-activities-md"></a>
+
 ## Source: `swiftui/alarmkit/live-activities.md`
 
 # Live Activities Integration
@@ -72,6 +73,7 @@ struct MyAppWidgets: WidgetBundle {
 `AlarmAttributes` is the type that conforms to `ActivityAttributes` and carries all the information needed to render alarm UI in Live Activities. AlarmKit provides this type -- you do not define it yourself.
 
 Key properties available in the activity context:
+
 - Presentation information (title, buttons)
 - Metadata (if you conform to `AlarmMetadata`)
 - Tint color

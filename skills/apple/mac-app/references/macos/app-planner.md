@@ -1,6 +1,7 @@
 # App planner
 
 <a id="source-macos-app-planner-skill-md"></a>
+
 ## Source: `macos/app-planner/SKILL.md`
 
 # App Planner for macOS
@@ -38,6 +39,7 @@ Create comprehensive planning documents for new macOS apps or analyze existing p
 Begin by asking whether this is a new app or existing app analysis.
 
 <a id="source-macos-app-planner-existing-app-analysis-md"></a>
+
 ## Source: `macos/app-planner/existing-app-analysis.md`
 
 # Existing macOS App Analysis
@@ -112,6 +114,7 @@ Create 10 comprehensive analysis documents for existing apps.
 - Priority timeline
 
 <a id="source-macos-app-planner-new-app-planning-md"></a>
+
 ## Source: `macos/app-planner/new-app-planning.md`
 
 # New macOS App Planning

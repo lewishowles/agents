@@ -20,16 +20,17 @@ Build simple, single-feature apps around those keywords.
 
 From Apple Search Ads. Represents search volume.
 
-| Score | Traffic Level | Notes |
-|-------|--------------|-------|
-| 5-15 | Very Low | Only target if very niche |
-| 16-25 | Low | Good for long-tail, low competition |
-| 26-40 | Medium | Sweet spot for indie apps |
-| 41-60 | Good | Worthwhile if difficulty allows |
-| 61-80 | High | Usually high competition |
-| 81-100 | Very High | Dominated by brands |
+| Score  | Traffic Level | Notes                               |
+| ------ | ------------- | ----------------------------------- |
+| 5-15   | Very Low      | Only target if very niche           |
+| 16-25  | Low           | Good for long-tail, low competition |
+| 26-40  | Medium        | Sweet spot for indie apps           |
+| 41-60  | Good          | Worthwhile if difficulty allows     |
+| 61-80  | High          | Usually high competition            |
+| 81-100 | Very High     | Dominated by brands                 |
 
 **Important:** Popularity is exponential, not linear.
+
 - Score 50 is NOT 2x traffic of Score 25
 - Score 80 could be 10x traffic of Score 40
 
@@ -37,13 +38,13 @@ From Apple Search Ads. Represents search volume.
 
 Estimated from competitor strength and count.
 
-| Score | Competition | Your Chances |
-|-------|------------|--------------|
-| 0-25 | Very Low | Easy ranking |
-| 26-40 | Low | Good opportunity |
-| 41-55 | Medium | Achievable with good ASO |
-| 56-70 | High | Hard, need excellent app + ASO |
-| 71-100 | Very High | Dominated by established apps |
+| Score  | Competition | Your Chances                   |
+| ------ | ----------- | ------------------------------ |
+| 0-25   | Very Low    | Easy ranking                   |
+| 26-40  | Low         | Good opportunity               |
+| 41-55  | Medium      | Achievable with good ASO       |
+| 56-70  | High        | Hard, need excellent app + ASO |
+| 71-100 | Very High   | Dominated by established apps  |
 
 ## The Sweet Spot Matrix
 
@@ -82,14 +83,14 @@ Penalty: -30 if Diff >70 (very competitive)
 
 ### Grading Scale
 
-| Score | Grade | Action |
-|-------|-------|--------|
-| 80+ | A+ | HIGH PRIORITY - Target immediately |
-| 60-79 | A | Good opportunity |
-| 40-59 | B | Worth pursuing |
-| 20-39 | C | Consider if relevant |
-| 0-19 | D | Low priority |
-| <0 | F | Skip |
+| Score | Grade | Action                             |
+| ----- | ----- | ---------------------------------- |
+| 80+   | A+    | HIGH PRIORITY - Target immediately |
+| 60-79 | A     | Good opportunity                   |
+| 40-59 | B     | Worth pursuing                     |
+| 20-39 | C     | Consider if relevant               |
+| 0-19  | D     | Low priority                       |
+| <0    | F     | Skip                               |
 
 ### Example Calculations
 
@@ -107,20 +108,24 @@ Score = (70 × 2) - 85 - 30 (penalty) = 25 → Grade C (despite high pop!)
 ## Keyword Categories by Opportunity
 
 ### Tier 1: Target Immediately
+
 - Pop 25-50, Diff <40
 - Pop 40-60, Diff <50
 - Score 60+
 
 ### Tier 2: Good Opportunities
+
 - Pop 20-40, Diff 40-55
 - Pop 50-70, Diff 50-60
 - Score 40-59
 
 ### Tier 3: Long-term Goals
+
 - Pop 60+, Diff 60-75
 - Build app strength first, then target
 
 ### Tier 4: Skip
+
 - Pop <15 (not enough traffic)
 - Diff >75 (too competitive)
 - Score <20
@@ -153,14 +158,14 @@ Best: "interval timer", "pomodoro timer", "study timer"
 
 Based on Nov 2025 App Store data:
 
-| Category | High-Opportunity Keywords |
-|----------|--------------------------|
-| Health | "ai coach", "brown noise", "pink noise" |
-| Business | "invoice", "fax", "side hustle" |
-| Utilities | "storage cleaner", "free up space" |
-| Lifestyle | "mood tracker", "gratitude journal" |
-| Music | "metronome", "tuner" |
-| Productivity | "pomodoro timer", "habit tracker" |
+| Category     | High-Opportunity Keywords               |
+| ------------ | --------------------------------------- |
+| Health       | "ai coach", "brown noise", "pink noise" |
+| Business     | "invoice", "fax", "side hustle"         |
+| Utilities    | "storage cleaner", "free up space"      |
+| Lifestyle    | "mood tracker", "gratitude journal"     |
+| Music        | "metronome", "tuner"                    |
+| Productivity | "pomodoro timer", "habit tracker"       |
 
 ## Competitor Keyword Analysis
 
@@ -176,6 +181,7 @@ Based on Nov 2025 App Store data:
 ### Steal Strategy
 
 Target keywords competitors rank for weakly:
+
 - Their rank: #30-100
 - Your potential: Top 10 with good ASO
 
@@ -184,22 +190,24 @@ Target keywords competitors rank for weakly:
 ### Check Before Targeting
 
 Some keywords are trademarked:
+
 - "Divvy" — Bill.com trademark
 - "Splitwise" — Brand name
 - "Venmo" — Brand name
 
 ### Safe vs Risky Keywords
 
-| Safe (Generic) | Risky (Trademarked) |
-|----------------|-------------------|
-| split bill | splitwise |
-| expense tracker | divvy |
-| payment | venmo |
-| settle up | paypal |
+| Safe (Generic)  | Risky (Trademarked) |
+| --------------- | ------------------- |
+| split bill      | splitwise           |
+| expense tracker | divvy               |
+| payment         | venmo               |
+| settle up       | paypal              |
 
 ### Rule
 
 If a keyword shows high popularity but is a brand name:
+
 - Traffic is people looking for THAT app
 - Even if you rank, conversion will be poor
 - May get trademark complaint

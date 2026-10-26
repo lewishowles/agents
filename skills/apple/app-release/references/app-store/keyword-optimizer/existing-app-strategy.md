@@ -5,6 +5,7 @@ How to improve ASO for apps that already have downloads without risking existing
 ## The Risk
 
 When optimizing an existing app:
+
 - You can see **rankings** but not which keywords drive **actual downloads**
 - Changing keywords that are working can **kill traffic**
 - Recovery can take weeks if you make mistakes
@@ -16,11 +17,11 @@ When optimizing an existing app:
 Traffic from a keyword ≈ **Popularity × Position Factor**
 
 | Position | Approx. Click Share |
-|----------|-------------------|
-| #1-3 | 40-60% of searches |
-| #4-10 | 10-25% of searches |
-| #11-30 | 2-8% of searches |
-| #30+ | <1% of searches |
+| -------- | ------------------- |
+| #1-3     | 40-60% of searches  |
+| #4-10    | 10-25% of searches  |
+| #11-30   | 2-8% of searches    |
+| #30+     | <1% of searches     |
 
 ### Method 2: Opportunity Score
 
@@ -33,9 +34,9 @@ Low Score + Any Rank = Probably not driving traffic
 
 ### Analysis Template
 
-| Keyword | Pop | Rank | Est. Traffic | Protect? |
-|---------|-----|------|--------------|----------|
-| [keyword] | [X] | #[Y] | High/Med/Low | Yes/No |
+| Keyword   | Pop | Rank | Est. Traffic | Protect? |
+| --------- | --- | ---- | ------------ | -------- |
+| [keyword] | [X] | #[Y] | High/Med/Low | Yes/No   |
 
 **Example:**
 | Keyword | Pop | Rank | Est. Traffic | Protect? |
@@ -66,6 +67,7 @@ SAFE TO CHANGE:
 ### Phase 1: Additive Only (Week 1-2)
 
 **Zero Risk Actions:**
+
 - [ ] Add Spanish (Mexico) locale with new keywords
 - [ ] Add English (UK) locale with new keywords
 - [ ] Update screenshot captions with keywords
@@ -76,11 +78,13 @@ These don't affect existing rankings — they only ADD opportunities.
 ### Phase 2: Monitor & Measure (Week 3-4)
 
 Track in your ASO tool:
+
 - [ ] Did new keywords start ranking?
 - [ ] Did downloads increase?
 - [ ] Did existing rankings stay stable?
 
 **Baseline Tracking Template:**
+
 ```
 Date: ___________
 Daily downloads: ___
@@ -100,6 +104,7 @@ Keyword 3: ___ rank #___
 ### Phase 4: Evaluate Full Changes (Week 7+)
 
 **Only if downloads stable/increased:**
+
 - Consider title adjustments (if needed)
 - Continue keyword field optimization
 - Always protect your best-ranking keywords
@@ -141,6 +146,7 @@ Why Safe:
 ### Red Flags
 
 Don't change if:
+
 - Keyword ranks Top 5 with Pop >20
 - Keyword drives measurable traffic (from Apple Search Ads data)
 - It's your app's core identity term
@@ -150,11 +156,13 @@ Don't change if:
 If possible, run a small Apple Search Ads campaign ($20-50):
 
 ### What You Learn
+
 - Exact keywords driving installs
 - Conversion rates per keyword
 - Cost per install (indicates competition)
 
 ### Campaign Strategy
+
 1. Create "Exact Match" ad groups
 2. Add your suspected traffic-driving keywords
 3. Run for 1-2 weeks
@@ -167,15 +175,18 @@ This data is **gold** for deciding what to protect vs. change.
 If rankings drop after changes:
 
 ### Immediate (Day 1-3)
+
 - Document what changed
 - Check if rankings are actually down or just fluctuating
 - Don't panic — rankings fluctuate naturally
 
 ### Short-Term (Week 1)
+
 - If significant drop, consider reverting changes
 - Reversion takes ~1 week to re-index
 
 ### Long-Term (Week 2+)
+
 - If still down, revert to previous metadata
 - Wait for full re-indexing (2-4 weeks)
 - Try smaller changes next time
@@ -194,20 +205,24 @@ If rankings drop after changes:
 **App:** Expense Split (7 downloads/day)
 
 **Current Rankings:**
+
 - "settle up" — #4, Pop 29 → PROTECT
 - "settle" — #18, Pop 21 → PROTECT
 - "split bill" — #211, Pop 21 → SAFE TO TARGET
 
 **Phase 1 Plan:**
+
 1. Add Spanish (MX) with: roommate,apartment,utilities,dinner,trip,vacation
 2. Add screenshot caption: "Split Bills with Roommates"
 3. DON'T change title (has "Settle Up")
 
 **Phase 2 Monitor:**
+
 - Check if new keywords start ranking
 - Verify "settle up" stays at #4
 - Track daily downloads
 
 **Phase 3 (if stable):**
+
 - Update subtitle to include "split bills"
 - Replace low-value keywords in keyword field

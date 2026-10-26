@@ -9,6 +9,7 @@
 - [Visual effects](animation-patterns-visual-effects.md) (upstream `visual-effects.md`)
 
 <a id="source-design-animation-patterns-skill-md"></a>
+
 ## Source: `design/animation-patterns/SKILL.md`
 
 # Animation Patterns
@@ -18,6 +19,7 @@ Correct API shapes and patterns for SwiftUI animations. Prevents common mistakes
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Asks to add, fix, or review **animation** code
 - Mentions **spring**, **bounce**, or **snappy** animations
 - Wants **view transitions** (insertion/removal, hero)
@@ -79,38 +81,38 @@ What are you animating?
 
 ## API Availability
 
-| API | Minimum Version | Reference |
-|-----|----------------|-----------|
-| `withAnimation` | iOS 13 | animation-patterns-core-animations.md |
-| `.animation(_:value:)` | iOS 13 | animation-patterns-core-animations.md |
-| `.spring(response:dampingFraction:)` | iOS 13 | animation-patterns-core-animations.md |
-| `.matchedGeometryEffect` | iOS 14 | animation-patterns-transitions.md |
-| `.transition(.push(from:))` | iOS 16 | animation-patterns-transitions.md |
-| `.contentTransition(.numericText())` | iOS 16 | animation-patterns-transitions.md |
-| `PhaseAnimator` | iOS 17 | animation-patterns-phase-keyframe-animators.md |
-| `KeyframeAnimator` | iOS 17 | animation-patterns-phase-keyframe-animators.md |
-| `.spring(duration:bounce:)` | iOS 17 | animation-patterns-core-animations.md |
-| Spring presets (`.bouncy`, `.snappy`, `.smooth`) | iOS 17 | animation-patterns-core-animations.md |
-| `withAnimation(_:completionCriteria:_:completion:)` | iOS 17 | animation-patterns-core-animations.md |
-| `.symbolEffect()` | iOS 17 | animation-patterns-symbol-effects.md |
-| `.transition(.blurReplace)` | iOS 17 | animation-patterns-transitions.md |
-| `.contentTransition(.symbolEffect(.replace))` | iOS 17 | animation-patterns-transitions.md |
-| `Transition` protocol / `TransitionPhase` | iOS 17 | animation-patterns-transitions.md |
-| `TransactionKey`, scoped `.animation` / `.transaction` variants | iOS 17 | animation-patterns-core-animations.md |
-| `KeyframeTimeline`, `.mapCameraKeyframeAnimator` | iOS 17 | animation-patterns-phase-keyframe-animators.md |
-| `.scrollTransition`, `.visualEffect` | iOS 17 | animation-patterns-visual-effects.md |
-| Shaders: `.colorEffect` / `.distortionEffect` / `.layerEffect` | iOS 17 | animation-patterns-visual-effects.md |
-| `MeshGradient` | iOS 18 | animation-patterns-visual-effects.md |
-| `TextRenderer` / `TextAttribute` | iOS 18 | animation-patterns-visual-effects.md |
+| API                                                             | Minimum Version | Reference                                      |
+| --------------------------------------------------------------- | --------------- | ---------------------------------------------- |
+| `withAnimation`                                                 | iOS 13          | animation-patterns-core-animations.md          |
+| `.animation(_:value:)`                                          | iOS 13          | animation-patterns-core-animations.md          |
+| `.spring(response:dampingFraction:)`                            | iOS 13          | animation-patterns-core-animations.md          |
+| `.matchedGeometryEffect`                                        | iOS 14          | animation-patterns-transitions.md              |
+| `.transition(.push(from:))`                                     | iOS 16          | animation-patterns-transitions.md              |
+| `.contentTransition(.numericText())`                            | iOS 16          | animation-patterns-transitions.md              |
+| `PhaseAnimator`                                                 | iOS 17          | animation-patterns-phase-keyframe-animators.md |
+| `KeyframeAnimator`                                              | iOS 17          | animation-patterns-phase-keyframe-animators.md |
+| `.spring(duration:bounce:)`                                     | iOS 17          | animation-patterns-core-animations.md          |
+| Spring presets (`.bouncy`, `.snappy`, `.smooth`)                | iOS 17          | animation-patterns-core-animations.md          |
+| `withAnimation(_:completionCriteria:_:completion:)`             | iOS 17          | animation-patterns-core-animations.md          |
+| `.symbolEffect()`                                               | iOS 17          | animation-patterns-symbol-effects.md           |
+| `.transition(.blurReplace)`                                     | iOS 17          | animation-patterns-transitions.md              |
+| `.contentTransition(.symbolEffect(.replace))`                   | iOS 17          | animation-patterns-transitions.md              |
+| `Transition` protocol / `TransitionPhase`                       | iOS 17          | animation-patterns-transitions.md              |
+| `TransactionKey`, scoped `.animation` / `.transaction` variants | iOS 17          | animation-patterns-core-animations.md          |
+| `KeyframeTimeline`, `.mapCameraKeyframeAnimator`                | iOS 17          | animation-patterns-phase-keyframe-animators.md |
+| `.scrollTransition`, `.visualEffect`                            | iOS 17          | animation-patterns-visual-effects.md           |
+| Shaders: `.colorEffect` / `.distortionEffect` / `.layerEffect`  | iOS 17          | animation-patterns-visual-effects.md           |
+| `MeshGradient`                                                  | iOS 18          | animation-patterns-visual-effects.md           |
+| `TextRenderer` / `TextAttribute`                                | iOS 18          | animation-patterns-visual-effects.md           |
 
 ## Common Mistakes — Quick Reference
 
-| # | Mistake | Fix | Details |
-|---|---------|-----|---------|
-| 1 | `spring(response:bounce:)` — mixing parameter generations | Use either `spring(response:dampingFraction:)` (iOS 13) or `spring(duration:bounce:)` (iOS 17) | animation-patterns-core-animations.md |
-| 2 | `.animation(.spring())` without `value:` parameter | Always pass `value:` — the no-value variant is deprecated (iOS 15) | animation-patterns-core-animations.md |
-| 3 | Wrong PhaseAnimator closure signature | `PhaseAnimator(phases) { content, phase in }` — not `{ phase in }` | animation-patterns-phase-keyframe-animators.md |
-| 4 | Using `withAnimation` for SF Symbol effects | Use `.symbolEffect()` modifier instead | animation-patterns-symbol-effects.md |
+| #   | Mistake                                                   | Fix                                                                                            | Details                                        |
+| --- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| 1   | `spring(response:bounce:)` — mixing parameter generations | Use either `spring(response:dampingFraction:)` (iOS 13) or `spring(duration:bounce:)` (iOS 17) | animation-patterns-core-animations.md          |
+| 2   | `.animation(.spring())` without `value:` parameter        | Always pass `value:` — the no-value variant is deprecated (iOS 15)                             | animation-patterns-core-animations.md          |
+| 3   | Wrong PhaseAnimator closure signature                     | `PhaseAnimator(phases) { content, phase in }` — not `{ phase in }`                             | animation-patterns-phase-keyframe-animators.md |
+| 4   | Using `withAnimation` for SF Symbol effects               | Use `.symbolEffect()` modifier instead                                                         | animation-patterns-symbol-effects.md           |
 
 ## Review Checklist
 
@@ -127,10 +129,10 @@ When reviewing animation code, verify:
 
 ## Reference Files
 
-| File | Content |
-|------|---------|
-| [animation-patterns-core-animations.md](animation-patterns-core-animations.md) | withAnimation, springs, completions, transactions + TransactionKey, timing curves, Animatable mechanics, fluid-interface principles (momentum projection, rubber-banding, hysteresis) |
-| [animation-patterns-phase-keyframe-animators.md](animation-patterns-phase-keyframe-animators.md) | PhaseAnimator, KeyframeAnimator, KeyframeTimeline, MapKit camera keyframes, custom animations |
-| [animation-patterns-transitions.md](animation-patterns-transitions.md) | View transitions, custom Transition protocol, matched geometry, gesture-driven springs |
-| [animation-patterns-symbol-effects.md](animation-patterns-symbol-effects.md) | SF Symbol effects, accessibility |
-| [animation-patterns-visual-effects.md](animation-patterns-visual-effects.md) | scrollTransition, visualEffect, MeshGradient, TextRenderer, shader effects (colorEffect/distortionEffect/layerEffect), effect pipelines, semantic alignment guides |
+| File                                                                                             | Content                                                                                                                                                                               |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [animation-patterns-core-animations.md](animation-patterns-core-animations.md)                   | withAnimation, springs, completions, transactions + TransactionKey, timing curves, Animatable mechanics, fluid-interface principles (momentum projection, rubber-banding, hysteresis) |
+| [animation-patterns-phase-keyframe-animators.md](animation-patterns-phase-keyframe-animators.md) | PhaseAnimator, KeyframeAnimator, KeyframeTimeline, MapKit camera keyframes, custom animations                                                                                         |
+| [animation-patterns-transitions.md](animation-patterns-transitions.md)                           | View transitions, custom Transition protocol, matched geometry, gesture-driven springs                                                                                                |
+| [animation-patterns-symbol-effects.md](animation-patterns-symbol-effects.md)                     | SF Symbol effects, accessibility                                                                                                                                                      |
+| [animation-patterns-visual-effects.md](animation-patterns-visual-effects.md)                     | scrollTransition, visualEffect, MeshGradient, TextRenderer, shader effects (colorEffect/distortionEffect/layerEffect), effect pipelines, semantic alignment guides                    |

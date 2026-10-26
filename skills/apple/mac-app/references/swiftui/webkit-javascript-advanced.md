@@ -1,6 +1,7 @@
 # WebKit: Advanced JavaScript
 
 <a id="source-swiftui-webkit-javascript-advanced-md"></a>
+
 ## Source: `swiftui/webkit/javascript-advanced.md`
 
 # JavaScript and Advanced Features
@@ -72,11 +73,11 @@ try await page.callJavaScript(
 )
 ```
 
-| Content World | Isolation | Use Case |
-|---------------|-----------|----------|
-| `.page` | None -- shares scope with page scripts | Reading page variables, interacting with page libraries |
-| `.defaultClient` | Isolated from page scripts | General app-to-web communication |
-| `.world(name:)` | Fully isolated namespace | Multiple independent script contexts |
+| Content World    | Isolation                              | Use Case                                                |
+| ---------------- | -------------------------------------- | ------------------------------------------------------- |
+| `.page`          | None -- shares scope with page scripts | Reading page variables, interacting with page libraries |
+| `.defaultClient` | Isolated from page scripts             | General app-to-web communication                        |
+| `.world(name:)`  | Fully isolated namespace               | Multiple independent script contexts                    |
 
 ### Complete JavaScript Example
 

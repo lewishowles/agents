@@ -6,6 +6,7 @@
 - [SwiftUI debugging](swiftui-debugging.md)
 
 <a id="source-performance-skill-md"></a>
+
 ## Source: `performance/SKILL.md`
 
 # Performance Skills
@@ -15,6 +16,7 @@ Diagnose and fix performance problems, from system-level profiling to SwiftUI re
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Reports the app is **slow, janky, or hanging**
 - Wants to profile with **Instruments** (Time Profiler, Allocations, Hangs)
 - Is investigating **memory issues, slow launches, or energy drain**
@@ -26,10 +28,10 @@ Use this skill when the user:
 Paths are relative to THIS file's directory — skills run with cwd set to the
 user's project, so resolve each path from this local reference page's location.
 
-| Skill | Read | Covers |
-|-------|------|--------|
-| profiling | `profiling.md` | Instruments workflows; hangs, memory, slow launch, energy diagnosis |
-| swiftui-debugging | `swiftui-debugging.md` | Unnecessary re-renders, view identity, slow body evaluations |
+| Skill             | Read                   | Covers                                                              |
+| ----------------- | ---------------------- | ------------------------------------------------------------------- |
+| profiling         | `profiling.md`         | Instruments workflows; hangs, memory, slow launch, energy diagnosis |
+| swiftui-debugging | `swiftui-debugging.md` | Unnecessary re-renders, view identity, slow body evaluations        |
 
 ## How to Route
 

@@ -1,6 +1,7 @@
 # Test contract
 
 <a id="source-testing-test-contract-skill-md"></a>
+
 ## Source: `testing/test-contract/SKILL.md`
 
 # Test Contract
@@ -10,6 +11,7 @@ Define behavioral contracts as test suites. Any class conforming to a protocol m
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Designs a protocol and wants to ensure conformance quality
 - Has multiple implementations of the same interface (e.g., real + mock + in-memory)
 - Says "test the protocol" or "contract test"
@@ -38,6 +40,7 @@ Read: protocol definition
 ```
 
 Understand:
+
 - [ ] All required methods and properties
 - [ ] Expected behavior for each method
 - [ ] Error conditions and edge cases
@@ -245,6 +248,7 @@ struct SQLiteDataStoreContractTests {
 ## Common Contract Categories
 
 ### Repository / Data Store
+
 - CRUD operations (create, read, update, delete)
 - Query/filter behavior
 - Ordering guarantees
@@ -252,6 +256,7 @@ struct SQLiteDataStoreContractTests {
 - Empty state handling
 
 ### Network Client
+
 - Successful response parsing
 - Error response handling (4xx, 5xx)
 - Timeout behavior
@@ -259,12 +264,14 @@ struct SQLiteDataStoreContractTests {
 - Request construction (headers, body)
 
 ### Cache
+
 - Store and retrieve
 - Expiration/TTL
 - Thread safety
 - Persistence across init
 
 ### Authentication
+
 - Login with valid credentials
 - Reject invalid credentials
 - Token refresh
@@ -273,31 +280,35 @@ struct SQLiteDataStoreContractTests {
 
 ## Output Format
 
-```markdown
+````markdown
 ## Contract Tests: [Protocol Name]
 
 ### Protocol
 ```swift
 protocol DataStore { ... }
-```
+````
 
 ### Behaviors Tested
-| Behavior | Tests | Edge Cases |
-|----------|-------|------------|
-| save | 3 | empty title, duplicate ID |
-| fetch | 2 | non-existent ID |
-| delete | 2 | non-existent ID |
-| fetchAll | 2 | empty store |
-| invariants | 1 | count consistency |
+
+| Behavior   | Tests | Edge Cases                |
+| ---------- | ----- | ------------------------- |
+| save       | 3     | empty title, duplicate ID |
+| fetch      | 2     | non-existent ID           |
+| delete     | 2     | non-existent ID           |
+| fetchAll   | 2     | empty store               |
+| invariants | 1     | count consistency         |
 
 ### Implementations Tested
+
 - [x] InMemoryDataStore — all passing
 - [x] SQLiteDataStore — all passing
 - [ ] CloudDataStore — pending implementation
 
 ### Files Created
+
 - `Tests/Contracts/DataStoreContractTests.swift`
 - `Tests/Contracts/InMemoryDataStoreContractTests.swift`
+
 ```
 
 ## References
@@ -305,3 +316,4 @@ protocol DataStore { ... }
 - `tdd-feature.md` — for TDD workflow using contract tests
 - `../../../apple-generators/references/test-generator/overview.md` — for standard test generation
 - Design by Contract (Bertrand Meyer) — theoretical foundation
+```

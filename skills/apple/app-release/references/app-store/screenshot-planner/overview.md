@@ -38,23 +38,23 @@ Before planning, ask about:
 
 Most users only see the first 2-3 screenshots. Order matters!
 
-| Position | Purpose | Content |
-|----------|---------|---------|
-| **1** | Hero Shot | Value proposition + best visual |
-| **2** | Core Feature | Primary use case in action |
-| **3** | Key Differentiator | What makes you unique |
-| **4** | Secondary Feature | Another compelling feature |
-| **5** | Social Proof/CTA | Reviews, awards, or final push |
+| Position | Purpose            | Content                         |
+| -------- | ------------------ | ------------------------------- |
+| **1**    | Hero Shot          | Value proposition + best visual |
+| **2**    | Core Feature       | Primary use case in action      |
+| **3**    | Key Differentiator | What makes you unique           |
+| **4**    | Secondary Feature  | Another compelling feature      |
+| **5**    | Social Proof/CTA   | Reviews, awards, or final push  |
 
 ### Extended (10 Screenshots)
 
-| Position | Purpose |
-|----------|---------|
-| 6 | Additional feature |
-| 7 | Customization/settings |
-| 8 | Integration/ecosystem |
-| 9 | Before/after or workflow |
-| 10 | Final CTA with app icon |
+| Position | Purpose                  |
+| -------- | ------------------------ |
+| 6        | Additional feature       |
+| 7        | Customization/settings   |
+| 8        | Integration/ecosystem    |
+| 9        | Before/after or workflow |
+| 10       | Final CTA with app icon  |
 
 ## Caption Writing
 
@@ -67,21 +67,25 @@ Most users only see the first 2-3 screenshots. Order matters!
 ### Examples by Category
 
 **Productivity:**
+
 - "Capture ideas instantly"
 - "Never miss a deadline"
 - "Your tasks, beautifully organized"
 
 **Health & Fitness:**
+
 - "Track every workout"
 - "See your progress over time"
 - "Personalized plans that work"
 
 **Photo & Video:**
+
 - "Edit like a pro in seconds"
 - "Filters that actually look good"
 - "Share anywhere with one tap"
 
 **Finance:**
+
 - "Know where your money goes"
 - "Budget without the stress"
 - "Insights that save you money"
@@ -89,6 +93,7 @@ Most users only see the first 2-3 screenshots. Order matters!
 ### Caption Rules
 
 ✅ **Do:**
+
 - Keep under 8 words
 - Start with action verbs
 - Focus on user benefits
@@ -96,6 +101,7 @@ Most users only see the first 2-3 screenshots. Order matters!
 - Use sentence case
 
 ❌ **Don't:**
+
 - Use technical jargon
 - Include version numbers
 - Mention prices
@@ -106,12 +112,12 @@ Most users only see the first 2-3 screenshots. Order matters!
 
 ### Device Frames
 
-| Approach | When to Use |
-|----------|-------------|
-| **With frames** | When device context matters, lifestyle apps |
+| Approach           | When to Use                                 |
+| ------------------ | ------------------------------------------- |
+| **With frames**    | When device context matters, lifestyle apps |
 | **Without frames** | Maximizing screen real estate, content apps |
-| **3D angles** | Standing out, premium feel |
-| **Flat/straight** | Clean, professional, enterprise |
+| **3D angles**      | Standing out, premium feel                  |
+| **Flat/straight**  | Clean, professional, enterprise             |
 
 ### Backgrounds
 
@@ -169,32 +175,37 @@ Notes: [Close the deal]
 ## Size Requirements
 
 ### iPhone (Required)
-| Size | Device | Dimensions |
-|------|--------|------------|
+
+| Size | Device            | Dimensions  |
+| ---- | ----------------- | ----------- |
 | 6.7" | iPhone 15 Pro Max | 1290 × 2796 |
 | 6.5" | iPhone 11 Pro Max | 1284 × 2778 |
-| 5.5" | iPhone 8 Plus | 1242 × 2208 |
+| 5.5" | iPhone 8 Plus     | 1242 × 2208 |
 
 ### iPad (If Universal)
-| Size | Device | Dimensions |
-|------|--------|------------|
+
+| Size  | Device   | Dimensions  |
+| ----- | -------- | ----------- |
 | 12.9" | iPad Pro | 2048 × 2732 |
 
 ### macOS
-| Display | Dimensions |
-|---------|------------|
+
+| Display  | Dimensions       |
+| -------- | ---------------- |
 | Standard | 1280 × 800 (min) |
-| Retina | 2880 × 1800 |
+| Retina   | 2880 × 1800      |
 
 ## App Preview Video
 
 ### When to Include
+
 - Complex apps that need demonstration
 - Games (almost always)
 - Apps with unique interactions
 - When screenshots can't show the experience
 
 ### Video Specs
+
 - 15-30 seconds optimal
 - First 3 seconds = hook
 - No audio required (most watch muted)
@@ -202,6 +213,7 @@ Notes: [Close the deal]
 - 1080p or higher
 
 ### Video Storyboard
+
 ```
 0:00-0:03  Hook - Most impressive moment
 0:03-0:10  Core workflow demonstration
@@ -212,12 +224,14 @@ Notes: [Close the deal]
 ## Localization
 
 ### Considerations
+
 - Captions must be localized
 - Screenshots may need localization if they show text
 - Consider using minimal in-app text in screenshots
 - Some markets prefer different visual styles
 
 ### Priority Markets
+
 1. English (US)
 2. Chinese (Simplified)
 3. Japanese
@@ -228,17 +242,20 @@ Notes: [Close the deal]
 ## Tools
 
 ### Design Tools
+
 - **Figma** - Free, collaborative
 - **Sketch** - Mac-native, templates available
 - **Photoshop** - Full control
 
 ### Screenshot Generators
+
 - **Screenshots.pro** - Templates with device frames
 - **Previewed** - 3D mockups
 - **AppLaunchpad** - Quick and easy
 - **Studio** - Mac app with templates
 
 ### Capture Tools
+
 - **Xcode Simulator** - File → Screenshot
 - **QuickTime** - Screen recording for video
 - **ScreenFloat** - Organize captures

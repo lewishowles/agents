@@ -7,31 +7,37 @@ Submit via: [Apple Developer — Promote Your App](https://developer.apple.com/c
 ### Required Fields
 
 **1. Contact Information**
+
 - First name
 - Last name
 - Email address (must be associated with Apple Developer account)
 - Apple Developer Team ID
 
 **2. App Information**
+
 - App name
 - App Store URL (or TestFlight link for pre-launch)
 - App category
 - Supported platforms and devices
 
 **3. Event/Occasion**
+
 - What's the occasion for this nomination?
 - Specific date for launch, update, or event
 - Is this associated with a cultural moment or season?
 
 **4. App Description**
+
 - 2-3 sentences describing what makes your app unique
 - Focus on the user benefit, not technical features
 
 **5. Apple Technologies**
+
 - List specific Apple frameworks and APIs used
 - Be detailed: "Uses HealthKit to sync workout data with Apple Health" not just "Uses HealthKit"
 
 **6. Supporting Materials**
+
 - Links to press coverage
 - App preview video
 - High-resolution screenshots
@@ -64,19 +70,19 @@ Timing: 4-6 weeks before the cultural moment
 **3. Seasonal Relevance**
 Best for: Apps with natural seasonal fit
 
-| Season | Angles |
-|--------|--------|
-| January | Fitness, organization, financial planning, fresh starts |
-| February | Relationships, creativity, Black History Month |
-| March | Women's History Month, spring cleaning, outdoors |
-| April | Earth Day, tax season, gardening |
-| May | Mental Health Month, Mother's Day, graduation |
-| June | WWDC, Pride Month, summer planning |
-| July-August | Travel, summer activities, back-to-school prep |
-| September | Back to school, new OS features, fall planning |
-| October | Halloween, breast cancer awareness, mindfulness |
-| November | Native American Heritage, gratitude, holiday prep |
-| December | Year in review, holiday, gift giving |
+| Season      | Angles                                                  |
+| ----------- | ------------------------------------------------------- |
+| January     | Fitness, organization, financial planning, fresh starts |
+| February    | Relationships, creativity, Black History Month          |
+| March       | Women's History Month, spring cleaning, outdoors        |
+| April       | Earth Day, tax season, gardening                        |
+| May         | Mental Health Month, Mother's Day, graduation           |
+| June        | WWDC, Pride Month, summer planning                      |
+| July-August | Travel, summer activities, back-to-school prep          |
+| September   | Back to school, new OS features, fall planning          |
+| October     | Halloween, breast cancer awareness, mindfulness         |
+| November    | Native American Heritage, gratitude, holiday prep       |
+| December    | Year in review, holiday, gift giving                    |
 
 **4. Accessibility & Inclusion**
 Best for: Apps with strong accessibility features or serving underserved communities
@@ -105,9 +111,11 @@ Best for: Significant new versions with substantial improvements
 ## Writing the Pitch
 
 ### The 30-Second Rule
+
 Apple editors review hundreds of nominations. Your pitch must communicate value in the first 30 seconds of reading.
 
 ### Structure
+
 1. **Hook** (1 sentence): What makes this app remarkable?
 2. **Value** (1-2 sentences): What do users get?
 3. **Why Now** (1 sentence): Why feature it at this specific time?
@@ -116,12 +124,15 @@ Apple editors review hundreds of nominations. Your pitch must communicate value 
 ### Example Pitches
 
 **Speech Therapy App:**
+
 > "Blow Quest transforms speech therapy into a game that kids actually want to play — using the iPhone microphone to detect breath patterns and guide children through therapeutic exercises. With over 5,000 families using it daily and endorsements from pediatric SLPs, it's making professional-grade therapy accessible to anyone with an iPhone. Our latest update adds Apple Watch integration for parents to track daily practice streaks. We'd love to be featured during Better Hearing & Speech Month (May)."
 
 **Meditation Watch App:**
+
 > "ChantFlow brings ancient chanting meditation to the modern wrist — the only Apple Watch app that uses haptic guidance to lead users through timed mantra sessions without looking at a screen. Built entirely with SwiftUI and using the new WidgetKit complications for meditation streak tracking, it showcases what focused Apple Watch design can achieve. Perfect for a mindfulness feature around Mental Health Awareness Month."
 
 **Productivity App:**
+
 > "TaskFlow reimagines task management for neurodivergent users — with time-blindness compensation, dopamine-friendly completion animations, and adaptive due dates that learn your actual completion patterns. Built with Core ML for on-device pattern recognition and supporting Apple Intelligence for smart task suggestions, it's productivity software that works with your brain, not against it. Ideal for a back-to-school feature highlighting inclusive design."
 
 ---
@@ -129,6 +140,7 @@ Apple editors review hundreds of nominations. Your pitch must communicate value 
 ## Common Mistakes to Avoid
 
 ### DON'T:
+
 - **Generic descriptions**: "The best productivity app" → Be specific about what's unique
 - **Feature lists**: "Supports dark mode, widgets, and Siri" → Explain how they create value
 - **Unsupported claims**: "The #1 app for..." → Only if you have data to back it up
@@ -137,6 +149,7 @@ Apple editors review hundreds of nominations. Your pitch must communicate value 
 - **Vague timing**: "We'd like to be featured sometime" → Give specific dates and reasons
 
 ### DO:
+
 - Be specific and concise
 - Lead with user impact
 - Show, don't tell (include screenshots, video)

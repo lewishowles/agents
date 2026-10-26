@@ -5,6 +5,7 @@ Performs deep market research for iOS/macOS app ideas. Provides market sizing, g
 ## When This Skill Activates
 
 Use this Skill when the user wants to:
+
 - Understand market size and potential
 - Analyze market growth trends
 - Calculate TAM/SAM/SOM
@@ -25,17 +26,20 @@ Use this Skill when the user wants to:
 - **SOM (Serviceable Obtainable Market):** Realistic share you can capture in near term (1-3 years)
 
 ### 2. Growth Analysis
+
 - Historical growth rates
 - Future projections (3-5 years)
 - Growth drivers
 - Market trends
 
 ### 3. Market Maturity Assessment
+
 - Stage: Emerging, Growing, Mature, or Declining
 - Market lifecycle position
 - Implications for new entrants
 
 ### 4. Entry Barriers
+
 - Technical barriers
 - Brand/network effects
 - Regulatory requirements
@@ -43,11 +47,13 @@ Use this Skill when the user wants to:
 - Customer acquisition costs
 
 ### 5. Distribution Channels
+
 - How apps in this category reach users
 - App Store dynamics
 - Alternative channels (web, enterprise, etc.)
 
 ### 6. Revenue Potential
+
 - Average revenue per user (ARPU)
 - Conversion rates
 - LTV (Lifetime Value)
@@ -168,6 +174,7 @@ Start specific for better analysis.
 ### Step 2: Size the Market (TAM/SAM/SOM)
 
 **TAM Calculation:**
+
 ```
 Method 1: Top-down
 - Global productivity software market: $50B
@@ -181,6 +188,7 @@ Method 2: Bottom-up
 ```
 
 **SAM Calculation:**
+
 ```
 Filter TAM by what you can reach:
 - TAM: $5B global
@@ -190,6 +198,7 @@ Filter TAM by what you can reach:
 ```
 
 **SOM Calculation:**
+
 ```
 Realistic capture in 3 years:
 - SAM: $900M
@@ -201,11 +210,13 @@ Realistic capture in 3 years:
 ### Step 3: Assess Growth
 
 Use WebSearch to find:
+
 - Market research reports
 - Growth rate data
 - Trend articles
 
 **Key searches:**
+
 ```
 "[category] market size 2026"
 "[category] growth rate"
@@ -217,24 +228,28 @@ Use WebSearch to find:
 **Indicators:**
 
 **Emerging** (Good for new entrants):
+
 - High growth (>20% CAGR)
 - No clear leaders
 - Rapid innovation
 - Unclear best practices
 
 **Growing** (Good opportunity):
+
 - Strong growth (10-20% CAGR)
 - Leaders emerging
 - Product-market fit established
 - Room for differentiation
 
 **Mature** (Differentiation required):
+
 - Moderate growth (5-10% CAGR)
 - Clear leaders
 - Established patterns
 - Compete on specific niches
 
 **Declining** (Avoid):
+
 - Negative or flat growth
 - Consolidation
 - Commoditization
@@ -245,6 +260,7 @@ Use WebSearch to find:
 **High barriers → Harder entry but better moat if you succeed**
 
 Assess:
+
 - Technical complexity
 - Brand importance
 - Network effects
@@ -254,6 +270,7 @@ Assess:
 ### Step 6: Map Distribution
 
 **For iOS/macOS apps:**
+
 - App Store (primary) - understand ranking factors
 - TestFlight (beta)
 - Direct website (for pro users)
@@ -263,12 +280,14 @@ Assess:
 ### Step 7: Estimate Revenue
 
 **Key metrics to research:**
+
 - Industry ARPU
 - Typical conversion rates
 - Churn rates
 - User acquisition costs
 
 **Reality check:**
+
 ```
 Year 1: 1K-5K users (realistic for indie)
 Year 2: 5K-20K users (with growth)
@@ -285,11 +304,13 @@ Year 3: $800K-4M
 ### "How do I calculate TAM without market reports?"
 
 **Bottom-up approach:**
+
 1. Estimate target user count (e.g., "iOS users who manage tasks")
 2. Research willingness to pay (look at competitor pricing)
 3. Multiply: TAM = Users × Average Spend
 
 **Proxy approach:**
+
 1. Find similar market (e.g., "Calendar apps")
 2. Adjust for your market differences
 3. Validate with multiple sources
@@ -297,6 +318,7 @@ Year 3: $800K-4M
 ### "What's a 'good' market size?"
 
 **For indie developers:**
+
 - **SOM > $5M:** Good opportunity
 - **SOM $1-5M:** Viable if low competition
 - **SOM < $1M:** Likely too small unless niche/passion project
@@ -306,12 +328,14 @@ Year 3: $800K-4M
 ### "How mature is too mature?"
 
 **Mature markets CAN work if:**
+
 - You have clear differentiation
 - Targeting underserved niche
 - Better execution than incumbents
 - Novel business model
 
 **Avoid if:**
+
 - No differentiation angle
 - Dominant players with network effects
 - Declining growth
@@ -365,6 +389,7 @@ Use market-research **after** initial discovery:
    - Year 3 realistic: $300K (15K users)
 
 8. **Present findings:**
+
    ```
    Market Research: Habit Tracking Apps
 
@@ -400,12 +425,14 @@ Use market-research **after** initial discovery:
 ## When to Run This Analysis
 
 **Perfect timing:**
+
 - After discovery shows potential
 - Before committing to development
 - When seeking funding (investors want market size)
 - When setting revenue goals
 
 **Skip if:**
+
 - Discovery showed "DON'T BUILD"
 - Just experimenting/learning
 - Building for personal use only
@@ -413,6 +440,7 @@ Use market-research **after** initial discovery:
 ## Output File Location
 
 Save market research results to one of these locations:
+
 - `market-research.md` (project root)
 - `docs/market-research.md` (if docs folder exists)
 

@@ -1,6 +1,7 @@
 # SwiftData inheritance
 
 <a id="source-swiftdata-inheritance-skill-md"></a>
+
 ## Source: `swiftdata/inheritance/SKILL.md`
 
 # SwiftData Class Inheritance

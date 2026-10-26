@@ -3,6 +3,7 @@ name: code-review
 description: >
   Use this skill when reviewing code — a PR, a diff, an individual file, or existing code at a named path — or when receiving review feedback. Checks accessibility, code style, error handling, frontend security, and web performance, and covers how to give and receive feedback.
 ---
+
 # Code review
 
 Reviews improve code collaboratively. Feedback is specific, actionable, grounded in code. Reviewers should understand what changed, why, and how it's maintained. If difficult, treat as maintainability issue.

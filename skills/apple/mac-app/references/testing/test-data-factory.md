@@ -1,6 +1,7 @@
 # Test data factory
 
 <a id="source-testing-test-data-factory-skill-md"></a>
+
 ## Source: `testing/test-data-factory/SKILL.md`
 
 # Test Data Factory
@@ -10,6 +11,7 @@ Generate factory helpers that make creating test data effortless. Eliminates boi
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Has repetitive test setup code
 - Asks for "test fixtures" or "test factories" or "sample data"
 - Wants to reduce boilerplate in tests
@@ -50,6 +52,7 @@ Grep: "struct.*:.*Codable|struct.*:.*Sendable"
 ```
 
 Identify models that appear in test files:
+
 ```
 Grep: "let.*=.*Model(" in test targets (manual construction)
 ```
@@ -283,16 +286,16 @@ extension APIResponse where T == [Item] {
 
 ### Defaults Should Be
 
-| Property Type | Default Strategy |
-|--------------|-----------------|
-| UUID | `UUID()` |
-| String | Descriptive placeholder (`"Test Item"`) |
-| Date | Fixed timestamp, not `Date()` |
-| Bool | `false` |
-| Array | Empty `[]` (opt-in to populated) |
-| Optional | `nil` |
-| Enum | Most common case |
-| Nested model | That model's `.fixture()` |
+| Property Type | Default Strategy                        |
+| ------------- | --------------------------------------- |
+| UUID          | `UUID()`                                |
+| String        | Descriptive placeholder (`"Test Item"`) |
+| Date          | Fixed timestamp, not `Date()`           |
+| Bool          | `false`                                 |
+| Array         | Empty `[]` (opt-in to populated)        |
+| Optional      | `nil`                                   |
+| Enum          | Most common case                        |
+| Nested model  | That model's `.fixture()`               |
 
 ### Naming Conventions
 
@@ -314,7 +317,7 @@ ItemBuilder().with(title: "X").build()
 
 ## Output Format
 
-```markdown
+````markdown
 ## Test Data Factories Generated
 
 ### Models Covered
@@ -339,7 +342,8 @@ let item = Item(id: UUID(), title: "T", description: "D", ...)
 
 // After (1 line)
 let item = Item.fixture(isFavorite: true)
-```
+````
+
 ```
 
 ## References
@@ -347,3 +351,4 @@ let item = Item.fixture(isFavorite: true)
 - `../../../apple-generators/references/test-generator/overview.md` — generates tests that use these factories
 - `tdd-feature.md` — TDD workflow benefits from low-friction factories
 - `integration-test-scaffold.md` — integration tests need realistic data
+```

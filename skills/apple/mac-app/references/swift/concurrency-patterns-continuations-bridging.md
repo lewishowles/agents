@@ -1,6 +1,7 @@
 # Concurrency patterns: Continuations and bridging
 
 <a id="source-swift-concurrency-patterns-continuations-bridging-md"></a>
+
 ## Source: `swift/concurrency-patterns/continuations-bridging.md`
 
 # Continuations and Bridging
@@ -13,12 +14,12 @@ Apple's candidate rule: "pretty much anything that does not need a response back
 
 **Check the built-ins before writing an adapter** — these ship as async sequences (iOS 15+/macOS 12+):
 
-| API | What it yields |
-|---|---|
-| `URL.lines` / `URL.bytes` | Lines/bytes from a file **or** the network, streamed as received — process elements before the download completes |
-| `FileHandle.bytes` (+ `.lines`) | Bytes/lines from a file handle, incl. `FileHandle.standardInput` |
-| `URLSession.bytes(from:)` | `(bytes, response)` — validate `statusCode == 200` before iterating |
-| `NotificationCenter.notifications(named:)` | Notifications; combine with `.first { … }` to await a single matching one |
+| API                                        | What it yields                                                                                                    |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| `URL.lines` / `URL.bytes`                  | Lines/bytes from a file **or** the network, streamed as received — process elements before the download completes |
+| `FileHandle.bytes` (+ `.lines`)            | Bytes/lines from a file handle, incl. `FileHandle.standardInput`                                                  |
+| `URLSession.bytes(from:)`                  | `(bytes, response)` — validate `statusCode == 200` before iterating                                               |
+| `NotificationCenter.notifications(named:)` | Notifications; combine with `.first { … }` to await a single matching one                                         |
 
 Standard operators have async counterparts: `map`, `filter`, `reduce`, `dropFirst`, `first(where:)`, `prefix`. Termination rules: `nil` from the iterator and thrown errors are both terminal — "after an error happens, they'll return nil for any subsequent calls to next." To make an indefinite iteration externally cancellable, wrap the `for await` loop in a stored `Task` and cancel it.
 
@@ -109,10 +110,10 @@ func fetchData() async throws -> Data {
 
 ### Checked vs Unsafe Continuations
 
-| Type | Debug Behavior | Release Behavior | Use When |
-|------|---------------|-----------------|----------|
-| `withCheckedContinuation` | Traps on misuse (zero or double resume) | Traps on misuse | Default choice, always start here |
-| `withUnsafeContinuation` | No checking | No checking | Performance-critical hot paths only |
+| Type                      | Debug Behavior                          | Release Behavior | Use When                            |
+| ------------------------- | --------------------------------------- | ---------------- | ----------------------------------- |
+| `withCheckedContinuation` | Traps on misuse (zero or double resume) | Traps on misuse  | Default choice, always start here   |
+| `withUnsafeContinuation`  | No checking                             | No checking      | Performance-critical hot paths only |
 
 Diagnosing a leak in the field (WWDC22 110350): a never-resumed continuation prints a console warning when the continuation is destroyed ("the continuation leaked"), and the Swift Concurrency Instrument shows the task stuck indefinitely in the **continuation** state — see `concurrency-patterns-concurrency-internals.md`.
 

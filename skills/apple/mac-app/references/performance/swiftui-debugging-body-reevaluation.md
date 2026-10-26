@@ -1,6 +1,7 @@
 # SwiftUI debugging: Body reevaluation
 
 <a id="source-performance-swiftui-debugging-body-reevaluation-md"></a>
+
 ## Source: `performance/swiftui-debugging/body-reevaluation.md`
 
 # Body Re-evaluation
@@ -11,18 +12,18 @@ Understanding what triggers SwiftUI to call a view's `body` property, how to dia
 
 SwiftUI calls `body` when it detects that a view's **dependencies** have changed. Dependencies include:
 
-| Dependency type | Triggers body when... |
-|----------------|----------------------|
-| `@State` | The wrapped value changes |
-| `@Binding` | The source value changes |
-| `@Environment` | The environment value changes |
-| `@Observable` object (iOS 17+) | A property **that body actually reads** changes |
-| `@ObservedObject` / `@EnvironmentObject` | The `objectWillChange` publisher fires (any property) |
-| Parent passes new value | An input property's value is different from last render |
+| Dependency type                          | Triggers body when...                                   |
+| ---------------------------------------- | ------------------------------------------------------- |
+| `@State`                                 | The wrapped value changes                               |
+| `@Binding`                               | The source value changes                                |
+| `@Environment`                           | The environment value changes                           |
+| `@Observable` object (iOS 17+)           | A property **that body actually reads** changes         |
+| `@ObservedObject` / `@EnvironmentObject` | The `objectWillChange` publisher fires (any property)   |
+| Parent passes new value                  | An input property's value is different from last render |
 
 Key insight: `body` being called does **not** necessarily mean the view re-renders on screen. SwiftUI diffs the output of `body` against the previous output and only updates what changed. However, calling `body` itself has a cost -- especially for complex view hierarchies.
 
-## Self._printChanges()
+## Self.\_printChanges()
 
 The most important debugging tool for re-evaluation. Add it as the first line in `body`:
 
@@ -43,13 +44,13 @@ struct ItemDetailView: View {
 
 Output format: `ViewName: _dependency1, _dependency2 changed.`
 
-| Output | Meaning |
-|--------|---------|
-| `ItemDetailView: _item changed.` | The `item` property received a new value from the parent |
-| `ItemDetailView: _isEditing changed.` | The `@State` property `isEditing` was modified |
-| `ItemDetailView: _colorScheme changed.` | The environment's color scheme changed |
-| `ItemDetailView: @self changed.` | The view struct itself was recreated (parent's body ran) |
-| `ItemDetailView: @identity changed.` | The view's identity changed (destroyed and recreated) |
+| Output                                  | Meaning                                                  |
+| --------------------------------------- | -------------------------------------------------------- |
+| `ItemDetailView: _item changed.`        | The `item` property received a new value from the parent |
+| `ItemDetailView: _isEditing changed.`   | The `@State` property `isEditing` was modified           |
+| `ItemDetailView: _colorScheme changed.` | The environment's color scheme changed                   |
+| `ItemDetailView: @self changed.`        | The view struct itself was recreated (parent's body ran) |
+| `ItemDetailView: @identity changed.`    | The view's identity changed (destroyed and recreated)    |
 
 ### @self changed -- What It Means
 
@@ -152,11 +153,11 @@ struct NameLabel: View {
 
 ### Migration Benefit
 
-| Scenario | ObservableObject | @Observable |
-|----------|-----------------|-------------|
-| 10 views observe a model with 5 properties | Changing 1 property re-evaluates all 10 views | Only views reading that specific property re-evaluate |
-| List of 100 rows, each observing a shared store | All 100 rows re-evaluate on any change | Only affected rows re-evaluate |
-| Form with 20 fields bound to a model | Every keystroke re-evaluates all 20 fields | Only the active field re-evaluates |
+| Scenario                                        | ObservableObject                              | @Observable                                           |
+| ----------------------------------------------- | --------------------------------------------- | ----------------------------------------------------- |
+| 10 views observe a model with 5 properties      | Changing 1 property re-evaluates all 10 views | Only views reading that specific property re-evaluate |
+| List of 100 rows, each observing a shared store | All 100 rows re-evaluate on any change        | Only affected rows re-evaluate                        |
+| Form with 20 fields bound to a model            | Every keystroke re-evaluates all 20 fields    | Only the active field re-evaluates                    |
 
 ### @Observable Gotchas
 
@@ -368,12 +369,12 @@ Filter Console output by your subsystem to see evaluation frequency.
 
 ### What Counts Are Acceptable
 
-| Scenario | Expected body count | Concerning if |
-|----------|-------------------|---------------|
-| View appears once | 1-2 | > 5 |
-| Scroll through 100 rows | ~20-30 (visible + prefetch) | 100+ (not lazy) |
-| Typing in a text field | 1 per keystroke for the field | 50+ other views also updating |
-| Tapping a button | 1-3 for affected views | 20+ unrelated views updating |
+| Scenario                | Expected body count           | Concerning if                 |
+| ----------------------- | ----------------------------- | ----------------------------- |
+| View appears once       | 1-2                           | > 5                           |
+| Scroll through 100 rows | ~20-30 (visible + prefetch)   | 100+ (not lazy)               |
+| Typing in a text field  | 1 per keystroke for the field | 50+ other views also updating |
+| Tapping a button        | 1-3 for affected views        | 20+ unrelated views updating  |
 
 ## Environment Changes
 

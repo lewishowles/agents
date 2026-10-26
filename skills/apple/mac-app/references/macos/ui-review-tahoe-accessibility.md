@@ -1,6 +1,7 @@
 # Tahoe UI review: Accessibility
 
 <a id="source-macos-ui-review-tahoe-accessibility-md"></a>
+
 ## Source: `macos/ui-review-tahoe/accessibility.md`
 
 # Accessibility Best Practices

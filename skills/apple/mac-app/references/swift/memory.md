@@ -5,6 +5,7 @@
 - [Swift performance](memory-swift-performance.md) (upstream `swift-performance.md`)
 
 <a id="source-swift-memory-skill-md"></a>
+
 ## Source: `swift/memory/SKILL.md`
 
 # InlineArray and Span
@@ -14,6 +15,7 @@ Guidance for Swift 6.2's low-level memory types: `InlineArray` for fixed-size in
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Asks about **InlineArray**, **fixed-size arrays**, or **stack-allocated collections**
 - Mentions **Span**, **MutableSpan**, **RawSpan**, or **UTF8Span**
 - Wants to **eliminate heap allocations** in hot paths
@@ -73,29 +75,29 @@ What memory optimization do you need?
 
 ## API Availability
 
-| API | Minimum Version | Notes |
-|-----|----------------|-------|
-| `InlineArray<let count: Int, Element>` | Swift 6.2 | Uses value generics; `@frozen` struct |
-| `Span<Element>` | Swift 6.2 | Non-escapable, lifetime-dependent |
-| `MutableSpan<Element>` | Swift 6.2 | Mutable variant of Span |
-| `RawSpan` | Swift 6.2 | Untyped byte-level access |
-| `MutableRawSpan` | Swift 6.2 | Mutable untyped byte access |
-| `UTF8Span` | Swift 6.2 | Unicode-aware text processing |
-| `OutputSpan` | Swift 6.2 | For initializing collection storage |
-| `.span` property on `Array` / `ArraySlice` / `InlineArray` | Swift 6.2 | Returns `Span<Element>` |
-| `.bytes` property on `Data` | Swift 6.2 | Returns `RawSpan` (byte-level access) |
-| `[N of T]` sugar, `InlineArray(repeating:)`, closure init | Swift 6.4 | `[256 of Int]` as a type; `InlineArray { i in … }` (WWDC26 262) |
-| `UniqueArray` / `UniqueBox` / `Ref` / `MutableRef` | Swift 6.4 | Noncopyable containers + single-value spans — see `memory-swift-performance.md` |
+| API                                                        | Minimum Version | Notes                                                                           |
+| ---------------------------------------------------------- | --------------- | ------------------------------------------------------------------------------- |
+| `InlineArray<let count: Int, Element>`                     | Swift 6.2       | Uses value generics; `@frozen` struct                                           |
+| `Span<Element>`                                            | Swift 6.2       | Non-escapable, lifetime-dependent                                               |
+| `MutableSpan<Element>`                                     | Swift 6.2       | Mutable variant of Span                                                         |
+| `RawSpan`                                                  | Swift 6.2       | Untyped byte-level access                                                       |
+| `MutableRawSpan`                                           | Swift 6.2       | Mutable untyped byte access                                                     |
+| `UTF8Span`                                                 | Swift 6.2       | Unicode-aware text processing                                                   |
+| `OutputSpan`                                               | Swift 6.2       | For initializing collection storage                                             |
+| `.span` property on `Array` / `ArraySlice` / `InlineArray` | Swift 6.2       | Returns `Span<Element>`                                                         |
+| `.bytes` property on `Data`                                | Swift 6.2       | Returns `RawSpan` (byte-level access)                                           |
+| `[N of T]` sugar, `InlineArray(repeating:)`, closure init  | Swift 6.4       | `[256 of Int]` as a type; `InlineArray { i in … }` (WWDC26 262)                 |
+| `UniqueArray` / `UniqueBox` / `Ref` / `MutableRef`         | Swift 6.4       | Noncopyable containers + single-value spans — see `memory-swift-performance.md` |
 
 ## Top 5 Mistakes
 
-| # | Mistake | Fix |
-|---|---------|-----|
-| 1 | Trying to append/remove elements on `InlineArray` | `InlineArray` is fixed-size; use `Array` if you need dynamic sizing |
-| 2 | Returning a `Span` from a function | `Span` is non-escapable and cannot outlive its source; restructure to process data within the same scope |
-| 3 | Capturing a `Span` in a closure | `Span` cannot be captured; pass the span as a parameter or use `Array` for escaped contexts |
-| 4 | Using `InlineArray` for large or frequently copied collections | `InlineArray` copies eagerly (no COW); use `Array` for large data that is shared or copied often |
-| 5 | Accessing a `Span` after mutating the source container | Mutation invalidates the span; re-acquire the span after any modification |
+| #   | Mistake                                                        | Fix                                                                                                      |
+| --- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| 1   | Trying to append/remove elements on `InlineArray`              | `InlineArray` is fixed-size; use `Array` if you need dynamic sizing                                      |
+| 2   | Returning a `Span` from a function                             | `Span` is non-escapable and cannot outlive its source; restructure to process data within the same scope |
+| 3   | Capturing a `Span` in a closure                                | `Span` cannot be captured; pass the span as a parameter or use `Array` for escaped contexts              |
+| 4   | Using `InlineArray` for large or frequently copied collections | `InlineArray` copies eagerly (no COW); use `Array` for large data that is shared or copied often         |
+| 5   | Accessing a `Span` after mutating the source container         | Mutation invalidates the span; re-acquire the span after any modification                                |
 
 ## InlineArray
 
@@ -154,14 +156,14 @@ copy[0] = 99
 
 ### InlineArray vs Array
 
-| Characteristic | InlineArray | Array |
-|---------------|-------------|-------|
-| Storage | Inline (stack or enclosing type) | Heap-allocated buffer |
-| Size | Fixed at compile time | Dynamic |
-| Copy semantics | Eager (full copy) | Copy-on-write |
-| Reference counting | None | Yes (buffer reference) |
-| Exclusivity checks | None | Yes |
-| Append/remove | Not supported | Supported |
+| Characteristic     | InlineArray                      | Array                  |
+| ------------------ | -------------------------------- | ---------------------- |
+| Storage            | Inline (stack or enclosing type) | Heap-allocated buffer  |
+| Size               | Fixed at compile time            | Dynamic                |
+| Copy semantics     | Eager (full copy)                | Copy-on-write          |
+| Reference counting | None                             | Yes (buffer reference) |
+| Exclusivity checks | None                             | Yes                    |
+| Append/remove      | Not supported                    | Supported              |
 
 ## Span Family
 

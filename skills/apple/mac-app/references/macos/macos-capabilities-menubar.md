@@ -1,6 +1,7 @@
 # Mac capabilities: Menu bar apps
 
 <a id="source-macos-macos-capabilities-menubar-md"></a>
+
 ## Source: `macos/macos-capabilities/menubar.md`
 
 # Menu Bar Apps

@@ -1,6 +1,7 @@
 # SF Symbols
 
 <a id="source-design-sf-symbols-skill-md"></a>
+
 ## Source: `design/sf-symbols/SKILL.md`
 
 # SF Symbols
@@ -8,7 +9,7 @@
 Over 7,000 system symbols with free platform consistency, Dynamic Type alignment, and
 accessibility — the default answer to "we need an icon." This skill covers using them well,
 authoring custom ones that behave like system ones, and the animation vocabulary.
-(Animation *implementation patterns* live in [animation patterns](animation-patterns-symbol-effects.md);
+(Animation _implementation patterns_ live in [animation patterns](animation-patterns-symbol-effects.md);
 this skill owns selection, authoring, and rendering.)
 
 ## When This Skill Activates
@@ -56,7 +57,7 @@ The workflow that makes a custom glyph behave like a system one:
    Export Template. Never draw from a blank canvas.
 2. **Draw three sources**: Ultralight-Small, Regular-Small, Black-Small — the system
    interpolates all **27 variants** (9 weights × 3 scales) from them. Get Regular-Small right
-   first, then copy its paths and only *move* points — all sources must keep the **same number
+   first, then copy its paths and only _move_ points — all sources must keep the **same number
    and order of paths and points** (move, never add/remove).
 3. **Outline everything**: convert live strokes to outlined paths once the design settles; no
    open paths (can't fill), no gradients or drop shadows baked in (they break multicolor/

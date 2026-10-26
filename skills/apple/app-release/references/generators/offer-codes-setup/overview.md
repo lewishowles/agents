@@ -5,6 +5,7 @@ Generate offer code distribution strategies, configuration guides, and campaign 
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Asks about "offer codes" or "promo codes" for subscriptions
 - Wants to distribute free/discounted subscriptions to partners or influencers
 - Mentions "redemption codes" or "App Store codes"
@@ -21,12 +22,14 @@ Use this skill when the user:
 - Codes expire after the date you set in App Store Connect
 
 ### Code Types
-| Type | Description | Best For |
-|------|-------------|----------|
-| One-time use | Unique codes, each used once | Email campaigns, individual distribution |
-| Custom codes | Reusable keyword codes (e.g., "LAUNCH2025") | Social media, events, partnerships |
+
+| Type         | Description                                 | Best For                                 |
+| ------------ | ------------------------------------------- | ---------------------------------------- |
+| One-time use | Unique codes, each used once                | Email campaigns, individual distribution |
+| Custom codes | Reusable keyword codes (e.g., "LAUNCH2025") | Social media, events, partnerships       |
 
 ### Redemption Methods
+
 1. **App Store > Account > Redeem Gift Card or Code**
 2. **In your app** via `AppStore.presentOfferCodeRedeemSheet()`
 3. **Direct URL**: `https://apps.apple.com/redeem?ctx=offercodes&id=APPID&code=CODE`
@@ -57,6 +60,7 @@ Ask user via AskUserQuestion:
 ### Step 1: Design Campaign Strategy
 
 Based on the distribution purpose, design:
+
 - Target audience and outreach plan
 - Code type (one-time vs. custom)
 - Offer duration and terms
@@ -67,7 +71,7 @@ Based on the distribution purpose, design:
 
 ## Output Format
 
-```markdown
+````markdown
 # Offer Code Campaign: [Campaign Name]
 
 ## Campaign Overview
@@ -172,23 +176,24 @@ struct SettingsView: View {
         }
     }
 }
-```
+````
 
 ## Measurement
 
-| Metric | How to Track |
-|--------|-------------|
-| Codes distributed | Your distribution records |
-| Codes redeemed | App Store Connect > Offer Codes |
-| Redemption rate | Redeemed / Distributed |
-| Post-offer retention | Retained after offer period ends |
-| Conversion to paid | Continued subscription after offer |
+| Metric               | How to Track                       |
+| -------------------- | ---------------------------------- |
+| Codes distributed    | Your distribution records          |
+| Codes redeemed       | App Store Connect > Offer Codes    |
+| Redemption rate      | Redeemed / Distributed             |
+| Post-offer retention | Retained after offer period ends   |
+| Conversion to paid   | Continued subscription after offer |
 
 ## Campaign Calendar
 
-| Month | Campaign | Codes | Channel |
-|-------|----------|-------|---------|
+| Month   | Campaign        | Codes   | Channel   |
+| ------- | --------------- | ------- | --------- |
 | [Month] | [Campaign name] | [Count] | [Channel] |
+
 ```
 
 ## Distribution Strategies by Purpose
@@ -226,3 +231,4 @@ struct SettingsView: View {
 - Related: `generators/subscription-offers` — StoreKit 2 offer implementation
 - Related: `generators/win-back-offers` — Win-back campaign strategy
 - Related: `app-store/marketing-strategy` — Overall promotional strategy
+```

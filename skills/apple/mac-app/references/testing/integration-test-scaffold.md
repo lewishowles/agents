@@ -1,6 +1,7 @@
 # Integration test scaffold
 
 <a id="source-testing-integration-test-scaffold-skill-md"></a>
+
 ## Source: `testing/integration-test-scaffold/SKILL.md`
 
 # Integration Test Scaffold
@@ -10,6 +11,7 @@ Generate test infrastructure for testing multiple modules working together — n
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Wants to "test the full stack" or "integration test"
 - Needs a mock server or mock API
 - Wants to test networking + caching together
@@ -40,6 +42,7 @@ Read: source files to understand data flow
 ```
 
 Common integration boundaries:
+
 - **Network → Parser → Repository** (API data flow)
 - **Repository → ViewModel → View** (UI data flow)
 - **UserAction → Service → Storage → Notification** (write flow)

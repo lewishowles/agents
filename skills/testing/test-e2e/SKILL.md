@@ -3,6 +3,7 @@ name: test-e2e
 description: >
   Use this skill when writing, reviewing, or planning end-to-end tests with Playwright or Cypress, or when deliberately trying to find browser bugs before one is confirmed. For isolated logic or rendering tests without a browser, use test-unit.
 ---
+
 # End-to-end testing
 
 E2E and component tests verify real-browser user experience. Playwright is standard for new projects; keep Cypress where established.

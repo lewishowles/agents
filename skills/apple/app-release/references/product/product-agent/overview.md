@@ -5,6 +5,7 @@ Product Agent validates iOS/macOS app ideas by analyzing problems, markets, and 
 ## When This Skill Activates
 
 Use this Skill when the user wants to:
+
 - Discover or validate product ideas
 - Analyze market opportunities
 - Check if an app idea is worth building
@@ -21,6 +22,7 @@ This skill performs structured product analysis using reasoning and web research
 When the user provides an app idea, perform the **Problem Discovery Analysis** below and present the results.
 
 If the user hasn't provided enough detail, ask:
+
 1. What's the app idea? (required)
 2. What platform? (iOS, macOS, or both — default: iOS/macOS)
 3. Who's the target user? (optional but improves analysis)
@@ -30,42 +32,54 @@ If the user hasn't provided enough detail, ask:
 For each idea, analyze and produce these fields:
 
 ### 1. Problem Statement
+
 One-sentence description of the core problem the app solves.
 
 ### 2. Target Users
+
 Who experiences this problem most acutely? Be specific about demographics, roles, and context.
 
 ### 3. Pain Points
+
 List 4-8 specific, concrete pain points users experience today. Each should be observable and verifiable.
 
 ### 4. Severity Score (1-10)
+
 Rate how painful this problem is:
+
 - **1-3**: Weak problem, low urgency — users barely notice
 - **4-6**: Moderate problem, decent opportunity — users work around it
 - **7-8**: Strong problem, good opportunity — users actively seek solutions
 - **9-10**: Critical problem, excellent opportunity — users are desperate (rare)
 
 ### 5. Frequency
+
 How often do target users encounter this problem? Daily problems are stronger than weekly ones.
 
 ### 6. Current Solutions
+
 Research existing alternatives using WebSearch. For each competitor:
+
 - Name and brief description
 - Key strengths
 - Main limitations
 - Pricing model
 
 ### 7. Market Opportunity
+
 Assess the opportunity using one of: **WEAK**, **MODERATE**, **STRONG**, **EXCELLENT**.
 Include reasoning about market saturation, differentiation potential, and timing.
 
 ### 8. Recommendation
+
 The most important field. Provide an honest verdict:
+
 - **BUILD** — Clear opportunity, go for it
 - **PROCEED WITH CAUTION** — Opportunity exists but significant risks
 - **DO NOT BUILD** — Market saturated, weak problem, or better alternatives exist
 
 Include:
+
 - Specific reasons for the verdict
 - Key risks
 - What would need to be true for this to succeed
@@ -103,6 +117,7 @@ Follow the JSON with a human-readable summary highlighting the key takeaway.
 ### Key Field: `recommendation`
 
 This is the **most important field**. It contains:
+
 - Honest assessment of whether to build
 - Market reality check
 - Competitive analysis
@@ -120,6 +135,7 @@ This is the **most important field**. It contains:
 ### Opportunity Assessment
 
 Look for keywords:
+
 - "WEAK" — Saturated market or marginal problem
 - "MODERATE" — Some opportunity with differentiation
 - "STRONG" — Clear gap in market
@@ -132,6 +148,7 @@ Look for keywords:
 User provides an idea. Run the full analysis and focus on the `recommendation` and `severity_score`.
 
 **Decision framework:**
+
 - **Score 7+, STRONG opportunity, BUILD verdict** — Green light
 - **Score 4-6, MODERATE opportunity, CAUTION verdict** — Needs differentiation strategy
 - **Score <4, WEAK opportunity, DON'T BUILD verdict** — Red light
@@ -139,6 +156,7 @@ User provides an idea. Run the full analysis and focus on the `recommendation` a
 ### 2. Comparing Multiple Ideas
 
 Run analysis on each idea, then compare:
+
 - Severity scores (higher = better)
 - Opportunity assessments (STRONG > MODERATE > WEAK)
 - Recommendation verdicts
@@ -147,6 +165,7 @@ Run analysis on each idea, then compare:
 ### 3. Iterative Refinement
 
 If initial analysis says "don't build", explore pivots:
+
 - Narrow the niche (e.g., "note-taking" -> "note-taking for academic researchers")
 - Change the target user
 - Add a unique angle (e.g., AI-powered, privacy-focused)
@@ -166,20 +185,25 @@ Re-run analysis for each pivot and look for improving severity and opportunity s
 After running discovery, use these specialized Skills for deeper analysis:
 
 ### **competitive-analysis** Skill
+
 When discovery shows potential and you need to understand competition in detail:
+
 - Feature comparison matrices
 - Pricing analysis across competitors
 - SWOT for each competitor
 - Differentiation opportunities
 
 ### **market-research** Skill
+
 When discovery shows potential and you need to size the opportunity:
+
 - TAM/SAM/SOM calculations
 - Growth trends and projections
 - Market maturity assessment
 - Revenue potential estimates
 
 **Workflow:**
+
 ```
 1. product-agent → Quick validation (problem discovery)
 2. If promising, use deep-dive Skills:

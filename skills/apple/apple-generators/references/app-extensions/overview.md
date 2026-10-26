@@ -84,27 +84,15 @@ Based on extension type selected:
 1. `ShareViewController.swift` -- Main share extension view controller with content handling
 2. `Info.plist` -- Extension configuration with activation rules
 
-**Action Extension:**
+**Action Extension:** 3. `ActionViewController.swift` -- Action extension with content manipulation 4. `Info.plist` -- Extension configuration
 
-3. `ActionViewController.swift` -- Action extension with content manipulation
-4. `Info.plist` -- Extension configuration
+**Keyboard Extension:** 5. `KeyboardViewController.swift` -- Custom keyboard with UIInputViewController 6. `Info.plist` -- Keyboard extension configuration
 
-**Keyboard Extension:**
-
-5. `KeyboardViewController.swift` -- Custom keyboard with UIInputViewController
-6. `Info.plist` -- Keyboard extension configuration
-
-**Safari Web Extension:**
-
-7. `SafariWebExtensionHandler.swift` -- Native message handler
-8. `manifest.json` -- Web extension manifest
-9. `content.js` -- Content script template
+**Safari Web Extension:** 7. `SafariWebExtensionHandler.swift` -- Native message handler 8. `manifest.json` -- Web extension manifest 9. `content.js` -- Content script template
 
 ### Step 3: Create Shared Infrastructure
 
-If data sharing selected:
-
-10. `SharedDataManager.swift` -- App Group data sharing helper
+If data sharing selected: 10. `SharedDataManager.swift` -- App Group data sharing helper
 
 ### Step 4: Determine File Location
 

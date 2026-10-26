@@ -5,6 +5,7 @@ Guide developers through handling App Store rejections — from understanding wh
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Says their app was rejected by App Review
 - Asks for help understanding a rejection notice
 - Wants to prepare a submission to minimize rejection risk
@@ -18,8 +19,8 @@ Use this skill when the user:
 
 Before handling a rejection, load:
 
-| File | Purpose |
-|------|---------|
+| File                     | Purpose                                                    |
+| ------------------------ | ---------------------------------------------------------- |
 | **common-rejections.md** | Top 20 rejection reasons with fixes and response templates |
 
 ## Pre-Submission Audit Checklist
@@ -111,6 +112,7 @@ When a user reports a rejection, gather:
 4. **Whether this is a first submission or re-submission**
 
 Ask via AskUserQuestion:
+
 - "Can you paste the full rejection message from App Store Connect?"
 - "Which guideline number was cited?"
 - "Is this the first time this app has been submitted?"
@@ -146,6 +148,7 @@ For clear violations (crashes, missing privacy policy, private API usage):
 4. Resubmit the binary
 
 **Response template (Fix and Resubmit):**
+
 ```
 Thank you for the review.
 
@@ -170,6 +173,7 @@ For rejections based on misunderstanding:
 4. Reference the specific guideline language and explain how you comply
 
 **Response template (Clarification):**
+
 ```
 Thank you for reviewing our app.
 
@@ -193,18 +197,21 @@ further.
 For "minimum functionality" (4.2), "spam" (4.3), or "design" (4.0) rejections, decide:
 
 **When to fix (usually the better path):**
+
 - If you honestly agree the app could be more substantial
 - If adding 2-3 features would make a meaningful difference
 - If the reviewer's feedback, while harsh, has a point
 - If you're early in development and can improve quickly
 
 **When to push back:**
+
 - If the app intentionally does one thing well (it's a focused tool, not incomplete)
 - If similar apps exist on the App Store with less functionality
 - If the reviewer appears to have missed core features
 - If you have user testimonials or metrics showing the app delivers value
 
 **Response template (Pushing Back on Subjective Rejection):**
+
 ```
 Thank you for your feedback on our app.
 
@@ -260,6 +267,7 @@ If Level 1 and Level 2 fail:
 - Response time: 5-14 business days
 
 **Appeal writing tips:**
+
 - Lead with facts, not emotions
 - Reference specific guideline language
 - Explain why the rejection criteria don't apply or are being misapplied
@@ -270,6 +278,7 @@ If Level 1 and Level 2 fail:
 ### When to Change Approach vs. Push Back
 
 **Apple is usually right about:**
+
 - Crashes and bugs (fix them)
 - Privacy violations (fix them)
 - Missing IAP for digital goods (implement IAP)
@@ -277,6 +286,7 @@ If Level 1 and Level 2 fail:
 - Private API usage (use public APIs)
 
 **Apple is sometimes wrong about:**
+
 - "Minimum functionality" for intentionally focused apps
 - "Spam" for apps that serve distinct user segments
 - "Could be a website" for apps with native features (widgets, notifications, offline)
@@ -289,23 +299,25 @@ If Level 1 and Level 2 fail:
 
 ### Typical Review Times
 
-| Scenario | Expected Timeline |
-|----------|------------------|
-| Initial submission | 1-3 days (24-48 hours typical) |
-| Resubmission after rejection | 1-3 days |
-| Expedited review request | Same day to 1 day |
-| Resolution Center reply | 1-3 business days |
-| Phone call request | 3-7 business days |
-| App Review Board appeal | 5-14 business days |
+| Scenario                     | Expected Timeline              |
+| ---------------------------- | ------------------------------ |
+| Initial submission           | 1-3 days (24-48 hours typical) |
+| Resubmission after rejection | 1-3 days                       |
+| Expedited review request     | Same day to 1 day              |
+| Resolution Center reply      | 1-3 business days              |
+| Phone call request           | 3-7 business days              |
+| App Review Board appeal      | 5-14 business days             |
 
 ### When to Request Expedited Review
 
 Apple allows expedited review requests for:
+
 - Critical bug fixes for live apps
 - Time-sensitive events (conference launch, holiday tie-in)
 - Security patches
 
 Do NOT request expedited review for:
+
 - Initial submissions (no urgency justification)
 - Feature updates (plan ahead)
 - Rejected apps (use Resolution Center instead)

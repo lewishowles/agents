@@ -21,15 +21,15 @@ Write professional, empathetic responses to App Store reviews that build trust a
 
 ### When to Respond
 
-| Review Type | Respond? | Priority |
-|-------------|----------|----------|
-| 1-2 stars with feedback | **Yes** | High |
-| 3 stars with suggestions | Yes | Medium |
-| Bug reports (any rating) | **Yes** | High |
-| 4-5 stars with content | Yes | Low |
-| 4-5 stars generic praise | Optional | Low |
-| Abusive/inappropriate | Report, don't respond | - |
-| Competitor spam | Report, don't respond | - |
+| Review Type              | Respond?              | Priority |
+| ------------------------ | --------------------- | -------- |
+| 1-2 stars with feedback  | **Yes**               | High     |
+| 3 stars with suggestions | Yes                   | Medium   |
+| Bug reports (any rating) | **Yes**               | High     |
+| 4-5 stars with content   | Yes                   | Low      |
+| 4-5 stars generic praise | Optional              | Low      |
+| Abusive/inappropriate    | Report, don't respond | -        |
+| Competitor spam          | Report, don't respond | -        |
 
 ### Response Timing
 
@@ -71,6 +71,7 @@ T - Thank them and invite continued feedback
 **Review:** "App crashes every time I try to export. Waste of money. 1 star."
 
 **Response:**
+
 ```
 Hi [Name],
 
@@ -91,6 +92,7 @@ Thank you for taking the time to report this. It helps us improve.
 **Review:** "No dark mode? In 2024? Uninstalled."
 
 **Response:**
+
 ```
 Hi there,
 
@@ -110,6 +112,7 @@ Thanks for the feedback. We hope to welcome you back soon!
 **Review:** "Can't figure out how to do X. Bad design."
 
 **Response:**
+
 ```
 Hi [Name],
 
@@ -130,6 +133,7 @@ walk you through it.
 **Review:** "Too expensive for what it does."
 
 **Response:**
+
 ```
 Hi [Name],
 
@@ -152,6 +156,7 @@ feature you'd find worth the price, we'd love to hear about it.
 **Review:** "Doesn't work. Terrible app."
 
 **Response:**
+
 ```
 Hi there,
 
@@ -173,6 +178,7 @@ We respond quickly and will do our best to get you sorted.
 **Review:** "Love this app! Would be perfect if it had X."
 
 **Response:**
+
 ```
 Thank you so much for the kind words! 🙏
 
@@ -191,6 +197,7 @@ Thanks for being a [App] user!
 **Review:** "Great app, use it every day. 5 stars!"
 
 **Response:**
+
 ```
 Thank you! Reviews like this make our day. We're glad [App] is
 helping you. If you ever need anything, we're here!
@@ -203,6 +210,7 @@ helping you. If you ever need anything, we're here!
 **Review:** [Previously reported bug]
 
 **Follow-up Response:**
+
 ```
 Hi [Name],
 
@@ -239,19 +247,20 @@ resolved things for you.
 
 ### Tone by Situation
 
-| Situation | Tone |
-|-----------|------|
-| Bug report | Apologetic, solution-focused |
+| Situation       | Tone                          |
+| --------------- | ----------------------------- |
+| Bug report      | Apologetic, solution-focused  |
 | Feature request | Appreciative, forward-looking |
-| Confusion | Helpful, educational |
-| Angry review | Calm, empathetic |
-| Positive review | Grateful, personable |
+| Confusion       | Helpful, educational          |
+| Angry review    | Calm, empathetic              |
+| Positive review | Grateful, personable          |
 
 ## Difficult Situations
 
 ### Abusive Reviews
 
 **Don't respond.** Report to Apple if it:
+
 - Contains profanity/hate speech
 - Includes personal attacks
 - Is clearly spam
@@ -260,6 +269,7 @@ resolved things for you.
 ### Competitor Attacks
 
 Signs of competitor spam:
+
 - Multiple similar reviews at once
 - No specific details
 - Account has reviewed many competing apps
@@ -270,6 +280,7 @@ Signs of competitor spam:
 ### Impossible to Satisfy
 
 Some users can't be pleased. After one genuine attempt:
+
 - Don't keep responding
 - Document for your records
 - Move on
@@ -277,6 +288,7 @@ Some users can't be pleased. After one genuine attempt:
 ### Legal Threats
 
 If a review contains legal threats:
+
 - Don't respond publicly
 - Consult with legal
 - Document everything
@@ -284,11 +296,13 @@ If a review contains legal threats:
 ## Metrics to Track
 
 ### Response Metrics
+
 - Response rate (aim for 100% of actionable)
 - Response time (aim for <48 hours)
 - Follow-up conversion (ratings changed after response)
 
 ### Review Health
+
 - Average rating trend
 - Review volume
 - Sentiment analysis
@@ -297,16 +311,19 @@ If a review contains legal threats:
 ## Workflow
 
 ### Daily (5 minutes)
+
 1. Check for new reviews
 2. Flag urgent issues (bugs, crashes)
 3. Respond to critical reviews
 
 ### Weekly (15 minutes)
+
 1. Respond to remaining reviews
 2. Track themes and patterns
 3. Share feedback with team
 
 ### Monthly (30 minutes)
+
 1. Analyze rating trends
 2. Update response templates if needed
 3. Report key feedback to product team
@@ -314,16 +331,19 @@ If a review contains legal threats:
 ## Quick Reference
 
 ### Response Length
+
 - **Ideal:** 50-100 words
 - **Maximum:** 150 words
 - **Never:** Wall of text
 
 ### Sign-off Options
+
 - "— The [App] Team"
 - "— [Name], [App] Support"
 - "— [Name], Founder of [App]"
 
 ### Contact Options to Offer
+
 - support@yourapp.com
 - In-app support chat
 - @TwitterHandle

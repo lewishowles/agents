@@ -1,6 +1,7 @@
 # WebKit: Navigation
 
 <a id="source-swiftui-webkit-navigation-md"></a>
+
 ## Source: `swiftui/webkit/navigation.md`
 
 # Navigation
@@ -130,11 +131,11 @@ Observe `page.currentNavigationEvent` to track loading state and detect errors.
 
 ### Event States
 
-| State | Meaning |
-|-------|---------|
-| `.started` | Navigation has begun; show loading indicator |
-| `.finished` | Content loaded successfully; hide loading indicator |
-| `.failed` | Navigation failed (network error, invalid URL, etc.) |
+| State       | Meaning                                              |
+| ----------- | ---------------------------------------------------- |
+| `.started`  | Navigation has begun; show loading indicator         |
+| `.finished` | Content loaded successfully; hide loading indicator  |
+| `.failed`   | Navigation failed (network error, invalid URL, etc.) |
 
 ### Observing Events
 

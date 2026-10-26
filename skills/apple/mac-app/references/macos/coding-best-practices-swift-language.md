@@ -1,6 +1,7 @@
 # Coding best practices: Swift language
 
 <a id="source-macos-coding-best-practices-swift-language-md"></a>
+
 ## Source: `macos/coding-best-practices/swift-language.md`
 
 # Swift Language Best Practices
@@ -10,6 +11,7 @@ Modern Swift 6+ language patterns and idioms for macOS development.
 ## Swift 6 Features
 
 ### Strict Concurrency Checking
+
 ```swift
 // ✅ GOOD: Sendable conformance
 struct User: Sendable {
@@ -33,6 +35,7 @@ actor UserManager {
 ```
 
 ### Macro System
+
 ```swift
 // ✅ Use macros for reducing boilerplate
 import SwiftData
@@ -48,6 +51,7 @@ class Article {
 ```
 
 ### Typed Throws (Swift 6+)
+
 ```swift
 // ✅ GOOD: Specific error types
 enum NetworkError: Error {
@@ -78,6 +82,7 @@ do {
 ## Value Types vs Reference Types
 
 ### Prefer Value Types
+
 ```swift
 // ✅ GOOD: Value type for data
 struct Settings {
@@ -95,6 +100,7 @@ class Settings {
 ```
 
 ### When to Use Reference Types
+
 ```swift
 // ✅ GOOD: Reference type for identity and shared state
 final class DocumentController: ObservableObject {
@@ -113,6 +119,7 @@ class BaseViewController: NSViewController {
 ## Protocol-Oriented Programming
 
 ### Protocol Composition
+
 ```swift
 // ✅ GOOD: Small, focused protocols
 protocol Identifiable {
@@ -143,6 +150,7 @@ struct Article: Identifiable, Timestamped, Searchable {
 ```
 
 ### Protocol Extensions
+
 ```swift
 // ✅ GOOD: Default implementations
 protocol Validatable {
@@ -162,6 +170,7 @@ extension Validatable {
 ```
 
 ### Protocol Witnesses (Avoid Runtime Type Checks)
+
 ```swift
 // ❌ BAD: Runtime type checking
 func process(_ item: Any) {
@@ -193,6 +202,7 @@ func process(_ item: Displayable) {
 ## Generics and Type Safety
 
 ### Generic Functions
+
 ```swift
 // ✅ GOOD: Generic function with constraints
 func findFirst<T: Collection>(
@@ -204,6 +214,7 @@ func findFirst<T: Collection>(
 ```
 
 ### Associated Types
+
 ```swift
 // ✅ GOOD: Protocol with associated type
 protocol Repository {
@@ -234,6 +245,7 @@ struct ArticleRepository: Repository {
 ## Optionals Best Practices
 
 ### Optional Binding
+
 ```swift
 // ✅ GOOD: Guard for early exit
 func processUser(_ user: User?) {
@@ -254,6 +266,7 @@ var user: User!
 ```
 
 ### Nil-Coalescing and Optional Chaining
+
 ```swift
 // ✅ GOOD: Nil-coalescing with default
 let displayName = user?.name ?? "Guest"
@@ -268,6 +281,7 @@ let userID = optionalUser.map { $0.id }
 ## Property Wrappers
 
 ### Built-in Property Wrappers
+
 ```swift
 import SwiftUI
 
@@ -284,6 +298,7 @@ struct SettingsView: View {
 ```
 
 ### Custom Property Wrappers
+
 ```swift
 // ✅ GOOD: Custom property wrapper for validation
 @propertyWrapper
@@ -311,6 +326,7 @@ struct Settings {
 ## Result Builders
 
 ### SwiftUI-Style DSL
+
 ```swift
 // ✅ GOOD: Result builder for custom DSL
 @resultBuilder
@@ -340,6 +356,7 @@ let menu = createMenu {
 ## Error Handling
 
 ### Swift Error Protocol
+
 ```swift
 // ✅ GOOD: Well-structured error types
 enum ValidationError: Error, LocalizedError {
@@ -361,6 +378,7 @@ enum ValidationError: Error, LocalizedError {
 ```
 
 ### Do-Catch Best Practices
+
 ```swift
 // ✅ GOOD: Specific error handling
 func saveDocument(_ document: Document) async {
@@ -390,6 +408,7 @@ func loadDocument(id: UUID) -> Result<Document, Error> {
 ## Collections and Algorithms
 
 ### Use Appropriate Collection Types
+
 ```swift
 // ✅ GOOD: Array for ordered collections
 var items: [Item] = []
@@ -406,6 +425,7 @@ var orderedUniqueItems: OrderedSet<Item> = []
 ```
 
 ### Functional Programming Patterns
+
 ```swift
 // ✅ GOOD: Map, filter, reduce
 let activeUserNames = users
@@ -425,6 +445,7 @@ let allTags = articles.flatMap { $0.tags }
 ## Memory Management
 
 ### Capture Lists in Closures
+
 ```swift
 // ✅ GOOD: Weak self to avoid retain cycles
 class DocumentViewController: NSViewController {
@@ -453,6 +474,7 @@ class ChildView: NSView {
 ```
 
 ### Automatic Reference Counting (ARC)
+
 ```swift
 // ❌ BAD: Strong reference cycle
 class Author {

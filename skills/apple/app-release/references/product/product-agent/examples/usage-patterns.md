@@ -9,11 +9,13 @@ This document shows real-world workflows for using the Product Agent skill effec
 **What to do:** Provide the idea and let the skill run its analysis.
 
 **What to Check:**
+
 1. `severity_score` — Is it 6+?
 2. `opportunity` — Does it say "STRONG" or "MODERATE"?
 3. `recommendation` — Does it say "BUILD" or "PROCEED WITH CAUTION"?
 
 **Decision Making:**
+
 - **Score 7+, STRONG opportunity, BUILD verdict** — Green light
 - **Score 4-6, MODERATE opportunity, CAUTION verdict** — Needs differentiation strategy
 - **Score <4, WEAK opportunity, DON'T BUILD verdict** — Red light
@@ -25,12 +27,14 @@ This document shows real-world workflows for using the Product Agent skill effec
 **Use Case:** You have 3-5 ideas and want to pick the best one.
 
 **What to do:** Run discovery on each idea, then compare:
+
 - Severity scores (higher = better)
 - Opportunity assessments (STRONG > MODERATE > WEAK)
 - Recommendation verdicts
 - Current solutions (fewer/weaker competitors = better)
 
 **Example:**
+
 ```
 Idea A: Severity 7/10, STRONG, BUILD
 Idea B: Severity 4/10, WEAK, DON'T BUILD
@@ -46,11 +50,13 @@ Winner: Idea A (clear green light)
 **Use Case:** You're serious about an idea and want comprehensive analysis.
 
 **What to do:**
+
 1. Run product-agent discovery with detailed context (platform, target user)
 2. Follow up with **competitive-analysis** skill for competitor deep-dive
 3. Follow up with **market-research** skill for TAM/SAM/SOM
 
 **Review Checklist:**
+
 - [ ] Read complete `recommendation` (all paragraphs)
 - [ ] Analyze all `pain_points` (are they real?)
 - [ ] Research each item in `current_solutions` (visit websites)
@@ -69,11 +75,13 @@ Winner: Idea A (clear green light)
 **Result:** "DO NOT BUILD — market saturated"
 
 **Pivot attempts:**
+
 1. "Note-taking app specifically for academic research with citation management" (targeting researchers)
 2. "Voice-first note capture for field workers who can't use keyboards" (different use case)
 3. "Notes that auto-organize into project contexts using AI" (unique workflow)
 
 **Look for:**
+
 - Severity score improving (4+ to 6+)
 - Opportunity changing (WEAK to MODERATE)
 - Fewer/weaker competitors in the niche
@@ -86,6 +94,7 @@ Winner: Idea A (clear green light)
 **Use Case:** Need to present findings to team/stakeholders.
 
 **What to do:**
+
 1. Run discovery analysis
 2. Save the JSON output
 3. Create a summary highlighting:
@@ -96,6 +105,7 @@ Winner: Idea A (clear green light)
    - Recommendation with reasoning
 
 **Present:**
+
 1. Walk through key sections
 2. Focus on recommendation and opportunity
 3. Discuss risks and mitigation
@@ -107,11 +117,13 @@ Winner: Idea A (clear green light)
 **Use Case:** Document why you chose/rejected an idea.
 
 **What to do:**
+
 1. Run analysis for each idea considered
 2. Save results alongside your project documentation
 3. Include both accepted and rejected ideas with reasoning
 
 **Benefit:**
+
 - Historical record of decision rationale
 - Reference for future similar ideas
 - Onboarding for new team members
@@ -150,14 +162,14 @@ Winner: Idea A (clear green light)
 
 ## Quick Reference
 
-| Goal | Approach |
-|------|----------|
-| Quick validation | Provide idea, check recommendation and severity |
-| Deep analysis | Add platform, target user, then use competitive-analysis and market-research skills |
-| Compare ideas | Run analysis on each, compare scores and opportunities |
-| Refine idea | If "don't build", try narrower niches or different angles |
-| Present findings | Save JSON, create summary for stakeholders |
-| Document decisions | Save analysis for both accepted and rejected ideas |
+| Goal               | Approach                                                                            |
+| ------------------ | ----------------------------------------------------------------------------------- |
+| Quick validation   | Provide idea, check recommendation and severity                                     |
+| Deep analysis      | Add platform, target user, then use competitive-analysis and market-research skills |
+| Compare ideas      | Run analysis on each, compare scores and opportunities                              |
+| Refine idea        | If "don't build", try narrower niches or different angles                           |
+| Present findings   | Save JSON, create summary for stakeholders                                          |
+| Document decisions | Save analysis for both accepted and rejected ideas                                  |
 
 ---
 

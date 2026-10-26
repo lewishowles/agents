@@ -1,6 +1,7 @@
 # Architecture patterns: Design patterns
 
 <a id="source-macos-architecture-patterns-design-patterns-md"></a>
+
 ## Source: `macos/architecture-patterns/design-patterns.md`
 
 # Design Patterns for macOS
@@ -84,6 +85,7 @@ struct TaskListView: View {
 ```
 
 ### When to Use MVVM
+
 - Any SwiftUI app with business logic beyond simple data display
 - When you need testable business logic separate from the view
 - When multiple views share the same state transformations
@@ -152,6 +154,7 @@ struct InMemoryTaskRepository: TaskRepository {
 ```
 
 ### When to Use Repository
+
 - Apps with persistence (SwiftData, Core Data, files)
 - When you need to swap data sources (network vs. local)
 - When you want testable data access without real databases
@@ -195,6 +198,7 @@ enum ViewModelFactory {
 ```
 
 ### When to Use Factory
+
 - Complex object creation with multiple dependencies
 - When creation logic varies based on context or configuration
 - Centralizing dependency wiring
@@ -252,11 +256,12 @@ class EditorController {
 ```
 
 ### When to Use Which Observer Mechanism
-| Mechanism | Coupling | Use Case |
-|-----------|----------|----------|
-| @Observable | Tight | ViewModel-to-View data binding |
-| Combine | Medium | Async streams, data transformation pipelines |
-| AsyncSequence | Medium | Streaming data, server-sent events |
+
+| Mechanism     | Coupling | Use Case                                     |
+| ------------- | -------- | -------------------------------------------- |
+| @Observable   | Tight    | ViewModel-to-View data binding               |
+| Combine       | Medium   | Async streams, data transformation pipelines |
+| AsyncSequence | Medium   | Streaming data, server-sent events           |
 
 ## Coordinator Pattern
 
@@ -322,6 +327,7 @@ struct ContentView: View {
 ```
 
 ### When to Use Coordinator
+
 - Apps with complex navigation flows (onboarding, multi-step forms)
 - Deep linking support
 - When navigation logic is cluttering ViewModels
@@ -367,9 +373,9 @@ struct TaskListView: View {
 
 ## Choosing the Right Pattern
 
-| Scenario | Recommended Patterns |
-|----------|---------------------|
-| Simple CRUD app | MVVM + Repository |
+| Scenario                         | Recommended Patterns            |
+| -------------------------------- | ------------------------------- |
+| Simple CRUD app                  | MVVM + Repository               |
 | Multi-screen app with navigation | MVVM + Repository + Coordinator |
-| App with swappable backends | Repository + Factory |
-| Plugin/extension architecture | Factory + Observer |
+| App with swappable backends      | Repository + Factory            |
+| Plugin/extension architecture    | Factory + Observer              |

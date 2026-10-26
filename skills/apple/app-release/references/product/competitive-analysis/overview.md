@@ -5,6 +5,7 @@ Performs deep competitive analysis for iOS/macOS app ideas. Goes beyond basic di
 ## When This Skill Activates
 
 Use this Skill when the user wants to:
+
 - Understand competitors in detail
 - Compare features across competitors
 - Analyze competitor pricing strategies
@@ -18,32 +19,38 @@ Use this Skill when the user wants to:
 ## What This Skill Does
 
 ### 1. Competitor Identification
+
 - Identifies direct and indirect competitors
 - Categorizes by market position (leaders, challengers, niche)
 - Includes App Store rankings and ratings
 
 ### 2. Feature Comparison
+
 - Creates feature comparison matrix
 - Identifies unique features per competitor
 - Highlights feature gaps (opportunities)
 
 ### 3. Pricing Analysis
+
 - Compares pricing models (free, paid, subscription, freemium)
 - Analyzes price points
 - Identifies pricing strategies
 
 ### 4. SWOT Analysis
+
 - Strengths of each competitor
 - Weaknesses and limitations
 - Opportunities for differentiation
 - Threats to new entrants
 
 ### 5. Market Positioning
+
 - How competitors position themselves
 - Target audience differences
 - Brand messaging analysis
 
 ### 6. Differentiation Strategy
+
 - **Key output:** How to be different
 - Feature gaps in market
 - Underserved user segments
@@ -150,6 +157,7 @@ Step 4: Create comparison matrix
 ### 2. Look Beyond Direct Competitors
 
 Include:
+
 - **Direct competitors:** Same problem, same solution
 - **Indirect competitors:** Same problem, different solution
 - **Alternative solutions:** How users solve this today without apps
@@ -157,6 +165,7 @@ Include:
 ### 3. Focus on Actionable Insights
 
 Don't just list features. Answer:
+
 - **What can we do better?**
 - **What gaps exist?**
 - **Where can we differentiate?**
@@ -164,6 +173,7 @@ Don't just list features. Answer:
 ### 4. Verify with App Store Data
 
 When analyzing iOS/macOS apps:
+
 - Check App Store ratings
 - Read recent reviews (last 3 months)
 - Note update frequency
@@ -172,6 +182,7 @@ When analyzing iOS/macOS apps:
 ### 5. Pricing Intelligence
 
 Understand:
+
 - How competitors monetize
 - What features are behind paywall
 - Trial periods and refund policies
@@ -202,12 +213,12 @@ Understand:
 
 3. **Create Feature Matrix**
 
-   | Feature | Todoist | Things | OmniFocus | TickTick |
-   |---------|---------|--------|-----------|----------|
-   | Subtasks | ✓ | ✓ | ✓ | ✓ |
-   | AI Prioritization | ✗ | ✗ | ✗ | ✗ |
-   | Calendar Integration | ✓ | ✓ | ✓ | ✓ |
-   | Natural Language Input | ✓ | ✗ | ✗ | ✓ |
+   | Feature                | Todoist | Things | OmniFocus | TickTick |
+   | ---------------------- | ------- | ------ | --------- | -------- |
+   | Subtasks               | ✓       | ✓      | ✓         | ✓        |
+   | AI Prioritization      | ✗       | ✗      | ✗         | ✗        |
+   | Calendar Integration   | ✓       | ✓      | ✓         | ✓        |
+   | Natural Language Input | ✓       | ✗      | ✗         | ✓        |
 
 4. **Identify Gaps**
    - AI prioritization: Nobody does it well
@@ -215,6 +226,7 @@ Understand:
    - Context-aware suggestions: Missing entirely
 
 5. **Present Findings**
+
    ```
    Competitive Analysis: Task Management Apps
 
@@ -243,6 +255,7 @@ Understand:
 ## Common Pitfalls to Avoid
 
 ### ❌ Don't Just List Competitors
+
 ```
 Bad: "Competitors are Todoist, Things, OmniFocus"
 Good: "Todoist leads with 30% market share at $4/mo, strong in
@@ -250,6 +263,7 @@ Good: "Todoist leads with 30% market share at $4/mo, strong in
 ```
 
 ### ❌ Don't Ignore Indirect Competition
+
 ```
 Bad: Only analyzing dedicated task apps
 Good: Also include: Notion (general productivity), Apple Reminders
@@ -257,6 +271,7 @@ Good: Also include: Notion (general productivity), Apple Reminders
 ```
 
 ### ❌ Don't Skip Pricing Analysis
+
 ```
 Bad: "They have a subscription"
 Good: "Freemium model with $4/mo premium. 70% on free tier,
@@ -264,6 +279,7 @@ Good: "Freemium model with $4/mo premium. 70% on free tier,
 ```
 
 ### ❌ Don't Forget the "So What?"
+
 ```
 Bad: "Competitor X has feature Y"
 Good: "Competitor X has feature Y, but it's poorly implemented
@@ -304,6 +320,7 @@ This Skill works best **after** using the product-agent skill:
 ## When to Run This Analysis
 
 **Perfect timing:**
+
 - After initial discovery shows "MODERATE" or "STRONG" opportunity
 - Before starting development (validate differentiation strategy)
 - When planning features (fill competitive gaps)
@@ -311,10 +328,12 @@ This Skill works best **after** using the product-agent skill:
 - When pitching to investors (competitive landscape)
 
 **Too early:**
+
 - Before basic discovery (use the product-agent skill first)
 - If discovery said "DON'T BUILD" (no point analyzing dead market)
 
 **Too late:**
+
 - After building MVP without checking competition (too late to differentiate)
 - After pricing decision (should inform pricing)
 
@@ -333,6 +352,7 @@ After running competitive analysis, you should have:
 ## Output File Location
 
 Save competitive analysis results to one of these locations:
+
 - `competitive-analysis.md` (project root)
 - `docs/competitive-analysis.md` (if docs folder exists)
 
@@ -345,16 +365,19 @@ Save competitive analysis results to one of these locations:
 Based on competitive analysis, next steps:
 
 **If gaps found:**
+
 - Proceed with MVP scoping
 - Design features that fill gaps
 - Position around differentiation
 
 **If no clear gaps:**
+
 - Consider pivoting idea
 - Target different user segment
 - Explore adjacent market
 
 **If too competitive:**
+
 - Find niche within market
 - Bundle with other features
 - Or abandon and try different idea

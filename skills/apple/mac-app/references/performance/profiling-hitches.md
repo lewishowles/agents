@@ -1,6 +1,7 @@
 # Profiling hitches
 
 <a id="source-performance-profiling-hitches-md"></a>
+
 ## Source: `performance/profiling/hitches.md`
 
 # Hitches and the Render Loop
@@ -27,12 +28,12 @@ Display:          frame on glass
 
 Raw hitch counts don't compare across runs (scroll durations differ). Use **hitch time ratio = total hitch ms ÷ interval seconds**:
 
-| Ratio (ms of hitch per second) | Verdict |
-|---|---|
-| 0 | The goal |
-| < 5 | Good — mostly unnoticeable |
-| 5–10 | Warning — users notice; investigate |
-| > 10 | Critical — severely impacts UX; fix now |
+| Ratio (ms of hitch per second) | Verdict                                 |
+| ------------------------------ | --------------------------------------- |
+| 0                              | The goal                                |
+| < 5                            | Good — mostly unnoticeable              |
+| 5–10                           | Warning — users notice; investigate     |
+| > 10                           | Critical — severely impacts UX; fix now |
 
 Track it in production on macOS 26 or later via MetricKit (`MXAnimationMetric` scroll hitch time ratio — WWDC20 10081).
 
@@ -40,11 +41,11 @@ Track it in production on macOS 26 or later via MetricKit (`MXAnimationMetric` s
 
 **Offscreen pass = the GPU renders a layer somewhere other than the final texture, then copies it back.** The retained triggers, and the fix for each:
 
-| Trigger | Fix |
-|---|---|
-| Dynamic shadow (no `shadowPath`) | Set `layer.shadowPath` (demo: −5 passes/cell) |
-| `layer.mask` around a subtree | `masksToBounds` for rect/rounded/ellipse clipping — or **no masking** if sublayers can't exceed bounds |
-| `CAShapeLayer` rounded-rect "squircle" masks | `cornerRadius` + `cornerCurve = .continuous` (−2 passes) |
+| Trigger                                      | Fix                                                                                                    |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Dynamic shadow (no `shadowPath`)             | Set `layer.shadowPath` (demo: −5 passes/cell)                                                          |
+| `layer.mask` around a subtree                | `masksToBounds` for rect/rounded/ellipse clipping — or **no masking** if sublayers can't exceed bounds |
+| `CAShapeLayer` rounded-rect "squircle" masks | `cornerRadius` + `cornerCurve = .continuous` (−2 passes)                                               |
 
 ```swift
 // ❌ dynamic shadow — renderer resolves the shape offscreen (5 passes in Apple's demo)

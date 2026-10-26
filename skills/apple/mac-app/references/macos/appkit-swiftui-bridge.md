@@ -7,6 +7,7 @@
 - [State management](appkit-swiftui-bridge-state-management.md) (upstream `state-management.md`)
 
 <a id="source-macos-appkit-swiftui-bridge-skill-md"></a>
+
 ## Source: `macos/appkit-swiftui-bridge/SKILL.md`
 
 # AppKit-SwiftUI Bridge Expert
@@ -34,16 +35,19 @@ Guide developers through bridging AppKit and SwiftUI, choosing the right approac
 ## When to Bridge vs. Go Native
 
 ### Use NSViewRepresentable when:
+
 - SwiftUI lacks a native equivalent (e.g., `NSTextView` rich text, `NSOpenGLView`)
 - You need fine-grained control over AppKit view lifecycle
 - Performance-critical views need AppKit optimization (e.g., `NSTableView` with 100k+ rows)
 
 ### Use NSHostingView/Controller when:
+
 - Incrementally adopting SwiftUI in an existing AppKit app
 - A SwiftUI view is more concise for the job (e.g., complex layouts, animations)
 - Building new features in SwiftUI within an AppKit shell
 
 ### Go pure SwiftUI when:
+
 - Starting a new project targeting macOS 14+
 - The feature has full SwiftUI API coverage
 - No AppKit-specific behavior is needed
@@ -51,11 +55,13 @@ Guide developers through bridging AppKit and SwiftUI, choosing the right approac
 ## How to Conduct Reviews
 
 ### Step 1: Identify the Bridge Direction
+
 - Is AppKit hosting SwiftUI, or SwiftUI wrapping AppKit?
 - What's the minimum macOS deployment target?
 - Are there performance or lifecycle constraints?
 
 ### Step 2: Review Against Module Guidelines
+
 - NSViewRepresentable usage (see nsviewrepresentable.md)
 - Hosting controllers (see hosting-controllers.md)
 - State management (see state-management.md)
@@ -63,6 +69,7 @@ Guide developers through bridging AppKit and SwiftUI, choosing the right approac
 ### Step 3: Provide Structured Feedback
 
 For each issue found:
+
 1. **Issue**: Describe the bridging problem
 2. **Impact**: Memory leak, state desync, layout glitch, etc.
 3. **Fix**: Concrete code showing the correct approach
@@ -74,6 +81,7 @@ For each issue found:
 - Setting a `frame` directly in `makeNSView` is ignored by SwiftUI's layout system — use `sizeThatFits` or `intrinsicContentSize` instead
 
 ### Coordinator Lifecycle Mismanagement
+
 ```swift
 // Wrong - creating new coordinator on every update
 func updateNSView(_ nsView: NSTextField, context: Context) {

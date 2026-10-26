@@ -8,18 +8,18 @@ Apple indexes keywords from **multiple locales per storefront**. Each additional
 
 ### US App Store — 10 Indexed Locales
 
-| # | Locale | Code | Notes |
-|---|--------|------|-------|
-| 1 | English (US) | en-US | Primary |
-| 2 | Spanish (Mexico) | es-MX | Most commonly used secondary |
-| 3 | Arabic | ar | |
-| 4 | Chinese (Simplified) | zh-Hans | |
-| 5 | Chinese (Traditional) | zh-Hant | |
-| 6 | French | fr | |
-| 7 | Korean | ko | |
-| 8 | Portuguese (Brazil) | pt-BR | |
-| 9 | Russian | ru | |
-| 10 | Vietnamese | vi | |
+| #   | Locale                | Code    | Notes                        |
+| --- | --------------------- | ------- | ---------------------------- |
+| 1   | English (US)          | en-US   | Primary                      |
+| 2   | Spanish (Mexico)      | es-MX   | Most commonly used secondary |
+| 3   | Arabic                | ar      |                              |
+| 4   | Chinese (Simplified)  | zh-Hans |                              |
+| 5   | Chinese (Traditional) | zh-Hant |                              |
+| 6   | French                | fr      |                              |
+| 7   | Korean                | ko      |                              |
+| 8   | Portuguese (Brazil)   | pt-BR   |                              |
+| 9   | Russian               | ru      |                              |
+| 10  | Vietnamese            | vi      |                              |
 
 ### How to Use
 
@@ -42,6 +42,7 @@ colleague,lunch,cab,uber,airbnb,weekend,event,party,wedding,gift
 ```
 
 ### Rules
+
 - **No duplicate words across ANY locale** — each word is counted only once even across locales, so repetition provides zero ranking boost
 - Words from different locales **DON'T combine** into phrases (only words within the same locale combine)
 - You CAN use English in any locale if targeting an English-speaking market
@@ -50,32 +51,32 @@ colleague,lunch,cab,uber,airbnb,weekend,event,party,wedding,gift
 
 ### Cross-Localization for All Major Markets
 
-| Market | Primary Locale | Secondary Locales Indexed |
-|--------|---------------|--------------------------|
-| **United States** | English (US) | Spanish (MX), Arabic, Chinese (Simplified), Chinese (Traditional), French, Korean, Portuguese (BR), Russian, Vietnamese |
-| **Canada** | English (Canada) | French (Canada) |
-| **United Kingdom** | English (UK) | — (single locale) |
-| **Australia** | English (Australia) | — (single locale) |
-| **Mexico** | Spanish (Mexico) | English (US) |
-| **Brazil** | Portuguese (Brazil) | English (US) |
-| **Japan** | Japanese | English (US) |
-| **South Korea** | Korean | English (US) |
-| **China (Mainland)** | Chinese (Simplified) | English (US) |
-| **Taiwan** | Chinese (Traditional) | English (US) |
-| **Germany** | German | English (UK) |
-| **France** | French | English (UK) |
-| **Spain** | Spanish (Spain) | English (UK), Catalan |
-| **Italy** | Italian | English (UK) |
-| **Netherlands** | Dutch | English (UK) |
-| **Portugal** | Portuguese (Portugal) | English (UK) |
-| **Russia** | Russian | English (UK) |
-| **India** | English (India) | Hindi |
-| **Switzerland** | German (Switzerland) | French, Italian, English (UK) |
-| **Belgium** | Dutch (Belgium) | French (Belgium) |
-| **Sweden** | Swedish | English (UK) |
-| **Norway** | Norwegian | English (UK) |
-| **Denmark** | Danish | English (UK) |
-| **Finland** | Finnish | English (UK) |
+| Market               | Primary Locale        | Secondary Locales Indexed                                                                                               |
+| -------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **United States**    | English (US)          | Spanish (MX), Arabic, Chinese (Simplified), Chinese (Traditional), French, Korean, Portuguese (BR), Russian, Vietnamese |
+| **Canada**           | English (Canada)      | French (Canada)                                                                                                         |
+| **United Kingdom**   | English (UK)          | — (single locale)                                                                                                       |
+| **Australia**        | English (Australia)   | — (single locale)                                                                                                       |
+| **Mexico**           | Spanish (Mexico)      | English (US)                                                                                                            |
+| **Brazil**           | Portuguese (Brazil)   | English (US)                                                                                                            |
+| **Japan**            | Japanese              | English (US)                                                                                                            |
+| **South Korea**      | Korean                | English (US)                                                                                                            |
+| **China (Mainland)** | Chinese (Simplified)  | English (US)                                                                                                            |
+| **Taiwan**           | Chinese (Traditional) | English (US)                                                                                                            |
+| **Germany**          | German                | English (UK)                                                                                                            |
+| **France**           | French                | English (UK)                                                                                                            |
+| **Spain**            | Spanish (Spain)       | English (UK), Catalan                                                                                                   |
+| **Italy**            | Italian               | English (UK)                                                                                                            |
+| **Netherlands**      | Dutch                 | English (UK)                                                                                                            |
+| **Portugal**         | Portuguese (Portugal) | English (UK)                                                                                                            |
+| **Russia**           | Russian               | English (UK)                                                                                                            |
+| **India**            | English (India)       | Hindi                                                                                                                   |
+| **Switzerland**      | German (Switzerland)  | French, Italian, English (UK)                                                                                           |
+| **Belgium**          | Dutch (Belgium)       | French (Belgium)                                                                                                        |
+| **Sweden**           | Swedish               | English (UK)                                                                                                            |
+| **Norway**           | Norwegian             | English (UK)                                                                                                            |
+| **Denmark**          | Danish                | English (UK)                                                                                                            |
+| **Finland**          | Finnish               | English (UK)                                                                                                            |
 
 **Key pattern:** English (UK) is the fallback for most European markets. English (US) is the fallback for most Asian and Latin American markets.
 
@@ -130,13 +131,14 @@ Apple OCR focuses on **top and bottom** of screenshots:
 
 ### Caption Strategy
 
-| Old Caption (Bad) | New Caption (Keyword-Rich) |
-|-------------------|---------------------------|
-| "Easy to use!" | "Split Bills Instantly" |
-| "Track everything" | "Track Shared Expenses" |
-| "Simple & fast" | "Settle Up with Friends" |
+| Old Caption (Bad)  | New Caption (Keyword-Rich) |
+| ------------------ | -------------------------- |
+| "Easy to use!"     | "Split Bills Instantly"    |
+| "Track everything" | "Track Shared Expenses"    |
+| "Simple & fast"    | "Settle Up with Friends"   |
 
 ### Important Notes
+
 - Keywords in screenshots DON'T compete with metadata keywords
 - Apple EXPECTS keyword repetition in screenshots (unlike metadata)
 - Use your most important keywords in first 2 screenshots
@@ -147,6 +149,7 @@ Apple OCR focuses on **top and bottom** of screenshots:
 Apple allows **5 live events** that appear in search results. Most developers ignore this.
 
 ### Benefits
+
 - Events get **separate search indexing**
 - Can appear in "Events" tab = extra visibility
 - Apple sometimes **features** interesting events
@@ -154,15 +157,16 @@ Apple allows **5 live events** that appear in search results. Most developers ig
 
 ### Event Ideas by Category
 
-| Category | Event Idea |
-|----------|-----------|
-| Finance | "New Year Budget Challenge" |
-| Health | "30-Day Fitness Challenge" |
-| Productivity | "Productivity Week" |
-| Education | "Back to School Special" |
-| Games | "Weekend Tournament" |
+| Category     | Event Idea                  |
+| ------------ | --------------------------- |
+| Finance      | "New Year Budget Challenge" |
+| Health       | "30-Day Fitness Challenge"  |
+| Productivity | "Productivity Week"         |
+| Education    | "Back to School Special"    |
+| Games        | "Weekend Tournament"        |
 
 ### Event Metadata = More Keywords
+
 Event title and description are indexed separately from your app's main keywords.
 
 ## 4. First 48 Hours Velocity Boost
@@ -170,12 +174,14 @@ Event title and description are indexed separately from your app's main keywords
 Apple gives new apps/updates a **temporary ranking boost**. Maximize it:
 
 ### Launch Strategy
+
 1. Have friends/family download on Day 1
 2. Share on social media immediately
 3. Email your list on launch day
 4. Coordinate with any press/coverage
 
 ### Update Strategy
+
 - Don't waste updates on bug fixes alone
 - Bundle bug fixes with keyword changes
 - Time updates for when you can promote them
@@ -185,6 +191,7 @@ Apple gives new apps/updates a **temporary ranking boost**. Maximize it:
 Hidden feature: **Long-press any review** → Mark as "Helpful"
 
 ### Strategy
+
 1. Find your best 5-star reviews
 2. Long-press each one
 3. Mark as "Helpful"
@@ -195,18 +202,19 @@ Your top 3 "most helpful" reviews show first to potential users.
 ## 6. UK English for Extra Keywords
 
 Add **English (UK)** localization with different keywords. These index for:
+
 - United Kingdom
 - Partially for other EU countries
 
 ### US vs UK Variations
 
-| US Term | UK Term |
-|---------|---------|
-| roommate | flatmate |
-| apartment | flat |
-| vacation | holiday |
-| check | cheque |
-| color | colour |
+| US Term      | UK Term      |
+| ------------ | ------------ |
+| roommate     | flatmate     |
+| apartment    | flat         |
+| vacation     | holiday      |
+| check        | cheque       |
+| color        | colour       |
 | organization | organisation |
 
 ## 7. Left-to-Right Keyword Weight
@@ -222,6 +230,7 @@ Stronger: Expense Split - Settle Up
 ```
 
 ### Application
+
 - Put your primary keyword FIRST in title
 - Put secondary keyword FIRST in subtitle
 - Front-load your keyword field too
@@ -229,6 +238,7 @@ Stronger: Expense Split - Settle Up
 ## 8. Singular vs Plural (Don't Waste Space)
 
 Apple treats these as equivalent:
+
 ```
 bill = bills
 expense = expenses
@@ -240,6 +250,7 @@ tracker = trackers
 ## 9. Stop Words Are Auto-Indexed
 
 Don't waste keyword space on:
+
 ```
 a, an, the, and, for, with, of, to, by, app, application
 ```
@@ -251,6 +262,7 @@ Apple indexes these automatically.
 When users mention keywords in reviews, it can boost ranking.
 
 ### Prompt Strategy
+
 ```
 "If you love splitting bills with roommates,
 please leave a review!"
@@ -263,6 +275,7 @@ Natural keyword inclusion in reviews = organic boost.
 Apple tracks **impressions → downloads** ratio. Higher conversion = higher ranking.
 
 ### Improve Conversion
+
 - Better icon (A/B test with Product Page Optimization)
 - First screenshot is most important (70% decide from it alone)
 - First 3 words of subtitle are visible in search results
@@ -270,6 +283,7 @@ Apple tracks **impressions → downloads** ratio. Higher conversion = higher ran
 ## Quick Reference Checklist
 
 ### Zero-Risk Additions
+
 - [ ] Add all 9 secondary US locales (es-MX, ar, zh-Hans, zh-Hant, fr, ko, pt-BR, ru, vi) with unique English keywords
 - [ ] Add en-UK locale with extra keywords (for European market reach)
 - [ ] Update screenshot captions with keywords
@@ -277,6 +291,7 @@ Apple tracks **impressions → downloads** ratio. Higher conversion = higher ran
 - [ ] Mark best reviews as "Helpful"
 
 ### Optimization Rules
+
 - [ ] No duplicate words across fields (Title → Subtitle → Keywords cascade)
 - [ ] No duplicate words across locales (each word counted once globally)
 - [ ] No spaces after commas in keywords
@@ -286,6 +301,7 @@ Apple tracks **impressions → downloads** ratio. Higher conversion = higher ran
 - [ ] Most important keywords in first 2 screenshots
 
 ### Tracking
+
 - [ ] Note baseline metrics before changes
 - [ ] Check rankings weekly
 - [ ] Update keywords every 4-6 weeks

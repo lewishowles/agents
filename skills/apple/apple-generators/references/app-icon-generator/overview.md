@@ -1,6 +1,26 @@
 # App Icon Generator
 
-Generate production-quality app icons programmatically using a CoreGraphics Swift script. Produces all required sizes and installs into the Xcode asset catalog.
+Generate an app icon programmatically with a CoreGraphics Swift script, resize it to every required size, and install it into the Xcode asset catalog — with appearance variants (light/dark/tinted).
+
+## Read first — the Liquid Glass era (iOS 26 / macOS 26)
+
+> **Apple icon standards verified as of July 2026** — Icon Composer, Xcode 26, macOS Tahoe 26.4+. This guidance is static (the skill does no per-run web lookup); if that date is well in the past or the OS has moved on, re-verify against the [HIG · App icons](https://developer.apple.com/design/human-interface-guidelines/app-icons) before trusting the specifics below.
+
+Apple's shippable icon format changed. On iOS 26 / macOS 26 the modern app icon is a **layered, light-responsive Liquid Glass icon** authored in **Icon Composer** (free; ships with Xcode 26, needs macOS Tahoe 26.4+). You supply _flat_ artwork in up to **four depth groups** (background → foreground); the **system renders the glass** — specular highlights, refraction, translucency, shadows — and masks the rounded-rect shape. One `.icon` file adapts across iPhone, iPad, Mac, and Apple Watch and across **Default / Dark / Mono (tinted)** appearances.
+
+**So this skill does NOT produce the final iOS 26 icon.** Icon Composer is GUI-first; no script can author a true layered `.icon`. Its two honest roles are:
+
+1. **Placeholder** — a fast flat 1024 PNG so early builds, TestFlight, and screenshots feel real before you invest in the real icon.
+2. **Layered source art** — flat background / midground / foreground PNGs (or SVGs), effect-free, ready to drag into Icon Composer, where you assemble depth and export the `.icon`.
+
+**What changed vs. the classic flow:**
+
+- **Do not bake in lighting.** No pre-painted specular highlights, drop shadows, or gradients-used-as-lighting — the system owns those now, and baking them in double-exposes against the system glass. (The `drawShine`/`drawShadow` blocks below are **legacy-only**, off by default for iOS 26+ targets.)
+- **Do not round the corners.** Icon Composer / the system apply the shape mask — fill a full square canvas.
+- **SVG for shapes, PNG for effects** — vector where you can, raster only where you must.
+- **Provide appearance variants** — light (default), dark, and tinted/mono. A single flat PNG only fills the light slot and won't adapt on iOS 18+.
+
+**Detect the target first:** read the deployment target (`IPHONEOS_DEPLOYMENT_TARGET` / `MACOSX_DEPLOYMENT_TARGET` in the pbxproj, or `.planning/APP.md`). iOS 26+ / macOS 26+ → lead with the Icon Composer handoff and treat the flat PNG as a placeholder. Older targets → the classic flat + appearances path is fine to ship. **If the deployment target is newer than the "verified as of" date above, flag it to the user and re-verify the icon rules against the current HIG before generating** — the skill won't know about anything Apple shipped after that date.
 
 ## When This Skill Activates
 
@@ -77,18 +97,57 @@ Ask via AskUserQuestion:
 
 ## Apple HIG Icon Guidelines
 
-**Read `apple-hig-icons.md` before generating.** Key rules:
+**Read `apple-hig-icons.md` before generating.**
+
+**Timeless rules (all eras):**
 
 1. **No text** in the icon — must be universally recognizable
 2. **Single focal point** — one clear element the eye is drawn to
-3. **Simple shapes** — must be legible at 16x16 (macOS menu bar)
-4. **Fill the canvas** — macOS/iOS apply the rounded rect mask automatically
-5. **Front-facing perspective** — no 3D tilts or dramatic angles
-6. **Use gradients sparingly** — subtle depth, not rainbow
-7. **Ensure contrast** — the focal element must stand out from background
-8. **Platform-appropriate**:
-   - macOS: Can be more detailed (icons display larger)
-   - iOS: Keep simpler (smaller grid, more rounded)
+3. **Simple shapes** — legible at 16×16 (macOS menu bar) and at Home-screen size
+4. **Fill a full square canvas** — never bake in rounded corners; the system / Icon Composer apply the shape mask
+5. **Front-facing** — no 3D tilts or dramatic angles
+6. **Ensure contrast** — the focal element must stand out from the background
+7. **Platform-appropriate detail** — macOS can be more detailed (displays larger); iOS simpler
+
+**Liquid Glass era rules (iOS 26 / macOS 26):**
+
+8. **The system owns lighting.** No baked specular, drop shadows, or gradients-as-lighting — Icon Composer / the system add depth, refraction, and highlights. Keep artwork flat.
+9. **Provide appearance variants** — light (default), dark, and tinted/mono. Make sure the mark reads on all three (tinted renders as a monochrome silhouette on a system-tinted background).
+10. **Layer, don't flatten (final icon)** — organize art into ≤4 depth groups for Icon Composer; SVG for shapes, PNG only for texture.
+
+## Designing the Icon (Apple's Rules)
+
+Design-layer guidance from Apple's icon sessions (WWDC25) plus evergreen craft tests. The numbered rules above are the hard constraints; this is how to make the artwork good.
+
+### Composition
+
+- **One 1024×1024 canvas** drives the retained platforms. The system applies the mask.
+- **Frontal, flat illustration** beats realistic 3D/perspective rendering — the glass material supplies the dimensionality, so pre-rendered depth fights it.
+- **Fewer, rounder layers beat dense detail.** Avoid sharp edges and thin lines: rounder corners carry the glass lighting; bolder weights survive small sizes.
+- **Soft gradients over flat fills.** For backgrounds, prefer the built-in **System Light / System Dark gradients** to pure white or black.
+- **Colored backgrounds keep light, dark, and tinted modes distinct** — a neutral field collapses across appearances.
+- **Translucency and blur are encouraged**, not risky: clear mode shows the wallpaper _through_ the glass, so translucent layers are rewarded.
+
+### Appearance modes
+
+Author **three** variants — default, dark, mono — and the system derives **six** renders: default, dark, clear light/dark, tinted light/dark. Preview all six before shipping.
+
+### Icon Composer craft details
+
+1. Export artwork **flat and opaque**, each color region split into its own layer; SVG for flat graphics (**convert text to outlines** first), PNG for gradients and raster; export at canvas size.
+2. Prefix layer filenames with a **Z-order number** so stacking imports deterministically.
+3. Glass is applied **per layer** — if a narrow shape turns "pillowy", toggle that layer's specular off.
+4. Tune per appearance: swap any fill that vanishes against black in dark mode; in mono keep **one prominent white element** and step the rest down to grays.
+5. Choose **neutral vs chromatic shadows** per layer — chromatic tints the shadow with the layer's color, better for colorful art on light backgrounds.
+6. Test on real wallpapers, with the grid overlay, and at small sizes — then ship the exported `.icon` into Xcode.
+
+### Classic tests (evergreen)
+
+- **One identifiable metaphor** — if you can't name the single thing the icon depicts, users can't either.
+- **Squint test inside a folder**: still distinguishable among its neighbors?
+- Check the **Settings-list render**, not only the Home Screen (Step 4.6) — it's the smallest surface users see daily.
+- **Align key shapes to the icon grid** for optical balance (a guide, not a straitjacket).
+- An icon is **identity with lineage** — refine it release over release; don't redesign from scratch every update.
 
 ## Generation Process
 
@@ -99,7 +158,7 @@ Based on the user's answers (or app context), select:
 - **Background**: Gradient direction, colors, optional radial glow
 - **Primary Element**: The main shape/symbol
 - **Secondary Elements**: Optional ring, glow, accent shapes
-- **Style Modifiers**: Shine, shadow, stroke weight
+- **Style Modifiers**: stroke weight (⚠️ skip Shine/shadow for iOS 26+ targets — the system applies Liquid Glass specular and shadow; baking them in double-exposes)
 
 ### Step 2: Generate Swift Script
 
@@ -125,21 +184,21 @@ let size: CGFloat = 1024
 
 **Design building blocks** (combine these based on category/style):
 
-| Building Block           | Function                               | Use For                    |
-| ------------------------ | -------------------------------------- | -------------------------- |
-| `drawGradientBackground` | Linear gradient fill                   | All icons                  |
-| `drawRadialGlow`         | Soft colored glow behind focal element | Adding depth               |
-| `drawCircle`             | Filled/stroked circle                  | Record buttons, dots, orbs |
-| `drawRoundedRect`        | Rounded rectangle                      | Screens, cards, containers |
-| `drawRing`               | Circle outline                         | Borders, focus rings       |
-| `drawBrackets`           | Corner bracket marks                   | Viewfinders, capture       |
-| `drawMonitor`            | Screen + stand shape                   | Screen/display apps        |
-| `drawShield`             | Shield outline                         | Security/privacy apps      |
-| `drawGear`               | Gear/cog shape                         | Settings/utility apps      |
-| `drawWaveform`           | Audio waveform bars                    | Audio/music apps           |
-| `drawDocument`           | Page with fold corner                  | Document/writing apps      |
-| `drawShine`              | Elliptical specular highlight          | Adding polish              |
-| `drawShadow`             | Drop shadow beneath element            | Adding depth               |
+| Building Block           | Function                               | Use For                                                           |
+| ------------------------ | -------------------------------------- | ----------------------------------------------------------------- |
+| `drawGradientBackground` | Linear gradient fill                   | All icons                                                         |
+| `drawRadialGlow`         | Soft colored glow behind focal element | Adding depth                                                      |
+| `drawCircle`             | Filled/stroked circle                  | Record buttons, dots, orbs                                        |
+| `drawRoundedRect`        | Rounded rectangle                      | Screens, cards, containers                                        |
+| `drawRing`               | Circle outline                         | Borders, focus rings                                              |
+| `drawBrackets`           | Corner bracket marks                   | Viewfinders, capture                                              |
+| `drawMonitor`            | Screen + stand shape                   | Screen/display apps                                               |
+| `drawShield`             | Shield outline                         | Security/privacy apps                                             |
+| `drawGear`               | Gear/cog shape                         | Settings/utility apps                                             |
+| `drawWaveform`           | Audio waveform bars                    | Audio/music apps                                                  |
+| `drawDocument`           | Page with fold corner                  | Document/writing apps                                             |
+| `drawShine`              | Elliptical specular highlight          | ⚠️ Legacy only — off for iOS 26+ (system paints its own specular) |
+| `drawShadow`             | Drop shadow beneath element            | ⚠️ Legacy only — off for iOS 26+ (system casts its own shadow)    |
 
 ### Step 3: Run Script and Present Variants
 
@@ -213,6 +272,40 @@ For **iOS** (single size, system generates others):
 3. **Copy files** into the asset catalog directory
 4. **Build** to verify: `xcodebuild build -scheme <scheme> -destination 'platform=<platform>' -quiet`
 
+### Step 4.5: Appearance variants & Icon Composer handoff
+
+**Appearance variants (iOS 18+, scriptable).** For the flat path, generate three 1024 PNGs — light (default), dark, and a monochrome/tinted mark — and declare them so the icon adapts to the user's Home screen:
+
+```json
+{
+  "images": [
+    { "filename": "icon_light.png",  "idiom": "universal", "platform": "ios", "size": "1024x1024" },
+    { "filename": "icon_dark.png",   "idiom": "universal", "platform": "ios", "size": "1024x1024",
+      "appearances": [ { "appearance": "luminosity", "value": "dark" } ] },
+    { "filename": "icon_tinted.png", "idiom": "universal", "platform": "ios", "size": "1024x1024",
+      "appearances": [ { "appearance": "luminosity", "value": "tinted" } ] }
+  ],
+  "info": { "author": "xcode", "version": 1 }
+}
+```
+
+**Icon Composer handoff (iOS 26+ / the shippable icon).** The flat PNGs above are a placeholder. For the real Liquid Glass icon:
+
+1. Export the design as **flat layers** — background, midground, foreground — as SVG (shapes) or PNG (texture), with **no** baked highlights, shadows, or corners.
+2. Open **Icon Composer** (Xcode 26 ▸ Open Developer Tool ▸ Icon Composer; needs macOS Tahoe 26.4+). Drag the layers in, organize into ≤4 depth groups, tune specular / refraction / translucency / shadow (don't overdo refraction), and check the Default / Dark / Mono previews.
+3. **Export `.icon`** and add it to the target (it replaces the `AppIcon` set). Icon Composer also exports a flattened 1024 PNG for App Store marketing.
+
+This is a manual GUI step by design — the skill prepares the layers and hands off; it does not author the `.icon`.
+
+### Step 4.6: Validate Before Install (hard checks — do not skip)
+
+An icon that "looks fine" as a 1024px file on a neutral canvas can still fail on a real Home Screen. All three checks below caught real shipped bugs:
+
+1. **Adjacent-element contrast.** Any mark element that touches the icon _background_ (a header band, badge ring, tab, outline) must clearly contrast with that background — same-hue-slightly-darker vanishes at Home Screen size, amputating part of the mark. Elements sitting on the card/mark interior only need contrast against the card.
+2. **Judge at 60–64 px, not 1024.** `sips -Z 120` each variant and Read the small render — that's the size users see. Subtle contrast that survives at 1024 dies at 60.
+3. **Tinted variant must be strictly grayscale.** iOS 18+ overlays the user's tint on the tinted variant; baked-in color renders wrong. Beware colors hardcoded _inside_ shared draw functions — the tinted call site can pass gray arguments while the function paints brand color anyway. Parametrize every color per variant, then verify the exported PNG has zero saturation (e.g. a quick pixel scan).
+4. **See it in place (required, not optional).** Build to a simulator and screenshot the Home Screen — the icon among other apps on a real wallpaper is the only honest review. Check light, dark, and tinted appearances.
+
 ### Step 5: Cleanup
 
 - Keep `scripts/generate-icon.swift` for future regeneration
@@ -281,17 +374,17 @@ For **iOS** (single size, system generates others):
 After completion, report:
 
 ```
-Icon installed successfully!
+Icon installed!
 
-Master: scripts/generate-icon.swift (re-run to regenerate)
-Sizes:  [list of sizes generated]
+Type:     [placeholder flat icon | classic icon + appearances]
+Master:   scripts/generate-icon.swift (re-run to regenerate)
+Sizes:    [list] · appearances: [light/dark/tinted]
 Location: [path to AppIcon.appiconset]
 
-Build and run to see the icon in:
-- Menu bar (macOS)
-- Home screen (iOS)
-- Finder / Spotlight
-- About view
+⚠️ For an iOS 26+ / macOS 26+ target this is a PLACEHOLDER. Finish the real
+   Liquid Glass icon in Icon Composer (see the handoff step) before submitting.
+
+Build and run to see it: Home screen (iOS) · menu bar / Finder / Spotlight (macOS).
 ```
 
 ## Iteration
@@ -307,6 +400,6 @@ Common adjustment requests:
 
 - "Make the record dot bigger/smaller" → adjust radius parameter
 - "Different background color" → change gradient hex values
-- "Add more depth" → add radial glow or shine
+- "Add more depth" → add a radial glow (⚠️ not baked shine on iOS 26+ — add depth in Icon Composer instead)
 - "Too busy, simplify" → remove secondary elements
 - "Doesn't look good at small size" → increase stroke widths, simplify shapes

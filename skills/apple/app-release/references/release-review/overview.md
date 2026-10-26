@@ -5,6 +5,7 @@ Performs a comprehensive pre-release audit of macOS and iOS applications from a 
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Says "review for release", "release review", or "pre-release audit"
 - Asks for "senior developer review" or "critical review"
 - Mentions preparing for "App Store", "TestFlight", or "notarization"
@@ -25,6 +26,7 @@ Glob: **/project.pbxproj
 ```
 
 Identify:
+
 - Platform (macOS, iOS, or both)
 - App type (standard app, menu bar app, widget, extension)
 - Distribution method (App Store, direct download, TestFlight)
@@ -34,6 +36,7 @@ Identify:
 Load and apply: **security-checklist.md**
 
 Key areas:
+
 - Credential storage (Keychain patterns, no hardcoded secrets)
 - Data transmission (HTTPS, certificate validation)
 - Input validation (injection prevention)
@@ -45,6 +48,7 @@ Key areas:
 Load and apply: **privacy-checklist.md**
 
 Key areas:
+
 - Data collection transparency
 - Privacy manifest (iOS 17+)
 - User consent flows
@@ -56,6 +60,7 @@ Key areas:
 Load and apply: **ux-polish-checklist.md**
 
 Key areas:
+
 - First launch / onboarding
 - Empty states and error handling
 - Loading states
@@ -67,6 +72,7 @@ Key areas:
 Load and apply: **distribution-checklist.md**
 
 Key areas:
+
 - Bundle identifier format
 - Code signing configuration
 - Info.plist completeness
@@ -78,6 +84,7 @@ Key areas:
 Load and apply: **api-design-checklist.md**
 
 Key areas:
+
 - User-Agent headers (honest identification)
 - Error handling patterns
 - Token expiration handling
@@ -88,7 +95,7 @@ Key areas:
 
 Present findings in this structure:
 
-```markdown
+````markdown
 # Release Review: [App Name]
 
 **Platform**: macOS / iOS / Universal
@@ -118,9 +125,10 @@ Issues that will cause rejection, crashes, or security vulnerabilities.
 **Current Code**:
 ```swift
 // problematic code
-```
+````
 
 **Suggested Fix**:
+
 ```swift
 // fixed code
 ```
@@ -154,6 +162,7 @@ Nice-to-have improvements and polish.
 ## ✅ Strengths
 
 What the app does well:
+
 - [Strength 1]
 - [Strength 2]
 - [Strength 3]
@@ -165,7 +174,8 @@ What the app does well:
 1. **[Critical]** [First thing to fix]
 2. **[Critical]** [Second thing to fix]
 3. **[High]** [Third thing to fix]
-...
+   ...
+
 ```
 
 ## Priority Classification
@@ -222,3 +232,4 @@ What the app does well:
 - **ux-polish-checklist.md** - User experience review
 - **distribution-checklist.md** - Release and distribution
 - **api-design-checklist.md** - Network and API patterns
+```

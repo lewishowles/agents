@@ -1,6 +1,7 @@
 # Attributed strings
 
 <a id="source-foundation-attributed-string-skill-md"></a>
+
 ## Source: `foundation/attributed-string/SKILL.md`
 
 # AttributedString Patterns
@@ -10,6 +11,7 @@ Correct API shapes and patterns for Foundation's `AttributedString`. Covers crea
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Asks about **AttributedString** creation or manipulation
 - Wants to **style text** with fonts, colors, underlines, or other attributes
 - Mentions **text alignment**, **writing direction**, or **line height**
@@ -55,30 +57,30 @@ What do you need with AttributedString?
 
 ## API Availability
 
-| API | Minimum Version | Notes |
-|-----|----------------|-------|
-| `AttributedString` | iOS 15 / macOS 12 | Swift-native replacement for NSAttributedString |
-| `AttributedString.paragraphStyle` | iOS 15 / macOS 12 | Uses NSMutableParagraphStyle |
-| `AttributedString.writingDirection` | iOS 26 / macOS 26 | New in 2025 |
-| `AttributedString.LineHeight` | iOS 26 / macOS 26 | `.exact(points:)`, `.multiple(factor:)`, `.loose` |
-| `AttributedString.alignment` | iOS 26 / macOS 26 | `.left`, `.center`, `.right` |
-| `AttributedTextSelection` | iOS 26 / macOS 26 | Programmatic text selection |
-| `replaceSelection(_:withCharacters:)` | iOS 26 / macOS 26 | Replace selection with plain characters |
-| `replaceSelection(_:with:)` | iOS 26 / macOS 26 | Replace selection with AttributedString |
-| `DiscontiguousAttributedSubstring` | iOS 26 / macOS 26 | Non-contiguous range selections |
-| `AttributedString.utf8` | iOS 26 / macOS 26 | UTF-8 code unit view |
-| `TextEditor(text:selection:)` with AttributedString | iOS 26 / macOS 26 | SwiftUI rich text editing |
-| `.textSelectionAffinity(_:)` | iOS 26 / macOS 26 | Control cursor affinity at line boundaries |
+| API                                                 | Minimum Version   | Notes                                             |
+| --------------------------------------------------- | ----------------- | ------------------------------------------------- |
+| `AttributedString`                                  | iOS 15 / macOS 12 | Swift-native replacement for NSAttributedString   |
+| `AttributedString.paragraphStyle`                   | iOS 15 / macOS 12 | Uses NSMutableParagraphStyle                      |
+| `AttributedString.writingDirection`                 | iOS 26 / macOS 26 | New in 2025                                       |
+| `AttributedString.LineHeight`                       | iOS 26 / macOS 26 | `.exact(points:)`, `.multiple(factor:)`, `.loose` |
+| `AttributedString.alignment`                        | iOS 26 / macOS 26 | `.left`, `.center`, `.right`                      |
+| `AttributedTextSelection`                           | iOS 26 / macOS 26 | Programmatic text selection                       |
+| `replaceSelection(_:withCharacters:)`               | iOS 26 / macOS 26 | Replace selection with plain characters           |
+| `replaceSelection(_:with:)`                         | iOS 26 / macOS 26 | Replace selection with AttributedString           |
+| `DiscontiguousAttributedSubstring`                  | iOS 26 / macOS 26 | Non-contiguous range selections                   |
+| `AttributedString.utf8`                             | iOS 26 / macOS 26 | UTF-8 code unit view                              |
+| `TextEditor(text:selection:)` with AttributedString | iOS 26 / macOS 26 | SwiftUI rich text editing                         |
+| `.textSelectionAffinity(_:)`                        | iOS 26 / macOS 26 | Control cursor affinity at line boundaries        |
 
 ## Top 5 Mistakes
 
-| # | Mistake | Fix |
-|---|---------|-----|
-| 1 | Using `NSAttributedString` in new Swift code | Use `AttributedString` (iOS 15+) for type-safe, Swift-native attributes |
-| 2 | Applying range-based attributes without checking the range exists | Always safely unwrap the result of `text.range(of:)` before subscripting |
-| 3 | Forgetting that `AttributedString` is a value type | Mutations require `var`, not `let`; assign attributes after declaring as `var` |
-| 4 | Building `NSMutableParagraphStyle` when new alignment API is available | Use `text.alignment = .center` on iOS 26+ instead of manual paragraph styles |
-| 5 | Modifying the original string instead of the selection when using `replaceSelection` | Pass the selection as `inout` and let the API update the selection range for you |
+| #   | Mistake                                                                              | Fix                                                                              |
+| --- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| 1   | Using `NSAttributedString` in new Swift code                                         | Use `AttributedString` (iOS 15+) for type-safe, Swift-native attributes          |
+| 2   | Applying range-based attributes without checking the range exists                    | Always safely unwrap the result of `text.range(of:)` before subscripting         |
+| 3   | Forgetting that `AttributedString` is a value type                                   | Mutations require `var`, not `let`; assign attributes after declaring as `var`   |
+| 4   | Building `NSMutableParagraphStyle` when new alignment API is available               | Use `text.alignment = .center` on iOS 26+ instead of manual paragraph styles     |
+| 5   | Modifying the original string instead of the selection when using `replaceSelection` | Pass the selection as `inout` and let the API update the selection range for you |
 
 ## Creating and Styling
 
@@ -118,11 +120,11 @@ if let range = source.range(of: "world") {
 }
 ```
 
-| Pattern | Verdict |
-|---------|---------|
-| `var text = AttributedString("...")` then mutate | Correct |
+| Pattern                                          | Verdict                                       |
+| ------------------------------------------------ | --------------------------------------------- |
+| `var text = AttributedString("...")` then mutate | Correct                                       |
 | `let text = AttributedString("...")` then mutate | Will not compile -- value type requires `var` |
-| Force-unwrapping `text.range(of:)!` | Fragile -- use `if let` or `guard let` |
+| Force-unwrapping `text.range(of:)!`              | Fragile -- use `if let` or `guard let`        |
 
 ## Text Alignment and Formatting
 
@@ -144,10 +146,10 @@ paragraph.alignment = .center
 
 Available `TextAlignment` values:
 
-| Value | Description |
-|-------|-------------|
-| `.left` | Left-aligned text |
-| `.right` | Right-aligned text |
+| Value     | Description         |
+| --------- | ------------------- |
+| `.left`   | Left-aligned text   |
+| `.right`  | Right-aligned text  |
 | `.center` | Center-aligned text |
 
 ## Writing Direction and Line Height
@@ -159,9 +161,9 @@ var text = AttributedString("Hello عربي")
 text.writingDirection = .rightToLeft
 ```
 
-| Value | Description |
-|-------|-------------|
-| `.leftToRight` | Standard LTR layout |
+| Value          | Description                         |
+| -------------- | ----------------------------------- |
+| `.leftToRight` | Standard LTR layout                 |
 | `.rightToLeft` | RTL layout for Arabic, Hebrew, etc. |
 
 ### Line Height (iOS 26+)
@@ -181,11 +183,11 @@ multiline.lineHeight = .multiple(factor: 2.5)
 multiline.lineHeight = .loose
 ```
 
-| Mode | Use Case |
-|------|----------|
-| `.exact(points:)` | Pixel-perfect designs with fixed line heights |
-| `.multiple(factor:)` | Proportional scaling relative to font size |
-| `.loose` | Comfortable reading spacing chosen by the system |
+| Mode                 | Use Case                                         |
+| -------------------- | ------------------------------------------------ |
+| `.exact(points:)`    | Pixel-perfect designs with fixed line heights    |
+| `.multiple(factor:)` | Proportional scaling relative to font size       |
+| `.loose`             | Comfortable reading spacing chosen by the system |
 
 ## Text Selection and Editing
 
@@ -282,22 +284,26 @@ Text(attributedString)
 ## Review Checklist
 
 ### Correctness
+
 - [ ] Using `AttributedString` (not `NSAttributedString`) for new Swift code
 - [ ] All range lookups safely unwrapped with `if let` or `guard let`
 - [ ] String declared as `var` before applying attributes
 - [ ] `replaceSelection` passes selection as `inout` (`&selection`)
 
 ### Platform and Versioning
+
 - [ ] New APIs (alignment, writingDirection, lineHeight, selection) gated to iOS 26+ / macOS 26+
 - [ ] Legacy paragraph style approach used for iOS 15-25 targets
 - [ ] Availability checks (`if #available`) wrap newer APIs when supporting older deployment targets
 
 ### SwiftUI
+
 - [ ] `TextEditor(text:selection:)` overload used for rich text editing (iOS 26+)
 - [ ] `.textSelectionAffinity` applied where cursor behavior at line wraps matters
 - [ ] `.textSelection(.enabled)` added to `Text` views that display user content
 
 ### Accessibility
+
 - [ ] Foreground and background color combinations meet contrast requirements
 - [ ] Styled text does not rely solely on color to convey meaning (add underline, bold, or icons)
 - [ ] Writing direction set correctly for RTL language content

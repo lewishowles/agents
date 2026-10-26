@@ -7,11 +7,13 @@ Network and API patterns review for macOS and iOS applications.
 ### Why This Matters
 
 User-Agent identifies your app to API servers. Spoofing (pretending to be a browser or another app) is:
+
 - **Dishonest** - Misrepresents your app's identity
 - **Risky** - Can get your app blocked when detected
 - **Unprofessional** - Shows lack of engineering maturity
 
 ### ✅ Good Pattern
+
 ```swift
 // Honest identification
 let userAgent = "MyApp/1.2.0 (macOS 14.0; com.company.myapp)"
@@ -21,6 +23,7 @@ request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
 ```
 
 ### ❌ Anti-patterns
+
 ```swift
 // Browser spoofing - NEVER do this
 request.setValue("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)...", forHTTPHeaderField: "User-Agent")
@@ -33,12 +36,14 @@ request.setValue("OfficialAPIClient/1.0", forHTTPHeaderField: "User-Agent")
 ```
 
 ### Checklist
+
 - [ ] User-Agent honestly identifies your app
 - [ ] Includes app name and version
 - [ ] No browser or other app spoofing
 - [ ] Consistent across all API calls
 
 ### Search Pattern
+
 ```
 Grep: "User-Agent|userAgent|Mozilla|Chrome|Safari"
 ```
@@ -73,6 +78,7 @@ func handleResponse(_ response: HTTPURLResponse, data: Data) throws -> Data {
 ### User-Friendly Error Messages
 
 #### ✅ Good Pattern
+
 ```swift
 enum APIError: LocalizedError {
     case networkUnavailable
@@ -104,6 +110,7 @@ enum APIError: LocalizedError {
 ```
 
 #### ❌ Anti-patterns
+
 ```swift
 // Technical jargon in user messages
 throw NSError(domain: "HTTP", code: 401, userInfo: nil)
@@ -116,6 +123,7 @@ throw APIError.error("JSON parsing failed at key 'data.user.id'")
 ```
 
 ### Checklist
+
 - [ ] All HTTP status codes handled
 - [ ] Error messages are user-friendly
 - [ ] Error messages explain what to do
@@ -129,6 +137,7 @@ throw APIError.error("JSON parsing failed at key 'data.user.id'")
 API tokens expire. If not handled, users experience silent failures or confusing errors.
 
 ### ✅ Good Pattern
+
 ```swift
 class APIClient {
     private var tokenExpiresAt: Date?
@@ -163,6 +172,7 @@ class APIClient {
 ```
 
 ### Token Refresh Flow
+
 ```swift
 // Option 1: Automatic refresh
 func refreshToken() async throws {
@@ -180,6 +190,7 @@ NotificationCenter.default.post(
 ```
 
 ### Checklist
+
 - [ ] Token expiration time tracked
 - [ ] Expiration checked before requests
 - [ ] 401 responses handled as potential expiration
@@ -211,6 +222,7 @@ func makeRequestWithRetry(maxRetries: Int = 3) async throws -> Data {
 ```
 
 ### Respect Retry-After Header
+
 ```swift
 if response.statusCode == 429 {
     if let retryAfter = response.value(forHTTPHeaderField: "Retry-After"),
@@ -221,6 +233,7 @@ if response.statusCode == 429 {
 ```
 
 ### Checklist
+
 - [ ] 429 status code handled
 - [ ] Retry-After header respected
 - [ ] Exponential backoff implemented
@@ -251,6 +264,7 @@ pingRequest.timeoutInterval = 5
 ```
 
 ### Checklist
+
 - [ ] Appropriate timeouts for each request type
 - [ ] Timeout errors show user-friendly message
 - [ ] Long operations use background session
@@ -298,6 +312,7 @@ func fetchData() async throws -> [Item] {
 ```
 
 ### Checklist
+
 - [ ] Network connectivity monitored
 - [ ] Offline state shown to user
 - [ ] Cached data available offline (if applicable)
@@ -321,6 +336,7 @@ func logResponse(_ response: HTTPURLResponse, data: Data) {
 ```
 
 ### ❌ Anti-patterns
+
 ```swift
 // NEVER log sensitive data
 print("Token: \(apiToken)")  // Security risk!
@@ -333,6 +349,7 @@ func makeRequest() {
 ```
 
 ### Checklist
+
 - [ ] Request/response logging only in DEBUG
 - [ ] No sensitive data in logs (tokens, passwords, PII)
 - [ ] No production logging of request bodies
@@ -379,6 +396,7 @@ actor APICache {
 ```
 
 ### Checklist
+
 - [ ] Caching strategy defined
 - [ ] Cache invalidation implemented
 - [ ] Stale data handling defined
@@ -404,6 +422,7 @@ struct APIClient {
 ```
 
 ### Checklist
+
 - [ ] API version included in requests
 - [ ] Graceful handling of deprecated endpoints
 - [ ] User prompted to update when API incompatible

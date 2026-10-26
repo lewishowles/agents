@@ -1,6 +1,7 @@
 # Mac capabilities: Background
 
 <a id="source-macos-macos-capabilities-background-md"></a>
+
 ## Source: `macos/macos-capabilities/background.md`
 
 # Background Operations
@@ -164,6 +165,7 @@ func handleRefresh(_ task: BGAppRefreshTask) {
 ```
 
 **Info.plist requirement:**
+
 ```xml
 <key>BGTaskSchedulerPermittedIdentifiers</key>
 <array>

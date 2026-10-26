@@ -117,14 +117,15 @@ Deep Link: yourapp://promo/back-to-school
 
 ### Required Sizes
 
-| Placement | Size | Aspect Ratio |
-|-----------|------|-------------|
-| Event Card | 1080 x 1920 px | 9:16 (portrait) |
-| Event Card (landscape) | 1920 x 1080 px | 16:9 |
+| Placement              | Size           | Aspect Ratio    |
+| ---------------------- | -------------- | --------------- |
+| Event Card             | 1080 x 1920 px | 9:16 (portrait) |
+| Event Card (landscape) | 1920 x 1080 px | 16:9            |
 
 ### Design Guidelines
 
 **Layout Structure:**
+
 ```
 ┌─────────────────────────┐
 │                         │
@@ -143,6 +144,7 @@ Deep Link: yourapp://promo/back-to-school
 ```
 
 **Color Palette by Event Type:**
+
 - Challenge: Energetic (orange, red, electric blue)
 - Competition: Bold (gold, silver, dark backgrounds)
 - Live Event: Urgent (red, white, high contrast)
@@ -152,6 +154,7 @@ Deep Link: yourapp://promo/back-to-school
 - Premiere: Premium (dark backgrounds, spotlight effect)
 
 **Text on Images:**
+
 - Maximum 3-5 words on the image itself
 - Use your app's brand font
 - Ensure readability at small sizes (event cards are small in browse)
@@ -187,6 +190,7 @@ enum DeepLink {
 ```
 
 ### Universal Links (Recommended)
+
 ```json
 {
     "applinks": {
@@ -204,17 +208,19 @@ enum DeepLink {
 ## Event Scheduling Best Practices
 
 ### Event Duration by Type
-| Type | Recommended Duration | Reason |
-|------|---------------------|--------|
-| Challenge | 7-30 days | Time to participate and complete |
-| Competition | 3-7 days | Creates urgency |
-| Live Event | 1-4 hours | Real-time participation |
-| Special Event | 7-14 days | Limited-time feel |
-| Major Update | 7-14 days | Discovery window |
-| New Season | 7 days | Season launch hype |
-| Premiere | 7-14 days | Feature awareness |
+
+| Type          | Recommended Duration | Reason                           |
+| ------------- | -------------------- | -------------------------------- |
+| Challenge     | 7-30 days            | Time to participate and complete |
+| Competition   | 3-7 days             | Creates urgency                  |
+| Live Event    | 1-4 hours            | Real-time participation          |
+| Special Event | 7-14 days            | Limited-time feel                |
+| Major Update  | 7-14 days            | Discovery window                 |
+| New Season    | 7 days               | Season launch hype               |
+| Premiere      | 7-14 days            | Feature awareness                |
 
 ### Overlap Strategy
+
 - Maximum 5 events visible at once
 - Don't overlap events with the same badge type
 - Stagger events so one ends as another begins

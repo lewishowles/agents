@@ -3,6 +3,7 @@
 Master orchestrator that generates complete implementation specifications by coordinating all role-based agents.
 
 ## Metadata
+
 - **Name**: implementation-spec
 - **Version**: 1.0.0
 - **Role**: Master Orchestrator
@@ -11,6 +12,7 @@ Master orchestrator that generates complete implementation specifications by coo
 ## When This Skill Activates
 
 This skill activates when the user says:
+
 - "generate implementation specifications"
 - "create implementation specs"
 - "generate all specs"
@@ -26,14 +28,13 @@ You orchestrate the entire specification generation workflow, ensuring consisten
 ## Prerequisites
 
 Before activating this skill, ensure:
+
 1. A product development plan exists (from the product-agent skill)
 2. The plan includes: problem analysis, MVP scope, positioning, ASO optimization
 3. User has reviewed and approved the product development plan
 4. User is ready to proceed to detailed specification generation
 
-**Optional but Recommended** (enhances specification quality):
-5. Competitive analysis (from `competitive-analysis` skill or product plan)
-6. Market research (from `market-research` skill or product plan)
+**Optional but Recommended** (enhances specification quality): 5. Competitive analysis (from `competitive-analysis` skill or product plan) 6. Market research (from `market-research` skill or product plan)
 
 ## Input Sources
 
@@ -124,6 +125,7 @@ What would you like to do?
 ```
 
 **Wait for user decision**:
+
 - If "Run research" → Guide user through competitive-analysis and market-research skills, then return here
 - If "Skip" → Proceed to Step 1
 - If "Have research" → Ask for file paths, read files, proceed to Step 1
@@ -222,6 +224,7 @@ Ready to begin? (This will take a few minutes)
 **Action**: Invoke the `prd-generator` skill
 
 **Say to user**:
+
 ```markdown
 ## Phase 1: Generating Product Requirements Document
 
@@ -263,6 +266,7 @@ Options:
 ```
 
 **Wait for user decision**:
+
 - If approved → Proceed to Phase 2
 - If changes requested → Update PRD, present changes, ask for approval again
 - If major concerns → Offer to restart Phase 1 with clarifications
@@ -272,6 +276,7 @@ Options:
 ### Step 3: Phase 2 - Generate Technical Architecture
 
 **Say to user**:
+
 ```markdown
 ## Phase 2: Generating Technical Architecture Specification
 
@@ -336,6 +341,7 @@ Options:
 ### Step 4: Phase 3 - Generate UI/UX Specifications
 
 **Say to user**:
+
 ```markdown
 ## Phase 3: Generating UI/UX Specifications and Design System
 
@@ -404,6 +410,7 @@ Options:
 ### Step 5: Phase 4 - Generate Implementation Guide
 
 **Say to user**:
+
 ```markdown
 ## Phase 4: Generating Implementation Guide
 
@@ -496,6 +503,7 @@ Options:
 ### Step 6: Phase 5 - Generate Test Specification
 
 **Say to user**:
+
 ```markdown
 ## Phase 5: Generating Test Specification
 
@@ -589,6 +597,7 @@ Options:
 ### Step 7: Phase 6 - Generate Release Documentation
 
 **Say to user**:
+
 ```markdown
 ## Phase 6: Generating Release Documentation
 
@@ -779,14 +788,16 @@ Your complete specification package has been generated in the `docs/` directory.
 Your `docs/` folder now contains:
 
 ```
+
 docs/
-├── PRD.md                       # Product Requirements
-├── ARCHITECTURE.md              # Technical Architecture
-├── UX_SPEC.md                   # UI/UX Specifications
-├── DESIGN_SYSTEM.md             # Design System
-├── IMPLEMENTATION_GUIDE.md      # Development Roadmap
-├── TEST_SPEC.md                 # Testing Strategy
-└── RELEASE_SPEC.md              # App Store Launch Guide
+├── PRD.md # Product Requirements
+├── ARCHITECTURE.md # Technical Architecture
+├── UX_SPEC.md # UI/UX Specifications
+├── DESIGN_SYSTEM.md # Design System
+├── IMPLEMENTATION_GUIDE.md # Development Roadmap
+├── TEST_SPEC.md # Testing Strategy
+└── RELEASE_SPEC.md # App Store Launch Guide
+
 ```
 
 ---
@@ -936,6 +947,7 @@ Update todo list to mark orchestrator as complete and final task (testing) as in
 If any phase fails:
 
 1. **Skill execution fails**:
+
    ```
    ❌ Error generating [Phase Name]
 
@@ -950,6 +962,7 @@ If any phase fails:
    ```
 
 2. **User rejects multiple times**:
+
    ```
    I notice we're iterating on [Phase] quite a bit.
 
@@ -963,6 +976,7 @@ If any phase fails:
    ```
 
 3. **Missing prerequisites**:
+
    ```
    ❌ Cannot start specification generation
 
@@ -1031,6 +1045,7 @@ User: "Redesign the home screen wireframe"
 ```
 
 **Process**:
+
 1. Identify which spec(s) are affected
 2. Update the requested spec
 3. Check for consistency impacts on other specs
@@ -1053,15 +1068,15 @@ PRD (Source of Truth)
 
 ### Impact Analysis by Change Type
 
-| Change Type | Directly Affected | May Need Review |
-|-------------|-------------------|-----------------|
-| Add new feature | PRD | Architecture, UX, Implementation, Test |
-| Remove feature | PRD | Architecture, UX, Implementation, Test |
-| Change architecture pattern | Architecture | Implementation |
-| Modify UI design | UX_SPEC | Implementation, possibly Test (UI tests) |
-| Update acceptance criteria | PRD | Test |
-| Change data model | Architecture | Implementation, Test |
-| Update positioning/ASO | Product Plan | Release |
+| Change Type                 | Directly Affected | May Need Review                          |
+| --------------------------- | ----------------- | ---------------------------------------- |
+| Add new feature             | PRD               | Architecture, UX, Implementation, Test   |
+| Remove feature              | PRD               | Architecture, UX, Implementation, Test   |
+| Change architecture pattern | Architecture      | Implementation                           |
+| Modify UI design            | UX_SPEC           | Implementation, possibly Test (UI tests) |
+| Update acceptance criteria  | PRD               | Test                                     |
+| Change data model           | Architecture      | Implementation, Test                     |
+| Update positioning/ASO      | Product Plan      | Release                                  |
 
 ### Regeneration Commands
 
@@ -1076,6 +1091,7 @@ User can request partial regeneration:
 ### Consistency Checking
 
 When updating specs, check for:
+
 1. **Feature alignment**: All PRD features appear in Architecture models
 2. **Screen coverage**: All UX screens have Implementation Guide pseudo-code
 3. **Test coverage**: All PRD acceptance criteria have Test Spec test cases
@@ -1094,6 +1110,7 @@ When updating specs, check for:
 ## Integration with Workflow
 
 This orchestrator is typically:
+
 - Activated after the product-agent skill completes
 - User reviews product development plan
 - User decides to proceed to detailed specifications

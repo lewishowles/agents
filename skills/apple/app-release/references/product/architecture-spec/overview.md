@@ -3,6 +3,7 @@
 Generate technical architecture specification for iOS/macOS app.
 
 ## Metadata
+
 - **Name**: architecture-spec
 - **Version**: 1.0.0
 - **Role**: iOS/macOS Architect
@@ -11,6 +12,7 @@ Generate technical architecture specification for iOS/macOS app.
 ## When This Skill Activates
 
 This skill activates when the user says:
+
 - "generate architecture"
 - "create technical spec"
 - "write architecture document"
@@ -25,6 +27,7 @@ You are an iOS/macOS Architect AI agent specializing in Apple platform app archi
 ## Prerequisites
 
 Before activating this skill, ensure:
+
 1. PRD exists at `docs/PRD.md`
 2. User has reviewed and approved the PRD
 3. MVP scope is clear (from product-agent output or PRD)
@@ -32,6 +35,7 @@ Before activating this skill, ensure:
 ## Input Sources
 
 Read and extract information from:
+
 1. **docs/PRD.md**
    - Core features and their complexity
    - Non-functional requirements
@@ -84,30 +88,32 @@ Generate `docs/ARCHITECTURE.md` with the following structure:
 ### 1.2 High-Level Component Diagram
 
 ```
+
 ┌─────────────────────────────────────────────────┐
-│                 Presentation Layer              │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐     │
-│  │  Views   │  │ViewModels│  │  Models  │     │
-│  │ (SwiftUI)│←→│(@Observ.)│←→│  (Data)  │     │
-│  └──────────┘  └──────────┘  └──────────┘     │
+│ Presentation Layer │
+│ ┌──────────┐ ┌──────────┐ ┌──────────┐ │
+│ │ Views │ │ViewModels│ │ Models │ │
+│ │ (SwiftUI)│←→│(@Observ.)│←→│ (Data) │ │
+│ └──────────┘ └──────────┘ └──────────┘ │
 └────────────────────┬────────────────────────────┘
-                     │
+│
 ┌────────────────────┴────────────────────────────┐
-│                Business Logic Layer             │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐     │
-│  │ Services │  │  Use     │  │Repository│     │
-│  │          │  │  Cases   │  │ Pattern  │     │
-│  └──────────┘  └──────────┘  └──────────┘     │
+│ Business Logic Layer │
+│ ┌──────────┐ ┌──────────┐ ┌──────────┐ │
+│ │ Services │ │ Use │ │Repository│ │
+│ │ │ │ Cases │ │ Pattern │ │
+│ └──────────┘ └──────────┘ └──────────┘ │
 └────────────────────┬────────────────────────────┘
-                     │
+│
 ┌────────────────────┴────────────────────────────┐
-│                  Data Layer                     │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐     │
-│  │SwiftData │  │ Network  │  │ Keychain │     │
-│  │ / Core   │  │ Client   │  │ Storage  │     │
-│  │   Data   │  │ (URLSess)│  │          │     │
-│  └──────────┘  └──────────┘  └──────────┘     │
+│ Data Layer │
+│ ┌──────────┐ ┌──────────┐ ┌──────────┐ │
+│ │SwiftData │ │ Network │ │ Keychain │ │
+│ │ / Core │ │ Client │ │ Storage │ │
+│ │ Data │ │ (URLSess)│ │ │ │
+│ └──────────┘ └──────────┘ └──────────┘ │
 └─────────────────────────────────────────────────┘
+
 ```
 
 ### 1.3 Key Architectural Decisions
@@ -192,78 +198,80 @@ Generate `docs/ARCHITECTURE.md` with the following structure:
 ### 3.1 Module Breakdown
 
 ```
+
 [AppName]/
 ├── App/
-│   ├── [AppName]App.swift          # App entry point (@main)
-│   ├── ContentView.swift            # Root view
-│   └── AppState.swift               # Global app state (if needed)
+│ ├── [AppName]App.swift # App entry point (@main)
+│ ├── ContentView.swift # Root view
+│ └── AppState.swift # Global app state (if needed)
 │
-├── Features/                        # Feature-based modules
-│   ├── Home/
-│   │   ├── Views/
-│   │   │   ├── HomeView.swift
-│   │   │   ├── HomeCardView.swift
-│   │   │   └── HomeEmptyStateView.swift
-│   │   ├── ViewModels/
-│   │   │   └── HomeViewModel.swift
-│   │   └── Models/
-│   │       └── HomeItem.swift (if feature-specific)
-│   │
-│   ├── [Feature2]/
-│   │   ├── Views/
-│   │   ├── ViewModels/
-│   │   └── Models/
-│   │
-│   └── [Feature3]/
-│       └── ...
+├── Features/ # Feature-based modules
+│ ├── Home/
+│ │ ├── Views/
+│ │ │ ├── HomeView.swift
+│ │ │ ├── HomeCardView.swift
+│ │ │ └── HomeEmptyStateView.swift
+│ │ ├── ViewModels/
+│ │ │ └── HomeViewModel.swift
+│ │ └── Models/
+│ │ └── HomeItem.swift (if feature-specific)
+│ │
+│ ├── [Feature2]/
+│ │ ├── Views/
+│ │ ├── ViewModels/
+│ │ └── Models/
+│ │
+│ └── [Feature3]/
+│ └── ...
 │
-├── Core/                            # Shared core functionality
-│   ├── Networking/
-│   │   ├── APIClient.swift          # HTTP client
-│   │   ├── APIEndpoint.swift        # Endpoint definitions
-│   │   ├── APIError.swift           # Error types
-│   │   └── RequestModels/           # API request DTOs
-│   │       └── ...
-│   │
-│   ├── Storage/
-│   │   ├── DataManager.swift        # SwiftData container wrapper
-│   │   └── KeychainManager.swift    # Keychain operations
-│   │
-│   ├── Extensions/
-│   │   ├── View+Extensions.swift    # SwiftUI View extensions
-│   │   ├── Color+Extensions.swift   # Color palette
-│   │   ├── Font+Extensions.swift    # Typography
-│   │   └── Date+Extensions.swift    # Date utilities
-│   │
-│   └── Utilities/
-│       ├── Logger.swift              # Logging utility
-│       ├── Validator.swift           # Input validation
-│       └── Constants.swift           # App constants
+├── Core/ # Shared core functionality
+│ ├── Networking/
+│ │ ├── APIClient.swift # HTTP client
+│ │ ├── APIEndpoint.swift # Endpoint definitions
+│ │ ├── APIError.swift # Error types
+│ │ └── RequestModels/ # API request DTOs
+│ │ └── ...
+│ │
+│ ├── Storage/
+│ │ ├── DataManager.swift # SwiftData container wrapper
+│ │ └── KeychainManager.swift # Keychain operations
+│ │
+│ ├── Extensions/
+│ │ ├── View+Extensions.swift # SwiftUI View extensions
+│ │ ├── Color+Extensions.swift # Color palette
+│ │ ├── Font+Extensions.swift # Typography
+│ │ └── Date+Extensions.swift # Date utilities
+│ │
+│ └── Utilities/
+│ ├── Logger.swift # Logging utility
+│ ├── Validator.swift # Input validation
+│ └── Constants.swift # App constants
 │
-├── Models/                          # Domain models (shared)
-│   ├── User.swift                   # @Model classes
-│   ├── [Entity2].swift
-│   └── ResponseModels/              # API response DTOs
-│       └── ...
+├── Models/ # Domain models (shared)
+│ ├── User.swift # @Model classes
+│ ├── [Entity2].swift
+│ └── ResponseModels/ # API response DTOs
+│ └── ...
 │
-├── Services/                        # Business logic services
-│   ├── AuthenticationService.swift
-│   ├── [Feature]Service.swift
-│   └── SyncService.swift (if background sync)
+├── Services/ # Business logic services
+│ ├── AuthenticationService.swift
+│ ├── [Feature]Service.swift
+│ └── SyncService.swift (if background sync)
 │
 ├── Resources/
-│   ├── Assets.xcassets              # Images, colors
-│   ├── Localizable.xcstrings        # Translations
-│   └── PrivacyInfo.xcprivacy        # Privacy manifest
+│ ├── Assets.xcassets # Images, colors
+│ ├── Localizable.xcstrings # Translations
+│ └── PrivacyInfo.xcprivacy # Privacy manifest
 │
 └── Tests/
-    ├── UnitTests/
-    │   ├── ViewModelTests/
-    │   ├── ServiceTests/
-    │   └── ModelTests/
-    └── UITests/
-        └── ...
-```
+├── UnitTests/
+│ ├── ViewModelTests/
+│ ├── ServiceTests/
+│ └── ModelTests/
+└── UITests/
+└── ...
+
+````
 
 **Organizational Principles**:
 - **Feature-based organization**: Each major feature in its own folder
@@ -315,7 +323,7 @@ final class User {
         self.updatedAt = Date()
     }
 }
-```
+````
 
 #### [Entity 2]: [Name]
 
@@ -337,11 +345,13 @@ final class [Entity2] {
 ```
 
 **Entity Relationships**:
+
 - User has many [Entity2] (one-to-many)
 - [Entity2] belongs to User (many-to-one)
 - [Add other relationships as per PRD]
 
 **SwiftData Considerations**:
+
 - Use @Attribute(.unique) for identifiers
 - Define deleteRule for relationships (cascade, nullify, deny, noAction)
 - Keep models simple - complex logic goes in ViewModels/Services
@@ -353,10 +363,12 @@ final class [Entity2] {
 **Pattern**: NavigationStack (SwiftUI native)
 
 **Primary Navigation**:
+
 - **TabView** for main app sections (if 3-5 top-level sections)
 - **NavigationStack** for drill-down navigation within tabs
 
 **Navigation State**:
+
 ```swift
 // In each feature's root view
 @State private var navigationPath = NavigationPath()
@@ -373,11 +385,13 @@ NavigationStack(path: $navigationPath) {
 ```
 
 **Deep Linking**:
+
 - Handle URL schemes: `[appname]://[route]/[id]`
 - Use `.onOpenURL` modifier at app root
 - Parse URL and manipulate NavigationPath
 
 **Modal Presentation**:
+
 - Use `.sheet` for full-screen modal forms
 - Use `.alert` for simple confirmations
 - Use `.confirmationDialog` for action sheets
@@ -408,6 +422,7 @@ NavigationStack(path: $navigationPath) {
    - Examples: User data, items list
 
 **Example ViewModel**:
+
 ```swift
 import Foundation
 import Observation
@@ -450,6 +465,7 @@ final class HomeViewModel {
 ```
 
 **Data Flow Diagram**:
+
 ```
 User Action (Tap Button)
     ↓
@@ -471,12 +487,14 @@ SwiftUI automatically updates View
 **Strategy**: Local-first with optional sync
 
 **Local Storage**:
+
 - **SwiftData** for structured data (models)
 - **UserDefaults** for simple preferences
 - **Keychain** for sensitive data (tokens, passwords)
 - **FileManager** for large files (images, documents)
 
 **SwiftData Setup**:
+
 ```swift
 // In App struct
 @main
@@ -509,11 +527,13 @@ struct [AppName]App: App {
 ```
 
 **Data Migration**:
+
 - SwiftData handles migrations automatically for simple changes
 - For complex migrations, use VersionedSchema and MigrationPlan
 - Test migrations thoroughly before releases
 
 **Backup & Sync** (if needed):
+
 - **iCloud CloudKit**: For user data sync across devices
 - **File-based**: For documents (UIDocument + iCloud Drive)
 - Implementation: Phase 2 (post-MVP unless critical)
@@ -523,6 +543,7 @@ struct [AppName]App: App {
 **Architecture**: Protocol-oriented with async/await
 
 **APIClient Design**:
+
 ```swift
 actor APIClient {
     static let shared = APIClient()
@@ -616,11 +637,13 @@ enum APIError: LocalizedError {
 ```
 
 **Request/Response Models**:
+
 - Separate DTOs (Data Transfer Objects) from domain models
 - Keep in `Core/Networking/RequestModels/` and `ResponseModels/`
 - Map from DTO to domain model in service layer
 
 **Error Handling Strategy**:
+
 - Use typed errors (APIError enum)
 - Provide user-friendly messages
 - Log technical details for debugging
@@ -628,6 +651,7 @@ enum APIError: LocalizedError {
 - Cache responses when appropriate
 
 **Caching**:
+
 - Use URLCache for HTTP caching (images, static content)
 - Implement custom cache for API responses (if needed)
 - Cache strategy: Cache-Control headers + custom logic
@@ -639,6 +663,7 @@ enum APIError: LocalizedError {
 ### 5.1 Data Security
 
 **Sensitive Data Storage**:
+
 ```swift
 // KeychainManager for secure storage
 final class KeychainManager {
@@ -677,12 +702,14 @@ final class KeychainManager {
 ```
 
 **Encryption**:
+
 - API tokens: Stored in Keychain
 - User passwords: Never stored locally (use tokens)
 - Sensitive files: Encrypt with CryptoKit before saving
 - Database: SwiftData encryption enabled (if available)
 
 **Communication Security**:
+
 - All API calls over HTTPS
 - TLS 1.2+ required
 - Certificate pinning: Consider for Phase 2 if high security needed
@@ -691,6 +718,7 @@ final class KeychainManager {
 ### 5.2 Privacy
 
 **Privacy Manifest** (PrivacyInfo.xcprivacy):
+
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -724,6 +752,7 @@ final class KeychainManager {
 ```
 
 **Data Collection Policy**:
+
 - Collect minimum data necessary
 - Document what data is collected and why
 - Provide clear privacy policy
@@ -731,6 +760,7 @@ final class KeychainManager {
 - No tracking without explicit consent
 
 **App Tracking Transparency**:
+
 - Only if analytics/ads used
 - Request permission with clear explanation
 - App must work if denied
@@ -742,18 +772,21 @@ final class KeychainManager {
 ### 6.1 App Launch Optimization
 
 **Cold Launch** (< 1.5s target):
+
 - Defer non-critical initialization
 - Use lazy loading for heavy components
 - Optimize image assets (compress, use asset catalogs)
 - Profile with Instruments (Time Profiler)
 
 **Warm Launch** (< 0.5s target):
+
 - Keep memory footprint low
 - Proper state restoration
 
 ### 6.2 Memory Management
 
 **Best Practices**:
+
 - Use value types (structs) where possible
 - Avoid retain cycles with `[weak self]` in closures
 - Use `@MainActor` for UI updates
@@ -761,6 +794,7 @@ final class KeychainManager {
 - Implement proper deinitialization
 
 **Image Handling**:
+
 - Lazy loading with AsyncImage
 - Downsample large images
 - Cache thumbnail versions
@@ -769,6 +803,7 @@ final class KeychainManager {
 ### 6.3 Background Task Handling
 
 **Background Refresh**:
+
 ```swift
 // If needed for data sync
 func scheduleBackgroundRefresh() {
@@ -782,6 +817,7 @@ func scheduleBackgroundRefresh() {
 ```
 
 **Background URLSession**:
+
 - For large downloads/uploads
 - Continues even if app terminated
 - Implement URLSessionDelegate
@@ -789,6 +825,7 @@ func scheduleBackgroundRefresh() {
 ### 6.4 Launch Time Optimization
 
 **Strategies**:
+
 - Minimize work in app launch path
 - Defer heavy operations to background
 - Use lazy initialization
@@ -804,6 +841,7 @@ func scheduleBackgroundRefresh() {
 **Coverage Target**: 70%+ for business logic
 
 **What to Test**:
+
 - ViewModels: All business logic methods
 - Services: API calls, data transformations
 - Models: Validation logic, computed properties
@@ -812,6 +850,7 @@ func scheduleBackgroundRefresh() {
 **Testing Framework**: XCTest
 
 **Example**:
+
 ```swift
 import XCTest
 @testable import [AppName]
@@ -872,6 +911,7 @@ final class HomeViewModelTests: XCTestCase {
 **Coverage Target**: Critical user journeys only (~10% of tests)
 
 **What to Test**:
+
 - Onboarding flow
 - Core feature happy paths
 - Error state handling
@@ -880,6 +920,7 @@ final class HomeViewModelTests: XCTestCase {
 **Framework**: XCTest with XCUITest
 
 **Best Practices**:
+
 - Use accessibility identifiers
 - Test user-facing behavior, not implementation
 - Keep tests independent
@@ -888,6 +929,7 @@ final class HomeViewModelTests: XCTestCase {
 ### 7.3 Integration Testing
 
 **What to Test**:
+
 - API integration (with mock backend or staging)
 - SwiftData CRUD operations
 - Background tasks
@@ -896,11 +938,13 @@ final class HomeViewModelTests: XCTestCase {
 ### 7.4 Mocking Strategy
 
 **Mock Types**:
+
 - Protocol-based mocks for dependencies
 - In-memory storage for tests
 - Mock API client with canned responses
 
 **Dependency Injection**:
+
 - Use initializer injection for testability
 - Provide default values for production
 - Override with mocks in tests
@@ -912,6 +956,7 @@ final class HomeViewModelTests: XCTestCase {
 ### 8.1 Build Configurations
 
 **Debug**:
+
 - Optimization: None (-Onone)
 - Assertions: Enabled
 - Logging: Verbose
@@ -919,6 +964,7 @@ final class HomeViewModelTests: XCTestCase {
 - Crashlytics: Disabled
 
 **Release**:
+
 - Optimization: Speed (-O)
 - Assertions: Disabled
 - Logging: Errors only
@@ -929,6 +975,7 @@ final class HomeViewModelTests: XCTestCase {
 ### 8.2 Environment Management
 
 **Configuration**:
+
 ```swift
 enum Environment {
     case development
@@ -961,6 +1008,7 @@ enum Environment {
 **Recommended**: Xcode Cloud or GitHub Actions
 
 **Pipeline Stages**:
+
 1. **On Pull Request**:
    - Run SwiftLint
    - Build project
@@ -978,6 +1026,7 @@ enum Environment {
    - Create GitHub release
 
 **Example GitHub Actions** (placeholder):
+
 ```yaml
 name: CI
 on: [pull_request, push]
@@ -996,6 +1045,7 @@ jobs:
 ### 8.4 Feature Flags
 
 **Implementation**: (If needed for gradual rollouts)
+
 - Use remote config (Firebase Remote Config, Launch Darkly, or custom)
 - Local override for testing
 - A/B testing capability
@@ -1010,11 +1060,12 @@ jobs:
 **Impact**: Data loss, migration issues, performance problems
 **Probability**: Medium
 **Mitigation**:
+
 - Thorough testing of CRUD operations
 - Implement backup mechanism
 - Have Core Data migration path ready as fallback
 - Monitor SwiftData-related crashes closely
-**Fallback**: Migrate to Core Data if critical issues found
+  **Fallback**: Migrate to Core Data if critical issues found
 
 ### Risk 2: iOS 17+ Minimum Version
 
@@ -1022,10 +1073,11 @@ jobs:
 **Impact**: Reduced potential user base
 **Probability**: Certain
 **Mitigation**:
+
 - Validate market data (% of users on iOS 17+)
 - Accept trade-off for modern APIs
 - Plan for iOS 16 support in future if needed
-**Decision**: Accept for MVP, modern APIs worth the trade-off
+  **Decision**: Accept for MVP, modern APIs worth the trade-off
 
 ### Risk 3: Network Dependency
 
@@ -1033,11 +1085,12 @@ jobs:
 **Impact**: Poor user experience in offline scenarios
 **Probability**: High
 **Mitigation**:
+
 - Implement robust offline support with local caching
 - Sync when network available
 - Clear messaging when offline
 - Core features work offline where possible
-**Fallback**: None - core to architecture
+  **Fallback**: None - core to architecture
 
 ### Risk 4: Third-Party API Reliability
 
@@ -1045,6 +1098,7 @@ jobs:
 **Impact**: App functionality degraded
 **Probability**: Low-Medium
 **Mitigation**:
+
 - Implement proper error handling
 - Retry logic with exponential backoff
 - Cache responses locally
@@ -1058,6 +1112,7 @@ jobs:
 ### Phase 2 Enhancements
 
 **After MVP Launch**:
+
 1. **iPad Support**: Adapt layouts for larger screens
 2. **macOS Catalyst**: Cross-platform desktop version
 3. **Widgets**: Home screen and Lock screen widgets
@@ -1072,6 +1127,7 @@ jobs:
 ### Technology Updates
 
 **Monitor**:
+
 - SwiftUI updates in future iOS versions
 - SwiftData improvements and bug fixes
 - New Apple frameworks (announced at WWDC)
@@ -1082,17 +1138,20 @@ jobs:
 ## 11. Documentation & Knowledge Sharing
 
 **Code Documentation**:
+
 - Use Swift DocC comments for public APIs
 - Document complex algorithms
 - Keep README updated
 - Maintain CHANGELOG
 
 **Architecture Decision Records (ADRs)**:
+
 - Document major architectural decisions
 - Include context, options considered, decision, consequences
 - Store in docs/architecture/decisions/
 
 **Onboarding**:
+
 - Architecture overview for new developers
 - Setup guide (README.md)
 - Coding standards document
@@ -1103,6 +1162,7 @@ jobs:
 ## 12. Success Metrics
 
 **Technical KPIs**:
+
 - Crash-free rate: > 99.5%
 - App launch time (cold): < 1.5s
 - App launch time (warm): < 0.5s
@@ -1111,6 +1171,7 @@ jobs:
 - Build time: < 10 minutes (for CI)
 
 **Monitoring**:
+
 - Crashlytics / Firebase Crashlytics
 - Performance monitoring (Xcode Organizer, MetricKit)
 - Network monitoring (URLSession metrics)
@@ -1121,6 +1182,7 @@ jobs:
 ## Appendix A: Coding Standards
 
 ### Swift Style Guide
+
 - Follow [Swift.org API Design Guidelines](https://swift.org/documentation/api-design-guidelines/)
 - Use SwiftLint for consistency
 - Naming conventions:
@@ -1129,12 +1191,14 @@ jobs:
   - Constants: camelCase (not SCREAMING_SNAKE_CASE)
 
 ### SwiftUI Best Practices
+
 - Keep views small and focused
 - Extract subviews for reusability
 - Use @ViewBuilder for custom DSLs
 - Prefer property wrappers (@State, @Binding) over manual management
 
 ### Concurrency
+
 - Always use async/await over completion handlers
 - Mark UI updates with @MainActor
 - Use actors for thread-safe shared state
@@ -1164,47 +1228,52 @@ jobs:
 When activated, follow these steps:
 
 1. **Read PRD**
-   ```
-   Read docs/PRD.md
-   Extract:
-   - Core features and complexity level
-   - Non-functional requirements
-   - Platform requirements (iOS version)
-   - Data model hints from user stories
-   - Technical requirements section
-   ```
+```
+
+Read docs/PRD.md
+Extract:
+
+- Core features and complexity level
+- Non-functional requirements
+- Platform requirements (iOS version)
+- Data model hints from user stories
+- Technical requirements section
+
+```
 
 2. **Assess Complexity**
-   - Simple (1-3 core features, basic CRUD): MVVM with SwiftUI
-   - Medium (4-8 features, some complexity): MVVM or Clean Architecture
-   - Complex (9+ features, high complexity): Clean Architecture or TCA
+- Simple (1-3 core features, basic CRUD): MVVM with SwiftUI
+- Medium (4-8 features, some complexity): MVVM or Clean Architecture
+- Complex (9+ features, high complexity): Clean Architecture or TCA
 
 3. **Make Technology Decisions**
-   Based on PRD requirements and iOS version target:
-   - iOS 17+ → SwiftUI + SwiftData + @Observable (recommended)
-   - iOS 16+ → SwiftUI + Core Data + Combine
-   - UIKit → Only if strong reason (legacy, specific UI needs)
+Based on PRD requirements and iOS version target:
+- iOS 17+ → SwiftUI + SwiftData + @Observable (recommended)
+- iOS 16+ → SwiftUI + Core Data + Combine
+- UIKit → Only if strong reason (legacy, specific UI needs)
 
 4. **Ask User Preferences** (if needed)
-   ```
-   Quick questions about the architecture:
+```
 
-   1. Do you have a preference for UI framework?
-      - SwiftUI (modern, recommended for iOS 17+)
-      - UIKit (if you need more control or have existing UIKit code)
+Quick questions about the architecture:
 
-   2. Do you have a backend API already?
-      - Yes → Focus on networking layer
-      - No → Focus on local-first architecture
+1.  Do you have a preference for UI framework?
+    - SwiftUI (modern, recommended for iOS 17+)
+    - UIKit (if you need more control or have existing UIKit code)
 
-   3. Any required third-party libraries?
-      - List them, or say "minimize dependencies"
-   ```
+2.  Do you have a backend API already?
+    - Yes → Focus on networking layer
+    - No → Focus on local-first architecture
+
+3.  Any required third-party libraries?
+    - List them, or say "minimize dependencies"
+
+````
 
 5. **Create Output Directory**
-   ```bash
-   mkdir -p docs
-   ```
+```bash
+mkdir -p docs
+````
 
 6. **Generate ARCHITECTURE.md**
    - Use template above
@@ -1214,11 +1283,13 @@ When activated, follow these steps:
    - Define complete module structure
 
 7. **Write to File**
+
    ```
    Write to: docs/ARCHITECTURE.md
    ```
 
 8. **Present Summary**
+
    ```
    ✅ Technical Architecture generated!
 
@@ -1283,6 +1354,7 @@ When activated, follow these steps:
 ## Integration with Workflow
 
 This skill is typically:
+
 - **Second step** in implementation specification generation (after prd-generator)
 - Activated after PRD is approved
 - Followed by ux-spec, implementation-guide, test-spec, release-spec

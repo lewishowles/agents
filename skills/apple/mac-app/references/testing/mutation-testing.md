@@ -1,17 +1,19 @@
 # Mutation testing
 
 <a id="source-testing-mutation-testing-skill-md"></a>
+
 ## Source: `testing/mutation-testing/SKILL.md`
 
 # Mutation Testing (Experimental)
 
 **Status: EXPERIMENTAL — advisory report only. Never wire this as a merge gate.**
 
-Coverage proves a line *ran* under test; mutation testing proves a test would *notice if the line were wrong*. Muter mutates the source (flips `>` to `<`, `&&` to `||`, deletes statements), reruns the suite per mutant, and reports the mutants that **survived** — code that is covered but effectively unasserted. It is the truest answer to "did the agent write real tests or coverage theater," and also the slowest and most fragile tool in the gauntlet, which is why it stays advisory.
+Coverage proves a line _ran_ under test; mutation testing proves a test would _notice if the line were wrong_. Muter mutates the source (flips `>` to `<`, `&&` to `||`, deletes statements), reruns the suite per mutant, and reports the mutants that **survived** — code that is covered but effectively unasserted. It is the truest answer to "did the agent write real tests or coverage theater," and also the slowest and most fragile tool in the gauntlet, which is why it stays advisory.
 
 ## When This Skill Activates
 
 Use this skill when:
+
 - Coverage is healthy but bugs still slip through covered code
 - Auditing agent-written test suites for assertion-free tests
 - A periodic (nightly/weekly) quality audit of engine/logic targets
@@ -50,7 +52,7 @@ excludeList:
 ## Reading the Report
 
 - **Killed mutant** — a test failed: the suite genuinely asserts this behavior.
-- **Survived mutant** — every test passed with the code broken: coverage without verification. Each survivor is a concrete, located prompt: *write the assertion that kills it*.
+- **Survived mutant** — every test passed with the code broken: coverage without verification. Each survivor is a concrete, located prompt: _write the assertion that kills it_.
 - Mutation score (killed ÷ total) is a trend number for the same scope over time; do not chase an absolute score.
 
 ## Caveats (Why This Stays Advisory)
@@ -69,12 +71,12 @@ When muter can't run (toolchain break, CI limits), the drill from `fitness-funct
 
 ## Common Pitfalls
 
-| Pitfall | Problem | Solution |
-|---------|---------|----------|
-| Wiring as a merge gate | Runtime + fragility block everyone | Nightly/on-demand advisory report |
-| Mutating the whole app | Hours of UI-noise mutants | Scope to engine/store directories |
-| Chasing a score | Score varies with scope, not quality | Track survivors fixed, not the percentage |
-| Trusting an unverified run | Kill detection may miss the test framework | Calibrate on a suite you trust first |
+| Pitfall                    | Problem                                    | Solution                                  |
+| -------------------------- | ------------------------------------------ | ----------------------------------------- |
+| Wiring as a merge gate     | Runtime + fragility block everyone         | Nightly/on-demand advisory report         |
+| Mutating the whole app     | Hours of UI-noise mutants                  | Scope to engine/store directories         |
+| Chasing a score            | Score varies with scope, not quality       | Track survivors fixed, not the percentage |
+| Trusting an unverified run | Kill detection may miss the test framework | Calibrate on a suite you trust first      |
 
 ## References
 

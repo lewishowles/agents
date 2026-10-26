@@ -1,6 +1,7 @@
 # Profiling: Launch optimisation
 
 <a id="source-performance-profiling-launch-optimization-md"></a>
+
 ## Source: `performance/profiling/launch-optimization.md`
 
 # Launch Time Optimization
@@ -26,11 +27,12 @@ Cold Launch Timeline
 ```
 
 ### Target Budgets
-| Launch Type | Good | Acceptable | Poor |
-|-------------|------|------------|------|
-| Cold launch | < 400ms | < 1s | > 2s |
-| Warm launch | < 200ms | < 500ms | > 1s |
-| Resume | < 100ms | < 200ms | > 500ms |
+
+| Launch Type | Good    | Acceptable | Poor    |
+| ----------- | ------- | ---------- | ------- |
+| Cold launch | < 400ms | < 1s       | > 2s    |
+| Warm launch | < 200ms | < 500ms    | > 1s    |
+| Resume      | < 100ms | < 200ms    | > 500ms |
 
 **Cold launch**: App not in memory — full DYLD load, runtime init, UI setup. Slowest, highest variance.
 **Warm launch**: Process spawned fresh, but app/data recently in memory and system services running.
@@ -40,14 +42,14 @@ Apple's headline goal: **first frame in 400ms** — roughly the duration of the 
 
 ### The Six Launch Phases (WWDC19 423)
 
-| # | Phase | What runs | Your lever |
-|---|-------|-----------|------------|
-| 1 | dyld | Shared libraries/frameworks load | dyld3 caches runtime dependencies on warm launches — but only if you **hard-link all dependencies**, **avoid `dlopen`/`NSBundle.load`**, and remove unused linked frameworks |
-| 2 | libSystem init | Fixed-cost system-side setup | Nothing — leave it alone |
-| 3 | Static runtime init | ObjC/Swift runtimes; **static initializers and `+load` run here and block launch** | Avoid static init entirely; frameworks should expose an explicit setup API; move `+load` (every launch) to `+initialize` (lazy, first use). Demo: a logging framework's `+load` burned **~370ms** for a feature used only on a row tap |
-| 4 | UIKit init | `UIApplication`/delegate instantiation, event loop | Fixed cost (~28ms in the demo) **unless** you subclass `UIApplication` or do work in delegate initializers — don't |
-| 5 | Application init | Launch delegate callbacks, scene connection | **Create view controllers in exactly ONE place** — `scene(_:willConnectTo:)` on UIScene apps, `didFinishLaunching` otherwise; doing it in both wastes time and breeds unpredictable bugs |
-| 6 | First frame render | Views created → layout → draw → commit | Flatten the hierarchy, subclass less, lazily load views not visible at launch, reduce Auto Layout constraint count |
+| #   | Phase               | What runs                                                                          | Your lever                                                                                                                                                                                                                             |
+| --- | ------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | dyld                | Shared libraries/frameworks load                                                   | dyld3 caches runtime dependencies on warm launches — but only if you **hard-link all dependencies**, **avoid `dlopen`/`NSBundle.load`**, and remove unused linked frameworks                                                           |
+| 2   | libSystem init      | Fixed-cost system-side setup                                                       | Nothing — leave it alone                                                                                                                                                                                                               |
+| 3   | Static runtime init | ObjC/Swift runtimes; **static initializers and `+load` run here and block launch** | Avoid static init entirely; frameworks should expose an explicit setup API; move `+load` (every launch) to `+initialize` (lazy, first use). Demo: a logging framework's `+load` burned **~370ms** for a feature used only on a row tap |
+| 4   | UIKit init          | `UIApplication`/delegate instantiation, event loop                                 | Fixed cost (~28ms in the demo) **unless** you subclass `UIApplication` or do work in delegate initializers — don't                                                                                                                     |
+| 5   | Application init    | Launch delegate callbacks, scene connection                                        | **Create view controllers in exactly ONE place** — `scene(_:willConnectTo:)` on UIScene apps, `didFinishLaunching` otherwise; doing it in both wastes time and breeds unpredictable bugs                                               |
+| 6   | First frame render  | Views created → layout → draw → commit                                             | Flatten the hierarchy, subclass less, lazily load views not visible at launch, reduce Auto Layout constraint count                                                                                                                     |
 
 There's also an optional **extended phase** after first frame: async-load remaining data while the app is already interactive, and **instrument it with os_signpost** so you know exactly what runs between first frame and fully loaded (WWDC19 423).
 
@@ -56,12 +58,14 @@ The session's demo went **2.5s → ~300ms** by fixing phases 3, 5, and 6 — see
 ## App Launch Instrument
 
 ### Setup
+
 1. **Xcode > Product > Profile** (Cmd+I)
 2. Choose **App Launch** template
 3. Record — the app launches and Instruments captures the entire timeline (the template runs the app for five seconds, gathering a Time Profile + Thread State Trace of the launch — WWDC21 10181)
 4. Stop after app is fully interactive
 
 ### Reading the Results
+
 - **Process Lifecycle** lane shows app state transitions
 - **Thread State** lane shows main thread activity during launch
 - **Time Profiler** lane shows CPU work during launch
@@ -70,6 +74,7 @@ The session's demo went **2.5s → ~300ms** by fixing phases 3, 5, and 6 — see
 - Distinguish **CPU time vs wall clock** — the 423 demo's dyld phase showed 149ms wall clock but only 6ms CPU (the rest was profiling overhead)
 
 ### Key Measurements
+
 - **Time to first frame**: Total duration from process start to first CA commit
 - **Pre-main time**: From process start to `main()` / `@main` entry
 - **Post-main time**: From `main()` to first frame rendered
@@ -77,6 +82,7 @@ The session's demo went **2.5s → ~300ms** by fixing phases 3, 5, and 6 — see
 ## Pre-main Optimization
 
 ### Reduce Dynamic Frameworks
+
 Each dynamic framework adds ~10-30ms to launch:
 
 ```
@@ -85,6 +91,7 @@ After:  3 dynamic frameworks  → ~50ms DYLD loading
 ```
 
 **How to fix:**
+
 - Convert dynamic frameworks to **static libraries** where possible
 - Use Swift Package Manager (static by default) instead of dynamic frameworks
 - Merge small frameworks into fewer larger ones
@@ -93,6 +100,7 @@ After:  3 dynamic frameworks  → ~50ms DYLD loading
 More dylibs = more dyld work + more dirty DATA pages; too many static libs = slow iterative builds. The ld64 rewrite in Xcode 14 (~2× faster linking) moved the sweet spot toward **fewer dylibs** (WWDC22 110362). Play to dyld3's warm-launch caching: hard-link all dependencies, avoid `dlopen`/`NSBundle.load` (dynamic loading forfeits the cache), prune unused frameworks (WWDC19 423).
 
 ### Remove Static Initializers
+
 Static initializers (`+load`, `__attribute__((constructor))`) run before `main()`:
 
 ```swift
@@ -118,6 +126,7 @@ class LegacyManager {
 - ❌ Static initializers doing I/O, networking, or anything beyond a few milliseconds — they always run before `main()`; in the 110362 TextEdit measurement, static initializers dominated launch after fixups shrank to ~1ms (WWDC22 110362)
 
 ### Minimize ObjC Metadata
+
 - Large ObjC class hierarchies increase rebasing/binding time
 - Swift classes without `@objc` are more efficient
 - Reduce ObjC category usage (each category adds metadata)
@@ -126,14 +135,14 @@ class LegacyManager {
 
 Raising your deployment target is itself a launch/size optimization:
 
-| Lever | Requirement | Effect |
-|-------|-------------|--------|
-| Protocol-conformance metadata precomputed in the dyld closure | Runs on iOS 16 / tvOS 16 / watchOS 9 — automatic, even for existing binaries | `is`/`as` protocol checks previously built metadata at launch — "up to half of the launch time" on real-world apps (WWDC22 110363) |
-| objc_msgSend selector stubs | Build with Xcode 14, any deployment target | Per-call site cost 12 → 4 bytes on arm64, up to 2% smaller binary. Keep the default stub mode; `-objc_stubs_small` only if severely size-constrained (WWDC22 110363) |
-| retain/release custom calling convention | Xcode 14 build AND deployment target iOS 16 / tvOS 16 / watchOS 9 | Another up-to-2% code-size win; combined with stubs ≈ 4% (WWDC22 110363) |
-| Faster autorelease elision | Runs on iOS 16-era OSes; extra size saving needs the Xcode 14 rebuild + iOS 16 target | Pointer-compare handshake replaces a pipeline-hostile data load (WWDC22 110363) |
-| Chained fixups | Deployment target ≥ iOS 13.4 | Smaller `__LINKEDIT`, enables **page-in linking** — the kernel applies fixups lazily as DATA pages fault in. Caveat: applies only at main launch; `dlopen`'d dylibs take the eager path (WWDC22 110362) |
-| `-no_exported_symbols` (Other Linker Flags) | Check `dyld_info -exports <binary>` first | Skips building the exports trie (an app with ~1M exported symbols saved 2–3s of *link* time). ❌ Don't use if the app hosts plugins that link back to it or serves as an XCTest host (WWDC22 110362) |
+| Lever                                                         | Requirement                                                                           | Effect                                                                                                                                                                                                  |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Protocol-conformance metadata precomputed in the dyld closure | Runs on iOS 16 / tvOS 16 / watchOS 9 — automatic, even for existing binaries          | `is`/`as` protocol checks previously built metadata at launch — "up to half of the launch time" on real-world apps (WWDC22 110363)                                                                      |
+| objc_msgSend selector stubs                                   | Build with Xcode 14, any deployment target                                            | Per-call site cost 12 → 4 bytes on arm64, up to 2% smaller binary. Keep the default stub mode; `-objc_stubs_small` only if severely size-constrained (WWDC22 110363)                                    |
+| retain/release custom calling convention                      | Xcode 14 build AND deployment target iOS 16 / tvOS 16 / watchOS 9                     | Another up-to-2% code-size win; combined with stubs ≈ 4% (WWDC22 110363)                                                                                                                                |
+| Faster autorelease elision                                    | Runs on iOS 16-era OSes; extra size saving needs the Xcode 14 rebuild + iOS 16 target | Pointer-compare handshake replaces a pipeline-hostile data load (WWDC22 110363)                                                                                                                         |
+| Chained fixups                                                | Deployment target ≥ iOS 13.4                                                          | Smaller `__LINKEDIT`, enables **page-in linking** — the kernel applies fixups lazily as DATA pages fault in. Caveat: applies only at main launch; `dlopen`'d dylibs take the eager path (WWDC22 110362) |
+| `-no_exported_symbols` (Other Linker Flags)                   | Check `dyld_info -exports <binary>` first                                             | Skips building the exports trie (an app with ~1M exported symbols saved 2–3s of _link_ time). ❌ Don't use if the app hosts plugins that link back to it or serves as an XCTest host (WWDC22 110362)    |
 
 Verify with **`dyld_usage`** (macOS, Simulator, Catalyst: per-launch dyld time breakdown) and **`dyld_info -exports` / `-fixups`** (inspect any binary, even inside the dyld shared cache) (WWDC22 110362).
 
@@ -413,6 +422,7 @@ The **Xcode Organizer** shows the same class of data aggregated: real-user launc
 ## Launch Optimization Checklist
 
 ### Pre-main
+
 - [ ] Minimize dynamic frameworks (prefer static linking)
 - [ ] No `+load` methods or static initializers (`+load` → `+initialize`; frameworks expose explicit setup APIs)
 - [ ] Remove unused frameworks from Link Binary With Libraries
@@ -421,6 +431,7 @@ The **Xcode Organizer** shows the same class of data aggregated: real-user launc
 - [ ] Deployment target ≥ iOS 13.4 (chained fixups / page-in linking); iOS 16 unlocks protocol-metadata precompute + retain/release convention
 
 ### Post-main (App Init)
+
 - [ ] Only essential setup in `App.init()` or `AppDelegate` (crash reporter only)
 - [ ] Analytics, remote config, and prefetch deferred to `.task {}` after first frame
 - [ ] No synchronous network calls at launch
@@ -430,12 +441,14 @@ The **Xcode Organizer** shows the same class of data aggregated: real-user launc
 - [ ] First frame fetches only first-frame data; no speculative pre-warming of unopened screens
 
 ### First Frame
+
 - [ ] Initial view is lightweight (skeleton/placeholder)
 - [ ] Data loading is async with `.task {}`
 - [ ] Heavy views (maps, web views, complex lists) lazy-loaded
 - [ ] Images use thumbnails, not full resolution
 
 ### Verification
+
 - [ ] Measure with App Launch Instrument on oldest supported device (controlled conditions: reboot + settle, Airplane Mode, pinned iCloud, Release/Profile build)
 - [ ] First frame < 400ms, measured on warm launches
 - [ ] `XCTApplicationLaunchMetric` baseline set in CI

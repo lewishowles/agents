@@ -1,6 +1,7 @@
 # Coding best practices: Data persistence
 
 <a id="source-macos-coding-best-practices-data-persistence-md"></a>
+
 ## Source: `macos/coding-best-practices/data-persistence.md`
 
 # Data Persistence Best Practices

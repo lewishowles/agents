@@ -3,6 +3,7 @@ name: component-api-design
 description: >
   Use this skill when creating a component or designing its public API — props, slots, emits, v-model, expose — or reviewing whether an existing API is consistent and discoverable.
 ---
+
 # Component API design
 
 Design public contract before internals: props, slots, emits, `v-model`, `defineExpose`.

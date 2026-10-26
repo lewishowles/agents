@@ -3,6 +3,7 @@ name: swift-ui
 description: >
   Use this skill when writing or reviewing SwiftUI code — views, state management, view composition, navigation, and performance. Covers modern patterns (@Observable, @Bindable), anti-patterns (ObservableObject, @Published), and optimization techniques for responsive interfaces.
 ---
+
 # SwiftUI patterns
 
 Modern SwiftUI, iOS 26+ / macOS 26+. Prefer `@Observable` over `ObservableObject`, type-safe navigation, performance-aware composition.

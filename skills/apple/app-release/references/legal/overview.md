@@ -5,6 +5,7 @@ Legal document generation and compliance guidance for indie Apple developers. Ge
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Needs a privacy policy for their app
 - Needs terms of service or EULA
 - Asks about legal compliance for App Store submission
@@ -16,6 +17,7 @@ Use this skill when the user:
 ## Available Skills
 
 ### privacy-policy/
+
 Generate privacy policies, terms of service, and EULAs tailored to your app's data collection practices, third-party SDKs, and target regions. Includes Apple Privacy Nutrition Label mapping and hosting guidance.
 
 ## How to Use

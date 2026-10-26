@@ -1,6 +1,7 @@
 # WebKit: WebView basics
 
 <a id="source-swiftui-webkit-webview-basics-md"></a>
+
 ## Source: `swiftui/webkit/webview-basics.md`
 
 # WebView Basics
@@ -46,13 +47,13 @@ struct ControlledWebView: View {
 
 ### When to Use Which
 
-| Scenario | Approach |
-|----------|----------|
-| Static content display (about page, terms) | `WebView(url:)` |
-| Need reload, back/forward | `WebPage` + `WebView(page)` |
-| Need loading indicators | `WebPage` + `WebView(page)` |
-| Need JavaScript execution | `WebPage` + `WebView(page)` |
-| Need navigation interception | `WebPage` + `WebView(page)` |
+| Scenario                                   | Approach                    |
+| ------------------------------------------ | --------------------------- |
+| Static content display (about page, terms) | `WebView(url:)`             |
+| Need reload, back/forward                  | `WebPage` + `WebView(page)` |
+| Need loading indicators                    | `WebPage` + `WebView(page)` |
+| Need JavaScript execution                  | `WebPage` + `WebView(page)` |
+| Need navigation interception               | `WebPage` + `WebView(page)` |
 
 ## WebPage Configuration
 

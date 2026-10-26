@@ -1,6 +1,7 @@
 # 3D charts
 
 <a id="source-swiftui-charts-3d-skill-md"></a>
+
 ## Source: `swiftui/charts-3d/SKILL.md`
 
 # 3D Charts with Swift Charts
@@ -10,6 +11,7 @@ Create 3D data visualizations using `Chart3D` and `SurfacePlot`. Covers math-dri
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Wants to create a 3D chart or 3D data visualization
 - Asks about `Chart3D`, `SurfacePlot`, or 3D surface plots
 - Needs to visualize a mathematical function as a 3D surface
@@ -54,13 +56,13 @@ What 3D chart feature do you need?
 
 ## API Availability
 
-| API | Minimum Version | Import | Notes |
-|-----|----------------|--------|-------|
-| `Chart3D` | iOS 26 / macOS 26 | `Charts` | Main 3D chart container |
-| `SurfacePlot` | iOS 26 / macOS 26 | `Charts` | 3D surface mark |
-| `Chart3DPose` | iOS 26 / macOS 26 | `Charts` | Viewing angle control |
+| API                       | Minimum Version   | Import   | Notes                                         |
+| ------------------------- | ----------------- | -------- | --------------------------------------------- |
+| `Chart3D`                 | iOS 26 / macOS 26 | `Charts` | Main 3D chart container                       |
+| `SurfacePlot`             | iOS 26 / macOS 26 | `Charts` | 3D surface mark                               |
+| `Chart3DPose`             | iOS 26 / macOS 26 | `Charts` | Viewing angle control                         |
 | `Chart3DCameraProjection` | iOS 26 / macOS 26 | `Charts` | `.automatic`, `.perspective`, `.orthographic` |
-| `Chart3DSurfaceStyle` | iOS 26 / macOS 26 | `Charts` | `.heightBased`, `.normalBased` |
+| `Chart3DSurfaceStyle`     | iOS 26 / macOS 26 | `Charts` | `.heightBased`, `.normalBased`                |
 
 ## Quick Start
 
@@ -435,7 +437,7 @@ Chart {
 }
 ```
 
-- Conditional styling belongs *inside* the builder — check `value.as(Date.self)` in the closure to, say, bold only the first month of each quarter.
+- Conditional styling belongs _inside_ the builder — check `value.as(Date.self)` in the closure to, say, bold only the first month of each quarter.
 - `.chartXAxis(.hidden)` removes an axis entirely; `.chartPlotStyle { $0.frame(height: 200).background(.gray.opacity(0.05)).border(.quaternary) }` sizes and styles the plot area itself.
 
 ### Interactivity: Selection First
@@ -569,41 +571,47 @@ var accessibilityChartDescriptor: AXChartDescriptor? {
 
 ## Top Mistakes
 
-| # | Mistake | Fix |
-|---|---------|-----|
-| 1 | Forgetting to `import Charts` | Both `SwiftUI` and `Charts` imports are required |
-| 2 | Using `.chart3DPose(.default)` and expecting drag-to-rotate | Use a `@State` binding: `.chart3DPose($pose)` for interactive rotation |
-| 3 | Setting `yRange` that does not cover actual function output | Match the `yRange` in `.heightBased()` to the actual min/max of your function output |
-| 4 | Applying `.roughness()` without `.foregroundStyle()` | Roughness modifies existing surface appearance; set a foreground style first |
-| 5 | Using orthographic projection for presentation/demo contexts | Prefer `.perspective` for visual appeal; use `.orthographic` for precise data reading |
+| #   | Mistake                                                      | Fix                                                                                   |
+| --- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| 1   | Forgetting to `import Charts`                                | Both `SwiftUI` and `Charts` imports are required                                      |
+| 2   | Using `.chart3DPose(.default)` and expecting drag-to-rotate  | Use a `@State` binding: `.chart3DPose($pose)` for interactive rotation                |
+| 3   | Setting `yRange` that does not cover actual function output  | Match the `yRange` in `.heightBased()` to the actual min/max of your function output  |
+| 4   | Applying `.roughness()` without `.foregroundStyle()`         | Roughness modifies existing surface appearance; set a foreground style first          |
+| 5   | Using orthographic projection for presentation/demo contexts | Prefer `.perspective` for visual appeal; use `.orthographic` for precise data reading |
 
 ## Review Checklist
 
 ### Imports and Setup
+
 - [ ] Both `import SwiftUI` and `import Charts` are present
 - [ ] Deployment target is iOS 26 / macOS 26 or later
 - [ ] `Chart3D` wraps all `SurfacePlot` content
 
 ### Surface Configuration
+
 - [ ] Axis labels (`x:`, `y:`, `z:`) are descriptive and meaningful
 - [ ] `foregroundStyle` applied to each `SurfacePlot` for clear visual distinction
 - [ ] `yRange` in `.heightBased()` matches the actual output range of the function
 - [ ] `roughness` value makes sense for the use case (0 = reflective, 1 = matte)
 
 ### Interactivity
+
 - [ ] Pose is a `@State` binding if drag-to-rotate is intended
 - [ ] Pose is a constant (non-binding) if rotation should be locked
 - [ ] Initial pose angle provides a good default view of the data
 
 ### Camera
+
 - [ ] Camera projection set appropriately (`.perspective` for visual, `.orthographic` for precision)
 - [ ] If using `.automatic`, verified the system choice looks acceptable
 
 ### Multiple Surfaces
+
 - [ ] Each surface has a distinct color or opacity to differentiate
 - [ ] Axis labels are unique per surface or shared where appropriate
 
 ### Accessibility
+
 - [ ] Contrast ≥ 4.5:1; no red+green or blue+yellow series pairs; symbols supplement color (WWDC21 10122)
 - [ ] Custom-drawn charts expose an `AXChartDescriptor` (Audio Graphs) — or keep Swift Charts' default intact
 - [ ] Large datasets expose one accessibility element per interval, not per point

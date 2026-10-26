@@ -1,6 +1,7 @@
 # Architecture patterns: Modular design
 
 <a id="source-macos-architecture-patterns-modular-design-md"></a>
+
 ## Source: `macos/architecture-patterns/modular-design.md`
 
 # Modular Design
@@ -75,6 +76,7 @@ MyApp/
 **Cons**: Related files scattered across folders, doesn't scale as well
 
 ### Recommendation
+
 - **Small apps (< 15 files)**: Group by layer — simpler, less folder nesting
 - **Medium+ apps (15+ files)**: Group by feature — better discoverability and modularity
 
@@ -189,14 +191,14 @@ package struct MigrationHelper {
 
 ### Access Level Summary
 
-| Level | Visible To |
-|-------|-----------|
-| `private` | Enclosing declaration only |
-| `fileprivate` | Same source file |
-| `internal` (default) | Same module/target |
-| `package` | Same package |
-| `public` | Any importing module |
-| `open` | Any module (can subclass/override) |
+| Level                | Visible To                         |
+| -------------------- | ---------------------------------- |
+| `private`            | Enclosing declaration only         |
+| `fileprivate`        | Same source file                   |
+| `internal` (default) | Same module/target                 |
+| `package`            | Same package                       |
+| `public`             | Any importing module               |
+| `open`               | Any module (can subclass/override) |
 
 ## DRY: Reducing Duplication
 
@@ -274,13 +276,13 @@ struct Contact: Searchable {
 
 ## When to Modularize
 
-| Signal | Action |
-|--------|--------|
-| Build times getting slow | Extract stable code into packages |
-| Multiple developers working on same files | Split into feature modules |
-| Want to share code between app and extension | Extract into shared package |
-| Tests require the full app to compile | Extract testable code into packages |
-| Hard to find files | Reorganize by feature |
+| Signal                                       | Action                              |
+| -------------------------------------------- | ----------------------------------- |
+| Build times getting slow                     | Extract stable code into packages   |
+| Multiple developers working on same files    | Split into feature modules          |
+| Want to share code between app and extension | Extract into shared package         |
+| Tests require the full app to compile        | Extract testable code into packages |
+| Hard to find files                           | Reorganize by feature               |
 
 ## Testing Across Modules
 

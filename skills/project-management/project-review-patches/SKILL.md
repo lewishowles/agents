@@ -4,6 +4,7 @@ description: >
   Use this skill only when explicitly reviewing current uncommitted work as separate, refreshable proposed commit patches. The coordinator chooses whole-file or whole-hunk boundaries; a named HCOM Scout creates and checks ignored patch artefacts without changing source, the worktree, or the index.
 disable-model-invocation: true
 ---
+
 # Project review patches
 
 Review current uncommitted work as separate proposed commits. The coordinator decides the proposals and whole-file or whole-hunk boundaries. A named HCOM Scout runs the installed `review-patches` command to write ignored patch artefacts, but does not choose groupings, edit source, stage, commit, or change the index.

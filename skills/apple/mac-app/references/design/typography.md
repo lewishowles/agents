@@ -1,12 +1,13 @@
 # Typography
 
 <a id="source-design-typography-skill-md"></a>
+
 ## Source: `design/typography/SKILL.md`
 
 # Typography
 
 Type is most of your UI. The system does the hard parts — optical sizes, tracking tables,
-Dynamic Type — *if* you use its APIs. This skill covers when to trust the system, how to build
+Dynamic Type — _if_ you use its APIs. This skill covers when to trust the system, how to build
 hierarchy deliberately, and what custom fonts owe you back.
 
 ## When This Skill Activates
@@ -19,7 +20,7 @@ hierarchy deliberately, and what custom fonts owe you back.
 ## Rule 1: text styles first
 
 Predefined styles (Large Title → Caption 2) are weight + size + leading combos with Dynamic
-Type support built in — and different styles scale *differently* (body grows more than
+Type support built in — and different styles scale _differently_ (body grows more than
 footnote), which manual font sizes can't replicate.
 
 - Build hierarchy from 2–3 text styles + emphasized variants (bold trait — the actual weight
@@ -42,13 +43,13 @@ footnote), which manual font sizes can't replicate.
 
 ## The San Francisco family — pick by job
 
-| Face | Job |
-|---|---|
-| SF Pro | The default; UI text everywhere |
-| SF Pro Rounded | Friendlier numerals/labels — widgets, health/fitness data |
-| SF Mono | Code, tabular alignment |
-| New York | Serif — reading experiences, editorial contrast |
-| SF Arabic / SF Arabic Rounded | Arabic script with its own optical sizes |
+| Face                          | Job                                                       |
+| ----------------------------- | --------------------------------------------------------- |
+| SF Pro                        | The default; UI text everywhere                           |
+| SF Pro Rounded                | Friendlier numerals/labels — widgets, health/fitness data |
+| SF Mono                       | Code, tabular alignment                                   |
+| New York                      | Serif — reading experiences, editorial contrast           |
+| SF Arabic / SF Arabic Rounded | Arabic script with its own optical sizes                  |
 
 **The width axis** (Condensed / Regular / Compressed / Expanded):
 
@@ -63,7 +64,7 @@ footnote), which manual font sizes can't replicate.
 
 ## Custom fonts: what you owe back
 
-System fonts provide Mac text styles; a brand font makes *you* responsible for type legibility:
+System fonts provide Mac text styles; a brand font makes _you_ responsible for type legibility:
 
 - Match the Mac text style hierarchy when choosing custom sizes and weights.
 - Test at larger display scaling settings; wrap to multiple lines rather than truncate.

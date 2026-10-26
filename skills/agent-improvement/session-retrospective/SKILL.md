@@ -3,6 +3,7 @@ name: session-retrospective
 description: >
   Use this skill when asked to learn from, retrospect on, review, or extract lessons from a difficult agent session without jumping straight to creating a new skill.
 ---
+
 # Session retrospective
 
 Turn a difficult agent session into a non-blaming learning brief for this agents repo. The failure this skill prevents is overfitting one painful session into an automatic new skill, rule, or process change without checking evidence and existing coverage.

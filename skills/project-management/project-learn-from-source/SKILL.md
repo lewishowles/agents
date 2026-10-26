@@ -3,6 +3,7 @@ name: project-learn-from-source
 description: >
   Use this skill to assess an external artefact at the user's requested level and identify verified lessons for the current repo.
 ---
+
 # Project learn from source
 
 Extract practical lessons from an external artefact and ground them in the current repo. The failure this skill prevents is losing the user's reason for sharing the source, or producing a speculative idea list without checking whether each recommendation is ready.

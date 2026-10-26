@@ -1,6 +1,7 @@
 # SwiftData architecture: Query patterns
 
 <a id="source-macos-swiftdata-architecture-query-patterns-md"></a>
+
 ## Source: `macos/swiftdata-architecture/query-patterns.md`
 
 # SwiftData Query Patterns
@@ -265,15 +266,15 @@ func buildPredicate(
 
 ## @Query vs FetchDescriptor
 
-| Feature | @Query | FetchDescriptor |
-|---------|--------|-----------------|
-| Where to use | SwiftUI views | ViewModels, services |
-| Auto-updates | Yes | No (manual re-fetch) |
-| Dynamic filtering | Via init() | Direct property setting |
-| Pagination | Via init() | fetchOffset + fetchLimit |
-| Count queries | No | fetchCount() |
-| ID-only queries | No | fetchIdentifiers() |
-| Background context | No | Yes |
+| Feature            | @Query        | FetchDescriptor          |
+| ------------------ | ------------- | ------------------------ |
+| Where to use       | SwiftUI views | ViewModels, services     |
+| Auto-updates       | Yes           | No (manual re-fetch)     |
+| Dynamic filtering  | Via init()    | Direct property setting  |
+| Pagination         | Via init()    | fetchOffset + fetchLimit |
+| Count queries      | No            | fetchCount()             |
+| ID-only queries    | No            | fetchIdentifiers()       |
+| Background context | No            | Yes                      |
 
 ## Common Mistakes
 

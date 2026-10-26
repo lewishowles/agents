@@ -15,11 +15,11 @@ Optimize app title, subtitle, and keywords for maximum App Store discoverability
 
 Before optimizing, load these reference materials:
 
-| File | Purpose |
-|------|---------|
-| [**keyword-criteria.md**](keyword-criteria.md) | Popularity/Difficulty sweet spots, opportunity scoring |
-| [**advanced-tactics.md**](advanced-tactics.md) | Cross-localization, screenshot indexing, velocity boost |
-| [**existing-app-strategy.md**](existing-app-strategy.md) | Safe optimization for apps with existing traffic |
+| File                                                     | Purpose                                                 |
+| -------------------------------------------------------- | ------------------------------------------------------- |
+| [**keyword-criteria.md**](keyword-criteria.md)           | Popularity/Difficulty sweet spots, opportunity scoring  |
+| [**advanced-tactics.md**](advanced-tactics.md)           | Cross-localization, screenshot indexing, velocity boost |
+| [**existing-app-strategy.md**](existing-app-strategy.md) | Safe optimization for apps with existing traffic        |
 
 ## Information Gathering
 
@@ -48,12 +48,12 @@ Before optimizing, ask about:
 
 ### Where Keywords Count
 
-| Field | Limit | Weight | Notes |
-|-------|-------|--------|-------|
-| **App Name** | 30 chars | Highest | Most valuable real estate |
-| **Subtitle** | 30 chars | High | Visible in search, below name |
-| **Keywords** | 100 chars | Medium | Not visible to users |
-| **Description** | 4000 chars | Low* | *Apple says indexed, debated |
+| Field           | Limit      | Weight  | Notes                         |
+| --------------- | ---------- | ------- | ----------------------------- |
+| **App Name**    | 30 chars   | Highest | Most valuable real estate     |
+| **Subtitle**    | 30 chars   | High    | Visible in search, below name |
+| **Keywords**    | 100 chars  | Medium  | Not visible to users          |
+| **Description** | 4000 chars | Low\*   | \*Apple says indexed, debated |
 
 ### Keyword Types
 
@@ -68,6 +68,7 @@ Before optimizing, ask about:
 ### Step 1: Keyword Research
 
 **Generate Initial List:**
+
 ```
 1. Brainstorm 50+ keywords
 2. What would YOU search for this app?
@@ -77,6 +78,7 @@ Before optimizing, ask about:
 ```
 
 **Research Tools:**
+
 - App Store Search Autocomplete
 - AppFollow, Sensor Tower, AppTweak (paid)
 - Google Keyword Planner (related terms)
@@ -86,14 +88,15 @@ Before optimizing, ask about:
 
 Rate each keyword on:
 
-| Factor | Question |
-|--------|----------|
-| **Relevance** | Does it accurately describe your app? |
-| **Volume** | Do people actually search this? |
-| **Difficulty** | Can you realistically rank? |
-| **Intent** | Will searchers want your app? |
+| Factor         | Question                              |
+| -------------- | ------------------------------------- |
+| **Relevance**  | Does it accurately describe your app? |
+| **Volume**     | Do people actually search this?       |
+| **Difficulty** | Can you realistically rank?           |
+| **Intent**     | Will searchers want your app?         |
 
 **Priority Matrix:**
+
 ```
 High Volume + Low Difficulty = 🎯 Target First
 High Volume + High Difficulty = 💪 Long-term Goal
@@ -104,6 +107,7 @@ Low Volume + High Difficulty = ❌ Skip
 ### Step 3: Allocate Keywords
 
 **App Name (30 characters):**
+
 ```
 [Brand Name] - [Top Keyword Phrase]
 or
@@ -116,6 +120,7 @@ Examples:
 ```
 
 **Subtitle (30 characters):**
+
 ```
 [Second Priority Keywords] / [Unique Value]
 
@@ -126,6 +131,7 @@ Examples:
 ```
 
 **Keywords Field (100 characters):**
+
 ```
 Rules:
 - Comma-separated, NO spaces after commas
@@ -143,16 +149,19 @@ Example:
 ### Maximize 100 Characters
 
 **Bad (wastes characters):**
+
 ```
 task manager, todo list, productivity app, reminder app, checklist
 ```
 
 **Good (efficient):**
+
 ```
 task,todo,productivity,reminder,checklist,planner,organize,gtd,schedule,daily
 ```
 
 **Savings:**
+
 - Remove spaces after commas
 - Don't repeat words in different forms
 - Skip obvious words (app, free, best)
@@ -241,17 +250,18 @@ New searchable combinations gained:
 
 When generating keyword recommendations, always verify:
 
-| Check | Rule |
-|-------|------|
-| Title word in Subtitle? | Remove from Subtitle |
-| Title word in Keywords? | Remove from Keywords |
-| Subtitle word in Keywords? | Remove from Keywords |
-| Plural/singular variant across fields? | Keep only in highest field |
-| Stop words (a, the, and, for)? | Don't include anywhere — auto-indexed |
+| Check                                  | Rule                                  |
+| -------------------------------------- | ------------------------------------- |
+| Title word in Subtitle?                | Remove from Subtitle                  |
+| Title word in Keywords?                | Remove from Keywords                  |
+| Subtitle word in Keywords?             | Remove from Keywords                  |
+| Plural/singular variant across fields? | Keep only in highest field            |
+| Stop words (a, the, and, for)?         | Don't include anywhere — auto-indexed |
 
 ## Common Mistakes
 
 ❌ **Don't Do This:**
+
 - Using spaces after commas in keywords
 - Duplicating words across fields
 - Including your category name
@@ -262,6 +272,7 @@ When generating keyword recommendations, always verify:
 - Repeating singular/plural forms
 
 ✅ **Do This:**
+
 - Research before guessing
 - Prioritize relevance over volume
 - Update keywords quarterly
@@ -340,6 +351,7 @@ EXPECTED COMBINATIONS
 ### A/B Testing
 
 App Store Connect allows testing:
+
 - App icons
 - Screenshots
 - App previews
@@ -349,6 +361,7 @@ Use Product Page Optimization to test different approaches.
 ## Quick Reference
 
 ### Prohibited Terms
+
 - "Free" (use pricing filter instead)
 - "#1" or "best" without verification
 - Competitor names
@@ -356,12 +369,14 @@ Use Product Page Optimization to test different approaches.
 - Pricing information
 
 ### Always Include
+
 - Core functionality words
 - Problem/solution words
 - Category-relevant terms
 - Action verbs users would search
 
 ### Character Limits
+
 ```
 App Name:      30 characters
 Subtitle:      30 characters
@@ -374,6 +389,7 @@ Description: 4000 characters (low SEO value)
 For building apps that generate $200-2,000/month:
 
 ### The Sweet Spot Formula
+
 ```
 Target keywords where:
 - Popularity > 20 (enough traffic)
@@ -383,6 +399,7 @@ Ideal: Popularity 25-50, Difficulty < 45
 ```
 
 ### Process
+
 1. Find underserved keywords using ASO tools (Astro, AppTweak)
 2. Build simple, single-feature apps around those keywords
 3. Double down on winners, abandon losers
@@ -393,13 +410,16 @@ See [**keyword-criteria.md**](keyword-criteria.md) for detailed scoring and eval
 ## Advanced Tactics Summary
 
 ### Cross-Localization (Double Keywords)
+
 Add Spanish (Mexico) locale with English keywords for US market.
 See [**advanced-tactics.md**](advanced-tactics.md) for all locales.
 
 ### Screenshot Text Indexing (June 2025)
+
 Apple OCR reads screenshot captions for keyword ranking.
 Put keywords in top/bottom of screenshots.
 
 ### Existing App Optimization
+
 Never change what's working. Use phased rollout.
 See [**existing-app-strategy.md**](existing-app-strategy.md) for safe optimization.

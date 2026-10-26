@@ -3,6 +3,7 @@ name: skill-craft
 description: >
   Use this skill when authoring, designing, or evaluating a new skill in this repo. Covers intake → design → build → lightweight eval lifecycle.
 ---
+
 # Skill-craft
 
 Lifecycle for authoring and evaluating skills in this repo: intake → design → build → eval.
@@ -38,8 +39,8 @@ If any of the three fails, extend an existing skill or discard the idea.
 ## Build
 
 1. Create `skills/<group>/<name>/SKILL.md` with `name` and `description` front matter; lead with the failure mode the skill corrects and prefer checklists over persona descriptions.
-3. Regenerate indexes: `PATH="/opt/homebrew/bin:$PATH" bash scripts/sync.sh </dev/null`.
-4. Validate: `PATH="/opt/homebrew/bin:$PATH" bash scripts/validate.sh </dev/null 2>&1 | tail -5`.
+2. Regenerate indexes: `PATH="/opt/homebrew/bin:$PATH" bash scripts/sync.sh </dev/null`.
+3. Validate: `PATH="/opt/homebrew/bin:$PATH" bash scripts/validate.sh </dev/null 2>&1 | tail -5`.
 
 ## Eval
 

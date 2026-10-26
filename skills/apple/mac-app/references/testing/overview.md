@@ -15,6 +15,7 @@
 - [Test data factory](test-data-factory.md)
 
 <a id="source-testing-skill-md"></a>
+
 ## Source: `testing/SKILL.md`
 
 # Testing & TDD Skills
@@ -24,6 +25,7 @@ Test-driven development workflows and testing infrastructure for Apple platform 
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Wants to do TDD (test-driven development) with AI-generated code
 - Needs to add tests before refactoring existing code
 - Wants to fix a bug using the red-green-refactor cycle
@@ -88,6 +90,7 @@ EXPERIMENTAL, advisory-only muter setup scoped to engine targets — surviving m
 The `../../../apple-generators/references/test-generator/overview.md` skill generates test boilerplate (unit, integration, UI tests). These testing skills are complementary — they focus on **workflows and methodology** (TDD cycle, characterization testing, contracts) rather than just test file generation.
 
 Cross-reference:
+
 - Use `test-generator` for "add tests to this class"
 - Use `tdd-feature.md` for "I want to TDD this new feature"
 - Use `characterization-test-generator.md` for "I need to safely refactor this"

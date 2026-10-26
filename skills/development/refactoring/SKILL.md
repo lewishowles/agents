@@ -3,6 +3,7 @@ name: refactoring
 description: >
   Use this skill when refactoring existing code or triaging technical debt. Covers behaviour-preserving refactoring technique (one change at a time, tests pass at every step), and a lightweight debt categorisation and prioritisation approach. Distinct from debugging (fixing a bug) and from new feature work.
 ---
+
 # Refactoring
 
 **Refactoring changes structure, not behaviour.** Tests pass before first change and after each step. Step breaks tests? Revert it.

@@ -1,6 +1,7 @@
 # Snapshot test setup
 
 <a id="source-testing-snapshot-test-setup-skill-md"></a>
+
 ## Source: `testing/snapshot-test-setup/SKILL.md`
 
 # Snapshot Test Setup
@@ -10,6 +11,7 @@ Generate SwiftUI snapshot/visual regression tests using Point-Free's swift-snaps
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Wants "snapshot tests" or "visual regression tests"
 - Says "I want to catch UI regressions"
 - Asks about "screenshot testing" or "preview testing"
@@ -284,14 +286,14 @@ Snapshot suites are the UI half of the deterministic gauntlet (code half:
 `fitness-functions.md`, `../swift/code-size.md`, `coverage-ratchet.md`).
 They use the same install trick as fitness functions: **they are ordinary
 tests in the existing unit-test target**, so they ride every `test` gate that
-already exists — no new CI plumbing to *run* them. What makes them a *gate*
+already exists — no new CI plumbing to _run_ them. What makes them a _gate_
 rather than a capability:
 
 - **A pixel diff is a FAIL, not a discussion.** SwiftShip's `<check
-  type="snapshot">` runs the suite scoped to a task's touched screens
+type="snapshot">` runs the suite scoped to a task's touched screens
   (`-only-testing`); the phase does not close on a red diff.
 - **The re-record ratchet.** `__Snapshots__/` baselines are committed;
-  re-recording is a *stated decision* — the commit message says which screens
+  re-recording is a _stated decision_ — the commit message says which screens
   changed and why. Record mode (`withSnapshotTesting(record: .all)`) is never
   committed enabled; a committed record-mode test asserts nothing.
 - **Determinism guards.** Pin one simulator model/OS as the snapshot
@@ -311,15 +313,18 @@ rather than a capability:
 ## What to Snapshot
 
 ### High Value (Always Snapshot)
+
 - Screens with multiple states (empty, loaded, error), reusable components across configurations, light/dark mode, Dynamic Type at accessibility sizes
 
 ### Medium Value (Selectively Snapshot)
+
 - Navigation flows (each step)
 - Onboarding screens
 - Paywall/subscription views
 - Settings screens
 
 ### Low Value (Skip)
+
 - Views that are 100% system components (plain List, NavigationStack)
 - Views that change frequently during active development
 - Views dependent on live data

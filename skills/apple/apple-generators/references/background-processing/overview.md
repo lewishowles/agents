@@ -88,10 +88,7 @@ Generate these files:
 
 ### Step 3: Create Feature-Specific Files
 
-Based on configuration:
-
-3. `BackgroundDownloadManager.swift` -- If background downloads selected
-4. `SilentPushHandler.swift` -- If silent push selected
+Based on configuration: 3. `BackgroundDownloadManager.swift` -- If background downloads selected 4. `SilentPushHandler.swift` -- If silent push selected
 
 ### Step 4: Determine File Location
 

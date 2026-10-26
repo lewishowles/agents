@@ -6,7 +6,7 @@ custom_rules:
     # never ban the import globally.
     name: "XCTest in unit tests"
     message: "New unit tests use Swift Testing (import Testing). XCTest remains only for XCUITest UI-test targets."
-    regex: '^import XCTest$'
+    regex: "^import XCTest$"
     included: ".*Tests/.*"
     excluded: ".*UITests?/.*"
     severity: warning

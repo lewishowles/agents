@@ -5,6 +5,7 @@ Interpret your app's metrics, diagnose problems, and make data-driven decisions.
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Wants to understand their app metrics or analytics
 - Asks about retention, LTV, ARPU, or churn
 - Wants to know if their metrics are good or bad
@@ -33,42 +34,46 @@ Ask the user via AskUserQuestion:
 Different monetization models have different north star metrics.
 
 #### Free with Ads
-| Metric | Why It Matters |
-|--------|---------------|
-| DAU/MAU | More daily users = more ad impressions |
-| Session length | Longer sessions = more ad views |
-| Sessions per day | More sessions = more revenue opportunities |
-| Ad impressions/revenue | Direct revenue driver |
-| D1/D7/D30 retention | Users must come back for ads to work |
+
+| Metric                 | Why It Matters                             |
+| ---------------------- | ------------------------------------------ |
+| DAU/MAU                | More daily users = more ad impressions     |
+| Session length         | Longer sessions = more ad views            |
+| Sessions per day       | More sessions = more revenue opportunities |
+| Ad impressions/revenue | Direct revenue driver                      |
+| D1/D7/D30 retention    | Users must come back for ads to work       |
 
 #### Freemium (One-Time Unlock)
-| Metric | Why It Matters |
-|--------|---------------|
-| Conversion rate (free → paid) | Primary revenue driver |
-| Time to conversion | How long before users see enough value |
-| Feature adoption | Which features drive upgrades |
-| Revenue per download | Overall monetization efficiency |
-| D7 retention (free users) | Must retain long enough to convert |
+
+| Metric                        | Why It Matters                         |
+| ----------------------------- | -------------------------------------- |
+| Conversion rate (free → paid) | Primary revenue driver                 |
+| Time to conversion            | How long before users see enough value |
+| Feature adoption              | Which features drive upgrades          |
+| Revenue per download          | Overall monetization efficiency        |
+| D7 retention (free users)     | Must retain long enough to convert     |
 
 #### Subscription
-| Metric | Why It Matters |
-|--------|---------------|
-| Trial start rate | Top of subscription funnel |
-| Trial → paid conversion | Critical conversion point |
-| Monthly churn rate | Determines LTV |
-| LTV (lifetime value) | Revenue per subscriber over their lifetime |
-| Payback period | Months to recoup acquisition cost |
-| MRR / ARR | Business health snapshot |
-| Subscriber retention (Month 1-12) | Long-term revenue curve |
+
+| Metric                            | Why It Matters                             |
+| --------------------------------- | ------------------------------------------ |
+| Trial start rate                  | Top of subscription funnel                 |
+| Trial → paid conversion           | Critical conversion point                  |
+| Monthly churn rate                | Determines LTV                             |
+| LTV (lifetime value)              | Revenue per subscriber over their lifetime |
+| Payback period                    | Months to recoup acquisition cost          |
+| MRR / ARR                         | Business health snapshot                   |
+| Subscriber retention (Month 1-12) | Long-term revenue curve                    |
 
 #### Paid Upfront
-| Metric | Why It Matters |
-|--------|---------------|
-| Downloads per day/week | Direct revenue driver |
-| Revenue per download | Should equal price minus Apple's cut |
-| Refund rate | Product quality signal (keep < 5%) |
-| Ratings and reviews | Social proof drives more downloads |
-| Organic vs. paid ratio | Sustainability indicator |
+
+| Metric                 | Why It Matters                       |
+| ---------------------- | ------------------------------------ |
+| Downloads per day/week | Direct revenue driver                |
+| Revenue per download   | Should equal price minus Apple's cut |
+| Refund rate            | Product quality signal (keep < 5%)   |
+| Ratings and reviews    | Social proof drives more downloads   |
+| Organic vs. paid ratio | Sustainability indicator             |
 
 ### Step 3: App Store Connect Analytics Interpretation
 
@@ -94,13 +99,14 @@ Paying Users
 
 **Impressions → Product Page Views (Tap-Through Rate)**
 
-| Rating | TTR | Interpretation |
-|--------|-----|---------------|
-| Good | > 8% | Icon and title are compelling |
-| Average | 4-8% | Room to improve first impression |
-| Poor | < 4% | Icon, title, or subtitle need work |
+| Rating  | TTR  | Interpretation                     |
+| ------- | ---- | ---------------------------------- |
+| Good    | > 8% | Icon and title are compelling      |
+| Average | 4-8% | Room to improve first impression   |
+| Poor    | < 4% | Icon, title, or subtitle need work |
 
 What to fix if low:
+
 - App icon not standing out (test bolder colors, simpler design)
 - Title not communicating value (add keyword after brand name)
 - Subtitle too vague (make it specific: "Budget Tracker" not "Finance App")
@@ -108,13 +114,14 @@ What to fix if low:
 
 **Product Page Views → Downloads (Conversion Rate)**
 
-| Rating | CVR | Interpretation |
-|--------|-----|---------------|
-| Good | > 40% | Screenshots and description are effective |
-| Average | 25-40% | Some friction on the product page |
-| Poor | < 25% | Major product page issues |
+| Rating  | CVR    | Interpretation                            |
+| ------- | ------ | ----------------------------------------- |
+| Good    | > 40%  | Screenshots and description are effective |
+| Average | 25-40% | Some friction on the product page         |
+| Poor    | < 25%  | Major product page issues                 |
 
 What to fix if low:
+
 - First 3 screenshots not showing core value
 - No app preview video (adds 15-25% lift)
 - Description too long before showing key benefits
@@ -123,13 +130,14 @@ What to fix if low:
 
 **Downloads → Day 1 Retention**
 
-| Rating | D1 | Interpretation |
-|--------|-----|---------------|
-| Good | > 35% | Onboarding delivers on promise |
+| Rating  | D1     | Interpretation                      |
+| ------- | ------ | ----------------------------------- |
+| Good    | > 35%  | Onboarding delivers on promise      |
 | Average | 20-35% | Some users confused or disappointed |
-| Poor | < 20% | App not delivering expected value |
+| Poor    | < 20%  | App not delivering expected value   |
 
 What to fix if low:
+
 - Onboarding too long or confusing
 - App Store screenshots overpromised
 - Core value not visible in first session
@@ -138,13 +146,14 @@ What to fix if low:
 
 **Day 1 → Day 7 Retention**
 
-| Rating | D7 | Interpretation |
-|--------|-----|---------------|
-| Good | > 20% | Users forming habit |
-| Average | 10-20% | Some users finding value |
-| Poor | < 10% | Most users abandoning after trying |
+| Rating  | D7     | Interpretation                     |
+| ------- | ------ | ---------------------------------- |
+| Good    | > 20%  | Users forming habit                |
+| Average | 10-20% | Some users finding value           |
+| Poor    | < 10%  | Most users abandoning after trying |
 
 What to fix if low:
+
 - No reason to come back (add notifications, reminders, streaks)
 - Core loop not engaging enough
 - Too complex — users haven't learned enough features
@@ -152,13 +161,14 @@ What to fix if low:
 
 **Day 7 → Day 30 Retention**
 
-| Rating | D30 | Interpretation |
-|--------|-----|---------------|
-| Good | > 10% | Strong product-market fit signal |
-| Average | 5-10% | Decent but room to grow |
-| Poor | < 5% | Retention cliff — users churning |
+| Rating  | D30   | Interpretation                   |
+| ------- | ----- | -------------------------------- |
+| Good    | > 10% | Strong product-market fit signal |
+| Average | 5-10% | Decent but room to grow          |
+| Poor    | < 5%  | Retention cliff — users churning |
 
 What to fix if low:
+
 - Feature depth too shallow (users exhaust value)
 - No progression or new content
 - Competitor doing it better
@@ -170,69 +180,74 @@ The pirate metrics framework — diagnose where your funnel leaks.
 
 #### Acquisition: How do users find you?
 
-| Metric | Benchmark | Diagnostic |
-|--------|-----------|-----------|
-| Organic search impressions | Growing month-over-month | Are your keywords working? |
-| Browse impressions | Category-dependent | Are you getting featured/editorial? |
-| Referral traffic | > 10% of total | Do users share your app? |
-| Paid acquisition CPA | < 1/3 of LTV | Is paid acquisition sustainable? |
+| Metric                     | Benchmark                | Diagnostic                          |
+| -------------------------- | ------------------------ | ----------------------------------- |
+| Organic search impressions | Growing month-over-month | Are your keywords working?          |
+| Browse impressions         | Category-dependent       | Are you getting featured/editorial? |
+| Referral traffic           | > 10% of total           | Do users share your app?            |
+| Paid acquisition CPA       | < 1/3 of LTV             | Is paid acquisition sustainable?    |
 
 **Questions to ask:**
+
 - What are your top 3 acquisition sources?
 - Is organic growing or shrinking?
 - What's your cost per install (if running ads)?
 
 #### Activation: Do users experience the core value?
 
-| Metric | Benchmark | Diagnostic |
-|--------|-----------|-----------|
-| Onboarding completion | > 70% | Is onboarding too long? |
-| "Aha moment" reached | > 50% in first session | Do users discover core value? |
-| First key action taken | > 40% of installs | Are users doing the main thing? |
+| Metric                 | Benchmark              | Diagnostic                      |
+| ---------------------- | ---------------------- | ------------------------------- |
+| Onboarding completion  | > 70%                  | Is onboarding too long?         |
+| "Aha moment" reached   | > 50% in first session | Do users discover core value?   |
+| First key action taken | > 40% of installs      | Are users doing the main thing? |
 
 **Questions to ask:**
+
 - What is the one action that defines "this user gets it"?
 - How many steps to reach that action?
 - What percentage of new users complete it?
 
 #### Retention: Do users come back?
 
-| Metric | Benchmark | Diagnostic |
-|--------|-----------|-----------|
-| D1 retention | 25-40% | First impression quality |
-| D7 retention | 15-25% | Habit formation |
-| D30 retention | 8-15% | Product-market fit |
-| DAU/MAU ratio | 15-30% | Daily engagement strength |
+| Metric        | Benchmark | Diagnostic                |
+| ------------- | --------- | ------------------------- |
+| D1 retention  | 25-40%    | First impression quality  |
+| D7 retention  | 15-25%    | Habit formation           |
+| D30 retention | 8-15%     | Product-market fit        |
+| DAU/MAU ratio | 15-30%    | Daily engagement strength |
 
 **Questions to ask:**
+
 - Where is the biggest retention drop-off?
 - What do retained users do differently from churned users?
 - Is there a retention cliff at a specific day?
 
 #### Revenue: Are users paying?
 
-| Metric | Benchmark | Diagnostic |
-|--------|-----------|-----------|
-| Free → trial rate | 10-30% | Is the paywall compelling? |
-| Trial → paid rate | 40-60% | Does the trial demonstrate value? |
-| ARPU (all users) | Category-dependent | Overall monetization efficiency |
-| ARPPU (paying users) | 5-20x ARPU | Are payers happy with value? |
+| Metric               | Benchmark          | Diagnostic                        |
+| -------------------- | ------------------ | --------------------------------- |
+| Free → trial rate    | 10-30%             | Is the paywall compelling?        |
+| Trial → paid rate    | 40-60%             | Does the trial demonstrate value? |
+| ARPU (all users)     | Category-dependent | Overall monetization efficiency   |
+| ARPPU (paying users) | 5-20x ARPU         | Are payers happy with value?      |
 
 **Questions to ask:**
+
 - At what point do users encounter the paywall?
 - What's the conversion rate at each paywall touchpoint?
 - Do longer-retained users convert at higher rates?
 
 #### Referral: Do users tell others?
 
-| Metric | Benchmark | Diagnostic |
-|--------|-----------|-----------|
-| Organic multiplier | > 1.0 | Each user brings > 1 new user |
-| Share rate | > 5% of MAU | Users actively sharing |
+| Metric             | Benchmark   | Diagnostic                      |
+| ------------------ | ----------- | ------------------------------- |
+| Organic multiplier | > 1.0       | Each user brings > 1 new user   |
+| Share rate         | > 5% of MAU | Users actively sharing          |
 | Rating/review rate | > 1% of MAU | Users willing to vouch publicly |
-| Average rating | > 4.5 | High satisfaction |
+| Average rating     | > 4.5       | High satisfaction               |
 
 **Questions to ask:**
+
 - Is there a share feature in the app?
 - Do you ask for ratings at the right moment?
 - What triggers a user to recommend your app?
@@ -275,6 +290,7 @@ Improvement: +11 percentage points → significant positive impact
 ```
 
 **Rules of thumb:**
+
 - < 3 percentage point change: likely noise
 - 3-10 percentage point change: meaningful, keep the change
 - > 10 percentage point change: major win, double down on this direction
@@ -284,6 +300,7 @@ Improvement: +11 percentage points → significant positive impact
 Use these when the user says "my [metric] is bad, what do I do?"
 
 #### Low Impressions (< 1,000/day for established app)
+
 ```
 Low impressions
 ├── Are you ranking for any keywords?
@@ -297,6 +314,7 @@ Low impressions
 ```
 
 #### High Impressions, Low Product Page Views (TTR < 4%)
+
 ```
 Low tap-through rate
 ├── Is your icon professional and distinctive?
@@ -309,6 +327,7 @@ Low tap-through rate
 ```
 
 #### Good Downloads, Bad Retention (D1 < 25%)
+
 ```
 Poor day-1 retention
 ├── Is onboarding complete rate > 70%?
@@ -323,6 +342,7 @@ Poor day-1 retention
 ```
 
 #### Good Retention, Low Revenue (conversion < 3%)
+
 ```
 Low monetization
 ├── Do users see the paywall?
@@ -342,7 +362,9 @@ Low monetization
 Based on the overall picture, recommend one of four paths:
 
 #### Invest (Double Down)
+
 **Signals:**
+
 - D7 retention > 40%
 - Growing organically (installs increasing without paid acquisition)
 - Users actively requesting features
@@ -352,7 +374,9 @@ Based on the overall picture, recommend one of four paths:
 **Action:** Increase development speed, consider marketing spend, expand to new platforms.
 
 #### Iterate (Keep Improving)
+
 **Signals:**
+
 - D7 retention 20-40%
 - Some organic growth but not accelerating
 - Mixed user feedback (some love it, some confused)
@@ -361,7 +385,9 @@ Based on the overall picture, recommend one of four paths:
 **Action:** Focus on the retention cliff. Find what retained users do differently and make all users do that. A/B test paywall and onboarding.
 
 #### Pivot (Change Direction)
+
 **Signals:**
+
 - D7 retention < 20% after 3+ iterations
 - Engagement concentrated in unexpected feature
 - Users using app differently than intended
@@ -370,7 +396,9 @@ Based on the overall picture, recommend one of four paths:
 **Action:** Double down on the unexpected use case. Rebuild around what users actually do, not what you planned.
 
 #### Sunset (Move On)
+
 **Signals:**
+
 - Declining metrics across the board
 - No organic growth despite multiple iterations
 - Users not engaging even after onboarding improvements
@@ -383,6 +411,7 @@ Based on the overall picture, recommend one of four paths:
 ## Reference Files
 
 See **metrics-reference.md** for:
+
 - Detailed metric definitions and formulas
 - Benchmark ranges by app category (social, productivity, games, utilities)
 - App Store Connect specific metric definitions

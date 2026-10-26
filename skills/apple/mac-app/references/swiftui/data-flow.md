@@ -1,6 +1,7 @@
 # SwiftUI data flow
 
 <a id="source-swiftui-data-flow-skill-md"></a>
+
 ## Source: `swiftui/data-flow/SKILL.md`
 
 # SwiftUI Data Flow
@@ -40,7 +41,8 @@ are "different states of the same conceptual UI element"; distinct identities ar
   ```
 
   Inert values (opacity 1, padding 0) cost nothing. "By default, try to preserve identity."
-- Conditionally include a view *inside* a stack rather than conditionally wrapping the stack.
+
+- Conditionally include a view _inside_ a stack rather than conditionally wrapping the stack.
 
 ## Lifetime: state is tied to identity
 
@@ -73,7 +75,7 @@ are "different states of the same conceptual UI element"; distinct identities ar
   model). Extracting subviews is free — "breaking up one view into multiple doesn't hurt
   performance" — and shrinks invalidation scope.
 - **Observation** (`@Observable`) tracks **per property, per instance** — a view re-renders only
-  when a property it actually *read* changes, including through computed properties, arrays,
+  when a property it actually _read_ changes, including through computed properties, arrays,
   optionals, and nesting.
 - Migration from `ObservableObject`: drop conformance + `@Published` → `@Observable`;
   `@ObservedObject` → delete or `@Bindable`; `@EnvironmentObject` → `@Environment`.
@@ -84,22 +86,22 @@ are "different states of the same conceptual UI element"; distinct identities ar
 Ask Apple's three questions: what data does the view need · how does it manipulate it ·
 **where does truth live?**
 
-| Situation | Use |
-|---|---|
-| Display-only, parent owns it | plain `let` property |
-| Transient, view-local UI state | `@State` (group related fields into one struct with mutating methods) |
-| Write access to someone else's truth | `@Binding` (bindings compose: `$config.note`) |
-| Observable model owned by this view | `@State` (lazy-init since WWDC26 macro) |
-| Observable model, needs `$model.field` bindings only | `@Bindable` |
-| Observable model, globally available | `@Environment` |
-| Observable model, none of the above | plain property |
+| Situation                                            | Use                                                                   |
+| ---------------------------------------------------- | --------------------------------------------------------------------- |
+| Display-only, parent owns it                         | plain `let` property                                                  |
+| Transient, view-local UI state                       | `@State` (group related fields into one struct with mutating methods) |
+| Write access to someone else's truth                 | `@Binding` (bindings compose: `$config.note`)                         |
+| Observable model owned by this view                  | `@State` (lazy-init since WWDC26 macro)                               |
+| Observable model, needs `$model.field` bindings only | `@Bindable`                                                           |
+| Observable model, globally available                 | `@Environment`                                                        |
+| Observable model, none of the above                  | plain property                                                        |
 
 - ❌ Never allocate a reference-type model inline as an `@ObservedObject` default — every
   re-run reallocates it (heap churn, data loss); use `@StateObject` or `@State` + `@Observable`.
 - ❌ Two siblings each holding `@State` for the same value desync — lift state to the container
   and hand children Bindings.
 - `@SceneStorage` (restoration state, per window) and `@AppStorage` (settings) are stores
-  *next to* your model, not the model. Limit total sources of truth.
+  _next to_ your model, not the model. Limit total sources of truth.
 
 ## Body discipline
 
@@ -116,12 +118,12 @@ Ask Apple's three questions: what data does the view need · how does it manipul
 - `View` is `@MainActor`: body, `@State`, members, and `Task { }` created in body are all
   main-actor — most view code needs zero annotations (and Swift 6.2's default-isolation mode
   removes the rest).
-- SwiftUI runs some of *your* closures off-main — `Shape.path(in:)`, `Layout` methods,
+- SwiftUI runs some of _your_ closures off-main — `Shape.path(in:)`, `Layout` methods,
   `visualEffect`, `onGeometryChange` — that's why they're `Sendable`. Don't touch
   `self.someState` there; **copy the value in the capture list** (`[pulse]`) and compute from
   the proxies SwiftUI hands you.
 - Every `await` can resume after the frame deadline, so time-sensitive state (gesture/scroll
-  reactions, button loading indicators) must mutate synchronously *before* starting async work.
+  reactions, button loading indicators) must mutate synchronously _before_ starting async work.
   Bridge UI↔async through a piece of state; keep view `Task`s minimal ("inform the model") so
   async logic stays unit-testable.
 

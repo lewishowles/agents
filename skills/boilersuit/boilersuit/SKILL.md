@@ -3,6 +3,7 @@ name: boilersuit
 description: >
   Use this skill when consuming an existing Boilersuit generator to create repeatable project files. Covers inspecting project support, listing and describing generators, previewing the complete planned file set, handling existing destinations, and generating only after preview.
 ---
+
 # Boilersuit
 
 Use existing Boilersuit generators for repeatable structures, not one-off files. Use `boilersuit-generator-authoring` for creating/changing generators. Generators are project-agnostic; follow selected project conventions; don't assume Vue, JavaScript, `src/components`, or `NAME` unless generator establishes them.

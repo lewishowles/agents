@@ -1,15 +1,17 @@
 # Code size
 
 <a id="source-swift-code-size-skill-md"></a>
+
 ## Source: `swift/code-size/SKILL.md`
 
 # Code Size & Complexity Limits
 
-Complexity is the strongest single predictor of defect density, and code written *by agents* balloons fastest — an agent under pressure adds one more branch to an existing function far more readily than it extracts a new one. These five SwiftLint threshold rules are the deterministic cap: they keep functions small enough that tests can actually cover their branches, and they keep agents from wrangling with their own tangles.
+Complexity is the strongest single predictor of defect density, and code written _by agents_ balloons fastest — an agent under pressure adds one more branch to an existing function far more readily than it extracts a new one. These five SwiftLint threshold rules are the deterministic cap: they keep functions small enough that tests can actually cover their branches, and they keep agents from wrangling with their own tangles.
 
 ## When This Skill Activates
 
 Use this skill when:
+
 - Setting up quality gates for a project where agents write most of the code
 - A review keeps flagging "this function is too long/branchy" by hand
 - Functions have grown past what their tests plausibly cover
@@ -19,19 +21,19 @@ Use this skill when:
 
 The fragment at `code-size-swiftlint.yml` configures five built-in SwiftLint rules (all enabled by default in SwiftLint — this fragment sets the thresholds):
 
-| Rule | Warning | Error | What it caps |
-|---|---|---|---|
-| `cyclomatic_complexity` | 10 | 20 | Independent paths through one function |
-| `function_body_length` | 50 | 100 | Lines per function body |
-| `type_body_length` | 300 | 500 | Lines per type body |
-| `file_length` | 500 | 1000 | Lines per file |
-| `function_parameter_count` | 5 | 8 | Parameters per function |
+| Rule                       | Warning | Error | What it caps                           |
+| -------------------------- | ------- | ----- | -------------------------------------- |
+| `cyclomatic_complexity`    | 10      | 20    | Independent paths through one function |
+| `function_body_length`     | 50      | 100   | Lines per function body                |
+| `type_body_length`         | 300     | 500   | Lines per type body                    |
+| `file_length`              | 500     | 1000  | Lines per file                         |
+| `function_parameter_count` | 5       | 8     | Parameters per function                |
 
 Merge the fragment into the project's `.swiftlint.yml` (alongside any `opt_in_rules`/`custom_rules` fragments already adopted).
 
 ## Brownfield Adoption: Baseline, Never Mass-Refactor
 
-Turning these rules on in an existing codebase must not trigger a refactoring spree — bulk rewrites to satisfy a linter are how working code gets broken. Freeze today's violations and gate only *new* ones:
+Turning these rules on in an existing codebase must not trigger a refactoring spree — bulk rewrites to satisfy a linter are how working code gets broken. Freeze today's violations and gate only _new_ ones:
 
 ```bash
 # One-time: record existing violations (SwiftLint 0.55+)
@@ -62,12 +64,12 @@ The fix is structural, not suppressive:
 
 ## Common Pitfalls
 
-| Pitfall | Problem | Solution |
-|---------|---------|----------|
-| Enabling without a baseline | Day-one wall of violations, gate ignored | `--write-baseline` first, gate on new only |
-| Mass-refactoring to satisfy thresholds | Working code broken for a number | Freeze old violations; fix opportunistically |
-| Inline `swiftlint:disable` comments | Exemptions scattered and invisible | `excluded:` list in config, with reasons |
-| Thresholds loosened per-project | Cap quietly stops capping | Change thresholds only with a written reason |
+| Pitfall                                | Problem                                  | Solution                                     |
+| -------------------------------------- | ---------------------------------------- | -------------------------------------------- |
+| Enabling without a baseline            | Day-one wall of violations, gate ignored | `--write-baseline` first, gate on new only   |
+| Mass-refactoring to satisfy thresholds | Working code broken for a number         | Freeze old violations; fix opportunistically |
+| Inline `swiftlint:disable` comments    | Exemptions scattered and invisible       | `excluded:` list in config, with reasons     |
+| Thresholds loosened per-project        | Cap quietly stops capping                | Change thresholds only with a written reason |
 
 ## References
 

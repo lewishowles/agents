@@ -1,6 +1,7 @@
 # Tahoe UI review: macOS Tahoe HIG
 
 <a id="source-macos-ui-review-tahoe-macos-tahoe-hig-md"></a>
+
 ## Source: `macos/ui-review-tahoe/macos-tahoe-hig.md`
 
 # macOS Tahoe Human Interface Guidelines

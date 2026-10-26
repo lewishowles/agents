@@ -1,6 +1,7 @@
 # AlarmKit: Scheduling
 
 <a id="source-swiftui-alarmkit-scheduling-md"></a>
+
 ## Source: `swiftui/alarmkit/scheduling.md`
 
 # Scheduling Alarms and Timers

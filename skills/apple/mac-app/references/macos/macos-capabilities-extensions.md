@@ -1,6 +1,7 @@
 # Mac capabilities: Extensions
 
 <a id="source-macos-macos-capabilities-extensions-md"></a>
+
 ## Source: `macos/macos-capabilities/extensions.md`
 
 # System Extensions
@@ -9,24 +10,25 @@ App extensions, system extensions, and XPC services for extending macOS capabili
 
 ## App Extension Types
 
-| Extension Type | Purpose | Host App |
-|---------------|---------|----------|
-| Share Extension | Share content to your app | Share sheet |
-| Action Extension | Transform content in-place | Any app with action menu |
-| Finder Sync | Badges, toolbar items, context menu in Finder | Finder |
-| Quick Look Preview | Preview custom file types | Finder, Mail, etc. |
-| Spotlight Importer | Index custom file types for search | Spotlight |
-| Widget (WidgetKit) | Desktop/Notification Center widgets | System |
-| Intents/App Intents | Siri, Shortcuts, Spotlight actions | System |
-| Photo Editing | Edit photos in Photos.app | Photos |
-| Network Extension | VPN, content filter, DNS proxy | System |
-| Endpoint Security | Process monitoring, file access control | System |
+| Extension Type      | Purpose                                       | Host App                 |
+| ------------------- | --------------------------------------------- | ------------------------ |
+| Share Extension     | Share content to your app                     | Share sheet              |
+| Action Extension    | Transform content in-place                    | Any app with action menu |
+| Finder Sync         | Badges, toolbar items, context menu in Finder | Finder                   |
+| Quick Look Preview  | Preview custom file types                     | Finder, Mail, etc.       |
+| Spotlight Importer  | Index custom file types for search            | Spotlight                |
+| Widget (WidgetKit)  | Desktop/Notification Center widgets           | System                   |
+| Intents/App Intents | Siri, Shortcuts, Spotlight actions            | System                   |
+| Photo Editing       | Edit photos in Photos.app                     | Photos                   |
+| Network Extension   | VPN, content filter, DNS proxy                | System                   |
+| Endpoint Security   | Process monitoring, file access control       | System                   |
 
 ## Share Extension
 
 Allow users to share content from other apps into yours:
 
 ### Setup
+
 1. File > New > Target > Share Extension
 2. Configure supported content types in Info.plist
 
@@ -162,6 +164,7 @@ class PreviewViewController: NSViewController, QLPreviewingController {
 Separate privilege domains within your app. XPC services run in their own process with their own sandbox.
 
 ### When to Use XPC
+
 Isolate crash-prone or privileged work in its own process, share functionality between app and extensions, or run long tasks that shouldn't crash the main app.
 
 ### Setting Up an XPC Service

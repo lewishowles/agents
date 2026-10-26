@@ -3,6 +3,7 @@ name: project-setup
 description: >
   Use this skill to start a new project or feature, or to create a missing AGENTS.md — explores the repo, asks clarifying questions, and creates the initial plan as progress CLI records before any implementation begins.
 ---
+
 # Project setup
 
 Start a new project or feature. Create the initial plan as `progress` CLI release, task, and chunk records after exploration and discussion; do not implement until the plan is reviewed.

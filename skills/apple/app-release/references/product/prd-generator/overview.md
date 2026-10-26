@@ -3,6 +3,7 @@
 Generate comprehensive Product Requirements Document from product development plan.
 
 ## Metadata
+
 - **Name**: prd-generator
 - **Version**: 1.0.0
 - **Role**: Product Manager
@@ -11,6 +12,7 @@ Generate comprehensive Product Requirements Document from product development pl
 ## When This Skill Activates
 
 This skill activates when the user says:
+
 - "generate PRD"
 - "create product requirements"
 - "write product requirements document"
@@ -24,6 +26,7 @@ You are a Product Manager AI agent specializing in iOS/macOS app requirements. Y
 ## Prerequisites
 
 Before activating this skill, ensure:
+
 1. A product development plan exists (from the product-agent skill output)
 2. The plan includes: problem analysis, MVP scope, positioning, and target audience
 3. User has reviewed and approved the product development plan
@@ -77,7 +80,7 @@ Read and extract information from:
 
 Generate `docs/PRD.md` with the following structure:
 
-```markdown
+````markdown
 # Product Requirements Document: [App Name]
 
 **Version**: 1.0.0
@@ -166,20 +169,23 @@ Then [expected result]
 Given [precondition 2]
 When [action 2]
 Then [expected result 2]
-```
+````
 
 **Description**:
 [Detailed description of what this feature does and why it's needed]
 
 **Dependencies**:
+
 - [Dependency 1]
 - [Dependency 2]
 
 **Success Metrics**:
+
 - [Metric 1]: [How to measure success]
 - [Metric 2]: [Target value]
 
 **Edge Cases**:
+
 - [Edge case 1 and how to handle]
 - [Edge case 2]
 
@@ -208,6 +214,7 @@ Then [expected result 2]
 **Goal**: Help new user understand value and start using core feature
 
 **Steps**:
+
 1. **Launch Screen**
    - Show: Value proposition and hero image
    - Actions: [Sign Up] [Sign In] [Skip]
@@ -233,19 +240,23 @@ Then [expected result 2]
 ### 4.2 Core Feature Flow: [Feature Name]
 
 **Entry Points**:
+
 - From: [Screen/Action]
 - Trigger: [User action or event]
 
 **Happy Path**:
+
 1. [Step 1] → [Result]
 2. [Step 2] → [Result]
 3. [Step 3] → [Success state]
 
 **Alternative Paths**:
+
 - If [condition]: [Alternative flow]
 - If [error]: [Error handling]
 
 **Exit Points**:
+
 - Success: Navigate to [Screen]
 - Cancel: Return to [Screen]
 - Error: Show [Error message] and stay
@@ -254,12 +265,12 @@ Then [expected result 2]
 
 ### 4.3 Error States & Edge Cases
 
-| Scenario | User Experience | System Behavior |
-|----------|----------------|-----------------|
-| No network connection | "Can't connect. Using offline mode." | Show cached data, queue actions |
-| API timeout | "Taking longer than usual. Please wait..." | Retry with exponential backoff |
-| Invalid input | "Please check [field] and try again" | Highlight invalid field, show helper text |
-| Permission denied | "We need [permission] to [reason]" | Link to Settings, graceful degradation |
+| Scenario              | User Experience                            | System Behavior                           |
+| --------------------- | ------------------------------------------ | ----------------------------------------- |
+| No network connection | "Can't connect. Using offline mode."       | Show cached data, queue actions           |
+| API timeout           | "Taking longer than usual. Please wait..." | Retry with exponential backoff            |
+| Invalid input         | "Please check [field] and try again"       | Highlight invalid field, show helper text |
+| Permission denied     | "We need [permission] to [reason]"         | Link to Settings, graceful degradation    |
 
 ---
 
@@ -307,6 +318,7 @@ Then [expected result 2]
 ## 6. Out of Scope
 
 **Explicitly NOT included in MVP**:
+
 - [Feature that was considered but excluded]
 - [Integration that will come later]
 - [Platform that won't be supported initially]
@@ -319,23 +331,26 @@ Then [expected result 2]
 
 ### 7.1 Third-Party Services / APIs
 
-| Service | Purpose | Alternative Considered |
-|---------|---------|----------------------|
-| [Service name] | [What it does] | [Why this was chosen] |
+| Service        | Purpose        | Alternative Considered |
+| -------------- | -------------- | ---------------------- |
+| [Service name] | [What it does] | [Why this was chosen]  |
 
 ### 7.2 Data Models (High-Level)
 
 **Core Entities**:
+
 - **[Entity 1]**: [Description, key fields]
 - **[Entity 2]**: [Description, relationships]
 
 **Relationships**:
+
 - [Entity 1] has many [Entity 2]
 - [Entity 3] belongs to [Entity 1]
 
 ### 7.3 API Requirements
 
 **Endpoints Needed** (if backend required):
+
 - `GET /api/v1/[resource]` - [Purpose]
 - `POST /api/v1/[resource]` - [Purpose]
 - `PUT /api/v1/[resource]/:id` - [Purpose]
@@ -349,17 +364,18 @@ Then [expected result 2]
 
 ### 8.1 Key Competitors
 
-| Competitor | Position | Key Strength | Key Weakness |
-|------------|----------|--------------|--------------|
+| Competitor     | Position      | Key Strength        | Key Weakness      |
+| -------------- | ------------- | ------------------- | ----------------- |
 | [Competitor 1] | Market leader | [What they do well] | [Gap/opportunity] |
-| [Competitor 2] | Challenger | [What they do well] | [Gap/opportunity] |
-| [Competitor 3] | Niche | [What they do well] | [Gap/opportunity] |
+| [Competitor 2] | Challenger    | [What they do well] | [Gap/opportunity] |
+| [Competitor 3] | Niche         | [What they do well] | [Gap/opportunity] |
 
 ### 8.2 Differentiation Strategy
 
 **Our Positioning**: [How we're different - from positioning analysis]
 
 **Key Differentiators**:
+
 1. [Feature/approach competitors don't have]
 2. [Unique value proposition element]
 3. [Target audience we serve better]
@@ -386,17 +402,19 @@ Then [expected result 2]
 **Growth Rate**: [X]% CAGR
 
 **Tailwinds** (positive trends):
+
 - [Trend 1 helping the market]
 - [Trend 2 helping the market]
 
 **Headwinds** (challenges):
+
 - [Challenge 1]
 - [Challenge 2]
 
 ### 9.3 Entry Barriers
 
-| Barrier | Level | Our Strategy |
-|---------|-------|--------------|
+| Barrier     | Level        | Our Strategy         |
+| ----------- | ------------ | -------------------- |
 | [Barrier 1] | Low/Med/High | [How we'll overcome] |
 | [Barrier 2] | Low/Med/High | [How we'll overcome] |
 
@@ -411,16 +429,17 @@ Then [expected result 2]
 ## 10. Open Questions & Decisions Needed
 
 **Critical Decisions** (block development):
+
 1. **[Question 1]**
    - Context: [Why this matters]
    - Options: [Option A / Option B]
    - Owner: [Who decides]
    - Deadline: [When needed]
 
-**Nice-to-Clarify** (doesn't block):
-2. **[Question 2]**
-   - Context: [Background]
-   - Current assumption: [What we're assuming]
+**Nice-to-Clarify** (doesn't block): 2. **[Question 2]**
+
+- Context: [Background]
+- Current assumption: [What we're assuming]
 
 ---
 
@@ -429,18 +448,21 @@ Then [expected result 2]
 ### 11.1 MVP Success Criteria
 
 **Launch Readiness**:
+
 - [ ] All P0 features implemented and tested
 - [ ] No P0 bugs in production
 - [ ] App Store submission approved
 - [ ] Performance benchmarks met
 
 **User Success**:
+
 - [ ] > 70% of users complete onboarding
 - [ ] > 50% of users perform core action within first week
 - [ ] Average session duration > 3 minutes
 - [ ] < 2% crash rate
 
 **Business Success**:
+
 - [ ] [Download target] in first month
 - [ ] [Active user target] in first 30 days
 - [ ] [Retention target] Day 7 retention
@@ -448,23 +470,28 @@ Then [expected result 2]
 ### 11.2 Key Metrics to Track
 
 **Acquisition**:
+
 - App Store impressions → downloads conversion rate
 - Organic vs paid downloads
 
 **Activation**:
+
 - Onboarding completion rate
 - Time to first [core action]
 
 **Engagement**:
+
 - Daily/Weekly Active Users (DAU/WAU)
 - Average session length
 - Feature usage rates
 
 **Retention**:
+
 - Day 1, Day 7, Day 30 retention rates
 - Churn rate and reasons
 
 **Quality**:
+
 - Crash-free rate (target: > 99.5%)
 - App Store rating (target: > 4.5)
 - Customer support ticket volume
@@ -474,6 +501,7 @@ Then [expected result 2]
 ## 12. Timeline & Milestones
 
 **Phase 1: MVP Development** ([X] weeks)
+
 - Week 1-2: Core infrastructure
 - Week 3-4: Feature 1, Feature 2
 - Week 5-6: Feature 3, Feature 4, Testing
@@ -481,6 +509,7 @@ Then [expected result 2]
 - Week 8: App Store submission
 
 **Phase 2: Iteration** ([X] weeks after launch)
+
 - First update with deferred features
 - Performance optimizations based on metrics
 - User feedback incorporation
@@ -489,12 +518,12 @@ Then [expected result 2]
 
 ## 13. Stakeholders
 
-| Role | Name | Responsibility | Contact |
-|------|------|---------------|---------|
+| Role          | Name   | Responsibility              | Contact |
+| ------------- | ------ | --------------------------- | ------- |
 | Product Owner | [Name] | Final decisions, priorities | [Email] |
-| iOS Developer | [Name] | Implementation | [Email] |
-| Designer | [Name] | UI/UX | [Email] |
-| QA | [Name] | Testing | [Email] |
+| iOS Developer | [Name] | Implementation              | [Email] |
+| Designer      | [Name] | UI/UX                       | [Email] |
+| QA            | [Name] | Testing                     | [Email] |
 
 ---
 
@@ -533,54 +562,60 @@ Then [expected result 2]
 When activated, follow these steps:
 
 1. **Locate and Read Product Development Plan**
-   ```
-   Look for files matching: product-plan-*.md
-   If multiple exist, use the most recent
-   If none exist, ask user to provide the file path
-   ```
+```
+
+Look for files matching: product-plan-\*.md
+If multiple exist, use the most recent
+If none exist, ask user to provide the file path
+
+```
 
 2. **Look for Market Research and Competitive Analysis** (Optional but Recommended)
-   ```
-   Check for competitive analysis:
-   - competitive-analysis.md
-   - docs/competitive-analysis.md
-   - Competitive Analysis section in product plan
+```
 
-   Check for market research:
-   - market-research.md
-   - docs/market-research.md
-   - Market Analysis section in product plan
+Check for competitive analysis:
 
-   If found, read and incorporate these insights.
-   If not found, proceed with product plan data only.
-   ```
+- competitive-analysis.md
+- docs/competitive-analysis.md
+- Competitive Analysis section in product plan
+
+Check for market research:
+
+- market-research.md
+- docs/market-research.md
+- Market Analysis section in product plan
+
+If found, read and incorporate these insights.
+If not found, proceed with product plan data only.
+
+````
 
 3. **Extract Key Information**
-   From the product plan, extract:
-   - App idea/name
-   - Problem statement
-   - Target users and personas
-   - Core features (from MVP scope section)
-   - Positioning and value proposition
-   - Success criteria
-   - Timeline estimate
+From the product plan, extract:
+- App idea/name
+- Problem statement
+- Target users and personas
+- Core features (from MVP scope section)
+- Positioning and value proposition
+- Success criteria
+- Timeline estimate
 
-   From competitive analysis (if available), extract:
-   - Key competitors and their weaknesses
-   - Feature gaps (opportunities)
-   - Differentiation strategy
-   - Pricing insights
+From competitive analysis (if available), extract:
+- Key competitors and their weaknesses
+- Feature gaps (opportunities)
+- Differentiation strategy
+- Pricing insights
 
-   From market research (if available), extract:
-   - TAM/SAM/SOM figures
-   - Market growth rate
-   - Entry barriers to address
-   - Revenue potential for success metrics
+From market research (if available), extract:
+- TAM/SAM/SOM figures
+- Market growth rate
+- Entry barriers to address
+- Revenue potential for success metrics
 
 4. **Create Output Directory**
-   ```bash
-   mkdir -p docs
-   ```
+```bash
+mkdir -p docs
+````
 
 5. **Generate PRD**
    Using the template above:
@@ -592,6 +627,7 @@ When activated, follow these steps:
    - Identify open questions and decision points
 
 6. **Write to File**
+
    ```
    Write the complete PRD to: docs/PRD.md
    ```
@@ -661,7 +697,8 @@ When generating the PRD:
 **User**: "Generate PRD from my product plan"
 
 **You**:
-1. Search for product-plan-*.md file
+
+1. Search for product-plan-\*.md file
 2. Read and parse the product development plan
 3. Extract all relevant information
 4. Generate comprehensive PRD using template
@@ -671,6 +708,7 @@ When generating the PRD:
 ## Integration with Workflow
 
 This skill is typically:
+
 - **First step** in implementation specification generation
 - Activated after the product-agent skill completes
 - Followed by architecture-spec, ux-spec, implementation-guide, test-spec, release-spec

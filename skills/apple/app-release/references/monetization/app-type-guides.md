@@ -13,6 +13,7 @@ Category-specific monetization strategies based on user behavior patterns, willi
 **Why:** Daily-use apps with clear ongoing value. Users build data and habits that create switching costs.
 
 **Tier structure:**
+
 ```
 FREE                        PRO ($4.99/mo or $39.99/yr)
 ──────────────────────────  ──────────────────────────────
@@ -40,6 +41,7 @@ Basic themes                Custom themes + icons
 **Why:** Ongoing engagement is the value. Health outcomes improve with consistency. Users associate subscription with commitment to self-improvement.
 
 **Tier structure:**
+
 ```
 FREE                        PREMIUM ($6.99/mo or $49.99/yr)
 ──────────────────────────  ──────────────────────────────────
@@ -54,6 +56,7 @@ Basic mood tracking         Advanced insights + trends
 ```
 
 **Key insights:**
+
 - **Free trial is essential** (14 days minimum) — users need time to feel the benefit
 - **Don't gate crisis/safety features** behind paywall (ethical + legal risk)
 - **Show progress** during trial ("You've meditated 8 days in a row")
@@ -63,6 +66,7 @@ Basic mood tracking         Advanced insights + trends
 **Pricing range:** $5.99-12.99/mo or $39.99-79.99/yr
 
 **Special considerations:**
+
 - Accessibility: offer reduced pricing for students/low-income (promotional offers)
 - HIPAA: if handling health data, consult compliance requirements
 - Apple Health: integration adds significant perceived value at low dev cost
@@ -78,6 +82,7 @@ Basic mood tracking         Advanced insights + trends
 **Why:** Parents are the buyers, kids are the users. Parents want safe, ad-free experiences and are willing to pay for educational value.
 
 **Tier structure (subscription):**
+
 ```
 FREE                        FAMILY ($6.99/mo or $49.99/yr)
 ──────────────────────────  ──────────────────────────────────
@@ -92,6 +97,7 @@ Progress for current week   Full progress history + reports
 ```
 
 **Tier structure (content packs):**
+
 ```
 FREE                        PACKS ($2.99-4.99 each)
 ──────────────────────────  ──────────────────────────────
@@ -102,6 +108,7 @@ Core features               Activity packs
 ```
 
 **Key insights:**
+
 - **COPPA compliance is mandatory** — no behavioral advertising for under-13
 - **Family Sharing is expected** — parents don't want to pay per device
 - **No ads in kids apps** — Apple explicitly prohibits third-party ads in kids category
@@ -124,6 +131,7 @@ Core features               Activity packs
 **Why:** Creative professionals value ownership. They want to pay once and own the tool. But subscription works if you offer a robust content library (brushes, templates, fonts).
 
 **Tier structure (one-time):**
+
 ```
 FULL APP ($9.99-29.99)
 ─────────────────────────
@@ -135,6 +143,7 @@ No subscription required
 ```
 
 **Tier structure (freemium + subscription):**
+
 ```
 FREE                        PRO ($4.99/mo or $29.99/yr)
 ──────────────────────────  ──────────────────────────────
@@ -148,6 +157,7 @@ Low-res export              Full-resolution export
 ```
 
 **Key insights:**
+
 - **Procreate proved one-time purchase works** at scale ($12.99, 40M+ downloads)
 - Creative users are vocal about anti-subscription sentiment
 - If subscription, the content library (templates, brushes, fonts) must justify ongoing cost
@@ -167,6 +177,7 @@ Low-res export              Full-resolution export
 **Why:** Network effects require a large free user base. Monetize power users who want enhanced experience.
 
 **Tier structure:**
+
 ```
 FREE                        PREMIUM ($2.99/mo or $19.99/yr)
 ──────────────────────────  ──────────────────────────────────
@@ -180,6 +191,7 @@ Standard media uploads      Higher upload limits
 ```
 
 **Key insights:**
+
 - **Never paywall core social features** (posting, messaging, following)
 - Cosmetic upgrades (badges, themes) are high-margin, low-controversy
 - Power users (moderators, content creators) will pay for tools
@@ -198,6 +210,7 @@ Standard media uploads      Higher upload limits
 **Why:** Developers understand the value of good tools and will pay for productivity gains. They also strongly prefer ownership.
 
 **Tier structure (one-time + updates):**
+
 ```
 V1 ($19.99-49.99)          V2 ($14.99 upgrade / $49.99 new)
 ──────────────────────────  ──────────────────────────────────
@@ -207,6 +220,7 @@ Free minor updates          Major new features
 ```
 
 **Tier structure (subscription):**
+
 ```
 FREE                        PRO ($4.99-9.99/mo)
 ──────────────────────────  ──────────────────────────────
@@ -219,6 +233,7 @@ Community support           Priority support
 ```
 
 **Key insights:**
+
 - **Developers respect paid software** — don't race to the bottom
 - SetApp distribution can supplement App Store revenue
 - Consider **education discount** (student/teacher)
@@ -238,6 +253,7 @@ Community support           Priority support
 **Why:** Financial data is ongoing, users need continuous access, and the value proposition (saving money) directly justifies the cost.
 
 **Tier structure:**
+
 ```
 FREE                        PREMIUM ($4.99/mo or $39.99/yr)
 ──────────────────────────  ──────────────────────────────────
@@ -251,6 +267,7 @@ Monthly summary             Trends, insights, projections
 ```
 
 **Key insights:**
+
 - **"This app saves you $X/month"** is the strongest conversion argument
 - Bank sync (Plaid) is expensive — subscription justifies the per-user cost
 - Users trust paid apps more with financial data (paradoxically)
@@ -270,6 +287,7 @@ Monthly summary             Trends, insights, projections
 **Why:** Low engagement frequency, clear bounded value, users expect utilities to be cheap or free.
 
 **Tier structure:**
+
 ```
 FREE (with ads)             PRO ($2.99-4.99 one-time)
 ──────────────────────────  ──────────────────────────────
@@ -281,6 +299,7 @@ Standard theme              All themes
 ```
 
 **Key insights:**
+
 - **Keep it cheap** — utilities are commodity products
 - Widgets and Watch complications are strong upsell features
 - One-time purchase feels right for utilities (no ongoing relationship)
@@ -299,6 +318,7 @@ Standard theme              All themes
 **Why:** API costs scale with usage. Subscription covers baseline costs; consumable credits handle heavy users.
 
 **Tier structure:**
+
 ```
 FREE                        PRO ($9.99/mo or $79.99/yr)
 ──────────────────────────  ──────────────────────────────────
@@ -313,6 +333,7 @@ EXTRA CREDITS: 100 for $1.99, 500 for $7.99
 ```
 
 **Key insights:**
+
 - **Usage limits on free tier must feel generous** enough to hook users
 - Transparently communicate what costs money (API calls) — builds trust
 - Consider **daily reset** for free credits (not monthly — daily feels more generous)

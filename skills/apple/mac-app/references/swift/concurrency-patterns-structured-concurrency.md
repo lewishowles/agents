@@ -1,6 +1,7 @@
 # Concurrency patterns: Structured concurrency
 
 <a id="source-swift-concurrency-patterns-structured-concurrency-md"></a>
+
 ## Source: `swift/concurrency-patterns/structured-concurrency.md`
 
 # Structured Concurrency
@@ -35,6 +36,7 @@ func loadDashboard() async throws -> Dashboard {
 ```
 
 **Key properties:**
+
 - Child tasks start immediately when `async let` is evaluated
 - Results are awaited where they are used
 - If the enclosing scope exits early (error thrown), pending tasks are automatically cancelled
@@ -42,12 +44,12 @@ func loadDashboard() async throws -> Dashboard {
 
 ### async let vs TaskGroup
 
-| Feature | `async let` | `TaskGroup` |
-|---------|------------|-------------|
-| Number of tasks | Fixed, known at compile time | Dynamic, determined at runtime |
-| Return types | Can be different per binding | Must be the same (or use enum) |
-| Syntax | Simple variable bindings | Closure with `group.addTask` |
-| Use when | 2-5 parallel calls with different types | Processing a collection in parallel |
+| Feature         | `async let`                             | `TaskGroup`                         |
+| --------------- | --------------------------------------- | ----------------------------------- |
+| Number of tasks | Fixed, known at compile time            | Dynamic, determined at runtime      |
+| Return types    | Can be different per binding            | Must be the same (or use enum)      |
+| Syntax          | Simple variable bindings                | Closure with `group.addTask`        |
+| Use when        | 2-5 parallel calls with different types | Processing a collection in parallel |
 
 ```swift
 // ✅ async let — different return types, fixed count
@@ -210,6 +212,7 @@ struct ItemListView: View {
 ```
 
 **Key properties:**
+
 - Starts an async task when the view appears
 - Automatically cancels the task when the view disappears
 - The task inherits the view's actor isolation (usually `@MainActor`)
@@ -309,6 +312,7 @@ func processItems(_ items: [Item]) async -> [ProcessedItem] {
 Apple's exact semantics (WWDC21 10134, WWDC23 10170): "Marking a task as canceled does not stop the task. It simply informs the task that its results are no longer needed" — your code must check and wind down. And "cancellation is a race": a check may pass just before cancellation lands, in which case the work simply runs to completion.
 
 Two API-design rules from WWDC21 10134:
+
 - "Implement your APIs with cancellation in mind, especially if they involve long-running computations" — callers expect the computation to stop as soon as possible.
 - If you return a **partial result** on cancellation, "you must ensure that your API clearly states that a partial result may be returned" — otherwise callers relying on a complete result can hit fatal errors.
 

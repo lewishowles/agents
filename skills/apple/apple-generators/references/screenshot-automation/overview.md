@@ -97,47 +97,31 @@ Tell the user to:
 
 ### Step 3: Create Configuration
 
-Generate:
-
-2. `ScreenshotPlan.swift` -- Defines screens to capture, devices, locales, and output paths
+Generate: 2. `ScreenshotPlan.swift` -- Defines screens to capture, devices, locales, and output paths
 
 ### Step 4: Create UI Test Files
 
-Generate:
-
-3. `ScreenshotUITests.swift` -- XCUITest class that navigates and captures each screen
-4. `ScreenshotTestHelper.swift` -- Helper utilities for locale setup, data seeding, alert dismissal, plus `tapUnhittable()` extension for custom controls
+Generate: 3. `ScreenshotUITests.swift` -- XCUITest class that navigates and captures each screen 4. `ScreenshotTestHelper.swift` -- Helper utilities for locale setup, data seeding, alert dismissal, plus `tapUnhittable()` extension for custom controls
 
 ### Step 5: Create Post-Processing Files
 
-Generate:
-
-5. `ScreenshotProcessor.swift` -- Loads captured images, routes through framing and captioning
-6. `CaptionOverlay.swift` -- Renders localized marketing text onto screenshot images
+Generate: 5. `ScreenshotProcessor.swift` -- Loads captured images, routes through framing and captioning 6. `CaptionOverlay.swift` -- Renders localized marketing text onto screenshot images
 
 For macOS-only or lightweight needs, offer `sips-screenshot-process.sh` as an alternative to the Swift processor. Uses macOS's built-in `sips` command — zero dependencies.
 
 ### Step 6: Create Export Script
 
-Generate:
+Generate: 7. `ScreenshotExportScript.swift` -- End-to-end pipeline script: build, test, process, organize
 
-7. `ScreenshotExportScript.swift` -- End-to-end pipeline script: build, test, process, organize
-
-For macOS apps, also generate:
-
-8. `macos-screenshot-env.sh` -- Desktop preparation script (hides dock, desktop icons, simplifies clock) with `trap`-based cleanup
+For macOS apps, also generate: 8. `macos-screenshot-env.sh` -- Desktop preparation script (hides dock, desktop icons, simplifies clock) with `trap`-based cleanup
 
 ### Step 7: Create Sample Content Generator
 
-If the user needs realistic sample data for screenshots:
-
-9. `SampleContentGenerator.swift` -- Provides text content, chart data, placeholder images, and PDF generation (macOS). Category-specific sample titles for productivity, fitness, finance, and notes apps.
+If the user needs realistic sample data for screenshots: 9. `SampleContentGenerator.swift` -- Provides text content, chart data, placeholder images, and PDF generation (macOS). Category-specific sample titles for productivity, fitness, finance, and notes apps.
 
 ### Step 8: Create Xcode Test Plan
 
-Generate:
-
-10. `ScreenshotTests.xctestplan` -- Dedicated test plan that isolates screenshot tests from development tests. Prevents screenshot tests from running during `Cmd+U`.
+Generate: 10. `ScreenshotTests.xctestplan` -- Dedicated test plan that isolates screenshot tests from development tests. Prevents screenshot tests from running during `Cmd+U`.
 
 Tell the user to:
 

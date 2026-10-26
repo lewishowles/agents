@@ -1,6 +1,7 @@
 # SwiftData architecture: Schema design
 
 <a id="source-macos-swiftdata-architecture-schema-design-md"></a>
+
 ## Source: `macos/swiftdata-architecture/schema-design.md`
 
 # SwiftData Schema Design
@@ -73,16 +74,16 @@ class Document {
 
 ### Supported Property Types
 
-| Type | Supported | Notes |
-|------|-----------|-------|
-| String, Int, Double, Bool | Yes | Native support |
-| Date, UUID, URL, Data | Yes | Native support |
-| Optional versions | Yes | Maps to nullable columns |
-| Arrays of value types | Yes | Stored as transformable |
-| Dictionaries | Yes | Must be Codable |
-| Enums | Yes | Must be Codable |
-| Other @Model classes | Yes | Relationships |
-| Custom Codable structs | Yes | Stored as transformable |
+| Type                      | Supported | Notes                    |
+| ------------------------- | --------- | ------------------------ |
+| String, Int, Double, Bool | Yes       | Native support           |
+| Date, UUID, URL, Data     | Yes       | Native support           |
+| Optional versions         | Yes       | Maps to nullable columns |
+| Arrays of value types     | Yes       | Stored as transformable  |
+| Dictionaries              | Yes       | Must be Codable          |
+| Enums                     | Yes       | Must be Codable          |
+| Other @Model classes      | Yes       | Relationships            |
+| Custom Codable structs    | Yes       | Stored as transformable  |
 
 ### Enums in Models
 
@@ -204,12 +205,12 @@ class Project {
 
 ### Choosing Delete Rules
 
-| Rule | Behavior | Use When |
-|------|----------|----------|
-| `.cascade` | Delete children when parent deleted | Children have no meaning without parent |
-| `.nullify` | Set reference to nil | Children can exist independently |
-| `.deny` | Prevent parent deletion if children exist | Children must be handled first |
-| `.noAction` | Do nothing (leaves orphans) | Rarely appropriate |
+| Rule        | Behavior                                  | Use When                                |
+| ----------- | ----------------------------------------- | --------------------------------------- |
+| `.cascade`  | Delete children when parent deleted       | Children have no meaning without parent |
+| `.nullify`  | Set reference to nil                      | Children can exist independently        |
+| `.deny`     | Prevent parent deletion if children exist | Children must be handled first          |
+| `.noAction` | Do nothing (leaves orphans)               | Rarely appropriate                      |
 
 ## Unique Constraints
 
@@ -267,6 +268,7 @@ try modelContext.save()
 ### Lightweight Migration (Automatic)
 
 SwiftData handles these automatically:
+
 - Adding new properties with default values
 - Making a required property optional
 - Renaming properties (with `@Attribute(originalName:)`)

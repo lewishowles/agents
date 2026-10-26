@@ -86,11 +86,7 @@ Generate these files (all wrapped in `#if DEBUG`):
 
 ### Step 3: Create Section Files
 
-Based on configuration:
-
-3. `DebugEnvironmentSwitcher.swift` -- If environment switcher selected
-4. `DebugNetworkLogger.swift` -- If network logs selected
-5. `DiagnosticInfo.swift` -- If diagnostics or export selected
+Based on configuration: 3. `DebugEnvironmentSwitcher.swift` -- If environment switcher selected 4. `DebugNetworkLogger.swift` -- If network logs selected 5. `DiagnosticInfo.swift` -- If diagnostics or export selected
 
 ### Step 4: Create Trigger Files
 

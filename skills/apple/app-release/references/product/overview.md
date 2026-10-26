@@ -5,6 +5,7 @@ Comprehensive product development guidance for iOS/macOS apps. This skill orches
 ## When This Skill Activates
 
 Use this skill when the user:
+
 - Has an app idea and wants to validate it
 - Needs market research or competitive analysis
 - Wants to generate product specifications
@@ -22,6 +23,7 @@ Read relevant module files based on the user's needs:
 
 **idea-generator/**
 Brainstorm and rank app ideas via 5 lenses.
+
 - Developer profile elicitation (skills, interests, constraints)
 - Five brainstorming lenses (skills, problem-first, technology-first, market gap, trend-based)
 - Feasibility filtering and scoring
@@ -31,12 +33,14 @@ Brainstorm and rank app ideas via 5 lenses.
 
 **product-agent/**
 AI-powered product discovery and validation.
+
 - Idea validation and assessment
 - MVP scoping
 - Market opportunity analysis
 
 **market-research/**
 Deep market analysis.
+
 - Market sizing (TAM/SAM/SOM)
 - Growth trends and maturity
 - Entry barriers and distribution channels
@@ -44,6 +48,7 @@ Deep market analysis.
 
 **competitive-analysis/**
 Competitor deep dive.
+
 - Feature comparison matrices
 - Pricing analysis
 - Strengths/weaknesses
@@ -53,12 +58,14 @@ Competitor deep dive.
 
 **prd-generator/**
 Product Requirements Document.
+
 - Features and user stories
 - Acceptance criteria
 - Success metrics
 
 **architecture-spec/**
 Technical architecture.
+
 - Architecture pattern selection
 - Tech stack decisions
 - Data models
@@ -66,18 +73,21 @@ Technical architecture.
 
 **ux-spec/**
 UI/UX specifications.
+
 - Wireframes and user flows
 - Design system definition
 - Interaction patterns
 
 **implementation-guide/**
 Development roadmap.
+
 - Step-by-step instructions
 - Pseudo-code examples
 - Implementation priorities
 
 **test-spec/**
 QA and testing strategy.
+
 - Unit test coverage
 - UI testing plan
 - Accessibility testing
@@ -85,6 +95,7 @@ QA and testing strategy.
 
 **release-spec/**
 App Store preparation.
+
 - Submission guide
 - Asset requirements
 - Privacy compliance
@@ -94,6 +105,7 @@ App Store preparation.
 
 **beta-testing/**
 TestFlight beta program strategy and feedback collection.
+
 - Internal vs. external testing cohort management
 - Beta tester recruitment and incentive strategies
 - Feedback collection methodology (in-app, surveys, interviews)
@@ -102,6 +114,7 @@ TestFlight beta program strategy and feedback collection.
 
 **localization-strategy/**
 Market prioritization and localization planning.
+
 - Language tier recommendations by app category
 - Minimum viable localization levels (metadata-only to full)
 - Translation workflow with Xcode String Catalogs
@@ -112,6 +125,7 @@ Market prioritization and localization planning.
 
 **implementation-spec/**
 Master orchestrator.
+
 - Generates complete specification package
 - Coordinates all role-based agents
 - End-to-end spec generation
@@ -129,18 +143,21 @@ Product development workflow guide.
 ## Example Workflows
 
 **User doesn't have an idea yet:**
+
 1. Use `idea-generator/` to brainstorm and rank ideas
 2. Pick top idea from shortlist
 3. Run `product-agent/` to validate the idea
 4. Continue with market research and specs
 
 **User has new app idea:**
+
 1. Use `product-agent/` for initial validation
 2. Run `market-research/` for market sizing
 3. Run `competitive-analysis/` for competitor insights
 4. Generate PRD with `prd-generator/`
 
 **User wants full spec package:**
+
 1. Use `implementation-spec/` orchestrator
 2. It coordinates all spec generators
 3. Produces complete documentation set

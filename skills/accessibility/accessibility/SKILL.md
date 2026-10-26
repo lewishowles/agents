@@ -3,6 +3,7 @@ name: accessibility
 description: >
   Use this skill when editing HTML, UI components, or interface copy, even if accessibility isn't mentioned. Covers WCAG 2.2 AA, keyboard, screen readers, semantics, focus, forms, and contrast.
 ---
+
 # Accessibility
 
 WCAG AA baseline; AAA where feasible. Inaccessible = incorrect. Covers blind/low-vision, colourblind, keyboard-only, neurodivergent, and plain-language users.

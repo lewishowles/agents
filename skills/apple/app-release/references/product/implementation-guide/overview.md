@@ -3,6 +3,7 @@
 Generate detailed implementation guide with pseudo-code and step-by-step instructions for iOS/macOS app development.
 
 ## Metadata
+
 - **Name**: implementation-guide
 - **Version**: 1.0.0
 - **Role**: Senior iOS/macOS Developer
@@ -11,6 +12,7 @@ Generate detailed implementation guide with pseudo-code and step-by-step instruc
 ## When This Skill Activates
 
 This skill activates when the user says:
+
 - "generate implementation guide"
 - "create development guide"
 - "write implementation steps"
@@ -24,6 +26,7 @@ You are a Senior iOS/macOS Developer AI agent with expertise in Swift, SwiftUI, 
 ## Prerequisites
 
 Before activating this skill, ensure:
+
 1. PRD exists (from prd-generator skill) with all features defined
 2. ARCHITECTURE.md exists (from architecture-spec skill) with tech stack and structure
 3. UX_SPEC.md exists (from ux-spec skill) with wireframes and interactions
@@ -69,7 +72,7 @@ Generate: **docs/IMPLEMENTATION_GUIDE.md**
 
 Structure (comprehensive, ~3000-5000 lines):
 
-```markdown
+````markdown
 # Implementation Guide: [App Name]
 
 **Version**: 1.0.0
@@ -108,7 +111,7 @@ For the impatient developer:
 xcodebuild test -scheme [AppName]
 
 # 7. Launch and iterate
-```
+````
 
 **Estimated Timeline**: [X] weeks for MVP (from PRD)
 **Estimated LOC**: ~[Y] lines of Swift code
@@ -141,6 +144,7 @@ xcodebuild test -scheme [AppName]
 **File**: Select project in Navigator → General tab
 
 **Deployment Info**:
+
 - **Minimum Deployments**: iOS 26.0 [adjust based on ARCHITECTURE — iOS 17+ still supported for broader reach]
 - **Supported Destinations**: iPhone (✅), iPad (based on requirements)
 - **Device Orientation**:
@@ -149,10 +153,12 @@ xcodebuild test -scheme [AppName]
   - Landscape Right (based on requirements)
 
 **App Icons & Launch Screen**:
+
 - **App Icon**: Add 1024x1024 icon to Assets.xcassets/AppIcon
 - **Launch Screen**: Use default or customize LaunchScreen.storyboard
 
 **Signing & Capabilities**:
+
 - **Team**: Select your development team
 - **Signing Certificate**: Automatically manage signing (recommended)
 - **Capabilities**: Add as needed:
@@ -165,6 +171,7 @@ xcodebuild test -scheme [AppName]
 **From ARCHITECTURE.md**, add these packages:
 
 **Example** (adjust based on actual ARCHITECTURE):
+
 ```
 File → Add Package Dependencies
 
@@ -340,6 +347,7 @@ Create this folder hierarchy in your project:
 ```
 
 **To Create Folders**:
+
 1. Right-click project in Navigator
 2. New Group (⌘⌥N)
 3. Name it exactly as above
@@ -484,6 +492,7 @@ extension User: Codable {
 ```
 
 **Implementation Notes**:
+
 - Use `@Model` macro for SwiftData (automatic persistence)
 - Mark unique fields with `@Attribute(.unique)`
 - Define relationships with `@Relationship(deleteRule:inverse:)`
@@ -492,6 +501,7 @@ extension User: Codable {
 - Add `Codable` conformance if syncing with backend API
 
 **Repeat for all models** listed in ARCHITECTURE.md:
+
 - `Models/Item.swift`
 - `Models/Category.swift`
 - [Any other models]
@@ -1347,6 +1357,7 @@ extension APIClient {
 **Phase 1 Complete!** ✅
 
 At this point, you have:
+
 - ✅ All data models defined
 - ✅ DataManager for CRUD operations
 - ✅ Design system tokens centralized
@@ -1368,6 +1379,7 @@ Now implement each screen from UX_SPEC.md, one feature at a time.
 **Goal**: Create the main content view where users see their items
 
 **Files to create**:
+
 - `Features/Home/Views/HomeView.swift`
 - `Features/Home/Views/HomeCardView.swift`
 - `Features/Home/Views/HomeEmptyStateView.swift`
@@ -1710,12 +1722,14 @@ struct HomeView: View {
 ---
 
 **Continue this pattern** for:
+
 - ItemDetailView
 - AddEditItemView
 - SettingsView
 - All other screens from UX_SPEC.md
 
 Each screen follows the same structure:
+
 1. Create ViewModel (business logic, state management)
 2. Create View (UI with SwiftUI)
 3. Create subviews (components like cards, empty states)
@@ -1746,6 +1760,7 @@ Each screen follows the same structure:
 When activated, follow these steps:
 
 1. **Read All Specification Documents**
+
    ```
    - Read docs/PRD.md (all features)
    - Read docs/ARCHITECTURE.md (tech stack, structure)
@@ -1792,6 +1807,7 @@ When activated, follow these steps:
    - Submission checklist
 
 8. **Write Complete Guide**
+
    ```
    Write to: docs/IMPLEMENTATION_GUIDE.md
    Target length: 3000-5000 lines
@@ -1799,6 +1815,7 @@ When activated, follow these steps:
    ```
 
 9. **Present Summary**
+
    ```
    ✅ Implementation Guide generated!
 
@@ -1888,6 +1905,7 @@ When activated, follow these steps:
 ## Integration with Workflow
 
 This skill is typically:
+
 - **Fourth step** in specification generation
 - Activated after PRD, Architecture, and UX specs are complete
 - Followed by test-spec and release-spec

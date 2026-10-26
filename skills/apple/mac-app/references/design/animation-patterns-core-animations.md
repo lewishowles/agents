@@ -1,6 +1,7 @@
 # Animation patterns: Animation basics
 
 <a id="source-design-animation-patterns-core-animations-md"></a>
+
 ## Source: `design/animation-patterns/core-animations.md`
 
 # Core Animations
@@ -11,9 +12,9 @@ Fundamentals of SwiftUI animation: `withAnimation`, spring configurations, compl
 
 Every SwiftUI animation has two separable halves: an **animatable attribute** — anything conforming to `Animatable` (opacity, scale, position, color) — and an **`Animation`** that supplies the timing. When state changes inside an animated transaction, SwiftUI interpolates the attribute in the render tree; the view's `body` does not re-run per frame for built-in effects.
 
-- **SwiftUI animates the delta, not the destination.** The animation runs over the vector *difference* between old and new values. A second change landing mid-flight adds its own delta animation on top, so concurrent animations merge additively instead of jumping.
+- **SwiftUI animates the delta, not the destination.** The animation runs over the vector _difference_ between old and new values. A second change landing mid-flight adds its own delta animation on top, so concurrent animations merge additively instead of jumping.
 - **Springs preserve velocity.** A retargeted spring merges with the in-flight one and carries its velocity toward the new target — the reason springs are the right default for anything interactive. Timing curves don't merge; overlapping ones run concurrently and their deltas sum.
-- **The bare default is a smooth spring.** `withAnimation { }` with no argument uses `.smooth` on iOS 17+. Think of a spring as *perceived duration + bounce*, not physics homework — that's exactly what the Gen 3 parameters encode.
+- **The bare default is a smooth spring.** `withAnimation { }` with no argument uses `.smooth` on iOS 17+. Think of a spring as _perceived duration + bounce_, not physics homework — that's exactly what the Gen 3 parameters encode.
 
 ## withAnimation vs .animation Modifier
 
@@ -33,7 +34,7 @@ Button("Toggle") {
 
 Use when: you control the state change site (button tap, gesture, event).
 
-### .animation(_:value:) (Implicit)
+### .animation(\_:value:) (Implicit)
 
 Watches a value and animates whenever it changes:
 
@@ -72,7 +73,7 @@ content
     }
 ```
 
-**Stacked per-property timing** — `.animation(_:value:)` animates the modifiers *above* it in the chain, up to the previous `.animation`. Stack several at different points for per-property timing without reaching for a KeyframeAnimator:
+**Stacked per-property timing** — `.animation(_:value:)` animates the modifiers _above_ it in the chain, up to the previous `.animation`. Stack several at different points for per-property timing without reaching for a KeyframeAnimator:
 
 ```swift
 Circle()
@@ -102,11 +103,11 @@ The most common in existing codebases:
 .spring(response: 0.5, dampingFraction: 0.7, blendDuration: 0)
 ```
 
-| Parameter | Meaning | Range |
-|-----------|---------|-------|
-| `response` | Duration of one oscillation (seconds) | 0.0+ (0 = instantaneous) |
-| `dampingFraction` | How quickly oscillation dies | 0 = forever, 1 = no bounce, >1 = overdamped |
-| `blendDuration` | Smoothing when interrupted (usually 0) | 0.0+ |
+| Parameter         | Meaning                                | Range                                       |
+| ----------------- | -------------------------------------- | ------------------------------------------- |
+| `response`        | Duration of one oscillation (seconds)  | 0.0+ (0 = instantaneous)                    |
+| `dampingFraction` | How quickly oscillation dies           | 0 = forever, 1 = no bounce, >1 = overdamped |
+| `blendDuration`   | Smoothing when interrupted (usually 0) | 0.0+                                        |
 
 ### Generation 3: Duration / Bounce (iOS 17+)
 
@@ -116,10 +117,10 @@ Simpler API. **Use this for new code targeting iOS 17+.**
 .spring(duration: 0.5, bounce: 0.3)
 ```
 
-| Parameter | Meaning | Range |
-|-----------|---------|-------|
-| `duration` | Approximate settling time (seconds) | 0.0+ |
-| `bounce` | Bounciness | -1 to 1 (0 = no bounce, negative = overdamped) |
+| Parameter  | Meaning                             | Range                                          |
+| ---------- | ----------------------------------- | ---------------------------------------------- |
+| `duration` | Approximate settling time (seconds) | 0.0+                                           |
+| `bounce`   | Bounciness                          | -1 to 1 (0 = no bounce, negative = overdamped) |
 
 ### Spring Presets (iOS 17+)
 
@@ -134,12 +135,12 @@ Use these instead of manual configuration when possible:
 
 ### Migration Table
 
-| Generation 2 | Generation 3 Equivalent |
-|--------------|------------------------|
-| `.spring(response: 0.5, dampingFraction: 0.7)` | `.spring(duration: 0.5, bounce: 0.3)` |
-| `.spring(response: 0.3, dampingFraction: 0.85)` | `.snappy` |
-| `.spring(response: 0.5, dampingFraction: 1.0)` | `.smooth` |
-| `.spring()` (default) | `.spring` |
+| Generation 2                                    | Generation 3 Equivalent               |
+| ----------------------------------------------- | ------------------------------------- |
+| `.spring(response: 0.5, dampingFraction: 0.7)`  | `.spring(duration: 0.5, bounce: 0.3)` |
+| `.spring(response: 0.3, dampingFraction: 0.85)` | `.snappy`                             |
+| `.spring(response: 0.5, dampingFraction: 1.0)`  | `.smooth`                             |
+| `.spring()` (default)                           | `.spring`                             |
 
 ### Anti-Patterns
 
@@ -181,10 +182,10 @@ withAnimation(
 
 ### Completion Criteria
 
-| Criteria | Meaning |
-|----------|---------|
+| Criteria             | Meaning                                                            |
+| -------------------- | ------------------------------------------------------------------ |
 | `.logicallyComplete` | Fires when animation reaches target (spring may still be settling) |
-| `.removed` | Fires when animation is fully removed (spring has fully settled) |
+| `.removed`           | Fires when animation is fully removed (spring has fully settled)   |
 
 ```swift
 // Wait for spring to fully settle before enabling interaction
@@ -254,11 +255,11 @@ Text(count, format: .number)
     }
 ```
 
-A bare `.transaction { }` rewrites the transaction for *every* change flowing through the view. Prefer `.animation(_:value:)` scoped to a value — or the scoped variants `.transaction(value:)` (fires only when that value changes) and `.transaction(_:body:)` (applies only to the attributes inside the closure), both iOS 17+.
+A bare `.transaction { }` rewrites the transaction for _every_ change flowing through the view. Prefer `.animation(_:value:)` scoped to a value — or the scoped variants `.transaction(value:)` (fires only when that value changes) and `.transaction(_:body:)` (applies only to the attributes inside the closure), both iOS 17+.
 
 ### TransactionKey — Animate by Cause (iOS 17+)
 
-When the same state change should animate differently depending on *why* it happened, define a custom `TransactionKey`, tag the change site, and read the cause where the view reacts (WWDC23):
+When the same state change should animate differently depending on _why_ it happened, define a custom `TransactionKey`, tag the change site, and read the cause where the view reacts (WWDC23):
 
 ```swift
 struct FromUserTapKey: TransactionKey {
@@ -307,6 +308,7 @@ Non-spring animations for specific use cases (opacity fades, progress bars).
 ```
 
 **When to use timing curves vs springs:**
+
 - Springs: interactive elements, things that feel physical (cards, buttons, toggles)
 - `easeInOut`: opacity fades, color transitions
 - `linear`: progress indicators, continuous rotation

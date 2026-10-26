@@ -1,6 +1,7 @@
 # SwiftUI layout
 
 <a id="source-swiftui-layout-skill-md"></a>
+
 ## Source: `swiftui/layout/SKILL.md`
 
 # SwiftUI Layout & Containers
@@ -40,11 +41,11 @@ Canonical case: equal-width buttons.
 
 ## Grid decisions
 
-| Need | Use |
-|---|---|
+| Need                               | Use                                                                              |
+| ---------------------------------- | -------------------------------------------------------------------------------- |
 | Static 2D with cross-row alignment | `Grid`/`GridRow` (+ `gridCellColumns` to span, `gridColumnAlignment` per column) |
-| Scrollable, large content | `LazyVGrid`/`LazyHGrid` (only visible views load; one axis fixed up front) |
-| "First arrangement that fits" | `ViewThatFits` |
+| Scrollable, large content          | `LazyVGrid`/`LazyHGrid` (only visible views load; one axis fixed up front)       |
+| "First arrangement that fits"      | `ViewThatFits`                                                                   |
 
 ## Custom containers (Demystify Containers)
 
@@ -71,7 +72,7 @@ from average placed-view size and corrected as you scroll. Everything below foll
 - **One subview per ForEach element, always.** An `if` inside a row (0-or-1 views) forces the
   stack to keep off-screen views + their `@State` alive to preserve indices — and environment
   changes then re-evaluate off-screen bodies. Filter at the data layer (`@Query` predicate);
-  gate auth-type conditions *outside* the stack.
+  gate auth-type conditions _outside_ the stack.
 - **Never key logic off absolute scroll offset** in a lazy stack (`onScrollGeometryChange` sees
   estimates) — use `onScrollTargetVisibilityChange(threshold: 0.8)` for visibility triggers.
 - **Set up in `init`, not `onAppear`** (`_model = State(initialValue:)`): body runs during
@@ -92,7 +93,7 @@ from average placed-view size and corrected as you scroll. Everything below foll
 
 - Snapping/paging: `scrollTargetLayout()` + `scrollTargetBehavior(.viewAligned/.paging)`.
 - Track/control position: `scrollPosition` binding; programmatic `ScrollPosition` +
-  `scrollTo(id:)` — works for unloaded targets *if* IDs map to stable one-subview elements.
+  `scrollTo(id:)` — works for unloaded targets _if_ IDs map to stable one-subview elements.
 - Scroll-linked effects: `scrollTransition` (enter/leave viewport) and `visualEffect`
   (geometry without GeometryReader) — details in `design/animation-patterns`.
 - Reactions: `onScrollGeometryChange` (fine outside lazy estimation),

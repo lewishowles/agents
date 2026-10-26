@@ -10,6 +10,7 @@
 - [Swift 6.2 concurrency](concurrency-patterns-swift62-concurrency.md) (upstream `swift62-concurrency.md`)
 
 <a id="source-swift-concurrency-patterns-skill-md"></a>
+
 ## Source: `swift/concurrency-patterns/SKILL.md`
 
 # Swift Concurrency Patterns
@@ -54,30 +55,31 @@ What concurrency problem are you solving?
 
 ## Quick Reference
 
-| Pattern | When to Use | Reference |
-|---------|-------------|-----------|
-| `async let` | Fixed number of parallel operations | `concurrency-patterns-structured-concurrency.md` |
-| `withTaskGroup` | Dynamic number of parallel operations | `concurrency-patterns-structured-concurrency.md` |
-| `withDiscardingTaskGroup` | Fire-and-forget parallel operations | `concurrency-patterns-structured-concurrency.md` |
-| `.task { }` modifier | Load data when view appears | `concurrency-patterns-structured-concurrency.md` |
-| `.task(id:)` modifier | Re-load when a value changes | `concurrency-patterns-structured-concurrency.md` |
-| `actor` | Shared mutable state protection | `concurrency-patterns-actors-and-isolation.md` |
-| `@MainActor` | UI-bound state and updates | `concurrency-patterns-actors-and-isolation.md` |
-| `@concurrent` | Explicitly offload to background (6.2) | `concurrency-patterns-swift62-concurrency.md` |
-| Isolated conformances | `@MainActor` type conforming to protocol (6.2) | `concurrency-patterns-swift62-concurrency.md` |
-| `withCheckedContinuation` | Bridge callback API to async | `concurrency-patterns-continuations-bridging.md` |
-| `AsyncStream` | Bridge delegate/notification API to async sequence | `concurrency-patterns-continuations-bridging.md` |
-| `@TaskLocal` | Context (IDs, tracing) down the task tree | `concurrency-patterns-structured-concurrency.md` |
-| `Atomic` / `Mutex` | Sendable wrappers for synchronous hot paths (Swift 6) | `concurrency-patterns-actors-and-isolation.md` |
-| Custom actor executors | Bridge existing DispatchSerialQueue synchronization | `concurrency-patterns-concurrency-internals.md` |
-| Swift Concurrency Instrument | Diagnose hangs, actor contention, continuation leaks | `concurrency-patterns-concurrency-internals.md` |
-| Strict concurrency migration | Incremental Swift 6 adoption | `concurrency-patterns-migration-guide.md` |
+| Pattern                      | When to Use                                           | Reference                                        |
+| ---------------------------- | ----------------------------------------------------- | ------------------------------------------------ |
+| `async let`                  | Fixed number of parallel operations                   | `concurrency-patterns-structured-concurrency.md` |
+| `withTaskGroup`              | Dynamic number of parallel operations                 | `concurrency-patterns-structured-concurrency.md` |
+| `withDiscardingTaskGroup`    | Fire-and-forget parallel operations                   | `concurrency-patterns-structured-concurrency.md` |
+| `.task { }` modifier         | Load data when view appears                           | `concurrency-patterns-structured-concurrency.md` |
+| `.task(id:)` modifier        | Re-load when a value changes                          | `concurrency-patterns-structured-concurrency.md` |
+| `actor`                      | Shared mutable state protection                       | `concurrency-patterns-actors-and-isolation.md`   |
+| `@MainActor`                 | UI-bound state and updates                            | `concurrency-patterns-actors-and-isolation.md`   |
+| `@concurrent`                | Explicitly offload to background (6.2)                | `concurrency-patterns-swift62-concurrency.md`    |
+| Isolated conformances        | `@MainActor` type conforming to protocol (6.2)        | `concurrency-patterns-swift62-concurrency.md`    |
+| `withCheckedContinuation`    | Bridge callback API to async                          | `concurrency-patterns-continuations-bridging.md` |
+| `AsyncStream`                | Bridge delegate/notification API to async sequence    | `concurrency-patterns-continuations-bridging.md` |
+| `@TaskLocal`                 | Context (IDs, tracing) down the task tree             | `concurrency-patterns-structured-concurrency.md` |
+| `Atomic` / `Mutex`           | Sendable wrappers for synchronous hot paths (Swift 6) | `concurrency-patterns-actors-and-isolation.md`   |
+| Custom actor executors       | Bridge existing DispatchSerialQueue synchronization   | `concurrency-patterns-concurrency-internals.md`  |
+| Swift Concurrency Instrument | Diagnose hangs, actor contention, continuation leaks  | `concurrency-patterns-concurrency-internals.md`  |
+| Strict concurrency migration | Incremental Swift 6 adoption                          | `concurrency-patterns-migration-guide.md`        |
 
 ## Process
 
 ### 1. Identify the Problem
 
 Read the user's code or error messages to determine:
+
 - Is this a compiler error (strict concurrency) or a runtime issue (data race, crash)?
 - What Swift version and concurrency checking level are they using?
 - Are they migrating existing code or writing new code?
@@ -85,6 +87,7 @@ Read the user's code or error messages to determine:
 ### 2. Load Relevant Reference Files
 
 Based on the problem, read from this directory:
+
 - `concurrency-patterns-swift62-concurrency.md` — Swift 6.2 approachable concurrency features, Apple's adoption doctrine, Swift 6.3/6.4 additions
 - `concurrency-patterns-structured-concurrency.md` — async let, TaskGroup, .task modifier lifecycle, task-locals, cancellation semantics
 - `concurrency-patterns-actors-and-isolation.md` — Actor patterns, reentrancy, @MainActor, Sendable, Atomic/Mutex
