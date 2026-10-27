@@ -6,6 +6,7 @@
 - Pin: `9ffb83138209057875698dd11c1720c657c47a92` (24 July 2026)
 - Licence: MIT, copyright (c) 2025 Ravishankar
 - The first local copy matched upstream at `5f1f5697c77adf99816de1a5c21742532a1c6f46` before link and formatting adaptations. This refresh brought in the upstream changes up to the pin above.
+- Links to the retired `swift-ui` skill were changed to point at the merged `swift` skill.
 
 The table maps every local reference to exactly one upstream file. The reference
 body keeps the upstream text apart from removed skill front matter and adapted

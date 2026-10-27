@@ -1,79 +1,18 @@
 ---
 name: swift
 description: >
-  Use this skill when writing or editing any Swift code — macOS apps, command-line tools, scripts, system tools. Covers comment style, naming, spacing, concurrency, error handling, process management, and environment setup. For SwiftUI-specific patterns, use the swift-ui skill.
+  Use this skill when writing or editing any Swift code, such as macOS apps, command-line tools, scripts, or system tools, or writing or reviewing SwiftUI views. Covers comment style, naming, spacing, concurrency, error handling, process management, environment setup, SwiftUI state management, view composition, navigation, and performance. Includes @Observable and @Bindable patterns, ObservableObject and @Published anti-patterns, and optimisation for responsive interfaces.
 ---
 
-# Swift code style
+# Swift
 
-## Comments
+Choose the guide for the Swift work before editing code or reviewing a view.
 
-Swift comments use a strict two-tier system.
+## Pick your guide
 
-**Declarations** (types, functions, properties, enum cases): use `///` documentation comments, one `///` per line, even for a single sentence. Xcode's Quick Help reads them, and swift-format's `UseTripleSlashForDocumentationComments` rule rewrites `/** */` to `///`. Never use `/** */` or `//` on a declaration.
+| Job                                                  | Guide                                                            |
+| ---------------------------------------------------- | ---------------------------------------------------------------- |
+| Write or edit Swift code for apps, tools, or scripts | [Swift code style](references/swift-code-style.md)               |
+| Write or review SwiftUI views and state              | [SwiftUI views and state](references/swiftui-views-and-state.md) |
 
-```swift
-/// Description here.
-struct Foo { ... }
-
-/// Does the thing.
-///
-/// - Parameter name: The name of the new session.
-func doSomething(name: String) { ... }
-
-/// The ID of the currently selected project.
-var selectedProjectID: UUID?
-```
-
-**Inline logic** inside a function body: use `//` only. Multi-line `//` blocks are fine. Never use `///` inside a body.
-
-```swift
-// Capture value-type snapshots before entering the Task. Inside the Task,
-// accessing @MainActor-isolated properties after an `await` crossing is
-// a Swift 6 error, and captured Sendable values avoid the actor hop.
-let projects = projects
-```
-
-## Spacing
-
-- Blank line between logical sections in function body: state mutation vs `save()`, setup vs execution, `guard` vs main logic.
-- Blank line between declarations of different "weight": single-line property before multi-line property/function, or between two multi-line declarations.
-- No blank line between two single-line properties of similar weight.
-
-## Naming
-
-- Full descriptive names — no abbreviations (`project` not `proj`, `index` not `i`).
-- Bool properties/parameters prefix `is`, `has`, `should`, `can` where natural (`isLoading`, `showSheet`).
-- Async fetch functions use return value as name (`currentBranch`, `readPackageJSON`), not mechanism (`fetchBranch`, `loadJSON`).
-
-## Concurrency
-
-- Mark UI-driving classes `@MainActor`; don't sprinkle `await MainActor.run` at call sites.
-- Use `async let` for parallel fetches needed together.
-- Capture value-type snapshots before `Task` body to avoid Swift 6 actor-isolation errors:
-  ```swift
-  let projects = projects  // captured copy
-  saveTask = Task {
-      Persistence.save(projects, filename: "projects.json")
-  }
-  ```
-- Actors protect internal state — one instance per operation, not a global serialisation queue.
-- Use `AsyncStream` + `continuation` to bridge callback APIs into structured concurrency.
-
-## Error handling
-
-- `guard let` / `guard` with early return over deeply nested `if let`.
-- `try?` fine for non-critical ops (file reads, process launch) where failure degrades gracefully.
-- No `try!` — always handle or suppress explicitly.
-
-## PATH in macOS apps
-
-Finder-launched apps don't inherit shell `PATH`. When spawning tools (`bun`, `git`), prepend known locations:
-
-```swift
-var env = ProcessInfo.processInfo.environment
-let home = env["HOME"] ?? NSHomeDirectory()
-let extraPaths = ["\(home)/.bun/bin", "/opt/homebrew/bin", "/opt/homebrew/sbin", "/usr/local/bin"]
-env["PATH"] = (extraPaths + [env["PATH"] ?? "/usr/bin:/bin:/usr/sbin:/sbin"]).joined(separator: ":")
-process.environment = env
-```
+Read both guides when SwiftUI work also changes general Swift code style or concurrency.

@@ -58,7 +58,7 @@ Load additional skills only when the touched files or diff contents make them re
 - `accessibility` for UI, HTML, components, forms, keyboard interaction, colour, ARIA, or interface copy; choose its auditing guide when reviewing accessibility
 - `web-performance` for runtime performance, asset loading, bundle size, Core Web Vitals, rendering, or reactivity cost
 - `typescript` or `vue` for matching Vue/TypeScript files and APIs
-- `swift` or `swift-ui` for Swift or SwiftUI changes
+- `swift` for Swift or SwiftUI changes
 - `bash` for shell scripts, hooks, installers, environment files, or command snippets
 - `dependencies` for package additions, removals, upgrades, lockfile changes, or dependency recommendations
 - `writing` for prose, README, documentation, or UI copy changes

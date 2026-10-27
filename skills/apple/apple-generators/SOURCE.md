@@ -223,6 +223,7 @@ than code, so they belong to the product and release skill instead:
 
 ## Adaptations
 
+- Changed links to the retired `swift-ui` skill to point at the merged `swift` skill.
 - Renamed five onboarding carousel templates into `references/onboarding-generator/templates/carousel-fallback/` to match upstream, and added the nine value-moment templates.
 - Added the CI/CD SwiftLint template and the three-page preview data generator reference. The preview overview links to its two child pages.
 - Rewrote CI/CD SwiftLint fragment paths for the local security and coding best practices references, dropped the unavailable `tdd-feature` and `concurrency` fragments, and removed the upstream library name and `/apple:review` sentence from the SwiftLint template.

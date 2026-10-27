@@ -1,9 +1,3 @@
----
-name: swift-ui
-description: >
-  Use this skill when writing or reviewing SwiftUI code — views, state management, view composition, navigation, and performance. Covers modern patterns (@Observable, @Bindable), anti-patterns (ObservableObject, @Published), and optimization techniques for responsive interfaces.
----
-
 # SwiftUI patterns
 
 Modern SwiftUI, iOS 26+ / macOS 26+. Prefer `@Observable` over `ObservableObject`, type-safe navigation, performance-aware composition.
@@ -84,6 +78,6 @@ struct SettingsView: View {
 }
 ```
 
-For view composition, navigation, performance, previews, and anti-patterns, see [references/patterns.md](references/patterns.md).
+For view composition, navigation, performance, previews, and anti-patterns, see [SwiftUI patterns](patterns.md).
 
 > Modified from [ECC `swiftui-patterns`](https://github.com/affaan-m/everything-claude-code/blob/main/skills/swiftui-patterns/SKILL.md) — MIT © 2026 Affaan Mustafa.

@@ -54,8 +54,6 @@
 		"security-review": "name-only",
 		"project-setup": "name-only",
 		"simplify": "name-only",
-		"swift": "name-only",
-		"swift-ui": "name-only",
 		"typescript": "name-only",
 		"update-config": "name-only",
 		"writing": "on"

@@ -14,8 +14,7 @@ description: >
 Choose the generator below by what the app needs to build. Open its overview first,
 then only the supporting files it names. Check the project structure, deployment
 target and existing implementation before applying a template. For general Swift
-and SwiftUI code guidance, also use [`swift`](../../swift/swift/SKILL.md) and
-[`swift-ui`](../../swift/swift-ui/SKILL.md).
+and SwiftUI code guidance, also use [`swift`](../../swift/swift/SKILL.md).
 App Store planning, such as custom product pages, in-app events and offer codes,
 is in [`app-release`](../app-release/SKILL.md).
 

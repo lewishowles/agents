@@ -6,7 +6,7 @@ description: >
 
 # Mac app
 
-Choose the task's topic below and open only its reference. Where a topic has named supporting files, open the part that covers the question. For general Swift and SwiftUI code guidance, also use [`swift`](../../swift/swift/SKILL.md) and [`swift-ui`](../../swift/swift-ui/SKILL.md).
+Choose the task's topic below and open only its reference. Where a topic has named supporting files, open the part that covers the question. For general Swift and SwiftUI code guidance, also use [`swift`](../../swift/swift/SKILL.md).
 
 ## macOS
 

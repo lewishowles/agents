@@ -9,6 +9,8 @@
 
 Each local file maps to one upstream file. File bodies keep the upstream text apart from removed front matter, the added Parts line in `references/core-ml/overview.md`, links and path pointers adapted to the local layout, formatter output, and platform and non-Swift exclusions.
 
+Links to the retired `swift-ui` skill were changed to point at the merged `swift` skill.
+
 | Local file                                                                                                                                             | Upstream path                                                   |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------- |
 | [`references/apple-intelligence/app-intents-advanced-features.md`](references/apple-intelligence/app-intents-advanced-features.md)                     | `apple-intelligence/app-intents/advanced-features.md`           |
