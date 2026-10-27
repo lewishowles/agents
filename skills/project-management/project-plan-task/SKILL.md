@@ -88,7 +88,7 @@ For broad dependency questions, start with local evidence, pick one lookup tool 
 
 ## Placement principles
 
-- Insert a prerequisite before the task that depends on it by setting `--position` and adding a dependency record.
+- Whenever one task must follow another, record the dependency with `--depends-on` on `progress task add` or with `progress task dependency add`. Within a release, `progress` then keeps the dependent task after its prerequisite and refuses moves that would break that order, so do not place prerequisites by hand with `--position`. The task list shows the link as "waiting on #n".
 - Order tasks by dependency, not arrival.
 - Treat each active task as an execution boundary.
 - Represent independently reviewable implementation steps as chunks under the task.
@@ -143,7 +143,7 @@ Require an exact match or unchanged behaviour only when a real user or caller de
 
 Make the final `--contract-step` an explicit out-of-scope statement naming the adjacent work a reader could reasonably assume is included; put release-wide exclusions in the release `--out-of-scope` field. Tasks have no separate non-goals field, and every delegation packet has to state explicit non-scope, so a task without this makes each handoff redraw the boundary from memory. Name a specific exclusion or leave the statement out; a generic "nothing else is in scope" line adds nothing.
 
-Files are a list too. Give each file or spec path its own `--file`, rather than joining several into one value.
+Files are a list too. Give each file or spec path its own `--file`, rather than joining several into one value. Write each entry as a plain repository path with no notes after it: the task list marks a ready task "can run in parallel" only when its files do not overlap current work, and an entry such as `render.py (new function)` or `./src` never matches, so the task can be wrongly marked safe to start.
 
 On `task edit`, repeating either flag replaces that whole list with the values given, so pass the steps or files you want the task to end up with, not just the new ones. Omitting a flag leaves its list alone. `--clear-files` empties the file list, and there is no matching flag for contract steps, because a task always has at least one.
 
