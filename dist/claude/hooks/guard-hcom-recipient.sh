@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# Blocks an `hcom send` that names no @recipient before the message body.
+# Blocks an `hcom send` that names no recipient, and stops core team roles
+# (orchestrator, scout, implementer, reviewer) from sending to a role tag,
+# which can wake a replaced peer; they must use team-send instead.
 # A reply that relies on --reply-to alone sits unread in the original sender's
 # queue without waking it, so every send must name its recipient. An @ inside
 # the message text, a --file body or a heredoc body never counts.
@@ -22,9 +24,15 @@ command_str="$(printf '%s' "$input" | jq -r '.tool_input.command // empty' 2>/de
 # Python splits the command into separate shell commands and arguments, which
 # a shell pattern cannot do reliably once quotes and heredocs are involved.
 python3 - "$command_str" <<'PY'
+import os
 import re
 import shlex
 import sys
+from typing import Iterator, Optional
+
+
+# Roles that must route messages through team-send.
+CORE_ROLES = {"orchestrator", "scout", "implementer", "reviewer"}
 
 
 # Returns the command with heredoc bodies and unquoted # comments removed.
@@ -133,15 +141,33 @@ def shell_commands(command: str) -> list[str]:
 	return commands
 
 
-# Returns True when any `hcom send` in the command has no @recipient before
-# `--`. hcom is recognised by any path ending in hcom, with or without global
-# options before `send`. Values of --file and --base64 are skipped, so a path
-# or encoded body starting with @ does not count. A send that asks for --help
-# or -h is allowed, and so is a command that cannot be parsed.
+# Returns the core role at the end of a tag, if it has one.
+#
+# @param  {str}  tag
+#     The sender's HCOM tag or a recipient tag without its @ prefix.
+def core_role(tag: str) -> Optional[str]:
+	# The last hyphen-separated part of the tag, where team tags carry the role.
+	role = tag.rsplit("-", 1)[-1]
+	return role if role in CORE_ROLES else None
+
+
+# Returns the core role named by a recipient tag, if it has one.
+#
+# @param  {str}  recipient
+#     An @recipient argument, such as @agent-tools-scout-.
+def recipient_role(recipient: str) -> Optional[str]:
+	return core_role(recipient[1:].removesuffix("-"))
+
+
+# Yields the recipients of each `hcom send` that would run. A send asking
+# for help is skipped. hcom is recognised by any path ending in hcom, with
+# or without global options before `send`. Values of --file and --base64
+# are skipped, so a body starting with @ does not count. Commands that
+# cannot be parsed are skipped.
 #
 # @param  {str}  command
 #     The full shell command from the tool call.
-def missing_recipient(command: str) -> bool:
+def send_recipients(command: str) -> Iterator[list[str]]:
 	for segment in shell_commands(without_heredoc_bodies(command)):
 		try:
 			# The command's arguments, unquoted.
@@ -168,8 +194,11 @@ def missing_recipient(command: str) -> bool:
 
 		# The send options and recipients, read in order.
 		arguments = iter(words[position + 1:])
+		# Recipients named before the message body.
+		recipients = []
 		for argument in arguments:
 			if argument == "--":
+				yield recipients
 				break
 			if argument in {"--help", "-h"}:
 				break
@@ -177,20 +206,35 @@ def missing_recipient(command: str) -> bool:
 				next(arguments, None)
 				continue
 			if argument.startswith("@"):
-				break
+				recipients.append(argument)
 		else:
-			return True
-
-		if argument == "--":
-			return True
-
-	return False
+			yield recipients
 
 
-if missing_recipient(sys.argv[1]):
-	print(
-		"guard-hcom-recipient: blocked: this hcom send names no recipient, so nobody would be woken by it. Nothing in this command ran. Add the recipient's role tag, such as @<repo>-<role>-, before the message body; --reply-to alone does not deliver a message.",
-		file=sys.stderr,
-	)
-	sys.exit(2)
+# The sender's core role from its HCOM tag, or None for anyone else.
+sender_role = core_role(os.environ.get("HCOM_TAG", ""))
+
+for recipients in send_recipients(sys.argv[1]):
+	if not recipients:
+		# The fix to suggest: team-send for core roles, a role tag for anyone else.
+		if sender_role:
+			message = "this hcom send names no recipient, so nobody would be woken by it. Nothing in this command ran. Use team-send <role> to reach the live teammate; if team-send refuses, report that instead of sending by hand. --reply-to alone does not deliver a message."
+		else:
+			message = "this hcom send names no recipient, so nobody would be woken by it. Nothing in this command ran. Add the recipient's role tag, such as @<repo>-<role>-, before the message body; --reply-to alone does not deliver a message."
+		print(
+			f"guard-hcom-recipient: blocked: {message}",
+			file=sys.stderr,
+		)
+		sys.exit(2)
+
+	if sender_role:
+		for recipient in recipients:
+			# The core role named by this recipient, if it is a role tag.
+			role = recipient_role(recipient)
+			if role:
+				print(
+					f"guard-hcom-recipient: blocked: this hcom send targets a role tag. Nothing in this command ran. Use team-send {role} to reach the live teammate; if team-send refuses, report that instead of sending by hand.",
+					file=sys.stderr,
+				)
+				sys.exit(2)
 PY

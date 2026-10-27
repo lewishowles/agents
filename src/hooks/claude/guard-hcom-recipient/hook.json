@@ -1,6 +1,6 @@
 {
 	"name": "guard-hcom-recipient",
-	"description": "Blocks HCOM sends without an @recipient role tag before the message body, including replies with --reply-to.",
+	"description": "Blocks HCOM sends without an @recipient before the message body, including replies with --reply-to, and stops core team roles from sending to a role tag instead of using team-send.",
 	"runtime": "claude",
 	"events": [
 		{
