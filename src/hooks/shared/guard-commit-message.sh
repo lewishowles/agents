@@ -9,17 +9,20 @@ set -euo pipefail
 
 command -v jq >/dev/null 2>&1 || exit 0
 
-# Raw PreToolUse payload on stdin.
+# The hook payload, read from standard input.
 input="$(cat)"
+# The tool the agent is about to call.
 tool_name="$(printf '%s' "$input" | jq -r '.tool_name // empty' 2>/dev/null)" || exit 0
 [[ "$tool_name" == "Bash" ]] || exit 0
 
+# The shell command the agent wants to run.
 command_str="$(printf '%s' "$input" | jq -r '.tool_input.command // empty' 2>/dev/null)" || exit 0
 [[ -n "$command_str" ]] || exit 0
 
 # Newlines flattened so patterns see one line (covers heredoc bodies).
 normalised="${command_str//$'\n'/ }"
 
+# Matches `hcom send`, optionally run through `command`, wherever it appears as separate words.
 hcom_send_pattern='(^|[;&|`(]|[[:space:]])(command[[:space:]]+)?hcom[[:space:]]+send([[:space:]]|$)'
 # The label an Implementer or Reviewer copies from the rules.
 commit_mention_pattern='[Cc]ommit message'

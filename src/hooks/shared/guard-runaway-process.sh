@@ -23,10 +23,13 @@ set -euo pipefail
 
 command -v jq >/dev/null 2>&1 || exit 0
 
+# The hook payload, read from standard input.
 input="$(cat)"
+# The tool the agent is about to call.
 tool_name="$(printf '%s' "$input" | jq -r '.tool_name // empty' 2>/dev/null)" || exit 0
 [[ "$tool_name" == "Bash" ]] || exit 0
 
+# The shell command the agent wants to run.
 command_str="$(printf '%s' "$input" | jq -r '.tool_input.command // empty' 2>/dev/null)" || exit 0
 [[ -n "$command_str" ]] || exit 0
 
@@ -37,7 +40,9 @@ boundary='(^|[[:space:];&|('\''"])'
 # A loop header that never terminates on its own. Required to be followed by `;`
 # or `do` so a bare mention such as `rg while true` is not read as a loop.
 while_spin="${boundary}"'while[[:space:]]+(:|true)[[:space:]]*(;|$|do([[:space:]]|$))'
+# An until loop on false, which never ends on its own.
 until_spin="${boundary}"'until[[:space:]]+false[[:space:]]*(;|$|do([[:space:]]|$))'
+# A C-style for loop with an empty header, which never ends on its own.
 for_spin="${boundary}"'for[[:space:]]*\(\([[:space:]]*;[[:space:]]*;[[:space:]]*\)\)'
 
 # Anything that makes the loop yield the CPU or stop. Presence anywhere in the
@@ -48,6 +53,7 @@ mitigation='(^|[[:space:]])(sleep|usleep|timeout)([[:space:]]|$)|(^|[[:space:];{
 # A command that runs a script string, where the busy loop sits inside the `-c`
 # argument rather than in the command text itself.
 exec_c='(^|[[:space:]])(bash|sh|zsh|dash|ksh)[[:space:]]+(-[a-zA-Z]+[[:space:]]+)*-c([[:space:]]|$)'
+# A timeout command anywhere in the command, which bounds a loop passed to a shell with -c.
 has_timeout='(^|[[:space:]])timeout([[:space:]]|$)'
 
 # Reports whether the given text contains an unbounded busy-loop header.
