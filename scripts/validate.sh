@@ -53,6 +53,7 @@ run_check() {
 }
 
 run_check "skill manifests"       bash "$REPO_DIR/scripts/validate/check-skill-manifests.sh"
+run_check "skill list and links"  bash "$REPO_DIR/scripts/validate/check-skill-list.sh"
 run_check "hook manifests"        bash "$REPO_DIR/scripts/validate/check-hook-manifests.sh"
 run_check "generated files"       bash "$REPO_DIR/scripts/validate/check-generated-files.sh"
 run_check "hook sync"             bash "$REPO_DIR/scripts/validate/check-hook-sync.sh"

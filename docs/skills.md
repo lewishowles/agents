@@ -76,6 +76,12 @@ Claude and Codex use the same canonical skill folders, and both mostly choose a 
 
 Claude reads shared skills from `~/.claude/skills/`, while Codex reads them from `~/.agents/skills/`. Claude also provides built-in skills managed by Claude Code; those entries have no source files in this repository.
 
+## Keep the skill list within budget
+
+`scripts/validate/check-skill-list.sh` estimates the Codex list shown for skills installed by default. It counts each skill's name, description and installed path at one token per four bytes, rounded up per line. Collections that `scripts/setup.sh` leaves off by default are excluded. The report shows the current size, the recorded limit and the room left in Codex's full 5,440-token skill-list budget. The installed path uses the current machine's home directory, so the measured count can differ on a machine with a different home path length.
+
+The recorded limit starts at the current size. After merging a skill family, lower `SKILL_LIST_LIMIT` in the check to the new measured count. To raise it deliberately, change that value and explain why the extra list space is needed in the review. The check also finds broken relative links in skill guides, reference files that no guide or other reference links to, and retired skill names left in maintained source. It skips the unlinked-reference check for upstream skill folders that contain `SOURCE.md`; their links are still checked. Add each merged-away name to `RETIRED_SKILL_NAMES` in the same script.
+
 ## Built-in Claude Code skills
 
 | Skill                      | When to use                                                                                                               |
