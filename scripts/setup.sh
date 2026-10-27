@@ -2380,7 +2380,17 @@ codex_config_value() {
 		}
 		in_section && $0 ~ "^" key "[[:space:]]*=" {
 			sub("^[^=]*=[[:space:]]*", "")
-			print
+			value = $0
+
+			# Join an array written over several lines into one line, so the
+			# caller can write it back as a single setting.
+			while (value ~ /^\[/ && value !~ /\][[:space:]]*$/ && (getline line) > 0) {
+				sub("^[[:space:]]+", "", line)
+				value = value (value ~ /\[$/ ? "" : " ") line
+			}
+			sub(/,[[:space:]]*\]$/, "]", value)
+
+			print value
 			exit
 		}
 	' "$REPO_DIR/src/adapters/codex/config.base.toml"
@@ -2574,6 +2584,7 @@ ensure_codex_tui_settings() {
 		BEGIN {
 			in_tui = 0
 			tui_found = 0
+			skipping_array = 0
 		}
 		/^\[tui\]$/ {
 			print
@@ -2584,8 +2595,19 @@ ensure_codex_tui_settings() {
 			tui_found = 1
 			next
 		}
+		# Skip the rest of a replaced array that spans several lines.
+		skipping_array {
+			if ($0 ~ /^[[:space:]]*\]/) {
+				skipping_array = 0
+			}
+
+			next
+		}
 		/^\[/ { in_tui = 0 }
-		in_tui && /^(alternate_screen|status_line(_use_colors)?)[[:space:]]*=/ { next }
+		in_tui && /^(alternate_screen|status_line(_use_colors)?)[[:space:]]*=/ {
+			skipping_array = $0 ~ /=[[:space:]]*\[[^]]*$/
+			next
+		}
 		{ print }
 		END {
 			if (!tui_found) {
