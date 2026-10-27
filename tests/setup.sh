@@ -84,7 +84,7 @@ create_command_stubs() {
 cat > "$bin_dir/bash" <<'EOF'
 #!/bin/sh
 case "$1" in
-	"$SETUP_INSTALLER"|"$SETUP_SYNC"|"$SETUP_VALIDATE")
+	"$SETUP_SYNC"|"$SETUP_VALIDATE")
 		printf '%s\n' "$1" >> "$SETUP_CALL_LOG"
 		exit 0
 		;;
@@ -201,6 +201,49 @@ cli_style_render() {
 EOF
 
 	chmod +x "$bin_dir/bash" "$bin_dir/cli-style" "$bin_dir/cp" "$bin_dir/mv" "$bin_dir/git" "$bin_dir/friction" "$bin_dir/team-send" "$bin_dir/doc-paths" "$bin_dir/uv" "$bin_dir/hcom" "$bin_dir/cli-style-adapter.sh"
+}
+
+# Makes a command path with a package manager but no cli-style command. The
+# package manager stand-in records its arguments and then links the cli-style
+# stub, as a real global install would.
+#
+# @param  {string}  bin_dir
+#     Directory that receives the test commands.
+# @param  {string}  manager
+#     The package manager to stand in for.
+create_cli_style_install_stubs() {
+	# The directory that receives the test commands.
+	local bin_dir="$1"
+	# The package manager to stand in for.
+	local manager="$2"
+
+	link_test_commands_without_cli_style "$bin_dir"
+
+	cat > "$bin_dir/$manager" <<'EOF'
+#!/bin/sh
+printf '%s\n' "$*" > "$HOME/cli-style-install-call"
+ln -s "$SETUP_TEST_CLI_STYLE_STUB" "$(dirname "$0")/cli-style"
+EOF
+	chmod +x "$bin_dir/$manager"
+}
+
+# Makes a command path holding every test command except cli-style, so setup
+# has to find or install cli-style itself.
+#
+# @param  {string}  bin_dir
+#     Directory that receives the test commands.
+link_test_commands_without_cli_style() {
+	# The directory that receives the test commands.
+	local bin_dir="$1"
+	# Each command from the main test path.
+	local entry
+
+	mkdir -p "$bin_dir"
+	for entry in "$TEST_ROOT/bin/"*; do
+		if [ "${entry##*/}" != cli-style ]; then
+			ln -s "$entry" "$bin_dir/${entry##*/}"
+		fi
+	done
 }
 
 # Creates an fzf stand-in that reports SETUP_FZF_VERSION (default:
@@ -437,15 +480,14 @@ run_setup_target() {
 		# shellcheck disable=SC2030
 		export PATH="$setup_path"
 		# The cli-style stub that points setup at the test adapter. A test can set
-		# SETUP_TEST_CLI_STYLE_BIN to a missing path to run setup without it.
-		export CLI_STYLE_BIN="${SETUP_TEST_CLI_STYLE_BIN:-$bin_dir/cli-style}"
-		# The cli-style installer path that the bash stub logs instead of running.
-		export SETUP_INSTALLER="$REPO_DIR/scripts/install-cli-style.sh"
+		# SETUP_TEST_CLI_STYLE_BIN to a missing path to run setup without it, or
+		# to an empty value so setup looks for cli-style on PATH.
+		export CLI_STYLE_BIN="${SETUP_TEST_CLI_STYLE_BIN-$bin_dir/cli-style}"
 		# The repository sync script path that the bash stub logs instead of running.
 		export SETUP_SYNC="$REPO_DIR/scripts/sync.sh"
 		# The repository validation script path that the bash stub logs instead of running.
 		export SETUP_VALIDATE="$REPO_DIR/scripts/validate.sh"
-		# The file where the bash stub records skipped installer, sync and validation runs.
+		# The file where the bash stub records skipped sync and validation runs.
 		export SETUP_CALL_LOG="$home_dir/setup-calls.log"
 		# The file recording calls to the uv stub.
 		export SETUP_UV_LOG="$home_dir/uv-calls.log"
@@ -867,6 +909,84 @@ test_skills_only_without_cli_style() {
 	assert_contains "$output" 'Done.'
 	assert_not_contains "$output" 'Done.: success'
 	assert_not_exists "$home_dir/setup-calls.log"
+}
+
+# Checks that setup prints and runs the global cli-style install command.
+#
+# @param  {string}  manager
+#     The available package manager, bun or npm.
+test_global_cli_style_install() {
+	# The available package manager.
+	local manager="$1"
+	# The isolated home for the setup run.
+	local home_dir="$TEST_ROOT/global-cli-style-$manager"
+	# The command path with one package manager and no cli-style.
+	local bin_dir="$TEST_ROOT/bin-cli-style-$manager"
+	# The setup preview and output.
+	local output="$TEST_ROOT/global-cli-style-$manager.txt"
+	# The command arguments expected for the chosen package manager.
+	local expected_arguments='add -g @lewishowles/cli-style'
+
+	if [ "$manager" = npm ]; then
+		expected_arguments='install -g @lewishowles/cli-style'
+	fi
+
+	create_cli_style_install_stubs "$bin_dir" "$manager"
+	SETUP_TEST_PATH="$bin_dir:/usr/bin:/bin" SETUP_TEST_CLI_STYLE_BIN='' \
+		SETUP_TEST_CLI_STYLE_STUB="$TEST_ROOT/bin/cli-style" \
+		run_setup_target "$home_dir" --claude > "$output" 2>&1
+
+	assert_contains "$output" "Run $manager $expected_arguments"
+	assert_contains "$output" "Running: $manager $expected_arguments"
+	assert_equals "$(cat "$home_dir/cli-style-install-call")" "$expected_arguments"
+	assert_contains "$output" 'Done.'
+}
+
+# Checks the global cli-style install when Bun is the only package manager.
+test_global_cli_style_install_with_bun() {
+	test_global_cli_style_install bun
+}
+
+# Checks the global cli-style install when npm is the only package manager.
+test_global_cli_style_install_with_npm() {
+	test_global_cli_style_install npm
+}
+
+# A working CLI_STYLE_BIN skips the global install even without cli-style on PATH.
+test_global_cli_style_override_skips_install() {
+	# The isolated home for setup with a working cli-style override.
+	local home_dir="$TEST_ROOT/global-cli-style-override"
+	# The command path with Bun but no cli-style.
+	local bin_dir="$TEST_ROOT/bin-cli-style-override"
+	# The setup preview and output.
+	local output="$TEST_ROOT/global-cli-style-override.txt"
+
+	create_cli_style_install_stubs "$bin_dir" bun
+	SETUP_TEST_PATH="$bin_dir:/usr/bin:/bin" \
+		SETUP_TEST_CLI_STYLE_BIN="$TEST_ROOT/bin/cli-style" \
+		run_setup_target "$home_dir" --claude > "$output" 2>&1
+
+	assert_not_exists "$home_dir/cli-style-install-call"
+	assert_contains "$output" 'Done.'
+}
+
+# Checks that setup stops with install guidance when no package manager exists.
+test_missing_cli_style_and_package_manager() {
+	# The isolated home for the setup run.
+	local home_dir="$TEST_ROOT/no-cli-style-manager"
+	# The command path without cli-style or a package manager.
+	local bin_dir="$TEST_ROOT/bin-no-cli-style-manager"
+	# The setup output.
+	local output="$TEST_ROOT/no-cli-style-manager.txt"
+
+	link_test_commands_without_cli_style "$bin_dir"
+
+	if SETUP_TEST_PATH="$bin_dir:/usr/bin:/bin" SETUP_TEST_CLI_STYLE_BIN='' \
+		run_setup_target "$home_dir" --claude > "$output" 2>&1; then
+		fail 'setup succeeded without cli-style or a package manager'
+	fi
+	assert_contains "$output" 'bun add -g @lewishowles/cli-style (or npm install -g @lewishowles/cli-style)'
+	assert_not_exists "$home_dir/.claude"
 }
 
 # Pick features uses the existing skill picker and installs only selected extras.
@@ -1705,7 +1825,8 @@ test_status_requires_cli_style_without_changes() {
 		fail '--status succeeded without cli-style'
 	fi
 
-	assert_contains "$output" 'cli-style is not installed. Run: scripts/install-cli-style.sh'
+	assert_contains "$output" 'cli-style is not executable:'
+	assert_contains "$output" 'bun add -g @lewishowles/cli-style (or npm install -g @lewishowles/cli-style)'
 	assert_not_exists "$home_dir/setup-calls.log"
 	assert_equals "$(snapshot_test_directory "$home_dir")" "$home_before"
 	assert_equals "$(git -C "$REPO_DIR" status --porcelain --untracked-files=all)" "$repo_before"
@@ -2372,6 +2493,10 @@ run_setup_cases() {
 		test_nothing_to_change_exits_without_yes
 		test_skills_only_preset_installs_only_skills
 		test_skills_only_without_cli_style
+		test_global_cli_style_install_with_bun
+		test_global_cli_style_install_with_npm
+		test_global_cli_style_override_skips_install
+		test_missing_cli_style_and_package_manager
 		test_pick_preset_installs_selected_features
 		test_pick_preset_without_hooks_preserves_user_settings
 		test_pick_preset_claude_features_hide_codex_choices

@@ -283,9 +283,12 @@ main() {
 		save_skill_inclusions
 	fi
 	if [ "$setup_helpers" = true ] && cli_style_install_needed; then
-		bash "$REPO_DIR/scripts/install-cli-style.sh"
+		printf 'Running: %s\n' "${cli_style_install_command[*]}"
+		"${cli_style_install_command[@]}"
 	fi
-	if [ -x "${CLI_STYLE_BIN:-$cli_style_install_dir/bin/cli-style}" ]; then
+	# Helper setup always loads styled output, so a cli-style that is still missing
+	# after the install stops setup with guidance. Other runs fall back to plain output.
+	if [ "$setup_helpers" = true ] || ! cli_style_install_needed; then
 		# shellcheck source=scripts/lib/cli-style-output.sh
 		source "$REPO_DIR/scripts/lib/cli-style-output.sh"
 	else
@@ -409,50 +412,36 @@ skill_inclusions_changed() {
 	fi
 }
 
-# Returns success when setup must install cli-style, the tool that styles setup
-# output: it is missing, or its saved version differs from the installer's. When
-# CLI_STYLE_BIN names another copy, that copy only needs to be executable.
-# Call load_cli_style_install_details first.
+# Returns success when setup must install cli-style: CLI_STYLE_BIN is set but
+# cannot run, or it is unset and no cli-style is on PATH. Sync and validate find
+# cli-style the same way.
 cli_style_install_needed() {
-	# The cli-style program installed in this repository.
-	local installed="$cli_style_install_dir/bin/cli-style"
-
 	if [ -n "${CLI_STYLE_BIN:-}" ]; then
 		[ ! -x "$CLI_STYLE_BIN" ]
 	else
-		[ ! -x "$installed" ] || [ ! -f "$cli_style_install_dir/VERSION" ] ||
-			[ "$(cat "$cli_style_install_dir/VERSION")" != "$cli_style_version" ]
+		! command -v cli-style >/dev/null 2>&1
 	fi
 }
 
-# Reads the cli-style version and install folder from the installer script
-# without running it, so the preview names the same version the installer
-# fetches. Sets cli_style_version and cli_style_install_dir, and returns 1 with
-# a message when either cannot be read.
-load_cli_style_install_details() {
-	# The script that installs cli-style.
-	local installer="$REPO_DIR/scripts/install-cli-style.sh"
-	# The install folder relative to this repository.
-	local relative_dir
-
-	cli_style_version=$(sed -n 's/^VERSION="\([^"]*\)"$/\1/p' "$installer")
-	# The dollar sign matches the installer's literal REPO_DIR variable reference.
-	# shellcheck disable=SC2016
-	relative_dir=$(sed -n 's|^INSTALL_DIR="$REPO_DIR/\([^"]*\)"$|\1|p' "$installer")
-
-	if [ -z "$cli_style_version" ] || [ -z "$relative_dir" ]; then
-		printf '%s\n' 'Could not read the cli-style version and install location from scripts/install-cli-style.sh.' >&2
+# Picks the command that installs cli-style globally, preferring Bun over npm,
+# and stores it in cli_style_install_command. Returns 1 with install guidance
+# when neither package manager is available.
+choose_cli_style_install_command() {
+	if command -v bun >/dev/null 2>&1; then
+		cli_style_install_command=(bun add -g @lewishowles/cli-style)
+	elif command -v npm >/dev/null 2>&1; then
+		cli_style_install_command=(npm install -g @lewishowles/cli-style)
+	else
+		printf 'cli-style is not installed. Run: bun add -g @lewishowles/cli-style (or npm install -g @lewishowles/cli-style)\n' >&2
 		return 1
 	fi
-
-	cli_style_install_dir="$REPO_DIR/$relative_dir"
 }
 
 # Gathers every change setup would make for the chosen agents into plan_items
 # and plan_count, without changing installed files. Also fills
 # planned_pruned_links with the stale links the preview lists for removal, so
-# the same paths are not listed for backup too. Returns 1 when the skills or the
-# cli-style installer cannot be read.
+# the same paths are not listed for backup too. Returns 1 when the skills cannot
+# be read, or when cli-style is missing and no package manager can install it.
 #
 # @param  {string}  target
 #     The agents to set up: claude, codex or both.
@@ -467,7 +456,7 @@ build_setup_plan() {
 	planned_commands=()
 	planned_pruned_links=()
 
-	if ! load_cli_style_install_details || ! collect_canonical_skills; then
+	if ! collect_canonical_skills; then
 		return 1
 	fi
 
@@ -487,7 +476,8 @@ build_setup_plan() {
 	fi
 
 	if [ "$setup_helpers" = true ] && cli_style_install_needed; then
-		plan_change "Helper commands" "Download and install cli-style $cli_style_version in $(display_path "$cli_style_install_dir")"
+		choose_cli_style_install_command || return 1
+		plan_change "Helper commands" "Run ${cli_style_install_command[*]}"
 	fi
 
 	if [ "$target" = claude ] || [ "$target" = both ]; then

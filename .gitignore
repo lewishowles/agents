@@ -18,5 +18,4 @@ PROGRESS.md
 !/.agents/skills/
 /.agents/skills/*
 !/.agents/skills/agent-config-review
-.agent/tools/
 .agent/review-patches/

@@ -4,6 +4,8 @@ Use the scripts for normal installs, and add a shell alias if you run them often
 
 `scripts/sync.sh` and `scripts/validate.sh` need Bash 4 or newer, and validation also needs coreutils for `timeout`. macOS ships Bash 3.2, so install both with `brew install bash coreutils`.
 
+Both scripts use `CLI_STYLE_BIN` when it is set, or the globally installed `cli-style` command from `PATH`. If it is missing, install it with `bun add -g @lewishowles/cli-style` or `npm install -g @lewishowles/cli-style`. Full project setup installs it globally when needed, using Bun when available and npm otherwise.
+
 ## Shell aliases
 
 Add this alias to `~/.zshrc`:
@@ -147,7 +149,7 @@ scripts/setup.sh --include-all
 
 These options apply to both agents unless you pass `--claude` or `--codex`. Excluded skill names are saved in `~/.agents/skill-exclusions`, which both agents share. New skills outside Apple are installed on later setup runs. Choose Apple in the picker, or run `--include mac-app` to opt in. Opting in installs every Apple skill now and any added later. The choice is saved as `apple` in `~/.agents/skill-inclusions`. An existing exclusions file does not opt Apple in. `--include-all` clears exclusions and opts in to Apple to restore the full set.
 
-Run `scripts/setup.sh --status` to see whether each skill is installed, excluded, off by default, missing, or conflicting in each agent's skill directory. An excluded or default-off skill can also show `link still present`. Status prints a command to fix each missing or conflicting skill and each leftover excluded link, and shows how to opt in to Apple; it makes no changes. It needs an installed cli-style renderer but does not install one or use the network. If cli-style is missing, status exits with a hint to run `scripts/install-cli-style.sh`.
+Run `scripts/setup.sh --status` to see whether each skill is installed, excluded, off by default, missing, or conflicting in each agent's skill directory. An excluded or default-off skill can also show `link still present`. Status prints a command to fix each missing or conflicting skill and each leftover excluded link, and shows how to opt in to Apple; it makes no changes. It needs an installed cli-style renderer but does not install one or use the network. If cli-style is missing, status exits with the global install commands.
 
 Run `scripts/setup.sh --select` to choose skills in a terminal. Skills are grouped by collection (the folder under `skills/`), with collections and their skills sorted alphabetically. Each collection heading shows its skill count. Apple starts unticked until you choose it; other collections start ticked unless you excluded a skill. Names are aligned and short descriptions appear in dim text unless `NO_COLOR` is set; skills without a description show only their name. The numbered list also uses plain text when output is redirected. Setup uses `fzf` 0.74 or newer when available and falls back to the numbered list with a notice for older or unreadable versions. With `fzf`, Tab toggles one skill or every skill under a collection heading. Tab on a heading also clears any typed search so the whole collection is included. A partly selected collection becomes fully selected; Tab again clears it. In the numbered list, enter skill numbers, collection names such as `apple` or `vue`, or both to toggle them. Long descriptions are shortened to fit the terminal. Cancelling leaves the selection unchanged. The picker requires a terminal; use `--exclude` and `--include` in scripts.
 

@@ -1,8 +1,18 @@
 #!/usr/bin/env bash
 # Shared cli-style rendering helpers for repository scripts.
 
-# The cli-style executable that the rendering helpers call, unless the caller has already set one.
-CLI_STYLE_BIN="${CLI_STYLE_BIN:-$REPO_DIR/.agent/tools/cli-style/bin/cli-style}"
+# The global install command to show when cli-style is missing or cannot run.
+CLI_STYLE_INSTALL_GUIDANCE='Run: bun add -g @lewishowles/cli-style (or npm install -g @lewishowles/cli-style)'
+
+# The cli-style executable that the rendering helpers call: CLI_STYLE_BIN when
+# the caller sets it, otherwise the cli-style command on PATH.
+if [ -z "${CLI_STYLE_BIN:-}" ]; then
+	CLI_STYLE_BIN=$(command -v cli-style || true)
+	if [ -z "$CLI_STYLE_BIN" ]; then
+		printf 'cli-style is not installed. %s\n' "$CLI_STYLE_INSTALL_GUIDANCE" >&2
+		exit 1
+	fi
+fi
 export CLI_STYLE_BIN
 
 # The label of the status group whose rows are being counted, or empty when no group is active.
@@ -21,7 +31,7 @@ CLI_STYLE_GROUP_WARNING=0
 CLI_STYLE_GROUP_FAILED=0
 
 if [ ! -x "$CLI_STYLE_BIN" ]; then
-	printf 'cli-style is not installed. Run: scripts/install-cli-style.sh\n' >&2
+	printf 'cli-style is not executable: %s. %s\n' "$CLI_STYLE_BIN" "$CLI_STYLE_INSTALL_GUIDANCE" >&2
 	exit 1
 fi
 

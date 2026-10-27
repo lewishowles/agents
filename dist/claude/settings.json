@@ -1,221 +1,223 @@
 {
-	"outputStyle": "concise",
-	"theme": "custom:catppuccin-mocha",
-	"model": "opus",
-	"modelSettings": {
-		"claude-opus-5-5": {
-			"effortLevel": "medium"
-		}
-	},
-	"env": {
-		"CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1",
-		"CLAUDE_CODE_SUBAGENT_MODEL": "haiku",
-		"MAX_THINKING_TOKENS": "10000"
-	},
-	"statusLine": {
-		"type": "command",
-		"command": "bash \"$HOME/.claude/statusline.sh\""
-	},
-	"permissions": {
-		"defaultMode": "auto",
-		"additionalDirectories": [
-			"~/.Trash",
-			"~/Dev/Repositories/Configuration/Agents",
-			"~/Dev/Repositories/Packages/dev-tools",
-			"~/Dev/Repositories/Packages/agent-tools"
-		],
-		"allow": [
-			"mcp__codebase-memory-mcp__*",
-			"Bash(hcom:*)",
-			"PowerShell(hcom:*)",
-			"Bash(export HCOM_*=*)",
-			"PowerShell($env:HCOM_* = *)",
-			"Bash(progress:*)",
-			"Bash(agent-run:*)",
-			"Bash(git status:*)",
-			"Bash(zsh -n:*)"
-		]
-	},
-	"skillOverrides": {
-		"accessibility": "name-only",
-		"bash": "name-only",
-		"project-continue": "name-only",
-		"claude-api": "name-only",
-		"code-style": "on",
-		"dependencies": "name-only",
-		"test-e2e": "name-only",
-		"error-handling": "on",
-		"fewer-permission-prompts": "name-only",
-		"init": "name-only",
-		"keybindings-help": "name-only",
-		"loop": "name-only",
-		"project-plan-task": "name-only",
-		"writing-readme": "name-only",
-		"review": "name-only",
-		"schedule": "name-only",
-		"security-review": "name-only",
-		"project-setup": "name-only",
-		"simplify": "name-only",
-		"swift": "name-only",
-		"swift-ui": "name-only",
-		"typescript": "name-only",
-		"writing-copy": "name-only",
-		"test-unit": "name-only",
-		"update-config": "name-only",
-		"vue-vite": "name-only",
-		"vue": "name-only",
-		"vue-project-stack": "name-only",
-		"writing": "on"
-	},
-	"hooks": {
-		"PreToolUse": [
-			{
-				"matcher": "Read",
-				"hooks": [
-					{
-						"type": "command",
-						"command": "jq -r '.tool_input.file_path // empty' | { read fp; if echo \"$fp\" | grep -q '\\.env'; then exit 2; fi; }"
-					}
-				]
-			},
-			{
-				"hooks": [
-					{
-						"type": "command",
-						"command": "bash \"$HOME/.claude/hooks/tool-call-checkpoint.sh\" claude"
-					}
-				]
-			},
-			{
-				"matcher": "Bash",
-				"hooks": [
-					{
-						"type": "command",
-						"command": "bash -c 'bash \"$HOME/.claude/hooks/guard-commit-message.sh\"'"
-					},
-					{
-						"type": "command",
-						"command": "bash -c 'bash \"$HOME/.claude/hooks/guard-destructive.sh\"'"
-					},
-					{
-						"type": "command",
-						"command": "bash -c 'bash \"$HOME/.claude/hooks/guard-hcom-ack.sh\"'"
-					},
-					{
-						"type": "command",
-						"command": "bash -c 'bash \"$HOME/.claude/hooks/guard-hcom-recipient.sh\"'"
-					},
-					{
-						"type": "command",
-						"command": "bash -c 'bash \"$HOME/.claude/hooks/guard-manual-commands.sh\"'"
-					},
-					{
-						"type": "command",
-						"command": "bash -c 'bash \"$HOME/.claude/hooks/guard-no-pager.sh\"'"
-					},
-					{
-						"type": "command",
-						"command": "bash -c 'bash \"$HOME/.claude/hooks/guard-runaway-process.sh\"'"
-					},
-					{
-						"type": "command",
-						"command": "bash -c 'bash \"$HOME/.claude/hooks/guard-search-boundaries.sh\"'"
-					}
-				]
-			},
-			{
-				"matcher": "Read",
-				"hooks": [
-					{
-						"type": "command",
-						"command": "bash -c 'bash \"$HOME/.claude/hooks/retina-shrink-read.sh\"'"
-					}
-				]
-			},
-			{
-				"matcher": "Write|Edit",
-				"hooks": [
-					{
-						"type": "command",
-						"command": "bash -c 'bash \"$HOME/.claude/hooks/test-skeleton-reminder.sh\"'"
-					}
-				]
-			}
-		],
-		"PostToolUse": [
-			{
-				"matcher": "Edit|Write",
-				"hooks": [
-					{
-						"type": "command",
-						"command": "bash -c 'bash \"$HOME/.claude/hooks/auto-format.sh\"'",
-						"timeout": 10
-					}
-				]
-			},
-			{
-				"matcher": "ExitPlanMode",
-				"hooks": [
-					{
-						"type": "command",
-						"command": "bash -c 'bash \"$HOME/.claude/hooks/plan-verify.sh\"'",
-						"timeout": 5
-					}
-				]
-			}
-		],
-		"PostToolUseFailure": [
-			{
-				"hooks": [
-					{
-						"type": "command",
-						"command": "bash -c 'bash \"$HOME/.claude/hooks/tool-failure-log.sh\"'"
-					}
-				]
-			}
-		],
-		"PreCompact": [
-			{
-				"hooks": [
-					{
-						"type": "command",
-						"command": "bash \"$HOME/.claude/hooks/tool-call-checkpoint.sh\" claude"
-					}
-				]
-			}
-		],
-		"SessionStart": [
-			{
-				"matcher": "clear",
-				"hooks": [
-					{
-						"type": "command",
-						"command": "bash \"$HOME/.claude/hooks/tool-call-checkpoint.sh\" claude"
-					}
-				]
-			}
-		],
-		"UserPromptSubmit": [
-			{
-				"hooks": [
-					{
-						"type": "command",
-						"command": "bash -c 'bash \"$HOME/.claude/hooks/progress-resume.sh\"'",
-						"timeout": 5
-					}
-				]
-			}
-		]
-	},
-	"disabledMcpjsonServers": ["mdn"],
-	"enabledPlugins": {},
-	"agentPushNotifEnabled": true,
-	"contextCompactionThreshold": 80,
-	"modelCaching": true,
-	"promptCaching": true,
-	"promptSuggestionEnabled": false,
-	"editorMode": "normal",
-	"awaySummaryEnabled": false,
-	"workflowKeywordTriggerEnabled": false,
-	"fileCheckpointingEnabled": true
+  "outputStyle": "concise",
+  "theme": "custom:catppuccin-mocha",
+  "model": "opus",
+  "modelSettings": {
+    "claude-opus-5-5": {
+      "effortLevel": "medium"
+    }
+  },
+  "env": {
+    "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "haiku",
+    "MAX_THINKING_TOKENS": "10000"
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash \"$HOME/.claude/statusline.sh\""
+  },
+  "permissions": {
+    "defaultMode": "auto",
+    "additionalDirectories": [
+      "~/.Trash",
+      "~/Dev/Repositories/Configuration/Agents",
+      "~/Dev/Repositories/Packages/dev-tools",
+      "~/Dev/Repositories/Packages/agent-tools"
+    ],
+    "allow": [
+      "mcp__codebase-memory-mcp__*",
+      "Bash(hcom:*)",
+      "PowerShell(hcom:*)",
+      "Bash(export HCOM_*=*)",
+      "PowerShell($env:HCOM_* = *)",
+      "Bash(progress:*)",
+      "Bash(agent-run:*)",
+      "Bash(git status:*)",
+      "Bash(zsh -n:*)"
+    ]
+  },
+  "skillOverrides": {
+    "accessibility": "name-only",
+    "bash": "name-only",
+    "project-continue": "name-only",
+    "claude-api": "name-only",
+    "code-style": "on",
+    "dependencies": "name-only",
+    "test-e2e": "name-only",
+    "error-handling": "on",
+    "fewer-permission-prompts": "name-only",
+    "init": "name-only",
+    "keybindings-help": "name-only",
+    "loop": "name-only",
+    "project-plan-task": "name-only",
+    "writing-readme": "name-only",
+    "review": "name-only",
+    "schedule": "name-only",
+    "security-review": "name-only",
+    "project-setup": "name-only",
+    "simplify": "name-only",
+    "swift": "name-only",
+    "swift-ui": "name-only",
+    "typescript": "name-only",
+    "writing-copy": "name-only",
+    "test-unit": "name-only",
+    "update-config": "name-only",
+    "vue-vite": "name-only",
+    "vue": "name-only",
+    "vue-project-stack": "name-only",
+    "writing": "on"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // empty' | { read fp; if echo \"$fp\" | grep -q '\\.env'; then exit 2; fi; }"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$HOME/.claude/hooks/tool-call-checkpoint.sh\" claude"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'bash \"$HOME/.claude/hooks/guard-commit-message.sh\"'"
+          },
+          {
+            "type": "command",
+            "command": "bash -c 'bash \"$HOME/.claude/hooks/guard-destructive.sh\"'"
+          },
+          {
+            "type": "command",
+            "command": "bash -c 'bash \"$HOME/.claude/hooks/guard-hcom-ack.sh\"'"
+          },
+          {
+            "type": "command",
+            "command": "bash -c 'bash \"$HOME/.claude/hooks/guard-hcom-recipient.sh\"'"
+          },
+          {
+            "type": "command",
+            "command": "bash -c 'bash \"$HOME/.claude/hooks/guard-manual-commands.sh\"'"
+          },
+          {
+            "type": "command",
+            "command": "bash -c 'bash \"$HOME/.claude/hooks/guard-no-pager.sh\"'"
+          },
+          {
+            "type": "command",
+            "command": "bash -c 'bash \"$HOME/.claude/hooks/guard-runaway-process.sh\"'"
+          },
+          {
+            "type": "command",
+            "command": "bash -c 'bash \"$HOME/.claude/hooks/guard-search-boundaries.sh\"'"
+          }
+        ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'bash \"$HOME/.claude/hooks/retina-shrink-read.sh\"'"
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'bash \"$HOME/.claude/hooks/test-skeleton-reminder.sh\"'"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'bash \"$HOME/.claude/hooks/auto-format.sh\"'",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "ExitPlanMode",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'bash \"$HOME/.claude/hooks/plan-verify.sh\"'",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'bash \"$HOME/.claude/hooks/tool-failure-log.sh\"'"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$HOME/.claude/hooks/tool-call-checkpoint.sh\" claude"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$HOME/.claude/hooks/tool-call-checkpoint.sh\" claude"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'bash \"$HOME/.claude/hooks/progress-resume.sh\"'",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  },
+  "disabledMcpjsonServers": [
+    "mdn"
+  ],
+  "enabledPlugins": {},
+  "agentPushNotifEnabled": true,
+  "contextCompactionThreshold": 80,
+  "modelCaching": true,
+  "promptCaching": true,
+  "promptSuggestionEnabled": false,
+  "editorMode": "normal",
+  "awaySummaryEnabled": false,
+  "workflowKeywordTriggerEnabled": false,
+  "fileCheckpointingEnabled": true
 }

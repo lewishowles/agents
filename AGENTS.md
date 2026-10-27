@@ -63,6 +63,8 @@ Root holds human-facing contracts that tools auto-discover and the user reads ea
 
 Durable scripts live under tracked `scripts/`, never under `.agent/`. Global setup installs the `friction`, `team-send`, and `doc-paths` commands.
 
+`scripts/sync.sh` and `scripts/validate.sh` use `CLI_STYLE_BIN` when set, then `cli-style` from `PATH`. Setup installs a missing `cli-style` globally with Bun or npm; there is no copy per worktree.
+
 ## Symlink topology (after `setup.sh --both`)
 
 ```
