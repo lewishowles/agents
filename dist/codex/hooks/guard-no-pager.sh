@@ -28,6 +28,8 @@ valid_pattern='git([[:space:]]+(-C[[:space:]]+[^[:space:]]+|-c[[:space:]]+[^[:sp
 if [[ "$normalised" =~ $git_pattern ]] \
 	&& [[ "$normalised" =~ $no_pager_pattern ]] \
 	&& [[ ! "$normalised" =~ $valid_pattern ]]; then
+	# The backticks are literal message text, not command substitution.
+	# shellcheck disable=SC2016
 	printf 'guard-no-pager: blocked: `--no-pager` is a Git global option and goes before the subcommand. Use `git --no-pager <subcommand>` or `git -C <path> --no-pager <subcommand>`.\n' >&2
 	exit 2
 fi

@@ -8,7 +8,15 @@
 plans_dir="$HOME/.claude/plans"
 [ -d "$plans_dir" ] || exit 0
 
-plan_file=$(ls -t "$plans_dir"/*.md 2>/dev/null | head -1)
+# The most recently changed plan, which is the one being exited.
+plan_file=""
+# Each plan file in turn; the glob stays unexpanded when there are none.
+for candidate in "$plans_dir"/*.md; do
+	[ -f "$candidate" ] || continue
+	if [ -z "$plan_file" ] || [ "$candidate" -nt "$plan_file" ]; then
+		plan_file="$candidate"
+	fi
+done
 [ -z "$plan_file" ] && exit 0
 
 if ! grep -qi "^## Validation" "$plan_file"; then

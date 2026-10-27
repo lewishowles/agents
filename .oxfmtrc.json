@@ -1,4 +1,4 @@
 {
 	"embeddedLanguageFormatting": "off",
-	"ignorePatterns": ["docs/skills.md", "docs/hooks.md"]
+	"ignorePatterns": ["docs/skills.md", "docs/hooks.md", "dist/claude/settings.json"]
 }

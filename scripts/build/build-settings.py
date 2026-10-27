@@ -97,7 +97,7 @@ def main() -> None:
 			event_list.append({"hooks": hook_entries})
 
 	OUT_FILE.parent.mkdir(parents=True, exist_ok=True)
-	OUT_FILE.write_text(json.dumps(base, indent=2) + "\n")
+	OUT_FILE.write_text(json.dumps(base, indent="\t") + "\n")
 	print(f"Generated {OUT_FILE.relative_to(REPO_DIR)}")
 
 

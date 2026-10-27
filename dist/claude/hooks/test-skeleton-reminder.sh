@@ -116,7 +116,8 @@ if ! is_implementation_file || is_test_file "$file_path" "$filename" || ! has_te
 fi
 
 first_candidate=$(test_candidates "$file_path" | sed -n '1p')
-display_candidate="${first_candidate#$PWD/}"
+# The suggested test path, relative to the project when it sits inside it.
+display_candidate="${first_candidate#"$PWD"/}"
 
 jq -n \
 	--arg ctx "TEST REMINDER (${filename}): This project has a test setup, but I couldn't find a matching test file. Add or update one alongside this implementation, for example ${display_candidate}." \
