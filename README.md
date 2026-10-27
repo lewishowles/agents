@@ -55,7 +55,7 @@ After setup, check which skills are linked and which are available to opt in:
 scripts/setup.sh --status
 ```
 
-For example, ask your agent to review a README. The `writing-readme` skill gives it a reader-first structure, while the general `writing` skill covers voice and plain language. Skills are discovered from their descriptions when the task matches.
+For example, ask your agent to review a README. The `writing` skill gives it a reader-first structure and covers voice and plain language. Skills are discovered from their descriptions when the task matches.
 
 ## Repository map
 

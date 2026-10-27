@@ -21,12 +21,12 @@ from urllib.parse import unquote, urlsplit
 # The repository containing the canonical skills and validation sources.
 REPO_DIR = Path(sys.argv[1]).resolve()
 # The largest allowed default skill list, in estimated tokens. Lower it to the new size after each merge.
-SKILL_LIST_LIMIT = 4258
+SKILL_LIST_LIMIT = 4184
 # The size of Codex's whole skill list for gpt-6-sol, shared with Codex's own and external skills.
 CODEX_LIST_BUDGET = 5440
 # Skill names removed by family merges; add names here when retiring them.
 RETIRED_SKILL_NAMES: tuple[str, ...] = (
-	"test-unit", "test-e2e", "vue-vite", "vue-router", "vue-pinia", "vue-pinia-colada", "vue-project-stack"
+	"test-unit", "test-e2e", "vue-vite", "vue-router", "vue-pinia", "vue-pinia-colada", "vue-project-stack", "writing-copy", "writing-readme"
 )
 # Retired skill names that are also package names. Any mention inside code spans or code blocks counts as the package,
 # so a backticked reference to one of these skills is not reported.
@@ -216,10 +216,12 @@ def check_retired_names() -> list[str]:
 	if not RETIRED_SKILL_NAMES:
 		return problems
 
-	# Paths that must use the merged skill names instead.
-	source_roots = ("src", "skills", "teams", "scripts", "docs")
-	for source_root in source_roots:
-		for source in (REPO_DIR / source_root).rglob("*"):
+	# Directories and root files that must use the merged skill names instead.
+	source_paths = ("src", "skills", "teams", "scripts", "docs", "README.md", "AGENTS.md")
+	for source_path in source_paths:
+		# The directory or root file to search.
+		root = REPO_DIR / source_path
+		for source in (root,) if root.is_file() else root.rglob("*"):
 			if not source.is_file():
 				continue
 			# The retired-name list is maintained here, so this file is not a source to scan.

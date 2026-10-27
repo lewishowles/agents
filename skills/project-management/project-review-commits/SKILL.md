@@ -61,7 +61,7 @@ Load additional skills only when the touched files or diff contents make them re
 - `swift` or `swift-ui` for Swift or SwiftUI changes
 - `bash` for shell scripts, hooks, installers, environment files, or command snippets
 - `dependencies` for package additions, removals, upgrades, lockfile changes, or dependency recommendations
-- `writing`, `writing-readme`, or `writing-copy` for prose, README, documentation, or UI copy changes
+- `writing` for prose, README, documentation, or UI copy changes
 - `test` for test strategy, test files, coverage gaps, or browser checks
 
 If a relevant skill is unavailable, state that once and continue with the closest applicable checklist.
