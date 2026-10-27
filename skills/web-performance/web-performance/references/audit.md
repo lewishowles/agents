@@ -135,4 +135,4 @@ Run `rollup-plugin-visualizer` and note unexpectedly large chunks or missing cod
 
 - [Optimisation](optimisation.md) — implementation guidance for fixing anything this audit finds
 - [code-review](../../../code/code-review/SKILL.md) — the fair-comparison check for any PR claiming a measured improvement
-- [accessibility-audit](../../../accessibility/accessibility-audit/SKILL.md) — same two-mode audit shape, for accessibility instead of performance
+- [Accessibility auditing guide](../../../accessibility/accessibility/references/auditing.md) — same two-mode audit shape, for accessibility instead of performance

@@ -1,10 +1,6 @@
----
-name: accessibility-audit
-description: >
-  Use this skill when conducting an accessibility audit of a page, component, or PR — distinct from building accessibly (use the accessibility skill for that). Two modes: quick PR triage or full client audit. Triggers: "audit for accessibility", "a11y check", "WCAG compliance", "is this accessible?", preparing a client accessibility report.
----
+# Auditing accessibility
 
-# Accessibility audit
+For building or editing accessible interfaces, use the [building guide](building.md).
 
 WCAG 2.2 AA baseline; AAA where feasible. Choose mode by context.
 
@@ -61,7 +57,7 @@ If `web-audit` is unavailable, stop and ask the user to run it, provide an exist
 | Loading, empty, and error states checked, not just happy path |       |
 | Error states are announced, not just visually distinct        |       |
 
-These states are only checkable if reachable (seeded empty data, throttled/failed network, or existing mock harness). See [references/manual-checks.md](references/manual-checks.md#component-states) for what's reachable.
+These states are only checkable if reachable (seeded empty data, throttled/failed network, or existing mock harness). See [manual-checks.md](manual-checks.md#component-states) for what's reachable.
 
 ### Triage output
 
@@ -102,7 +98,7 @@ Use `web-audit` for rendered automated evidence. If it is unavailable, ask the u
 
 ### 3. Manual verification
 
-Work through WCAG 2.2 AA. For the per-criterion checklist, see [references/wcag-checklist.md](references/wcag-checklist.md).
+Work through WCAG 2.2 AA. For the per-criterion checklist, see [wcag-checklist.md](wcag-checklist.md).
 
 Priority areas:
 
@@ -111,9 +107,9 @@ Priority areas:
 - **Understandable**: error messages, form labels, consistent navigation, plain language
 - **Robust**: valid HTML, ARIA used correctly, works with screen readers
 
-Not every manual check needs a human. If browser access is available, run agent-assistable checks directly: keyboard traversal, focus order, contrast, reflow at zoom, landmark structure, etc. See [references/manual-checks.md](references/manual-checks.md) for what an agent can run directly vs. what needs human confirmation.
+Not every manual check needs a human. If browser access is available, run agent-assistable checks directly: keyboard traversal, focus order, contrast, reflow at zoom, landmark structure, etc. See [manual-checks.md](manual-checks.md) for what an agent can run directly vs. what needs human confirmation.
 
-Screen reader testing is the one category no browser MCP replaces — it needs real AT on a real device. For VoiceOver, NVDA, and JAWS commands, see [references/screen-reader-testing.md](references/screen-reader-testing.md).
+Screen reader testing is the one category no browser MCP replaces — it needs real AT on a real device. For VoiceOver, NVDA, and JAWS commands, see [screen-reader-testing.md](screen-reader-testing.md).
 
 ### 4. Map findings to severity
 

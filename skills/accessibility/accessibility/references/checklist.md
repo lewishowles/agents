@@ -1,6 +1,6 @@
 # Accessibility implementation checklist
 
-Quick reference for changed UI. It combines WCAG 2.2 A/AA outcomes, preferred techniques, and stricter project or platform defaults. The label on each item identifies which contract it represents. Paste it into a PR description or use it as a review gate. For criterion-by-criterion audit work, use the accessibility-audit skill.
+Quick reference for changed UI. It combines WCAG 2.2 A/AA outcomes, preferred techniques, and stricter project or platform defaults. The label on each item identifies which contract it represents. Paste it into a PR description or use it as a review gate. For criterion-by-criterion audit work, use the [auditing guide](auditing.md).
 
 ## Visual
 

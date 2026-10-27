@@ -21,12 +21,12 @@ from urllib.parse import unquote, urlsplit
 # The repository containing the canonical skills and validation sources.
 REPO_DIR = Path(sys.argv[1]).resolve()
 # The largest allowed default skill list, in estimated tokens. Lower it to the new size after each merge.
-SKILL_LIST_LIMIT = 4090
+SKILL_LIST_LIMIT = 4042
 # The size of Codex's whole skill list for gpt-6-sol, shared with Codex's own and external skills.
 CODEX_LIST_BUDGET = 5440
 # Skill names removed by family merges; add names here when retiring them.
 RETIRED_SKILL_NAMES: tuple[str, ...] = (
-	"test-unit", "test-e2e", "vue-vite", "vue-router", "vue-pinia", "vue-pinia-colada", "vue-project-stack", "writing-copy", "writing-readme", "web-performance-audit", "boilersuit-generator-authoring"
+	"test-unit", "test-e2e", "vue-vite", "vue-router", "vue-pinia", "vue-pinia-colada", "vue-project-stack", "writing-copy", "writing-readme", "web-performance-audit", "boilersuit-generator-authoring", "accessibility-audit"
 )
 # Retired skill names that are also package names. Any mention inside code spans or code blocks counts as the package,
 # so a backticked reference to one of these skills is not reported.
@@ -206,7 +206,8 @@ def check_links(skill_file: Path) -> list[str]:
 def check_retired_names() -> list[str]:
 	"""Find retired skill names still mentioned in maintained source files.
 
-	Names that are also package names are only reported outside code, where they would refer to the skill.
+	Names that are also package names are only reported outside code, where they would refer to the skill. Skills copied
+	from upstream are skipped, because their text keeps the source's own names.
 
 	Returns:
 		One finding for each retired name in each file that still mentions it.
@@ -224,6 +225,13 @@ def check_retired_names() -> list[str]:
 		for source in (root,) if root.is_file() else root.rglob("*"):
 			if not source.is_file():
 				continue
+			# Skills copied from upstream (those with a SOURCE.md) keep their source's wording, where a retired name can mean
+			# something else, such as an iOS folder called accessibility-audit.
+			if source_path == "skills":
+				# The file's path inside skills/, starting with its collection and skill folder.
+				skill_parts = source.relative_to(root).parts
+				if len(skill_parts) >= 3 and (root / skill_parts[0] / skill_parts[1] / "SOURCE.md").is_file():
+					continue
 			# The retired-name list is maintained here, so this file is not a source to scan.
 			if source == REPO_DIR / "scripts" / "validate" / "check-skill-list.sh":
 				continue

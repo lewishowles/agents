@@ -20,7 +20,7 @@ Audit:
 - Progress handoff quality when multi-session work is active
 - setup drift after this configuration repo changes
 
-Do not turn this into broad code-quality review. Use `code-review` for code diffs and `accessibility-audit` for UI/WCAG audits.
+Do not turn this into broad code-quality review. Use `code-review` for code diffs and the auditing guide in `accessibility` for UI/WCAG audits.
 
 ## Startup
 

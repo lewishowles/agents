@@ -8,7 +8,7 @@ description: >
 
 Review an existing interface against [frontend-design](../frontend-design/SKILL.md). Report what the supplied evidence shows and name the checks it cannot support. Use [writing](../../writing/writing/SKILL.md) for clear findings.
 
-For an accessibility audit or fix, use `accessibility-audit` or `accessibility`. For performance work, use `web-performance`. For building or fixing an interface, use `frontend-design`.
+For an accessibility audit or fix, use the relevant guide in `accessibility`. For performance work, use `web-performance`. For building or fixing an interface, use `frontend-design`.
 
 ## Choose the evidence tier
 
@@ -23,12 +23,12 @@ The tiers in [the check list](references/checks.md) are cumulative only when the
 
 1. Choose quick triage for a screenshot, PR, or narrow polish question. Choose a full report when the user requests a broader audit across pages, themes, or interactions.
 2. Work through [the check list](references/checks.md) in evidence order. Apply the linked `frontend-design` rule in the context of the product's existing design system. Record the location and evidence for each observed issue. Do not infer a defect from a missing view or from taste alone.
-3. Route accessibility questions, including focus visibility, reduced-motion behaviour, and touch-target size, to `accessibility-audit`. Route compositor properties and `will-change` to `web-performance`. You may note that those checks need a separate review, but do not judge them here.
+3. Route accessibility questions, including focus visibility, reduced-motion behaviour, and touch-target size, to the [accessibility auditing guide](../../accessibility/accessibility/references/auditing.md). Route compositor properties and `will-change` to `web-performance`. You may note that those checks need a separate review, but do not judge them here.
 4. Prioritise findings by their effect on clarity, consistency, and interaction. Give a specific change that follows the cited rule. Keep quick triage to five findings and a full report to fifteen; group repeated instances of the same issue.
 
 ## Quick triage output
 
-Use the quick-triage shape from `accessibility-audit`, with the `frontend-design` rule in place of a WCAG criterion:
+Use the quick-triage shape from the [accessibility auditing guide](../../accessibility/accessibility/references/auditing.md), with the `frontend-design` rule in place of a WCAG criterion:
 
 ```markdown
 ## Design triage: [Interface]
@@ -57,7 +57,7 @@ Use **Blockers** for issues that obscure a primary action or state. Use **Warnin
 
 ## Full report output
 
-Use the full-report shape from `accessibility-audit`. Replace its WCAG criterion with the named `frontend-design` rule:
+Use the full-report shape from the [accessibility auditing guide](../../accessibility/accessibility/references/auditing.md). Replace its WCAG criterion with the named `frontend-design` rule:
 
 ```markdown
 ## Design audit report: [Interface]
@@ -92,4 +92,4 @@ Use the full-report shape from `accessibility-audit`. Replace its WCAG criterion
 1. [Highest-impact change]
 ```
 
-Grade each finding with the severity scale in `accessibility-audit`, judged by how much the issue gets in the way of someone using the interface. Reserve **Blocker** for an issue that hides a primary action or state, as in quick triage.
+Grade each finding with the severity scale in the [accessibility auditing guide](../../accessibility/accessibility/references/auditing.md), judged by how much the issue gets in the way of someone using the interface. Reserve **Blocker** for an issue that hides a primary action or state, as in quick triage.

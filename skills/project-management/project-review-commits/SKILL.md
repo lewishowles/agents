@@ -55,7 +55,7 @@ Apply these core review checks: verify behaviour and edge or error states, trace
 Load additional skills only when the touched files or diff contents make them relevant:
 
 - `frontend-security` for user input, auth, tokens, secrets, sanitisation, CSP, redirects, or external data
-- `accessibility` or `accessibility-audit` for UI, HTML, components, forms, keyboard interaction, colour, ARIA, or interface copy
+- `accessibility` for UI, HTML, components, forms, keyboard interaction, colour, ARIA, or interface copy; choose its auditing guide when reviewing accessibility
 - `web-performance` for runtime performance, asset loading, bundle size, Core Web Vitals, rendering, or reactivity cost
 - `typescript` or `vue` for matching Vue/TypeScript files and APIs
 - `swift` or `swift-ui` for Swift or SwiftUI changes

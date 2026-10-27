@@ -28,7 +28,7 @@ Do not use this skill for:
 - feedback already written about this repo, use `project-synthesise-feedback`
 - uncommitted local changes, use `project-review-worktree`
 - general repo health checks without an external source, use `project-audit`
-- accessibility compliance reviews, use `accessibility-audit`
+- accessibility compliance reviews, use the auditing guide in `accessibility`
 
 ## Decision contract
 
