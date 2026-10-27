@@ -114,6 +114,8 @@ session_id="$(printf '%s' "$input" | jq -r '.session_id // empty' 2>/dev/null)" 
 state_dir="${TMPDIR:-/tmp}/agent-tool-call-checkpoints"
 mkdir -p "$state_dir" 2>/dev/null || exit 0
 
+# Holds "<count> <limit>" on one line; the Claude status line reads it to show
+# the count, so keep this format in step with statusline.sh.
 state_file="$state_dir/$runtime-$session_id"
 trace_file="$state_file.trace.jsonl"
 lock_dir="$state_file.lock"
@@ -133,7 +135,7 @@ trap 'rmdir "$lock_dir" 2>/dev/null || true' EXIT
 if [[ "$event_name" == "SessionStart" ]]; then
 	source="$(printf '%s' "$input" | jq -r '.source // empty' 2>/dev/null)" || exit 0
 	[[ "$source" == "clear" ]] || exit 0
-	printf '0\n' > "$state_file"
+	printf '0 %s\n' "$TOOL_CALL_LIMIT" > "$state_file"
 	exit 0
 fi
 
@@ -143,14 +145,14 @@ trace_event_structure "$trace_file" "$input"
 
 count=0
 if [[ -f "$state_file" ]]; then
-	IFS= read -r count < "$state_file" || true
+	read -r count _ < "$state_file" || true
 	[[ "$count" =~ ^[0-9]+$ ]] || count=0
 fi
 
 (( count < TOOL_CALL_LIMIT )) || exit 0
 
 count=$((count + 1))
-printf '%s\n' "$count" > "$state_file"
+printf '%s %s\n' "$count" "$TOOL_CALL_LIMIT" > "$state_file"
 
 (( count == TOOL_CALL_LIMIT )) || exit 0
 

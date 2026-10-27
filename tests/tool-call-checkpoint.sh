@@ -112,7 +112,7 @@ assert_silent() {
 
 	assert_empty "$output_file"
 	if [[ -f "$STATE_FILE" ]]; then
-		IFS= read -r actual_count < "$STATE_FILE"
+		read -r actual_count _ < "$STATE_FILE"
 	fi
 	assert_equals "$actual_count" "$expected_count"
 }
@@ -141,8 +141,12 @@ fill_to_limit() {
 	local limit="$1"
 	# The counter value expected after each silent call.
 	local count
+	# The count already saved when the loop starts.
+	local current_count
 
-	for count in $(seq "$(( $(cat "$STATE_FILE") + 1 ))" "$(( limit - 1 ))"); do
+	read -r current_count _ < "$STATE_FILE"
+
+	for count in $(seq "$(( current_count + 1 ))" "$(( limit - 1 ))"); do
 		assert_silent "Write" "$count"
 	done
 }
@@ -186,6 +190,7 @@ done
 # Default limit: reads and edits both count, the 20th call fires, then the counter freezes.
 start_session "default" ""
 assert_silent "Read" "1"
+assert_equals "$(cut -d ' ' -f 2 "$STATE_FILE")" "20"
 assert_silent "mcp__codebase-memory-mcp__search_graph" "2"
 assert_silent "Edit" "3"
 assert_silent "Bash" "4"
@@ -200,9 +205,21 @@ assert_not_contains "$TEST_ROOT/advisory-context.txt" 'Outside HCOM'
 assert_silent "Write" "20"
 assert_silent "Read" "20"
 
+# Clearing a session resets the count to 0, keeps the limit in the counter file,
+# and lets the checkpoint fire again.
+jq -n --arg session "$SESSION" '{hook_event_name: "SessionStart", source: "clear", session_id: $session}' \
+	| env -u HCOM_TAG TMPDIR="$TEST_ROOT" AGENT_TOOL_CALL_LIMIT="$LIMIT_OVERRIDE" HCOM_NAME="$AGENT_NAME" HCOM_TAG="Agents-reviewer" \
+		bash "$HOOK" claude > "$TEST_ROOT/clear.txt"
+assert_empty "$TEST_ROOT/clear.txt"
+assert_equals "$(cat "$STATE_FILE")" "0 20"
+assert_silent "Read" "1"
+fill_to_limit 20
+assert_advisory "Write"
+
 # Overridden limit: the advisory moves to the configured call.
 start_session "override" "5"
 assert_silent "Read" "1"
+assert_equals "$(cut -d ' ' -f 2 "$STATE_FILE")" "5"
 fill_to_limit 5
 assert_advisory "Edit"
 assert_silent "Edit" "5"
@@ -216,6 +233,7 @@ assert_advisory "Write"
 # A bare HCOM name uses the worker limit from a role-only HCOM tag.
 start_session "implementer" "" "maki" "Agents-implementer"
 assert_silent "Read" "1"
+assert_equals "$(cut -d ' ' -f 2 "$STATE_FILE")" "40"
 fill_to_limit 40
 assert_advisory "Edit"
 assert_silent "Edit" "40"

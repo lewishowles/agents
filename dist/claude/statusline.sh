@@ -16,6 +16,8 @@ workspace_dir=$(printf '%s' "$input" | jq -r '.workspace.current_dir // empty')
 # repo's name in a worktree.
 dir=$(basename "$workspace_dir" 2>/dev/null)
 tokens=$(printf '%s' "$input" | jq -r '.context_window.total_input_tokens // empty')
+# The session ID that names this session's tool-call counter file.
+session_id=$(printf '%s' "$input" | jq -r '.session_id // empty')
 model=$(printf '%s' "$input" | jq -r '.model.display_name // empty')
 effort=$(printf '%s' "$input" | jq -r '.effort.level // empty')
 five_used=$(printf '%s' "$input" | jq -r '.rate_limits.five_hour.used_percentage // empty')
@@ -72,6 +74,22 @@ if [[ -n "$tokens" ]]; then
 		tokensfmt=$(echo "scale=1; $tokens / 1000" | bc)K
 	else
 		tokensfmt="${tokens}"
+	fi
+fi
+
+# The tool-call segment, such as "tools 12/20". The checkpoint hook counts the
+# calls and picks the limit; this only shows what it saved. A session without a
+# counter file, or a file written before the hook saved the limit, shows nothing.
+tool_calls=""
+if [[ "$session_id" =~ ^[A-Za-z0-9._-]+$ ]]; then
+	# The checkpoint hook's counter file for this session.
+	state_file="${TMPDIR:-/tmp}/agent-tool-call-checkpoints/claude-$session_id"
+	if [[ -f "$state_file" ]]; then
+		# The saved call count and limit, read from the file's single line.
+		read -r count limit < "$state_file" || true
+		if [[ "$count" =~ ^[0-9]+$ && "$limit" =~ ^[1-9][0-9]*$ ]]; then
+			tool_calls="tools $count/$limit"
+		fi
 	fi
 fi
 
@@ -154,6 +172,7 @@ line1_parts=()
 [[ -n "$account_tag" ]] && line1_parts+=("${magenta}[${account_tag}]${reset}")
 [[ -n "$dir" ]] && line1_parts+=("${green}${dir}${reset}")
 [[ -n "$tokensfmt" ]] && line1_parts+=("${orange}${tokensfmt} used${reset}")
+[[ -n "$tool_calls" ]] && line1_parts+=("${orange}${tool_calls}${reset}")
 
 if [[ -n "$model" ]]; then
 	m="$model"
