@@ -15,9 +15,7 @@ from pathlib import Path
 # The repository root, so the script finds its files from any working directory.
 REPO_DIR = Path(__file__).resolve().parent.parent.parent
 # The hand-edited settings file that the generated settings start from.
-BASE_FILE = (
-	REPO_DIR / "src" / "adapters" / "claude" / "settings.base.json"
-)
+BASE_FILE = REPO_DIR / "src" / "adapters" / "claude" / "settings.base.json"
 # The folder of Claude hook manifests whose hooks are added to the settings.
 HOOKS_DIR = REPO_DIR / "src" / "hooks" / "claude"
 # The generated settings file that Claude reads.
@@ -97,6 +95,7 @@ def main() -> None:
 			event_list.append({"hooks": hook_entries})
 
 	OUT_FILE.parent.mkdir(parents=True, exist_ok=True)
+	# Indent with tabs to match the committed file, so a sync with no settings change leaves it untouched.
 	OUT_FILE.write_text(json.dumps(base, indent="\t") + "\n")
 	print(f"Generated {OUT_FILE.relative_to(REPO_DIR)}")
 
