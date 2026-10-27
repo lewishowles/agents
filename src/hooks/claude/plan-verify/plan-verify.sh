@@ -5,6 +5,7 @@
 # Warns if the most recently modified plan file lacks a ## Validation section.
 # Silent on pass, silent if no plan files exist.
 
+# The folder where Claude stores plan files.
 plans_dir="$HOME/.claude/plans"
 [ -d "$plans_dir" ] || exit 0
 

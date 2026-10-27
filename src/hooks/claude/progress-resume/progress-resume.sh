@@ -9,7 +9,9 @@ if ! command -v jq &>/dev/null; then
 	exit 0
 fi
 
+# The hook payload, which holds the prompt the user submitted.
 input=$(cat)
+# The user's prompt, checked for a request to continue work.
 prompt=$(printf '%s' "$input" | jq -r '.prompt // ""' 2>/dev/null)
 
 if [[ -z "$prompt" ]]; then
@@ -20,8 +22,10 @@ if ! printf '%s' "$prompt" | grep -qiE '\b(continue|carry on|pick up|resume|wher
 	exit 0
 fi
 
+# The context shown to Claude: the next work item from progress, or a note that progress is unavailable.
 ctx=""
 if command -v progress &>/dev/null; then
+	# The next work item reported by progress, when the command succeeds.
 	progress_output=$(progress next --json 2>/dev/null) || progress_output=""
 	if [[ -n "$progress_output" ]] && printf '%s' "$progress_output" | jq -e 'type == "object"' >/dev/null 2>&1; then
 		ctx="Current project progress from progress next --json:"$'\n\n'"$progress_output"
