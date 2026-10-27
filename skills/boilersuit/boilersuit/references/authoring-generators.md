@@ -1,10 +1,4 @@
----
-name: boilersuit-generator-authoring
-description: >
-  Use this skill when creating or editing a project-owned Boilersuit generator under .boilersuit/generators/. Uses the installed CLI contract as the source of truth, plans the generator before writing, runs doctor before preview, and avoids copying schema details that can drift.
----
-
-# Boilersuit generator authoring
+# Authoring generators
 
 Create or edit generators using the installed Boilersuit CLI as contract. Do not rely on remembered field types, filters, schema properties, or path behaviour.
 
@@ -20,7 +14,7 @@ boilersuit generators contract --help
 boilersuit generators doctor --help
 ```
 
-If unavailable, stop and report CLI needs update. Don't reconstruct schema from this skill.
+If unavailable, stop and report CLI needs update. Don't reconstruct schema from this guide.
 
 If a command prints `LLVM Profile Error: Failed to write file "default.profraw"`, rerun it with:
 
@@ -50,7 +44,7 @@ Current implementation: `pascal`, `kebab`, `camel`, `snake`, `constant`, `upper`
 
 Tokens: SCREAMING_SNAKE_CASE, digits allowed after first char (e.g. `API_V2_NAME`, `WCAG_22_LEVEL`). Verify `token_format` in loaded contract.
 
-Don't copy contract details into this skill or assume prior projects match current contract.
+Don't copy contract details into this guide or assume prior projects match current contract.
 
 ## Project contract boundaries
 
