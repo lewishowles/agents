@@ -32,6 +32,7 @@ while [[ -L "$script_path" ]]; do
 		script_path="$script_directory/$script_path"
 	fi
 done
+# The folder that holds the real script, where its message file lives.
 SCRIPT_DIR="$(cd -P "$(dirname "$script_path")" && pwd)"
 readonly SCRIPT_DIR
 readonly TOOL_CALL_CONTEXT_FILE="$SCRIPT_DIR/tool-call-checkpoint-message.md"
