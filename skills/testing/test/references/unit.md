@@ -1,9 +1,3 @@
----
-name: test-unit
-description: >
-  Use this skill for unit tests, including Vitest, @testing-library/vue, composable tests, or XCTest; also applies to *.test.js, tests, specs, or coverage. For E2E, see test-e2e.
----
-
 # Unit testing
 
 ## General
@@ -88,7 +82,7 @@ vi.mock("@vendor/sdk", () => ({
 - Clear or restore mocks in lifecycle hooks when handler state can leak between tests
 - Only promote a shared package helper when it doesn't need to know the mocked module path, export shape, SDK class, or composable return shape.
 
-For component, composable, helper, and `test.for` examples, see [references/examples.md](references/examples.md).
+For component, composable, helper, and `test.for` examples, see [examples.md](examples.md).
 
 ### Component logic test structure
 

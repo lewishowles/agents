@@ -21,11 +21,11 @@ from urllib.parse import unquote, urlsplit
 # The repository containing the canonical skills and validation sources.
 REPO_DIR = Path(sys.argv[1]).resolve()
 # The largest allowed default skill list, in estimated tokens. Lower it to the new size after each merge.
-SKILL_LIST_LIMIT = 4633
+SKILL_LIST_LIMIT = 4547
 # The size of Codex's whole skill list for gpt-6-sol, shared with Codex's own and external skills.
 CODEX_LIST_BUDGET = 5440
 # Skill names removed by family merges; add names here when retiring them.
-RETIRED_SKILL_NAMES: tuple[str, ...] = ()
+RETIRED_SKILL_NAMES: tuple[str, ...] = ("test-unit", "test-e2e")
 # A Markdown link, capturing its address without any title.
 LINK_PATTERN = re.compile(r"\]\((<?[^)\s>]+>?)(?:\s+[^)]*)?\)")
 # An inline code span, which holds an example rather than a real link.
@@ -210,7 +210,7 @@ def check_retired_names() -> list[str]:
 		return problems
 
 	# Paths that must use the merged skill names instead.
-	source_roots = ("src/rules", "skills", "teams", "scripts", "docs")
+	source_roots = ("src", "skills", "teams", "scripts", "docs")
 	for source_root in source_roots:
 		for source in (REPO_DIR / source_root).rglob("*"):
 			if not source.is_file():

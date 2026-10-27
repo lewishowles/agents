@@ -62,7 +62,7 @@ Load additional skills only when the touched files or diff contents make them re
 - `bash` for shell scripts, hooks, installers, environment files, or command snippets
 - `dependencies` for package additions, removals, upgrades, lockfile changes, or dependency recommendations
 - `writing`, `writing-readme`, or `writing-copy` for prose, README, documentation, or UI copy changes
-- `test`, `test-unit`, or `test-e2e` for test strategy, test files, coverage gaps, or browser checks
+- `test` for test strategy, test files, coverage gaps, or browser checks
 
 If a relevant skill is unavailable, state that once and continue with the closest applicable checklist.
 

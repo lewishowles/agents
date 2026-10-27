@@ -1,9 +1,3 @@
----
-name: test-e2e
-description: >
-  Use this skill when writing, reviewing, or planning end-to-end tests with Playwright or Cypress, or when deliberately trying to find browser bugs before one is confirmed. For isolated logic or rendering tests without a browser, use test-unit.
----
-
 # End-to-end testing
 
 E2E and component tests verify real-browser user experience. Playwright is standard for new projects; keep Cypress where established.
@@ -54,7 +48,7 @@ Component tests sit between Vitest unit tests and full e2e. They mount one compo
 - Implementation details: internal state, method calls, component structure users cannot see
 - DOM structure for its own sake: assert what element communicates, not specific tag
 
-For Cypress/Playwright examples, setup config, e2e structure, and interaction patterns, see [references/patterns.md](references/patterns.md).
+For Cypress/Playwright examples, setup config, e2e structure, and interaction patterns, see [patterns.md](patterns.md).
 
 ## Selectors
 
