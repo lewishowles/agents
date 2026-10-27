@@ -1,28 +1,22 @@
----
-name: library-update
-description: >
-  Use this skill to survey supported @lewishowles library releases in a project, or to audit one library for new APIs, fixes, and every place the project could adopt them.
----
-
-# Library update
+# Survey and adopt updates
 
 Find the improvements a shared-library release offers and where the project can use them.
 
 ## Invocation
 
 ```
-/library-update              quick survey of libraries present in package.json
-/library-update components   deep audit of @lewishowles/components
-/library-update helpers      deep audit of @lewishowles/helpers
-/library-update testing      deep audit of @lewishowles/testing
-/library-update cli-style    deep audit of @lewishowles/cli-style
-/library-update lint-config  deep audit of @lewishowles/lint-config
-/library-update pkg-checks   deep audit of @lewishowles/pkg-checks
+/library-releases Survey the libraries in this project
+/library-releases Audit @lewishowles/components for updates and adoption opportunities
+/library-releases Audit @lewishowles/helpers for updates and adoption opportunities
+/library-releases Audit @lewishowles/testing for updates and adoption opportunities
+/library-releases Audit @lewishowles/cli-style for updates and adoption opportunities
+/library-releases Audit @lewishowles/lint-config for updates and adoption opportunities
+/library-releases Audit @lewishowles/pkg-checks for updates and adoption opportunities
 ```
 
 ## Step 1: choose the scope
 
-With no argument, survey the libraries in `package.json` dependencies and devDependencies. With a library name such as `components`, run the full audit below for that library.
+For a survey request, check the libraries in `package.json` dependencies and devDependencies. For a request naming one library, such as `@lewishowles/components`, run the full audit below for that library.
 
 Supported libraries:
 

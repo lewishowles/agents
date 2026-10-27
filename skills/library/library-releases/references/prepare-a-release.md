@@ -1,12 +1,6 @@
----
-name: library-release
-description: >
-  Use this skill when preparing to release a supported @lewishowles library package.
----
+# Prepare a release
 
-# Library release
-
-Conservative release guardrails for `@lewishowles/components`, `@lewishowles/helpers`, `@lewishowles/testing`, `@lewishowles/cli-style`, `@lewishowles/lint-config`, and `@lewishowles/pkg-checks`. Inspect current repo process first; require explicit approval for irreversible steps.
+Conservative release guardrails for `@lewishowles/components`, `@lewishowles/helpers`, `@lewishowles/testing`, `@lewishowles/cli-style`, `@lewishowles/lint-config`, and `@lewishowles/pkg-checks`. Inspect the current repo process first; require explicit approval for irreversible steps.
 
 ## Release stance
 
@@ -118,4 +112,4 @@ Report:
 - Publish, tag, release status
 - Any release-process rough edges worth fixing
 
-Don't update consuming projects unless user asks; use `library-update` for follow-up.
+Don't update consuming projects unless the user asks; use the [survey and adoption guide](survey-and-adopt-updates.md) for follow-up.
