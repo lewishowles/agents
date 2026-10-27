@@ -1,12 +1,6 @@
----
-name: web-performance-audit
-description: >
-  Use this skill when conducting a performance audit of a page, PR, or app — distinct from building performantly (use the web-performance skill for that). Two modes: quick PR triage or full app audit. Triggers: "performance audit", "check Core Web Vitals", "is this fast enough?", preparing a performance report.
----
-
 # Web performance audit
 
-Standalone performance review of a page, PR, or app — distinct from building performantly (use the `web-performance` skill for implementation guidance). Two modes: quick triage or full audit.
+Standalone performance review of a page, PR, or app. For implementation guidance, use [Optimisation](optimisation.md). Two modes: quick triage or full audit.
 
 ## Scope reality
 
@@ -37,7 +31,7 @@ rg -n -B2 '@font-face' -g '*.css' -g '*.scss' | rg -L 'font-display'
 rg -n 'component:\s*\(\)\s*=>\s*import' -g 'router*' -g 'routes*'
 ```
 
-Not all hits are wrong (hero LCP images legitimately skip `loading="lazy"`). Check each against `web-performance` guidance before flagging.
+Not all hits are wrong (hero LCP images legitimately skip `loading="lazy"`). Check each against [Optimisation](optimisation.md) before flagging.
 
 ### 2. Live check
 
@@ -89,7 +83,7 @@ Run the quick-triage static scan across the whole repo, not just touched files.
 
 ### 3. Live measurement per page
 
-For each target page, run Lighthouse (or `lhci autorun` if CI is set up — see [references/measurement.md](../web-performance/references/measurement.md)) and record LCP, CLS, INP against `web-performance` targets.
+For each target page, run Lighthouse (or `lhci autorun` if CI is set up — see [Measurement](measurement.md)) and record LCP, CLS, INP against the [optimisation targets](optimisation.md#core-web-vitals-targets).
 
 If this audit precedes planned fixes, record date, tool, build/cache conditions alongside each score — not just numbers. Later "after" comparisons are defensible only if they match this method (see `code-review`).
 
@@ -129,7 +123,7 @@ Run `rollup-plugin-visualizer` and note unexpectedly large chunks or missing cod
 - **Location:** [page / component]
 - **Issue:** [what's wrong]
 - **Impact:** [measured effect — score, timing, or user-facing symptom]
-- **Recommendation:** [specific fix, linking to `web-performance` skill guidance]
+- **Recommendation:** [specific fix, linking to the optimisation guidance]
 - **Evidence:** [Lighthouse score, trace, or bundle report]
 
 ### What passed
@@ -139,6 +133,6 @@ Run `rollup-plugin-visualizer` and note unexpectedly large chunks or missing cod
 
 ## Related skills
 
-- [web-performance](../web-performance/SKILL.md) — implementation guidance for fixing anything this audit finds
-- [code-review](../../code/code-review/SKILL.md) — the fair-comparison check for any PR claiming a measured improvement
-- [accessibility-audit](../../accessibility/accessibility-audit/SKILL.md) — same two-mode audit shape, for accessibility instead of performance
+- [Optimisation](optimisation.md) — implementation guidance for fixing anything this audit finds
+- [code-review](../../../code/code-review/SKILL.md) — the fair-comparison check for any PR claiming a measured improvement
+- [accessibility-audit](../../../accessibility/accessibility-audit/SKILL.md) — same two-mode audit shape, for accessibility instead of performance

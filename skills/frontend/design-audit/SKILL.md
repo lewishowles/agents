@@ -8,7 +8,7 @@ description: >
 
 Review an existing interface against [frontend-design](../frontend-design/SKILL.md). Report what the supplied evidence shows and name the checks it cannot support. Use [writing](../../writing/writing/SKILL.md) for clear findings.
 
-For an accessibility audit or fix, use `accessibility-audit` or `accessibility`. For performance work, use `web-performance-audit` or `web-performance`. For building or fixing an interface, use `frontend-design`.
+For an accessibility audit or fix, use `accessibility-audit` or `accessibility`. For performance work, use `web-performance`. For building or fixing an interface, use `frontend-design`.
 
 ## Choose the evidence tier
 
@@ -23,7 +23,7 @@ The tiers in [the check list](references/checks.md) are cumulative only when the
 
 1. Choose quick triage for a screenshot, PR, or narrow polish question. Choose a full report when the user requests a broader audit across pages, themes, or interactions.
 2. Work through [the check list](references/checks.md) in evidence order. Apply the linked `frontend-design` rule in the context of the product's existing design system. Record the location and evidence for each observed issue. Do not infer a defect from a missing view or from taste alone.
-3. Route accessibility questions, including focus visibility, reduced-motion behaviour, and touch-target size, to `accessibility-audit`. Route compositor properties and `will-change` to `web-performance-audit`. You may note that those checks need a separate review, but do not judge them here.
+3. Route accessibility questions, including focus visibility, reduced-motion behaviour, and touch-target size, to `accessibility-audit`. Route compositor properties and `will-change` to `web-performance`. You may note that those checks need a separate review, but do not judge them here.
 4. Prioritise findings by their effect on clarity, consistency, and interaction. Give a specific change that follows the cited rule. Keep quick triage to five findings and a full report to fifteen; group repeated instances of the same issue.
 
 ## Quick triage output
