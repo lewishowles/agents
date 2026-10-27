@@ -21,11 +21,16 @@ from urllib.parse import unquote, urlsplit
 # The repository containing the canonical skills and validation sources.
 REPO_DIR = Path(sys.argv[1]).resolve()
 # The largest allowed default skill list, in estimated tokens. Lower it to the new size after each merge.
-SKILL_LIST_LIMIT = 4547
+SKILL_LIST_LIMIT = 4258
 # The size of Codex's whole skill list for gpt-6-sol, shared with Codex's own and external skills.
 CODEX_LIST_BUDGET = 5440
 # Skill names removed by family merges; add names here when retiring them.
-RETIRED_SKILL_NAMES: tuple[str, ...] = ("test-unit", "test-e2e")
+RETIRED_SKILL_NAMES: tuple[str, ...] = (
+	"test-unit", "test-e2e", "vue-vite", "vue-router", "vue-pinia", "vue-pinia-colada", "vue-project-stack"
+)
+# Retired skill names that are also package names. Any mention inside code spans or code blocks counts as the package,
+# so a backticked reference to one of these skills is not reported.
+RETIRED_NAMES_ALSO_PACKAGES = frozenset({"vue-router"})
 # A Markdown link, capturing its address without any title.
 LINK_PATTERN = re.compile(r"\]\((<?[^)\s>]+>?)(?:\s+[^)]*)?\)")
 # An inline code span, which holds an example rather than a real link.
@@ -201,6 +206,8 @@ def check_links(skill_file: Path) -> list[str]:
 def check_retired_names() -> list[str]:
 	"""Find retired skill names still mentioned in maintained source files.
 
+	Names that are also package names are only reported outside code, where they would refer to the skill.
+
 	Returns:
 		One finding for each retired name in each file that still mentions it.
 	"""
@@ -225,9 +232,15 @@ def check_retired_names() -> list[str]:
 				continue
 
 			for retired_name in RETIRED_SKILL_NAMES:
-				# The name as a whole word, so "vue" does not match "vue-router".
+				# The file's text with code removed when the name is also a package, since code there means the package.
+				text_to_check = content
+				if retired_name in RETIRED_NAMES_ALSO_PACKAGES:
+					text_to_check = FENCED_CODE_PATTERN.sub("", text_to_check)
+					text_to_check = INLINE_CODE_PATTERN.sub("", text_to_check)
+
+				# Match the complete skill name, not part of another name.
 				pattern = rf"(?<![\w-]){re.escape(retired_name)}(?![\w-])"
-				if re.search(pattern, content):
+				if re.search(pattern, text_to_check):
 					problems.append(f"Retired skill name {retired_name}: {source.relative_to(REPO_DIR)}")
 	return problems
 

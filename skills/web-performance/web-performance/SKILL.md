@@ -1,7 +1,7 @@
 ---
 name: web-performance
 description: >
-  Use this skill when optimising runtime performance, Core Web Vitals, bundle size, or asset loading for Vue/Vite projects — including GitHub Pages deployments. Covers LCP, CLS, INP, Vue reactivity cost, code splitting, images, fonts, and measurement. Distinct from vue-vite (build config) and accessibility (which covers prefers-reduced-motion).
+  Use this skill when optimising runtime performance, Core Web Vitals, bundle size, or asset loading for Vue/Vite projects — including GitHub Pages deployments. Covers LCP, CLS, INP, Vue reactivity cost, code splitting, images, fonts, and measurement. Distinct from vue (Vite build config) and accessibility (prefers-reduced-motion).
 ---
 
 # Web performance

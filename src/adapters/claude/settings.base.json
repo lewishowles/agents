@@ -60,9 +60,6 @@
 		"typescript": "name-only",
 		"writing-copy": "name-only",
 		"update-config": "name-only",
-		"vue-vite": "name-only",
-		"vue": "name-only",
-		"vue-project-stack": "name-only",
 		"writing": "on"
 	},
 	"hooks": {

@@ -1,9 +1,3 @@
----
-name: vue-pinia
-description: >
-  Use this skill when working with Pinia client-side stores in Vue projects. Covers setup stores, state/getter/action usage, storeToRefs, SSR-safe access, HMR, testing with @pinia/testing, and the boundary between Pinia, Pinia Colada, and VueUse.
----
-
 # Pinia
 
 Pinia is for app state: UI state, preferences, cross-page flags, and client-owned data. Use Pinia Colada for server state.
@@ -81,4 +75,4 @@ if (import.meta.hot) {
 
 ## Completion
 
-For stores that affect UI state or interaction, run [the accessibility checklist](../../accessibility/accessibility/references/checklist.md) before handoff.
+For stores that affect UI state or interaction, run [the accessibility checklist](../../../accessibility/accessibility/references/checklist.md) before handoff.

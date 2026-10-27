@@ -57,7 +57,7 @@ Load additional skills only when the touched files or diff contents make them re
 - `frontend-security` for user input, auth, tokens, secrets, sanitisation, CSP, redirects, or external data
 - `accessibility` or `accessibility-audit` for UI, HTML, components, forms, keyboard interaction, colour, ARIA, or interface copy
 - `web-performance` for runtime performance, asset loading, bundle size, Core Web Vitals, rendering, or reactivity cost
-- `typescript`, `vue`, `vue-router`, `vue-pinia`, `vue-pinia-colada`, or `vue-vite` for matching Vue/TypeScript files and APIs
+- `typescript` or `vue` for matching Vue/TypeScript files and APIs
 - `swift` or `swift-ui` for Swift or SwiftUI changes
 - `bash` for shell scripts, hooks, installers, environment files, or command snippets
 - `dependencies` for package additions, removals, upgrades, lockfile changes, or dependency recommendations

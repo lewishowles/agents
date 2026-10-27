@@ -1,9 +1,3 @@
----
-name: vue-vite
-description: >
-  Use this skill when configuring vite.config.ts, managing environment variables, or troubleshooting build/dev server issues. Covers config structure, environment variables, security boundaries, library mode, dev vs build differences, and common pitfalls.
----
-
 > Modified from [ECC `vite-patterns`](https://github.com/affaan-m/everything-claude-code/blob/main/skills/vite-patterns/SKILL.md) — MIT © 2026 Affaan Mustafa. Adapted to focus on config, security, and build patterns relevant to Vue projects; omitted plugin authoring and framework-specific HMR details.
 
 # Vite patterns
@@ -145,8 +139,8 @@ import shaderSource from "./shader.glsl?raw";
 - Use virtual modules only when config-time data must become runtime-importable code
 - Check Vite docs for migration (Rolldown, Oxc, beta features)
 
-For library mode, SSR, and common pitfalls (stale chunks, Docker, monorepo, barrel files, import extensions, stale cache), see [references/advanced.md](references/advanced.md).
+For library mode, SSR, and common pitfalls (stale chunks, Docker, monorepo, barrel files, import extensions, stale cache), see [advanced Vite patterns](vite-advanced.md).
 
 ## Completion
 
-For Vite changes affecting rendered UI, run [the accessibility checklist](../../accessibility/accessibility/references/checklist.md) before handoff.
+For Vite changes affecting rendered UI, run [the accessibility checklist](../../../accessibility/accessibility/references/checklist.md) before handoff.

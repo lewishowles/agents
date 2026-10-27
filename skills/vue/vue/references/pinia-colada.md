@@ -1,9 +1,3 @@
----
-name: vue-pinia-colada
-description: >
-  Use this skill when working with @pinia/colada for async data fetching and server state in Vue projects. TRIGGER when: code imports from `@pinia/colada`, uses `useQuery`, `useMutation`, `defineQuery`, `defineMutation`, `useQueryCache`, or `invalidateQueries`; when setting up async data fetching in a Vue project; when working in `src/queries/`.
----
-
 # Pinia Colada
 
 Pinia Colada manages Vue server state: caching, deduplication, background revalidation, and mutation coordination. It sits above fetch/API functions.
@@ -114,7 +108,7 @@ export const ALERT_KEYS = {
 
 ## API patterns
 
-Consult **[references/api.md](references/api.md)** when choosing between `defineQueryOptions`, `useQuery`, `useMutation`, `defineMutationOptions`, `defineMutation`, `defineQuery`, `refresh()`, `refetch()`, `state`, and `asyncStatus`.
+Consult **[the Pinia Colada API guide](pinia-colada-api.md)** when choosing between `defineQueryOptions`, `useQuery`, `useMutation`, `defineMutationOptions`, `defineMutation`, `defineQuery`, `refresh()`, `refetch()`, `state`, and `asyncStatus`.
 
 ## Active queries
 
@@ -141,10 +135,10 @@ State management responsibilities:
 
 ## Advanced topics
 
-- **[references/advanced-patterns.md](references/advanced-patterns.md)** — optimistic updates, infinite queries, paginated queries, query cancellation, SSR, Nuxt
-- **[references/plugins.md](references/plugins.md)** — retry, delay, auto-refetch, cache persistence, query hooks, custom plugins
-- **[references/query-cache.md](references/query-cache.md)** — direct cache access, `invalidateQueries` variants, mutation cache
+- **[Advanced Pinia Colada patterns](pinia-colada-advanced.md)** — optimistic updates, infinite queries, paginated queries, query cancellation, SSR, Nuxt
+- **[Pinia Colada plugins](pinia-colada-plugins.md)** — retry, delay, auto-refetch, cache persistence, query hooks, custom plugins
+- **[Pinia Colada query cache](pinia-colada-query-cache.md)** — direct cache access, `invalidateQueries` variants, mutation cache
 
 ## Completion
 
-For server-state changes that affect rendered UI, run [the accessibility checklist](../../accessibility/accessibility/references/checklist.md) before handoff.
+For server-state changes that affect rendered UI, run [the accessibility checklist](../../../accessibility/accessibility/references/checklist.md) before handoff.

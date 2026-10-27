@@ -1,9 +1,3 @@
----
-name: vue-router
-description: >
-  Use this skill when working with Vue Router routes, navigation guards, params, query strings, layouts, redirects, or route-driven state. Covers async guards, same-route param updates, side-effect cleanup, and the boundary between router state and component state.
----
-
 # Vue Router
 
 Use Vue Router for production Vue SPAs and route-driven state. Keep URL state meaningful for shareable filters, tabs, pagination, selected records, and search.
@@ -64,4 +58,4 @@ watch(
 
 ## Completion
 
-For route or page UI changes, run [the accessibility checklist](../../accessibility/accessibility/references/checklist.md) before handoff.
+For route or page UI changes, run [the accessibility checklist](../../../accessibility/accessibility/references/checklist.md) before handoff.

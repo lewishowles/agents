@@ -206,5 +206,5 @@ export default defineNuxtConfig({
 
 - No `await` needed in setup — SSR is handled automatically by the module
 - Use `$fetch` in query functions so they work on both server and client
-- In `defineQuery`, import `useRoute` from `vue-router` directly, not from Nuxt auto-imports
+- In `defineQuery`, import `useRoute` from `vue-router` directly, not from Nuxt auto-imports. See [the Vue Router guide](router.md) for route-driven state.
 - Configure via `colada.options.ts` in the project root

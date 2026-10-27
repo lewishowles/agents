@@ -1,9 +1,3 @@
----
-name: vue-project-stack
-description: >
-  Use this skill when working in a Vue project that uses the wider Lewis Howles stack. Covers the chosen tools (Vue 3 with script setup, Tailwind, Vitest, Bun, Gitflow, GitHub Pages) with the *why* for each so suggestions can flag outdated choices, plus the @lewishowles/helpers and @lewishowles/components libraries that replace common packages.
----
-
 # Vue project stack
 
 Stack across Vue projects. Each tool includes rationale for assessment.
@@ -84,4 +78,4 @@ State management responsibilities:
 
 ## Completion
 
-For frontend UI changes, run [the accessibility checklist](../../accessibility/accessibility/references/checklist.md) before handoff.
+For frontend UI changes, run [the accessibility checklist](../../../accessibility/accessibility/references/checklist.md) before handoff.
