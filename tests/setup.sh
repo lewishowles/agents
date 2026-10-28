@@ -2151,6 +2151,8 @@ test_skip_backup_environment_does_not_bypass_backup() {
 	assert_timestamped_backup "$home_dir"
 }
 
+# Checks that setup stops, reports the error and leaves the user's Codex config
+# untouched when the config cannot be moved to its backup.
 test_failed_backup_preserves_existing_config() {
 	# The isolated home for the failed backup check.
 	local home_dir="$TEST_ROOT/backup-failure"
@@ -2160,7 +2162,7 @@ test_failed_backup_preserves_existing_config() {
 	create_existing_config "$home_dir"
 	# Makes the mv stub fail the config backup move.
 	if SETUP_TEST_FAIL_BACKUP_MOVE=1 run_setup "$home_dir" > "$output" 2>&1; then
-		fail "Expected a failed backup to abort setup"
+		fail "Setup did not fail when the config backup move failed"
 	fi
 
 	assert_contains "$output" "backup move failed"
@@ -2279,7 +2281,9 @@ test_hcom_write_failure_does_not_stop_setup() {
 }
 
 # Runs the cases side by side, up to one per CPU core, then prints each result
-# in call order with the logs of any failed case. Returns 1 if any case failed.
+# in call order. A failed case shows its exit status, or the signal that killed
+# it when the status is above 128, followed by the last 20 lines of its log.
+# Returns 1 if any case failed.
 run_setup_cases() {
 	# The cases, in the order that their results are reported.
 	local -a cases=(
@@ -2368,6 +2372,8 @@ run_setup_cases() {
 	local max_running_cases
 	# The current case and the case whose slot must be freed.
 	local index finished_index
+	# The signal number and name inferred from a status above 128.
+	local signal_number signal_name
 	# Whether any case failed.
 	local failed=0
 
@@ -2392,7 +2398,7 @@ run_setup_cases() {
 			if wait "${case_pids[finished_index]}"; then
 				case_status[finished_index]=0
 			else
-				case_status[finished_index]=1
+				case_status[finished_index]=$?
 			fi
 		fi
 
@@ -2406,7 +2412,7 @@ run_setup_cases() {
 		if wait "${case_pids[index]}"; then
 			case_status[index]=0
 		else
-			case_status[index]=1
+			case_status[index]=$?
 		fi
 	done
 
@@ -2414,8 +2420,14 @@ run_setup_cases() {
 		if [ "${case_status[index]}" -eq 0 ]; then
 			printf '✓ %s\n' "${cases[index]}"
 		else
-			printf '✗ %s\n' "${cases[index]}"
-			cat "$TEST_ROOT/case-logs/${cases[index]}.log"
+			if (( case_status[index] > 128 )); then
+				signal_number=$((case_status[index] - 128))
+				signal_name=$(kill -l "$signal_number" 2>/dev/null || true)
+				printf '✗ %s (killed by signal %s [%s])\n' "${cases[index]}" "${signal_name:-$signal_number}" "$signal_number"
+			else
+				printf '✗ %s (exit status %s)\n' "${cases[index]}" "${case_status[index]}"
+			fi
+			tail -n 20 "$TEST_ROOT/case-logs/${cases[index]}.log"
 			failed=1
 		fi
 	done
