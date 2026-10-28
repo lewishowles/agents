@@ -1250,8 +1250,10 @@ run_setup_cases() {
 	local -a case_pids=() case_status=()
 	# The number of cases allowed to run at once.
 	local max_running_cases
-	# The current case and the case whose slot must be freed.
+	# The next case to start and the case that has just finished.
 	local index finished_index
+	# The number of cases currently running.
+	local running_cases=0
 	# The signal number and name inferred from a status above 128.
 	local signal_number signal_name
 	# Whether any case failed.
@@ -1269,32 +1271,40 @@ run_setup_cases() {
 
 	mkdir -p "$TEST_ROOT/case-logs"
 	create_command_stubs "$TEST_ROOT/bin"
+	# Each case writes its index to this pipe when it finishes, so the runner can
+	# start the next case straight away. The macOS default Bash 3.2 has no wait -n.
+	mkfifo "$TEST_ROOT/case-finished"
+	exec 3<> "$TEST_ROOT/case-finished"
 	# Start each case in its own process group so cleanup can stop everything
 	# the case started.
 	set -m
-	for index in "${!cases[@]}"; do
-		if (( index >= max_running_cases )); then
-			finished_index=$((index - max_running_cases))
+	index=0
+	while (( index < ${#cases[@]} || running_cases > 0 )); do
+		if (( index < ${#cases[@]} && running_cases < max_running_cases )); then
+			# The case reads from /dev/null because, with process groups on, Bash no
+			# longer gives background cases empty input, so a case that read the
+			# terminal would stop and hang the suite.
+			(
+				# Report completion even when an assertion exits the case early. A case
+				# must not set its own EXIT trap, because that would replace this one and
+				# the runner would wait forever.
+				trap 'printf "%s\n" "$index" >&3' EXIT
+				"${cases[index]}"
+			) < /dev/null > "$TEST_ROOT/case-logs/${cases[index]}.log" 2>&1 &
+			case_pids[index]=$!
+			running_cases=$((running_cases + 1))
+			index=$((index + 1))
+		else
+			IFS= read -r finished_index <&3
 			if wait "${case_pids[finished_index]}"; then
 				case_status[finished_index]=0
 			else
 				case_status[finished_index]=$?
 			fi
-		fi
-
-		# With process groups on, Bash no longer gives background cases empty
-		# input, so a case that read the terminal would stop and hang the suite.
-		("${cases[index]}") < /dev/null > "$TEST_ROOT/case-logs/${cases[index]}.log" 2>&1 &
-		case_pids[index]=$!
-	done
-
-	for (( index = ${#cases[@]} - max_running_cases; index < ${#cases[@]}; index++ )); do
-		if wait "${case_pids[index]}"; then
-			case_status[index]=0
-		else
-			case_status[index]=$?
+			running_cases=$((running_cases - 1))
 		fi
 	done
+	exec 3>&-
 
 	for index in "${!cases[@]}"; do
 		if [ "${case_status[index]}" -eq 0 ]; then
