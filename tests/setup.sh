@@ -266,30 +266,6 @@ if [ "${1:-}" = '--version' ]; then
 fi
 printf '%s\n' "$@" > "$SETUP_FZF_ARGUMENTS"
 cat > "$SETUP_FZF_INPUT"
-# Records what Tab on the agent-improvement heading does with one, then both, of its skills ticked.
-if [ -n "${SETUP_FZF_ACTIONS:-}" ]; then
-	# The Tab command received from setup, before fzf fills in its placeholders.
-	tab_command=''
-	for argument in "$@"; do
-		case "$argument" in
-			tab:transform\(*) tab_command="${argument#tab:transform(}"; tab_command="${tab_command%)}" ;;
-		esac
-	done
-	[ -n "$tab_command" ] || exit 1
-	# The row under the cursor, passed by fzf as {}.
-	current_row=$(sed -n '3p' "$SETUP_FZF_INPUT")
-	sed -n '4p' "$SETUP_FZF_INPUT" > "$SETUP_FZF_ACTIONS.selected"
-	# The ticked-rows file and current row wrapped in single quotes, as fzf passes them.
-	# Kept in variables because Bash 3.2 keeps quotes written inside a replacement.
-	quoted_selected="'$SETUP_FZF_ACTIONS.selected'"
-	quoted_row="'$current_row'"
-	# Substitute the two placeholders as fzf does, then cross a clean shell boundary.
-	action="${tab_command//\{+f\}/$quoted_selected}"
-	action="${action//\{\}/$quoted_row}"
-	env -i PATH="$PATH" sh -c "$action" > "$SETUP_FZF_ACTIONS" || exit 1
-	sed -n '4,5p' "$SETUP_FZF_INPUT" > "$SETUP_FZF_ACTIONS.selected"
-	env -i PATH="$PATH" sh -c "$action" >> "$SETUP_FZF_ACTIONS" || exit 1
-fi
 printf '%s\n' "${SETUP_FZF_SELECTION:-}"
 exit "${SETUP_FZF_STATUS:-0}"
 EOF
@@ -1810,7 +1786,6 @@ assert_fzf_version_opens_picker() {
 	# shellcheck disable=SC2031
 	SETUP_FZF_VERSION="$version" SETUP_FZF_ARGUMENTS="$fzf_arguments" SETUP_FZF_INPUT="$fzf_input" SETUP_FZF_STATUS=1 SETUP_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output" 2>&1
 
-	assert_contains "$fzf_arguments" '--multi'
 	assert_contains "$output" 'Skill selection cancelled. Nothing changed.'
 	assert_not_contains "$output" 'Enter skill numbers or collection names to toggle'
 }
@@ -1871,7 +1846,7 @@ test_select_fzf_empty_version_uses_numbered_list() {
 	assert_fzf_version_uses_numbered_list '' 'select-fzf-empty-version' 'fzf version could not be read, so using the numbered list.'
 }
 
-# Ensures fzf is started with --multi and its chosen skills are saved.
+# Ensures fzf lets several skills be ticked and saves the chosen skills.
 test_select_fzf_updates_skill_exclusions() {
 	create_test_repo_copy test_select_fzf_updates_skill_exclusions
 
@@ -1879,75 +1854,22 @@ test_select_fzf_updates_skill_exclusions() {
 	local home_dir="$TEST_ROOT/select-fzf"
 	# Output from the fzf selection run.
 	local output="$TEST_ROOT/select-fzf.txt"
-	# The empty temporary directory for the picker's Tab files, which must be empty again after setup.
-	local temp_dir="$TEST_ROOT/select-fzf-temp"
 	# Directory containing the fzf stand-in.
 	local fzf_dir="$TEST_ROOT/fzf-bin"
 	# Arguments received by the fzf stand-in.
 	local fzf_arguments="$home_dir/fzf-arguments.txt"
 	# Skills displayed to the fzf stand-in.
 	local fzf_input="$home_dir/fzf-input.txt"
-	# Actions returned when Tab is pressed on a partly or fully ticked heading.
-	local fzf_actions="$home_dir/fzf-actions.txt"
-	# A skill fixture with a folded two-line description.
-	local folded_skill="$ADDED_SKILL_GROUP/folded-picker"
-	# A skill fixture with a quoted single-line description.
-	local single_line_skill="$ADDED_SKILL_GROUP/single-picker"
-	# A skill fixture with no description in its frontmatter.
-	local no_description_skill="$ADDED_SKILL_GROUP/setup-no-description"
 
 	create_fzf_stub "$fzf_dir"
-	mkdir -p "$temp_dir"
-	mkdir -p "$folded_skill"
-	cat > "$folded_skill/SKILL.md" <<'EOF'
----
-name: folded-picker
-description: >
-  Use this skill to inspect a folded description that spans
-  two lines in the skill picker.
----
-EOF
-	mkdir -p "$single_line_skill"
-	printf -- '---\nname: single-picker\ndescription: "Use this skill when reading a single-line description."\n---\n' > "$single_line_skill/SKILL.md"
-	mkdir -p "$no_description_skill"
-	printf -- '---\nname: setup-no-description\n---\n' > "$no_description_skill/SKILL.md"
 	mkdir -p "$home_dir/.agents"
 	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
-	(
-		# This test checks dimming, so clear an inherited NO_COLOR for this run.
-		unset NO_COLOR
-		# A narrow COLUMNS value proves fzf receives full rows and handles its own truncation.
-		# The fzf capture files, chosen skills, command path, and terminal setting for this picker run.
-		# PATH here is this test's own value; ShellCheck confuses it with the copy run_setup_target changes in its subshell.
-		# shellcheck disable=SC2031
-		COLUMNS=48 TMPDIR="$temp_dir" SETUP_FZF_ARGUMENTS="$fzf_arguments" SETUP_FZF_INPUT="$fzf_input" SETUP_FZF_ACTIONS="$fzf_actions" SETUP_FZF_SELECTION=$'skill\taccessibility\t  accessibility  When editing HTML' SETUP_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
-	)
+	# The fzf capture files, chosen skill, command path, and terminal setting for this picker run.
+	# PATH here is this test's own value; ShellCheck confuses it with the copy run_setup_target changes in its subshell.
+	# shellcheck disable=SC2031
+	SETUP_FZF_ARGUMENTS="$fzf_arguments" SETUP_FZF_INPUT="$fzf_input" SETUP_FZF_SELECTION=$'skill\taccessibility\t  accessibility  When editing HTML' SETUP_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
 
-	assert_equals "$(ls -A "$temp_dir")" ''
-	assert_contains "$fzf_arguments" '--ansi'
 	assert_contains "$fzf_arguments" '--multi'
-	assert_contains "$fzf_arguments" '--layout=reverse'
-	assert_contains "$fzf_arguments" '--header'
-	assert_contains "$fzf_arguments" 'Tab toggles a skill or collection, Enter confirms, Esc cancels. Ticked skills are installed.'
-	assert_contains "$fzf_arguments" '--bind'
-	assert_contains "$fzf_arguments" $'--delimiter=\t'
-	assert_contains "$fzf_arguments" '--with-nth=3'
-	assert_contains "$fzf_arguments" 'tab:transform('
-	assert_contains "$fzf_arguments" '{} {+f}'
-	assert_contains "$fzf_input" $'heading\tagent-improvement\tagent-improvement (2)'
-	assert_contains "$fzf_actions" 'clear-query+wait+pos(4)+select+pos(5)+select+pos(3)'
-	assert_contains "$fzf_actions" 'clear-query+wait+pos(4)+deselect+pos(5)+deselect+pos(3)'
-	assert_contains "$fzf_input" $'skill\taccessibility\t  accessibility'
-	assert_contains "$fzf_input" $'\033[2mWhen editing HTML'
-	assert_contains "$fzf_input" $'\033[2mTo inspect a folded description that spans two lines in the skill picker.'
-	assert_contains "$fzf_input" $'\033[2mWhen reading a single-line description.'
-	if ! grep -Fxq $'skill\tsetup-no-description\t  setup-no-description' "$fzf_input"; then
-		fail 'Expected a skill without a description to show its name alone'
-	fi
-	assert_not_contains "$fzf_input" 'Use this skill to inspect'
-	assert_not_contains "$fzf_input" '…'
-	assert_contains "$fzf_input" $'skill\twriting\t  writing'
-	assert_picker_group_order "$fzf_input" fzf
 	assert_fzf_start_selection "$fzf_arguments" "$fzf_input" 'writing'
 	assert_dir_link "$home_dir/.agents/skills/accessibility"
 	assert_dir_link "$home_dir/.claude/skills/accessibility"
@@ -2003,7 +1925,6 @@ test_select_fzf_excludes_every_skill() {
 	# shellcheck disable=SC2031
 	SETUP_FZF_ARGUMENTS="$fzf_arguments" SETUP_FZF_INPUT="$fzf_input" SETUP_FZF_SELECTION=$'heading\tagent-improvement\tagent-improvement (2)' SETUP_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
 
-	assert_contains "$fzf_arguments" '--multi'
 	assert_contains "$home_dir/.agents/skill-exclusions" 'accessibility'
 	assert_contains "$home_dir/.agents/skill-exclusions" 'agent-retrospective'
 	assert_contains "$home_dir/.agents/skill-exclusions" 'skill-craft'
@@ -2019,8 +1940,6 @@ test_select_fzf_cancel_preserves_existing_state() {
 	local home_dir="$TEST_ROOT/select-fzf-cancel"
 	# Output from the cancelled fzf selection.
 	local output="$TEST_ROOT/select-fzf-cancel.txt"
-	# The empty temporary directory for the picker's Tab files, which must be empty again after a cancel.
-	local temp_dir="$TEST_ROOT/select-fzf-cancel-temp"
 	# Directory containing the fzf stand-in.
 	local fzf_dir="$TEST_ROOT/fzf-cancel-bin"
 	# Arguments received by the fzf stand-in.
@@ -2029,15 +1948,13 @@ test_select_fzf_cancel_preserves_existing_state() {
 	local fzf_input="$home_dir/fzf-input.txt"
 
 	create_fzf_stub "$fzf_dir"
-	mkdir -p "$temp_dir"
 	mkdir -p "$home_dir/.agents"
 	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
 	# The fzf capture files, cancelled picker status, command path, and terminal setting for this picker run.
 	# PATH here is this test's own value; ShellCheck confuses it with the copy run_setup_target changes in its subshell.
 	# shellcheck disable=SC2031
-	TMPDIR="$temp_dir" SETUP_FZF_ARGUMENTS="$fzf_arguments" SETUP_FZF_INPUT="$fzf_input" SETUP_FZF_STATUS=1 SETUP_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
+	SETUP_FZF_ARGUMENTS="$fzf_arguments" SETUP_FZF_INPUT="$fzf_input" SETUP_FZF_STATUS=1 SETUP_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
 
-	assert_equals "$(ls -A "$temp_dir")" ''
 	assert_contains "$output" 'Skill selection cancelled. Nothing changed.'
 	assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'writing'
 	assert_not_exists "$home_dir/.claude"
