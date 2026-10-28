@@ -197,6 +197,8 @@ assert_silent "Bash" "4"
 fill_to_limit 20
 assert_advisory "Write"
 jq -r '.hookSpecificOutput.additionalContext' "$TEST_ROOT/advisory.json" > "$TEST_ROOT/advisory-context.txt"
+assert_contains "$TEST_ROOT/advisory-context.txt" 'limit of 20 reached'
+assert_not_contains "$TEST_ROOT/advisory-context.txt" 'TOOL_CALL_LIMIT'
 # The advisory shows the option in Markdown backticks, so the shell must not run it as a command.
 # shellcheck disable=SC2016
 assert_contains "$TEST_ROOT/advisory-context.txt" 'After sending either report with `--intent inform`, stop making tool calls and end your turn: inform means the recipient will not reply.'
