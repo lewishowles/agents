@@ -12,7 +12,7 @@ Apply these extra instructions alongside `teams/hcom/roles/orchestrator.md`. You
 ## Hold the independent packet
 
 - Complete the independent report review without reading the opposite model's packet file, even if it already exists, and do not contact the opposite reviewer.
-- Use `insights-review` to resolve the supplied rendered report path, retain its resolved path and stem, and calculate its exact-byte SHA-256 with `skills/agent-improvement/codex-insights/scripts/codex_insights_extract.py`'s existing `hash_bytes` helper.
+- Use [review insights](../../../skills/agent-improvement/agent-retrospective/references/review-insights.md) to resolve the supplied rendered report path, retain its resolved path and stem, and calculate its exact-byte SHA-256 with `skills/agent-improvement/agent-retrospective/scripts/codex_insights_extract.py`'s existing `hash_bytes` helper.
 - Write the complete packet, report evidence, every proposal and its exact before/after diff, the resolved report path, report stem, and SHA-256 to `.agent/reviews/<report-stem>.<model>.md` (`claude` or `codex`, matching this peer).
 - Propose only minimal changes under `src/rules/` or `skills/`. State `Never auto-apply` and `User confirmation required before any file change`; do not edit a proposed target.
 - Report `Safe to reset: no` until the packet is written and the done message is sent. Then report `Safe to reset: yes`; the packet and message are the durable handoff.

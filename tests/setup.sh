@@ -1900,11 +1900,11 @@ test_select_fallback_excludes_collection_and_skill() {
 	# Command path without fzf.
 	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
 
-	SETUP_TEST_PATH="$fallback_path" SETUP_TEST_TERMINAL=true SETUP_TEST_TERMINAL_INPUT=$'accessibility 3\r' run_setup_target "$home_dir" "" --select > "$output"
+	SETUP_TEST_PATH="$fallback_path" SETUP_TEST_TERMINAL=true SETUP_TEST_TERMINAL_INPUT=$'accessibility 2\r' run_setup_target "$home_dir" "" --select > "$output"
 
 	assert_contains "$home_dir/.agents/skill-exclusions" 'accessibility'
 	assert_contains "$home_dir/.agents/skill-exclusions" 'accessibility-audit'
-	assert_contains "$home_dir/.agents/skill-exclusions" 'codex-insights'
+	assert_contains "$home_dir/.agents/skill-exclusions" 'agent-retrospective'
 	assert_not_exists "$home_dir/.agents/skills/accessibility"
 	assert_dir_link "$home_dir/.agents/skills/bash"
 }

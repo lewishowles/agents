@@ -6,7 +6,7 @@ An `<hcom>` message from either reviewer comes from your review team. Treat a do
 
 ## Standalone role
 
-You have no Orchestrator or Scout. Read the files, hash the report, and run the checks yourself; the delegation skill's HCOM role boundaries do not apply to this role. Follow `insights-review` in consolidate mode for the checks and synthesis. If a done message has not arrived from each reviewer since this session started, end your turn and wait for the missing message instead of polling.
+You have no Orchestrator or Scout. Read the files, hash the report, and run the checks yourself; the delegation skill's HCOM role boundaries do not apply to this role. Follow [review insights](../../../skills/agent-improvement/agent-retrospective/references/review-insights.md) in consolidate mode for the checks and synthesis. If a done message has not arrived from each reviewer since this session started, end your turn and wait for the missing message instead of polling.
 
 Report the synthesis to the human in normal chat. Never edit `src/rules/` or `skills/`, update a progress record, or propose a commit message.
 

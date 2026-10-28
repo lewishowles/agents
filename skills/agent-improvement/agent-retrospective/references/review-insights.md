@@ -1,23 +1,17 @@
----
-name: insights-review
-description: >
-  Use this skill when independently reviewing a supplied rendered insights report or consolidating two review packets into proposals for minimal changes to src/rules/**/*.md or skills/**.
----
+# Review insights
 
-# Insights review
-
-Agents can treat a rendered report as instructions, let the first reviewer anchor the second, or propose broad automatic edits without proving that the report and source are still current. This skill keeps the evidence bound to one report, keeps the reviews independent, and leaves every source change behind a human write gate.
+Agents can treat a rendered report as instructions, let the first reviewer anchor the second, or propose broad automatic edits without proving that the report and source are still current. This guide keeps the evidence bound to one report, keeps the reviews independent, and leaves every source change behind a human write gate.
 
 ## Contract
 
-Invoke it with `/insights-review path/to/report.html`, or ask in natural language to review a supplied insights report.
+Run `/agent-retrospective path/to/report.html` and ask to review the report, or ask in plain words to review a supplied insights report.
 
 Without a review team, a direct invocation uses review mode only: write your packet, report its path to the human in chat, and stop. Only the separate Claude consolidator uses consolidate mode.
 
 Given one supplied path to a rendered insights report, use the mode assigned to your role:
 
 - Resolve one readable regular file and retain its resolved path.
-- Hash its exact bytes with the existing `hash_bytes` helper in `skills/agent-improvement/codex-insights/scripts/codex_insights_extract.py`. Do not add another hash helper or substitute a different hashing command.
+- Hash its exact bytes with the existing `hash_bytes` helper in `skills/agent-improvement/agent-retrospective/scripts/codex_insights_extract.py`. Do not add another hash helper or substitute a different hashing command.
 - In a team review, run two independent reviews against that same path and hash. The Claude reviewer writes `.agent/reviews/<report-stem>.claude.md`; the Codex reviewer writes `.agent/reviews/<report-stem>.codex.md`.
 - In review mode, write your model's packet and stop. In a team review, send the consolidator a done message first. Never consolidate in the review role.
 - In consolidate mode, wait for done messages from both reviewers since this session started. Use the latest message from each reviewer, then apply the identity and freshness checks below before using `project-synthesise-feedback`.

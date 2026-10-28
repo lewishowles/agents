@@ -1,12 +1,6 @@
----
-name: session-retrospective
-description: >
-  Use this skill when asked to learn from, retrospect on, review, or extract lessons from a difficult agent session without jumping straight to creating a new skill.
----
+# Learn from a session
 
-# Session retrospective
-
-Turn a difficult agent session into a non-blaming learning brief for this agents repo. The failure this skill prevents is overfitting one painful session into an automatic new skill, rule, or process change without checking evidence and existing coverage.
+Turn a difficult agent session into a non-blaming learning brief for this agents repo. The failure this guide prevents is overfitting one painful session into an automatic new skill, rule, or process change without checking evidence and existing coverage.
 
 Default to analysis and recommendations only. Do not edit files, log friction, create skills, or amend rules unless the user explicitly asks after the assessment.
 
@@ -21,9 +15,9 @@ The session evidence may be:
 - a user's summary of what went wrong
 - a friction note that has not yet become a recurring pattern
 
-Do not use this skill for:
+Do not use this guide for:
 
-- recurring friction review, use `friction-review`
+- recurring friction review, use [Review friction](review-friction.md)
 - external artefacts such as websites, repos, docs, or skill collections, use `project-learn-from-source`
 - feedback already written by another agent or reviewer, use `project-synthesise-feedback`
 - general repo health checks, use `agent-config-review` for this repo or `project-audit` for other projects
@@ -46,10 +40,10 @@ Then gather only local context needed to judge if issue is already covered:
 
 1. Relevant `rules/` for always-on behaviour
 2. Existing skills matching task type or proposed fix
-3. `friction-review` output only if user asks to compare recorded patterns
+3. [Review friction](review-friction.md) output only if user asks to compare recorded patterns
 4. Repo scripts or diagnostics only for tooling-coverage lessons
 
-Avoid broad reads. This skill is learning triage, not audit.
+Avoid broad reads. This guide is learning triage, not audit.
 
 ## Review method
 

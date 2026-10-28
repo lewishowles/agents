@@ -80,7 +80,7 @@ def proposed_change(pattern: dict[str, object]) -> tuple[str, str, str]:
 	if kind == "correction":
 		return (
 			"skill",
-			"codex-insights workflow",
+			"agent-retrospective workflow",
 			f"Add a focused check for the corrected behaviour represented by {observed}.",
 		)
 	if kind in {"tool_failure", "verification_gap"}:

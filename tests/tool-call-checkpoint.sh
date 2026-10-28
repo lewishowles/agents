@@ -169,7 +169,7 @@ assert_silent "Read" "missing"
 assert_silent "Edit" "missing"
 assert_silent "Write" "missing"
 
-start_session "insights-review" "2" "maki" "Agents-reviewer"
+start_session "agent-retrospective" "2" "maki" "Agents-reviewer"
 INSIGHTS_REVIEW_WORKFLOW="1"
 assert_silent "Read" "missing"
 assert_silent "Edit" "missing"
