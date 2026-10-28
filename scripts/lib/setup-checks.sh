@@ -49,6 +49,22 @@ choose_cli_style_install_command() {
 	fi
 }
 
+# Prints the helper commands that setup installs for the selected agents.
+#
+# @param  {string}  target
+#     The agent setup target: claude, codex or both. Empty prints nothing.
+required_agent_tools() {
+	# The agent setup target that decides whether friction is required.
+	local target="$1"
+	if [ -z "$target" ]; then
+		return 0
+	fi
+	if [ "$target" = claude ] || [ "$target" = both ]; then
+		printf '%s\n' friction
+	fi
+	printf '%s\n' team-send doc-paths
+}
+
 # Checks that setup can provide every agent-tools command the chosen target
 # needs, before setup writes anything. A command passes when it is already
 # installed, or when uv and its package in the agent-tools checkout are both
@@ -61,8 +77,8 @@ choose_cli_style_install_command() {
 preflight_agent_tools() {
 	# The agent setup target that decides which commands are needed.
 	local target="$1"
-	# The commands the chosen target needs; Claude also needs friction.
-	local required_commands=(team-send doc-paths)
+	# The commands the chosen target needs.
+	local -a required_commands=()
 	# The command being checked.
 	local command_name
 	# Whether any command can be neither found nor installed.
@@ -70,9 +86,9 @@ preflight_agent_tools() {
 	# Whether uv is available to install missing commands.
 	local uv_available=true
 
-	if [ "$target" = claude ] || [ "$target" = both ]; then
-		required_commands=(friction "${required_commands[@]}")
-	fi
+	while IFS= read -r command_name; do
+		required_commands+=("$command_name")
+	done < <(required_agent_tools "$target")
 
 	if ! command -v uv >/dev/null 2>&1; then
 		uv_available=false
@@ -236,9 +252,14 @@ picker_collection_of() {
 #
 # @param  {string}  target
 #     The selected Claude, Codex, or both agent targets.
+# @param  {string}  mode
+#     Set to doctor to report problems with selected skills as errors that
+#     the doctor counts. Defaults to status.
 report_skill_status() {
 	# The selected agent targets included in this report.
 	local target="$1"
+	# Whether selected skill problems must fail the doctor.
+	local mode="${2:-status}"
 	# The agent roots selected for the read-only report.
 	local -a status_agents=()
 	# The current agent root whose skill links are reported.
@@ -296,7 +317,15 @@ report_skill_status() {
 				fi
 				opt_in_hint="the $status_collection collection is off; run: scripts/setup.sh --$status_agent --include $status_name (adds every $status_collection skill)"
 
-				if { [ -e "$status_link" ] || [ -L "$status_link" ]; } && ! is_repo_owned_link "$status_skill" "$status_link"; then
+				if [ "$mode" = doctor ] && skill_is_selected "$status_skill"; then
+					if is_repo_owned_link "$status_skill" "$status_link" && [ -e "$status_link" ]; then
+						cli_status success "installed $status_name" "skills/$status_name"
+					elif [ -e "$status_link" ] || [ -L "$status_link" ]; then
+						check_link "$status_skill" "$status_link" "skills/$status_name"
+					else
+						required_problem "missing $status_name" "run: scripts/setup.sh --$status_agent --include $status_name"
+					fi
+				elif { [ -e "$status_link" ] || [ -L "$status_link" ]; } && ! is_repo_owned_link "$status_skill" "$status_link"; then
 					if excluded_skill_exists "$status_name"; then
 						cli_status warning "conflicting $status_name" "run: trash $(display_path "$status_link")"
 					elif [ "$collection_off" = true ]; then
@@ -334,7 +363,7 @@ report_skill_status() {
 #     The existing Codex configuration, or a missing path on first setup.
 # @param  {string}  output
 #     The file that receives the managed configuration.
-prepare_codex_config() {
+prepare_codex_config() (
 	# The existing Codex configuration.
 	local config="$1"
 	# The file that receives the managed configuration.
@@ -343,28 +372,33 @@ prepare_codex_config() {
 	# on first setup.
 	local source="$config"
 	# The starting config with the managed root defaults applied.
-	local defaults_temp
+	local defaults_temp=""
 	# The working copy that collects the managed sections, MCP servers,
 	# permissions and TUI settings.
-	local temp
+	local temp=""
+	# The temporary config with legacy inline hooks removed, when needed.
+	local hooks_temp=""
+	# Deletes the temporary files however the function ends. The function body
+	# runs in a subshell so this trap does not replace the caller's EXIT trap.
+	trap 'rm -f "$defaults_temp" "$temp" "$hooks_temp"' EXIT
 
 	if [ ! -f "$source" ]; then
 		source=/dev/null
 	fi
 	defaults_temp=$(mktemp)
 	temp=$(mktemp)
-	ensure_codex_defaults "$source" "$defaults_temp"
+	ensure_codex_defaults "$source" "$defaults_temp" || return 1
 
 	# Apply managed feature flags and memory settings. Leave the user's hooks
 	# flag alone when hooks are off. Retire codex_hooks when hooks are chosen.
 	# This runs before the managed sections below are moved to the end, so a
 	# newly added section keeps its place on later runs.
 	if [ "$setup_hooks" = true ]; then
-		ensure_codex_section_settings "$defaults_temp" "features" "" "codex_hooks"
+		ensure_codex_section_settings "$defaults_temp" "features" "" "codex_hooks" || return 1
 	else
-		ensure_codex_section_settings "$defaults_temp" "features" "hooks"
+		ensure_codex_section_settings "$defaults_temp" "features" "hooks" || return 1
 	fi
-	ensure_codex_section_settings "$defaults_temp" "memories" ""
+	ensure_codex_section_settings "$defaults_temp" "memories" "" || return 1
 
 	# Strip managed MCP server sections before re-appending them,
 	# so re-running setup never creates duplicate entries.
@@ -378,29 +412,27 @@ prepare_codex_config() {
 			while (blanks > 0) { print ""; blanks-- }
 			print
 		}
-	' "$defaults_temp" > "$temp"
+	' "$defaults_temp" > "$temp" || return 1
 	rm "$defaults_temp"
-	ensure_codex_tui_settings "$temp"
+	ensure_codex_tui_settings "$temp" || return 1
 
 	# Re-add repository-managed MCP server configuration.
 	for section in "mcp_servers.codebase-memory-mcp" "mcp_servers.mdn" "mcp_servers.sketch" "mcp_servers.sketch.tools.run_code"; do
 		printf '\n' >> "$temp"
-		codex_config_section "$section" >> "$temp"
+		codex_config_section "$section" >> "$temp" || return 1
 	done
 	if [ "$setup_permissions" = true ]; then
-		ensure_codex_permission_settings "$temp"
+		ensure_codex_permission_settings "$temp" || return 1
 	fi
 
 	if [ "$setup_hooks" = true ]; then
-		# The temporary config file with legacy inline hooks removed.
-		local hooks_temp
 		hooks_temp=$(mktemp)
-		remove_inline_codex_hooks "$temp" "$hooks_temp"
-		mv "$hooks_temp" "$temp"
+		remove_inline_codex_hooks "$temp" "$hooks_temp" || return 1
+		mv "$hooks_temp" "$temp" || return 1
 	fi
 
 	mv "$temp" "$output"
-}
+)
 
 # Sets the root-level Codex defaults while preserving unrelated configuration.
 #

@@ -543,9 +543,9 @@ plan_claude_setup() {
 	fi
 
 	if [ "$setup_helpers" = true ]; then
-		for command_name in friction team-send doc-paths; do
+		while IFS= read -r command_name; do
 			plan_helper_command "$command_name"
-		done
+		done < <(required_agent_tools claude)
 	fi
 
 	if [ "$setup_core" = true ]; then
@@ -638,9 +638,9 @@ plan_codex_setup() {
 	fi
 
 	if [ "$setup_helpers" = true ]; then
-		for command_name in team-send doc-paths; do
+		while IFS= read -r command_name; do
 			plan_helper_command "$command_name"
-		done
+		done < <(required_agent_tools codex)
 	fi
 
 	if [ "$setup_core" = true ]; then
