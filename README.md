@@ -49,10 +49,10 @@ Setup may need the local `agent-tools` checkout and `uv` to install helper comma
 
 ## First use
 
-After setup, check which skills are linked and which are available to opt in:
+After setup, check the installed configuration, including which skills are linked and which are available to opt in:
 
 ```bash
-scripts/setup.sh --status
+scripts/doctor.sh
 ```
 
 For example, ask your agent to review a README. The `writing` skill gives it a reader-first structure and covers voice and plain language. Skills are discovered from their descriptions when the task matches.

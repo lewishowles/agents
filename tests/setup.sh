@@ -626,6 +626,26 @@ test_public_backup_bypass_is_rejected() {
 	assert_equals "$(cat "$home_dir/.codex/config.toml")" 'custom_setting = "keep"'
 }
 
+# Setup rejects its former status option without changing the home.
+test_status_option_is_rejected_without_changes() {
+	# The isolated home for the rejected status option.
+	local home_dir="$TEST_ROOT/rejected-status"
+	# The output from the rejected setup run.
+	local output="$TEST_ROOT/rejected-status.txt"
+	# The home snapshot before setup starts.
+	local before
+
+	create_existing_config "$home_dir"
+	before=$(snapshot_test_directory "$home_dir")
+	if run_setup_target "$home_dir" "--both" --status > "$output" 2>&1; then
+		fail 'Expected --status to be rejected'
+	fi
+
+	assert_contains "$output" 'Usage:'
+	assert_equals "$(snapshot_test_directory "$home_dir")" "$before"
+	assert_not_exists "$home_dir/setup-calls.log"
+}
+
 test_default_setup_skips_repository_refresh() {
 	# The isolated home for the default setup run.
 	local home_dir="$TEST_ROOT/default-setup"
@@ -738,24 +758,6 @@ test_preflight_checks_only_codex_commands() {
 
 	assert_not_exists "$home_dir/uv-calls.log"
 	assert_link "$home_dir/.agents/AGENTS.md"
-}
-
-# Status reports skill links without checking installation prerequisites.
-test_status_skips_agent_tools_preflight() {
-	# The isolated home for the status run.
-	local home_dir="$TEST_ROOT/status-no-agent-tools"
-	# The stub directory without agent-tools commands.
-	local bin_dir="$TEST_ROOT/status-no-agent-tools-bin"
-	# The status output.
-	local output="$TEST_ROOT/status-no-agent-tools.txt"
-
-	/bin/cp -R "$TEST_ROOT/bin" "$bin_dir"
-	trash "$bin_dir/friction" "$bin_dir/team-send" "$bin_dir/doc-paths" "$bin_dir/uv"
-	SETUP_TEST_PATH="$bin_dir:/usr/bin:/bin:/usr/sbin:/sbin" run_setup_target "$home_dir" "--both" --status > "$output"
-
-	assert_not_contains "$output" 'is not installed'
-	assert_not_contains "$output" 'Setup stopped before changing anything.'
-	assert_not_exists "$home_dir/setup-calls.log"
 }
 
 # Checks that global setup installs a missing doc-paths command once for both targets.
@@ -1651,207 +1653,6 @@ test_unmanaged_included_skill_is_backed_up() {
 	assert_contains "$output" 'backup at ~/.agents/backups/skills/accessibility.bak.'
 }
 
-test_status_reports_an_installed_skill() {
-	# Isolated home directory for the status report.
-	local home_dir="$TEST_ROOT/status-installed"
-	# Output from the installed-skill report.
-	local output="$TEST_ROOT/status-installed.txt"
-
-	mkdir -p "$home_dir/.claude/skills"
-	ln -s "$REPO_DIR/skills/accessibility/accessibility" "$home_dir/.claude/skills/accessibility"
-
-	run_setup_target "$home_dir" "--claude" --status > "$output"
-
-	assert_contains "$output" 'installed accessibility'
-}
-
-test_status_reports_a_missing_skill() {
-	# Isolated home directory for the status report.
-	local home_dir="$TEST_ROOT/status-missing"
-	# Output from the missing-skill report.
-	local output="$TEST_ROOT/status-missing.txt"
-
-	run_setup_target "$home_dir" "--claude" --status > "$output"
-
-	assert_contains "$output" 'missing bash'
-}
-
-test_status_reports_an_excluded_skill() {
-	# Isolated home directory for the status report.
-	local home_dir="$TEST_ROOT/status-excluded"
-	# Output from the excluded-skill report.
-	local output="$TEST_ROOT/status-excluded.txt"
-
-	mkdir -p "$home_dir/.agents"
-	printf 'agent-retrospective\n' > "$home_dir/.agents/skill-exclusions"
-
-	run_setup_target "$home_dir" "--claude" --status > "$output"
-
-	assert_contains "$output" 'excluded agent-retrospective'
-	assert_contains "$output" 'saved in ~/.agents/skill-exclusions'
-}
-
-# Status explains why an Apple skill is absent or linked without an opt-in.
-test_status_reports_apple_collection_off() {
-	# Isolated home directory for both status reports.
-	local home_dir="$TEST_ROOT/status-apple-off"
-	# Output when Apple is absent.
-	local output="$TEST_ROOT/status-apple-off.txt"
-	# Output when a repository-owned Apple link is still present.
-	local linked_output="$TEST_ROOT/status-apple-link.txt"
-	# Apple skill link retained from an earlier setup.
-	local apple_link="$home_dir/.claude/skills/mac-app"
-
-	run_setup_target "$home_dir" "--claude" --status > "$output"
-	assert_contains "$output" 'off by default mac-app'
-	assert_contains "$output" 'the apple collection is off; run: scripts/setup.sh --claude --include mac-app (adds every apple skill)'
-	assert_not_contains "$output" 'excluded mac-app'
-
-	mkdir -p "$(dirname "$apple_link")"
-	ln -s "$REPO_DIR/skills/apple/mac-app" "$apple_link"
-	run_setup_target "$home_dir" "--claude" --status > "$linked_output"
-	assert_contains "$linked_output" 'off by default mac-app'
-	assert_contains "$linked_output" 'link still present; the apple collection is off'
-	assert_contains "$linked_output" 'or run: trash ~/.claude/skills/mac-app'
-	assert_equals "$(readlink "$apple_link")" "$REPO_DIR/skills/apple/mac-app"
-}
-
-test_status_reports_an_excluded_skill_with_a_lingering_link() {
-	# Isolated home directory for the status report.
-	local home_dir="$TEST_ROOT/status-lingering-link"
-	# Output from the lingering-link report.
-	local output="$TEST_ROOT/status-lingering-link.txt"
-	# Excluded repo-owned link that the report must not remove.
-	local lingering_link="$home_dir/.claude/skills/writing"
-
-	mkdir -p "$home_dir/.agents" "$(dirname "$lingering_link")"
-	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
-	ln -s "$REPO_DIR/skills/writing/writing" "$lingering_link"
-
-	run_setup_target "$home_dir" "--claude" --status > "$output"
-
-	assert_contains "$output" 'excluded writing'
-	assert_contains "$output" 'link still present; run: scripts/setup.sh --claude --exclude writing'
-	assert_equals "$(readlink "$lingering_link")" "$REPO_DIR/skills/writing/writing"
-}
-
-test_status_reports_conflicting_included_content() {
-	# Isolated home directory for the status report.
-	local home_dir="$TEST_ROOT/status-included-conflict"
-	# Output from the included-conflict report.
-	local output="$TEST_ROOT/status-included-conflict.txt"
-	# Unmanaged included content that must remain conflicting.
-	local conflict_file="$home_dir/.claude/skills/code-style/keep.txt"
-
-	mkdir -p "$(dirname "$conflict_file")"
-	printf 'keep this content\n' > "$conflict_file"
-
-	run_setup_target "$home_dir" "--claude" --status > "$output"
-
-	assert_contains "$output" 'conflicting code-style'
-	assert_contains "$output" 'run: scripts/setup.sh --claude --include code-style'
-	assert_equals "$(cat "$conflict_file")" 'keep this content'
-}
-
-test_status_reports_conflicting_excluded_content() {
-	# Isolated home directory for the status report.
-	local home_dir="$TEST_ROOT/status-excluded-conflict"
-	# Output from the excluded-conflict report.
-	local output="$TEST_ROOT/status-excluded-conflict.txt"
-	# Unmanaged excluded content that must remain conflicting.
-	local conflict_file="$home_dir/.claude/skills/code-style/keep.txt"
-
-	mkdir -p "$home_dir/.agents" "$(dirname "$conflict_file")"
-	printf 'code-style\n' > "$home_dir/.agents/skill-exclusions"
-	printf 'keep this content\n' > "$conflict_file"
-
-	run_setup_target "$home_dir" "--claude" --status > "$output"
-
-	assert_contains "$output" 'conflicting code-style'
-	assert_contains "$output" 'run: trash ~/.claude/skills/code-style'
-	assert_equals "$(cat "$conflict_file")" 'keep this content'
-}
-
-test_status_does_not_change_files() {
-	# Isolated home directory for the status report.
-	local home_dir="$TEST_ROOT/status-read-only"
-	# Output from the read-only status report.
-	local output="$TEST_ROOT/status-read-only.txt"
-	# Repo-owned link that must remain installed.
-	local installed_link="$home_dir/.claude/skills/accessibility"
-	# Unmanaged excluded content that must remain conflicting.
-	local excluded_skill="$home_dir/.agents/skills/code-style/keep.txt"
-	# The home contents before the status report.
-	local home_before
-	# The repository file state before the status report.
-	local repo_before
-
-	mkdir -p "$home_dir/.agents/skills" "$home_dir/.claude/skills" "$(dirname "$excluded_skill")"
-	printf 'code-style\n' > "$home_dir/.agents/skill-exclusions"
-	printf 'keep this content\n' > "$excluded_skill"
-	ln -s "$REPO_DIR/skills/accessibility/accessibility" "$installed_link"
-	home_before=$(snapshot_test_directory "$home_dir")
-	repo_before=$(git -C "$REPO_DIR" status --porcelain --untracked-files=all)
-
-	run_setup_target "$home_dir" "" --status > "$output"
-
-	assert_not_exists "$home_dir/setup-calls.log"
-	assert_equals "$(snapshot_test_directory "$home_dir")" "$home_before"
-	assert_equals "$(git -C "$REPO_DIR" status --porcelain --untracked-files=all)" "$repo_before"
-	assert_contains "$output" 'Claude skills'
-	assert_contains "$output" 'Codex skills'
-	assert_equals "$(readlink "$installed_link")" "$REPO_DIR/skills/accessibility/accessibility"
-	assert_equals "$(cat "$excluded_skill")" 'keep this content'
-	assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'code-style'
-	assert_not_exists "$home_dir/.codex"
-}
-
-# Checks that status stops with an install hint when cli-style is missing.
-test_status_requires_cli_style_without_changes() {
-	# Isolated home directory for the status report.
-	local home_dir="$TEST_ROOT/status-without-cli-style"
-	# Output from the rejected status report.
-	local output="$TEST_ROOT/status-without-cli-style.txt"
-	# The home contents before the status report.
-	local home_before
-	# The repository file state before the status report.
-	local repo_before
-
-	mkdir -p "$home_dir"
-	home_before=$(snapshot_test_directory "$home_dir")
-	repo_before=$(git -C "$REPO_DIR" status --porcelain --untracked-files=all)
-
-	if SETUP_TEST_CLI_STYLE_BIN="$TEST_ROOT/missing-cli-style" run_setup_target "$home_dir" "--claude" --status > "$output" 2>&1; then
-		fail '--status succeeded without cli-style'
-	fi
-
-	assert_contains "$output" 'cli-style is not executable:'
-	assert_contains "$output" 'bun add -g @lewishowles/cli-style (or npm install -g @lewishowles/cli-style)'
-	assert_not_exists "$home_dir/setup-calls.log"
-	assert_equals "$(snapshot_test_directory "$home_dir")" "$home_before"
-	assert_equals "$(git -C "$REPO_DIR" status --porcelain --untracked-files=all)" "$repo_before"
-}
-
-test_status_rejects_skill_options_without_changes() {
-	# Isolated home directory for the rejected status run.
-	local home_dir="$TEST_ROOT/status-with-skill-options"
-	# Output from the rejected status run.
-	local output="$TEST_ROOT/status-with-skill-options.txt"
-
-	mkdir -p "$home_dir/.agents"
-	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
-	if run_setup_target "$home_dir" "--claude" --status --exclude accessibility > "$output" 2>&1; then
-		fail 'Expected --status with --exclude to be rejected'
-	fi
-
-	assert_contains "$output" '--status cannot be combined with --select, --exclude, --include, or --include-all.'
-	assert_contains "$output" 'Usage:'
-	assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'writing'
-	assert_not_exists "$home_dir/.claude"
-	assert_not_exists "$home_dir/.codex"
-	assert_not_exists "$home_dir/setup-calls.log"
-}
-
 # Ensures the numbered selector defaults to both agents and saves its changes.
 test_select_fallback_updates_skill_exclusions() {
 	# Isolated home directory for the numbered selection run.
@@ -2484,13 +2285,13 @@ run_setup_cases() {
 	local -a cases=(
 		test_help_hides_backup_bypass
 		test_public_backup_bypass_is_rejected
+		test_status_option_is_rejected_without_changes
 		test_default_setup_skips_repository_refresh
 		test_existing_doc_paths_is_preserved
 		test_preflight_reports_missing_uv_without_changes
 		test_preflight_reports_missing_checkout_without_changes
 		test_preflight_accepts_installed_commands_without_installer
 		test_preflight_checks_only_codex_commands
-		test_status_skips_agent_tools_preflight
 		test_missing_doc_paths_is_installed
 		test_codex_installs_missing_doc_paths
 		test_refresh_runs_repository_sync
@@ -2534,16 +2335,6 @@ run_setup_cases() {
 		test_removed_skill_can_be_included
 		test_unmanaged_excluded_directory_survives
 		test_unmanaged_included_skill_is_backed_up
-		test_status_reports_an_installed_skill
-		test_status_reports_a_missing_skill
-		test_status_reports_an_excluded_skill
-		test_status_reports_apple_collection_off
-		test_status_reports_an_excluded_skill_with_a_lingering_link
-		test_status_reports_conflicting_included_content
-		test_status_reports_conflicting_excluded_content
-		test_status_does_not_change_files
-		test_status_requires_cli_style_without_changes
-		test_status_rejects_skill_options_without_changes
 		test_select_fallback_updates_skill_exclusions
 		test_select_fallback_excludes_collection_and_skill
 		test_select_fallback_empty_selection_keeps_default_choices

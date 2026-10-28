@@ -15,14 +15,14 @@ source "$REPO_DIR/scripts/lib/setup-links.sh"
 source "$REPO_DIR/scripts/lib/setup-checks.sh"
 
 # Reads the command-line options and saves any changes to the skill selection.
-# Then it either reports which skills are linked, or installs the configuration
-# for Claude, Codex or both along with the shared trash wrapper and Git hooks.
+# Then it installs the configuration for Claude, Codex or both along with the
+# shared trash wrapper and Git hooks.
 #
 # @param  {string}  ...
 #     Command-line options passed to the script.
 main() {
 	# The agents to set up (claude, codex or both). It comes from the options, defaults
-	# to both for the skill and status options, and is otherwise asked for.
+	# to both for skill options, and is otherwise asked for.
 	target=""
 	# Whether to run sync.sh to regenerate dist/ before installing links.
 	refresh=false
@@ -30,8 +30,6 @@ main() {
 	skill_options_requested=false
 	# Whether the terminal skill selection flow was requested.
 	select_requested=false
-	# Whether to report skill link states without changing skill links.
-	status_requested=false
 	# Whether a scripted run may apply its printed plan without a terminal.
 	yes_requested=false
 	# The preset the user chose: skills-only, pick or everything. Empty runs the
@@ -122,7 +120,6 @@ main() {
 				skill_operation_names+=("")
 				skill_options_requested=true
 				;;
-			--status)        status_requested=true ;;
 			--refresh)       refresh=true ;;
 			--yes)           yes_requested=true ;;
 			--help)          usage; exit 0 ;;
@@ -130,12 +127,6 @@ main() {
 		esac
 		shift
 	done
-
-	if [ "$status_requested" = true ] && [ "$skill_options_requested" = true ]; then
-		printf '%s\n' '--status cannot be combined with --select, --exclude, --include, or --include-all.' >&2
-		usage >&2
-		exit 1
-	fi
 
 	if [ "$select_requested" = true ] && [ "${#skill_operation_types[@]}" -gt 0 ]; then
 		printf '%s\n' '--select cannot be combined with --exclude, --include, or --include-all.' >&2
@@ -147,11 +138,7 @@ main() {
 		printf '%s\n' '--select requires a terminal. Use --exclude or --include when standard input is not a terminal.' >&2
 		exit 1
 	fi
-	if [ "$status_requested" = true ] && [ -n "$preset" ]; then
-		printf '%s\n' '--status cannot be combined with --preset.' >&2
-		exit 1
-	fi
-	if [ -z "$preset" ] && [ "$skill_options_requested" = false ] && [ "$status_requested" = false ] && [ -z "$target" ] && [ -t 0 ]; then
+	if [ -z "$preset" ] && [ "$skill_options_requested" = false ] && [ -z "$target" ] && [ -t 0 ]; then
 		preset=$(prompt_preset) || exit 1
 		if [ "$preset" = cancelled ]; then
 			printf '%s\n' 'Setup cancelled. Nothing changed.'
@@ -171,7 +158,7 @@ main() {
 			;;
 	esac
 	if [ -z "$target" ]; then
-		if [ "$skill_options_requested" = true ] || [ "$status_requested" = true ] || ! [ -t 0 ]; then
+		if [ "$skill_options_requested" = true ] || ! [ -t 0 ]; then
 			target=both
 		elif [ "$preset" = everything ]; then
 			target=both
@@ -236,21 +223,11 @@ main() {
 
 	load_managed_paths
 
-	if [ "$status_requested" != true ] && [ "$setup_helpers" = true ]; then
+	if [ "$setup_helpers" = true ]; then
 		preflight_agent_tools "$target" || exit 1
 	fi
 
 	report_excluded_skills
-
-	if [ "$status_requested" = true ]; then
-		# The python3 calls in the status helpers would otherwise cache bytecode
-		# in the user's home, and status must leave the home unchanged.
-		export PYTHONDONTWRITEBYTECODE=1
-		# shellcheck source=scripts/lib/cli-style-output.sh
-		source "$REPO_DIR/scripts/lib/cli-style-output.sh"
-		report_skill_status "$target"
-		exit 0
-	fi
 
 	if [ "$refresh" = true ]; then
 		bash "$REPO_DIR/scripts/sync.sh"
@@ -779,7 +756,7 @@ parse_skill_list() {
 
 # Prints the options this script accepts.
 usage() {
-	printf 'Usage: %s [--preset skills-only|pick|everything] [--claude|--codex|--both] [--claude-dir <path>] [--codex-dir <path>] [--select] [--exclude <skill>[,<skill>...]] [--include <skill>[,<skill>...]] [--include-all] [--status] [--refresh] [--yes]\n' "$(basename "$0")"
+	printf 'Usage: %s [--preset skills-only|pick|everything] [--claude|--codex|--both] [--claude-dir <path>] [--codex-dir <path>] [--select] [--exclude <skill>[,<skill>...]] [--include <skill>[,<skill>...]] [--include-all] [--refresh] [--yes]\n' "$(basename "$0")"
 }
 
 # Rejects unknown exclusions and includes unless an include clears a saved name.

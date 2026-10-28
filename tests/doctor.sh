@@ -200,6 +200,7 @@ main() {
 	check_doctor 1 'Claude: not set up'
 	check_doctor 1 'Codex: not set up'
 	check_doctor 1 'cli-style: missing'
+	check_doctor 1 'bun add -g @lewishowles/cli-style (or npm install -g @lewishowles/cli-style)'
 	check_doctor 0 'No required problems found' "$CLI_STYLE_STUB"
 	check_doctor 1 'Git core.hooksPath does not match src/hooks/git' "$CLI_STYLE_STUB" other/hooks
 	check_doctor 1 '1 required check(s) failed' "$CLI_STYLE_STUB" other/hooks
@@ -265,6 +266,42 @@ main() {
 	trash "$TEST_HOME"
 	mkdir -p "$TEST_HOME"
 	install_claude_fixture
+	# The repository's Git status before the doctor runs, compared afterwards
+	# because the doctor must not change the repository either.
+	local repo_before
+	repo_before=$(git -C "$REPO_DIR" status --porcelain --untracked-files=all)
+	check_doctor 0 'No required problems found' "$CLI_STYLE_STUB"
+	if [ "$(git -C "$REPO_DIR" status --porcelain --untracked-files=all)" != "$repo_before" ]; then
+		printf 'The doctor changed the repository.\n' >&2
+		return 1
+	fi
+	check_doctor 0 'off by default mac-app' "$CLI_STYLE_STUB" src/hooks/git "$TEST_PATH" 'the apple collection is off; run: scripts/setup.sh --claude --include mac-app (adds every apple skill)'
+	ln -s "$REPO_DIR/skills/apple/mac-app" "$TEST_HOME/.claude/skills/mac-app"
+	check_doctor 0 'off by default mac-app link still present' "$CLI_STYLE_STUB"
+	trash "$TEST_HOME/.claude/skills/mac-app"
+
+	trash "$TEST_HOME/.claude/skills/writing"
+	mkdir -p "$TEST_HOME/.agents"
+	printf 'writing\n' > "$TEST_HOME/.agents/skill-exclusions"
+	check_doctor 0 'excluded writing saved in ~/.agents/skill-exclusions' "$CLI_STYLE_STUB"
+	ln -s "$REPO_DIR/skills/writing/writing" "$TEST_HOME/.claude/skills/writing"
+	trash "$TEST_HOME/.agents/skill-exclusions"
+	printf 'retired-skill\n' > "$TEST_HOME/.agents/skill-exclusions"
+	check_doctor 0 'stale exclusion retired-skill' "$CLI_STYLE_STUB" src/hooks/git "$TEST_PATH" 'remove it from ~/.agents/skill-exclusions, or run: scripts/setup.sh --include-all'
+	trash "$TEST_HOME/.agents/skill-exclusions"
+
+	trash "$TEST_HOME/.claude/skills/code-style"
+	mkdir -p "$TEST_HOME/.claude/skills/code-style"
+	printf 'keep this content\n' > "$TEST_HOME/.claude/skills/code-style/keep.txt"
+	check_single_problem 'skills/code-style real file in the way'
+	printf 'code-style\n' > "$TEST_HOME/.agents/skill-exclusions"
+	check_doctor 0 'conflicting code-style' "$CLI_STYLE_STUB" src/hooks/git "$TEST_PATH" 'run: trash ~/.claude/skills/code-style'
+	if [ "$(cat "$TEST_HOME/.claude/skills/code-style/keep.txt")" != 'keep this content' ]; then
+		printf 'The doctor changed unmanaged skill content.\n' >&2
+		return 1
+	fi
+	trash "$TEST_HOME/.claude/skills/code-style" "$TEST_HOME/.agents/skill-exclusions"
+	ln -s "$REPO_DIR/skills/code/code-style" "$TEST_HOME/.claude/skills/code-style"
 	check_doctor 0 'No required problems found' "$CLI_STYLE_STUB"
 	/bin/cp -R "$TEST_ROOT/bin" "$TEST_ROOT/missing-helper-bin"
 	trash "$TEST_ROOT/missing-helper-bin/team-send"
