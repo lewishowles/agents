@@ -266,7 +266,7 @@ if [ "${1:-}" = '--version' ]; then
 fi
 printf '%s\n' "$@" > "$SETUP_FZF_ARGUMENTS"
 cat > "$SETUP_FZF_INPUT"
-# Records what Tab on the first heading does with one, then both, of its skills ticked.
+# Records what Tab on the agent-improvement heading does with one, then both, of its skills ticked.
 if [ -n "${SETUP_FZF_ACTIONS:-}" ]; then
 	# The Tab command received from setup, before fzf fills in its placeholders.
 	tab_command=''
@@ -277,8 +277,8 @@ if [ -n "${SETUP_FZF_ACTIONS:-}" ]; then
 	done
 	[ -n "$tab_command" ] || exit 1
 	# The row under the cursor, passed by fzf as {}.
-	current_row=$(sed -n '1p' "$SETUP_FZF_INPUT")
-	sed -n '2p' "$SETUP_FZF_INPUT" > "$SETUP_FZF_ACTIONS.selected"
+	current_row=$(sed -n '3p' "$SETUP_FZF_INPUT")
+	sed -n '4p' "$SETUP_FZF_INPUT" > "$SETUP_FZF_ACTIONS.selected"
 	# The ticked-rows file and current row wrapped in single quotes, as fzf passes them.
 	# Kept in variables because Bash 3.2 keeps quotes written inside a replacement.
 	quoted_selected="'$SETUP_FZF_ACTIONS.selected'"
@@ -287,7 +287,7 @@ if [ -n "${SETUP_FZF_ACTIONS:-}" ]; then
 	action="${tab_command//\{+f\}/$quoted_selected}"
 	action="${action//\{\}/$quoted_row}"
 	env -i PATH="$PATH" sh -c "$action" > "$SETUP_FZF_ACTIONS" || exit 1
-	sed -n '2,3p' "$SETUP_FZF_INPUT" > "$SETUP_FZF_ACTIONS.selected"
+	sed -n '4,5p' "$SETUP_FZF_INPUT" > "$SETUP_FZF_ACTIONS.selected"
 	env -i PATH="$PATH" sh -c "$action" >> "$SETUP_FZF_ACTIONS" || exit 1
 fi
 printf '%s\n' "${SETUP_FZF_SELECTION:-}"
@@ -1527,16 +1527,16 @@ test_exclusions_persist_and_report() {
 	# Output after including all skills.
 	local include_all_output="$TEST_ROOT/skill-exclusions-include-all.txt"
 	# Expected exclusion status line.
-	local excluded_message='Excluded: accessibility, accessibility-audit (from ~/.agents/skill-exclusions; run with --include-all to restore)'
+	local excluded_message='Excluded: accessibility, agent-retrospective (from ~/.agents/skill-exclusions; run with --include-all to restore)'
 
-	run_setup_target "$home_dir" "" --exclude accessibility,accessibility-audit > "$output"
+	run_setup_target "$home_dir" "" --exclude accessibility,agent-retrospective > "$output"
 	assert_contains "$output" "$excluded_message"
 	assert_contains "$home_dir/.agents/skill-exclusions" 'accessibility'
-	assert_contains "$home_dir/.agents/skill-exclusions" 'accessibility-audit'
+	assert_contains "$home_dir/.agents/skill-exclusions" 'agent-retrospective'
 	assert_not_exists "$home_dir/.agents/skills/accessibility"
-	assert_not_exists "$home_dir/.agents/skills/accessibility-audit"
+	assert_not_exists "$home_dir/.agents/skills/agent-retrospective"
 	assert_not_exists "$home_dir/.claude/skills/accessibility"
-	assert_not_exists "$home_dir/.claude/skills/accessibility-audit"
+	assert_not_exists "$home_dir/.claude/skills/agent-retrospective"
 
 	run_setup_target "$home_dir" "--both" > "$rerun_output"
 	assert_contains "$rerun_output" "$excluded_message"
@@ -1544,15 +1544,15 @@ test_exclusions_persist_and_report() {
 	assert_not_exists "$home_dir/.claude/skills/accessibility"
 
 	run_setup_target "$home_dir" "" --include accessibility > "$include_output"
-	assert_contains "$include_output" 'Excluded: accessibility-audit (from ~/.agents/skill-exclusions; run with --include-all to restore)'
+	assert_contains "$include_output" 'Excluded: agent-retrospective (from ~/.agents/skill-exclusions; run with --include-all to restore)'
 	assert_dir_link "$home_dir/.agents/skills/accessibility"
 	assert_dir_link "$home_dir/.claude/skills/accessibility"
-	assert_not_exists "$home_dir/.agents/skills/accessibility-audit"
+	assert_not_exists "$home_dir/.agents/skills/agent-retrospective"
 
 	run_setup_target "$home_dir" "" --include-all > "$include_all_output"
 	assert_not_contains "$include_all_output" 'Excluded:'
-	assert_dir_link "$home_dir/.agents/skills/accessibility-audit"
-	assert_dir_link "$home_dir/.claude/skills/accessibility-audit"
+	assert_dir_link "$home_dir/.agents/skills/agent-retrospective"
+	assert_dir_link "$home_dir/.claude/skills/agent-retrospective"
 	assert_not_exists "$home_dir/.agents/skill-exclusions"
 	assert_equals "$(cat "$home_dir/.agents/skill-inclusions")" 'apple'
 	assert_dir_link "$home_dir/.agents/skills/mac-app"
@@ -1683,11 +1683,11 @@ test_status_reports_an_excluded_skill() {
 	local output="$TEST_ROOT/status-excluded.txt"
 
 	mkdir -p "$home_dir/.agents"
-	printf 'accessibility-audit\n' > "$home_dir/.agents/skill-exclusions"
+	printf 'agent-retrospective\n' > "$home_dir/.agents/skill-exclusions"
 
 	run_setup_target "$home_dir" "--claude" --status > "$output"
 
-	assert_contains "$output" 'excluded accessibility-audit'
+	assert_contains "$output" 'excluded agent-retrospective'
 	assert_contains "$output" 'saved in ~/.agents/skill-exclusions'
 }
 
@@ -1862,11 +1862,12 @@ test_select_fallback_updates_skill_exclusions() {
 	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
 
 	# The stub command path and terminal input for this picker run.
-	NO_COLOR=1 COLUMNS=80 SETUP_TEST_PATH="$fallback_path" SETUP_TEST_TERMINAL=true SETUP_TEST_TERMINAL_INPUT=$'1 2\r' run_setup_target "$home_dir" "" --select > "$output"
+	NO_COLOR=1 COLUMNS=80 SETUP_TEST_PATH="$fallback_path" SETUP_TEST_TERMINAL=true SETUP_TEST_TERMINAL_INPUT=$'2 3\r' run_setup_target "$home_dir" "" --select > "$output"
 
 	assert_contains "$output" '[x]  1. accessibility'
-	assert_contains "$output" '[x]  2. accessibility-audit'
-	assert_contains "$output" 'accessibility (2)'
+	assert_contains "$output" '[x]  2. agent-retrospective'
+	assert_contains "$output" '[x]  3. skill-craft'
+	assert_contains "$output" 'agent-improvement (2)'
 	assert_contains "$output" '…'
 	assert_not_contains "$output" 'Use this skill when editing HTML'
 	assert_not_contains "$output" $'\033[2m'
@@ -1883,10 +1884,12 @@ PY
 		fail 'Expected numbered skill rows to fit within 80 columns'
 	fi
 	assert_picker_group_order "$output" numbered
-	assert_contains "$home_dir/.agents/skill-exclusions" 'accessibility'
-	assert_contains "$home_dir/.agents/skill-exclusions" 'accessibility-audit'
-	assert_not_exists "$home_dir/.agents/skills/accessibility"
-	assert_not_exists "$home_dir/.claude/skills/accessibility"
+	assert_contains "$home_dir/.agents/skill-exclusions" 'agent-retrospective'
+	assert_contains "$home_dir/.agents/skill-exclusions" 'skill-craft'
+	assert_not_exists "$home_dir/.agents/skills/agent-retrospective"
+	assert_not_exists "$home_dir/.claude/skills/agent-retrospective"
+	assert_not_exists "$home_dir/.agents/skills/skill-craft"
+	assert_not_exists "$home_dir/.claude/skills/skill-craft"
 	assert_dir_link "$home_dir/.agents/skills/bash"
 	assert_dir_link "$home_dir/.claude/skills/bash"
 }
@@ -1900,12 +1903,14 @@ test_select_fallback_excludes_collection_and_skill() {
 	# Command path without fzf.
 	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
 
-	SETUP_TEST_PATH="$fallback_path" SETUP_TEST_TERMINAL=true SETUP_TEST_TERMINAL_INPUT=$'accessibility 2\r' run_setup_target "$home_dir" "" --select > "$output"
+	SETUP_TEST_PATH="$fallback_path" SETUP_TEST_TERMINAL=true SETUP_TEST_TERMINAL_INPUT=$'agent-improvement 1\r' run_setup_target "$home_dir" "" --select > "$output"
 
 	assert_contains "$home_dir/.agents/skill-exclusions" 'accessibility'
-	assert_contains "$home_dir/.agents/skill-exclusions" 'accessibility-audit'
 	assert_contains "$home_dir/.agents/skill-exclusions" 'agent-retrospective'
+	assert_contains "$home_dir/.agents/skill-exclusions" 'skill-craft'
 	assert_not_exists "$home_dir/.agents/skills/accessibility"
+	assert_not_exists "$home_dir/.agents/skills/agent-retrospective"
+	assert_not_exists "$home_dir/.agents/skills/skill-craft"
 	assert_dir_link "$home_dir/.agents/skills/bash"
 }
 
@@ -2128,9 +2133,9 @@ EOF
 	assert_contains "$fzf_arguments" '--with-nth=3'
 	assert_contains "$fzf_arguments" 'tab:transform('
 	assert_contains "$fzf_arguments" '{} {+f}'
-	assert_contains "$fzf_input" $'heading\taccessibility\taccessibility (2)'
-	assert_contains "$fzf_actions" 'clear-query+wait+pos(2)+select+pos(3)+select+pos(1)'
-	assert_contains "$fzf_actions" 'clear-query+wait+pos(2)+deselect+pos(3)+deselect+pos(1)'
+	assert_contains "$fzf_input" $'heading\tagent-improvement\tagent-improvement (2)'
+	assert_contains "$fzf_actions" 'clear-query+wait+pos(4)+select+pos(5)+select+pos(3)'
+	assert_contains "$fzf_actions" 'clear-query+wait+pos(4)+deselect+pos(5)+deselect+pos(3)'
 	assert_contains "$fzf_input" $'skill\taccessibility\t  accessibility'
 	assert_contains "$fzf_input" $'\033[2mWhen editing HTML'
 	assert_contains "$fzf_input" $'\033[2mTo inspect a folded description that spans two lines in the skill picker.'
@@ -2195,10 +2200,12 @@ test_select_fzf_excludes_every_skill() {
 	# The fzf capture files, chosen skills, command path, and terminal setting for this picker run.
 	# PATH here is this test's own value; ShellCheck confuses it with the copy run_setup_target changes in its subshell.
 	# shellcheck disable=SC2031
-	SETUP_FZF_ARGUMENTS="$fzf_arguments" SETUP_FZF_INPUT="$fzf_input" SETUP_FZF_SELECTION=$'heading\taccessibility\taccessibility (2)' SETUP_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
+	SETUP_FZF_ARGUMENTS="$fzf_arguments" SETUP_FZF_INPUT="$fzf_input" SETUP_FZF_SELECTION=$'heading\tagent-improvement\tagent-improvement (2)' SETUP_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
 
 	assert_contains "$fzf_arguments" '--multi'
 	assert_contains "$home_dir/.agents/skill-exclusions" 'accessibility'
+	assert_contains "$home_dir/.agents/skill-exclusions" 'agent-retrospective'
+	assert_contains "$home_dir/.agents/skill-exclusions" 'skill-craft'
 	assert_contains "$home_dir/.agents/skill-exclusions" 'writing'
 	assert_not_contains "$home_dir/.agents/skill-exclusions" 'heading'
 	assert_not_exists "$home_dir/.agents/skills/accessibility"
