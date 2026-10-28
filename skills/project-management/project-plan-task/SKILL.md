@@ -35,7 +35,7 @@ Do not write the progress database directly or use a second task store.
 
 Use `<project-root>/AGENTS.md`, ordinary docs, and `agent-run list --json` to choose verification commands, generated outputs, expensive checks, forbidden operations, and repository context.
 
-Use `agent-run detect --json` to preview likely commands and record their names in the plan. Register a missing command during implementation or verification with `agent-run detect --add <name>` (repeatable) or `agent-run detect --all`, then report what you registered. Do not register commands during planning or review. Use `agent-run run <name> --json` in verification instructions and `agent-run run --json -- <argv>` for one-off commands. Manual-only commands stay with the human.
+Use `agent-run detect --json` to preview likely commands and record their names in the plan. Register a missing command during implementation or verification with `agent-run detect --add <name>` (repeatable) or `agent-run detect --all`, then report what you registered. Do not register commands during planning or review. Use `agent-run run <name> --json` in verification instructions and `agent-run run --json -- <argv>` for one-off commands. Manual-only commands stay with the human: when a chunk's verification includes a check the agents cannot run, such as a manual-only command, a GUI or AppleScript check, or one that `AGENTS.md` or a discovery record says the sandbox blocks, name it with its exact command in the chunk's verification when you plan it.
 
 Do not generate project guidance during planning. If command registrations are missing, inspect package scripts and use `agent-run detect --json` to name them in the plan.
 
