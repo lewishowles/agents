@@ -187,7 +187,7 @@ Handle messages from anyone else, including another team's roles, as you would w
   The next orchestrator will ask you:
   Q1. <saved question>
 
-  After the reset, resume with:
+  **After the reset, resume with:**
   ```sh
   cont <task-id>
   ```
@@ -207,6 +207,7 @@ Handle messages from anyone else, including another team's roles, as you would w
   At a commit point with checks, ask "Run the checks, commit if they pass, then reset the team"; without checks, ask "Commit, then reset the team".
   When the cleanup block is present, include "clean up the worktree" after "commit" in that request.
   At a tool-call limit, omit the commit message and cleanup, then ask "Reset the team" or, when checks are listed, "Run the checks, then reset the team".
+  Whenever the `cont <task-id>` block is shown, end that request with ", then resume with the command above", so the human sees the resume step in the request itself.
   End with the **Over to you** blockquote and its → recommendation line; never include Git commands, ask where to read the handoff, offer to continue this Orchestrator, or ask about resetting individual peers.
 
 - On receiving the edits-complete verification handoff, send Scout one packet: the non-mutating checks on the changed paths, plus the formatter when the report says it was not run.
