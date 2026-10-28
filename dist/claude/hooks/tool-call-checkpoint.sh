@@ -32,7 +32,8 @@ while [[ -L "$script_path" ]]; do
 		script_path="$script_directory/$script_path"
 	fi
 done
-readonly SCRIPT_DIR="$(cd -P "$(dirname "$script_path")" && pwd)"
+SCRIPT_DIR="$(cd -P "$(dirname "$script_path")" && pwd)"
+readonly SCRIPT_DIR
 readonly TOOL_CALL_CONTEXT_FILE="$SCRIPT_DIR/tool-call-checkpoint-message.md"
 
 # Writes an opt-in, non-sensitive summary of the received hook event.
@@ -72,7 +73,8 @@ resolve_tool_call_limit() {
 }
 
 # Limit applied to this session's counter.
-readonly TOOL_CALL_LIMIT="$(resolve_tool_call_limit)"
+TOOL_CALL_LIMIT="$(resolve_tool_call_limit)"
+readonly TOOL_CALL_LIMIT
 
 runtime="${1:-}"
 case "$runtime" in
@@ -160,7 +162,7 @@ printf '%s %s\n' "$count" "$TOOL_CALL_LIMIT" > "$state_file"
 
 # Replace the message placeholder with the limit that fired for this session.
 checkpoint_context="$(<"$TOOL_CALL_CONTEXT_FILE")"
-checkpoint_context="${checkpoint_context//__TOOL_CALL_LIMIT__/$TOOL_CALL_LIMIT}"
+checkpoint_context="${checkpoint_context//\{\{TOOL_CALL_LIMIT\}\}/$TOOL_CALL_LIMIT}"
 
 jq -n \
 	--arg context "$checkpoint_context" \
