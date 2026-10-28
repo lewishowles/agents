@@ -61,8 +61,10 @@ import { createCliStyle } from "@lewishowles/cli-style";
 const ui = createCliStyle({ argv, env, stdout });
 ```
 
-- Construct `ui` once at entrypoint.
-- Thread `ui` through command handlers and print functions.
+- Commands never print. Return structured result.
+- Only terminal layer builds `ui` and renders result for people. Separate JSON renderer turns same result into `--json` output.
+- Interactive commands receive question-asking function, not whole `ui`.
+- Why: commands stay testable with plain data, and human and JSON output come from same result.
 - Use library helpers for colour, tables, panels, status rows, cancellation.
 - Keep colour optional and non-TTY compatible.
 - Inject `argv`, `env`, `stdout` explicitly for deterministic test output.
