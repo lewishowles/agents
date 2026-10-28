@@ -293,7 +293,7 @@ def configuration_status_for_pattern(
 
 def build_patterns(
 	observations: list[dict[str, object]],
-	configuration_cache: dict[tuple[str, str], dict[str, object]],
+	configuration_cache: dict[tuple[str, str, tuple[str, ...]], dict[str, object]],
 ) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
 	"""Group observations into patterns and pick out the repeated ones.
 
