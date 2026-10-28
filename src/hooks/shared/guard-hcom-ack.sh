@@ -8,14 +8,18 @@
 
 set -euo pipefail
 
+# Agent that runs this hook; Codex also needs an explicit allow decision in the reply.
 runtime="${1:-claude}"
 
 command -v jq >/dev/null 2>&1 || exit 0
 
+# Hook payload describing the proposed tool call.
 input="$(cat)"
+# Name of the tool the agent is about to run.
 tool_name="$(printf '%s' "$input" | jq -r '.tool_name // empty' 2>/dev/null)" || exit 0
 [[ "$tool_name" == "Bash" ]] || exit 0
 
+# Shell command proposed by the tool call.
 command_str="$(printf '%s' "$input" | jq -r '.tool_input.command // empty' 2>/dev/null)" || exit 0
 [[ -n "$command_str" ]] || exit 0
 
@@ -32,6 +36,7 @@ remaining_line=""
 # A possible heredoc closing line after any allowed leading tabs are removed.
 closing_line=""
 
+# Current line of the proposed shell command.
 while IFS= read -r line || [[ -n "$line" ]]; do
 	if [[ ${#heredoc_delimiters[@]} -gt 0 ]]; then
 		closing_line="$line"
@@ -65,8 +70,9 @@ normalised_command="${command_without_heredocs//$'\n'/;}"
 hcom_send_pattern='^(command[[:space:]]+)?hcom[[:space:]]+send([[:space:]]|$)'
 # Finds a team-send to a core role, written role first as the team rules show it. Its body arrives on stdin, so only the intent can mark it as an acknowledgement.
 team_send_pattern='^(command[[:space:]]+)?([^[:space:]]+/)?team-send[[:space:]]+(orchestrator|scout|implementer|reviewer)([[:space:]]|$)'
+# Finds an explicit acknowledgement intent in a send's options.
 ack_intent_pattern='(^|[[:space:]])--intent(=|[[:space:]]+)ack([[:space:]]|$)'
-# Finds acknowledgement text disguised as a result.
+# Finds an informational intent, whose inline message may still be an acknowledgement.
 inform_intent_pattern='(^|[[:space:]])--intent(=|[[:space:]]+)inform([[:space:]]|$)'
 # Covers common acknowledgement-only openings.
 acknowledgement_text_pattern=$'^(Acknowledged|Acknowledgement|Understood|I will|I\'ll|I’ll|Will do)([[:space:][:punct:]]|$)'
@@ -83,6 +89,7 @@ quote=""
 # True when the previous character was a backslash, so this one is taken literally.
 escaped=false
 
+# Position of the character being scanned for command separators.
 for ((index = 0; index < ${#normalised_command}; index++)); do
 	# The character being scanned.
 	character="${normalised_command:index:1}"
