@@ -69,45 +69,6 @@ Two details worth knowing before trusting a modified copy:
   operations inflates the figure by roughly 30%, because it treats a read separated from its edit by
   a dozen greps and builds as "immediately after".
 
-## index.py
-
-Builds a compact per-session index: project, title, timestamps, prompt and response counts, tool-use
-histogram, and files written more than once.
-
-```
-python3 scripts/audit/index.py .agent/audits/index.json
-```
-
-Use it to triage which sessions deserve a closer look. Sorting the output by the largest repeated
-write count surfaced most of the findings in the report.
-
-## corrections.py
-
-Extracts user messages matching a correction vocabulary (`you didn't`, `why did you`, `not what I
-asked`, `revert`, and similar), each with the assistant text and tool calls that preceded it.
-
-```
-python3 scripts/audit/corrections.py .agent/audits/corrections.json
-```
-
-This produced the strongest evidence in the audit, since a user correction marks a failure the user
-actually noticed. Expect false positives: skill preamble text injected as a user message matches the
-pattern often, and is easiest to filter on the first 200 characters.
-
-## timeline.py
-
-Prints a readable timeline for a single session, optionally bounded by timestamp. Tool calls are
-summarised to one line each, with file paths truncated from the left so the filename stays visible.
-
-```
-python3 scripts/audit/timeline.py <session-id-prefix> [start-timestamp] [end-timestamp]
-python3 scripts/audit/timeline.py abc12345 2026-07-21T12:00 2026-07-21T12:30
-```
-
-The session-id prefix is the first characters of the transcript filename, which is what the audit
-report cites. Use this to confirm a finding rather than to search for one; a full session is far too
-long to read.
-
 ## redundancy.py
 
 Flags three redundancy patterns across all sessions: identical Bash commands repeated four or more
