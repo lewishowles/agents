@@ -57,7 +57,7 @@ Skills are focused instruction sets for a specific kind of work. Each canonical 
 
 Claude and Codex use the same canonical skill folders, and both mostly choose a skill from its description, so write an action-led sentence that starts with `Use this skill when...`. Claude also has one path-scoped rule, `src/adapters/claude/rules/code-style.md`, that asks it to load the code-style skill when it works with code files.
 
-Claude reads shared skills from `~/.claude/skills/`, while Codex reads them from `~/.agents/skills/`. Claude also provides built-in skills managed by Claude Code; those entries have no source files in this repository.
+Claude reads shared skills from `~/.claude/skills/`, while Codex reads them from `~/.agents/skills/`. Claude also provides built-in skills managed by Claude Code; those skills have no source files in this repository.
 
 ## Keep the skill list within budget
 
@@ -67,18 +67,7 @@ The recorded limit starts at the current size. After merging a skill family, low
 
 ## Built-in Claude Code skills
 
-| Skill                      | When to use                                                                                                               |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `claude-api`               | Building, debugging, or optimising Claude API / Anthropic SDK apps, including prompt caching and model version migrations |
-| `fewer-permission-prompts` | Scan transcripts and add a permission allowlist to `.claude/settings.json` to reduce approval prompts                     |
-| `init`                     | Initialise a new project with Claude Code conventions                                                                     |
-| `keybindings-help`         | Customise keyboard shortcuts, rebind keys, or add chord bindings in `~/.claude/keybindings.json`                          |
-| `loop`                     | Run a prompt or slash command on a recurring interval (e.g. `/loop 5m /foo`)                                              |
-| `review`                   | Run a code review of the current branch or changes                                                                        |
-| `schedule`                 | Create, update, list, or run scheduled remote agents on a cron schedule                                                   |
-| `security-review`          | Run a security-focused review of code changes                                                                             |
-| `simplify`                 | Review changed code for reuse, quality, and efficiency, then fix issues found                                             |
-| `update-config`            | Modify Claude Code configuration via `settings.json`, including hooks, permissions, env vars, and plugins                 |
+For built-in skills, see the [official Claude Code documentation](https://code.claude.com/docs/en/skills).
 
 ## Control skill loading
 
