@@ -419,7 +419,10 @@ cli_style_install_needed() {
 	if [ -n "${CLI_STYLE_BIN:-}" ]; then
 		[ ! -x "$CLI_STYLE_BIN" ]
 	else
-		! command -v cli-style >/dev/null 2>&1
+		if command -v cli-style >/dev/null 2>&1; then
+			return 1
+		fi
+		return 0
 	fi
 }
 
