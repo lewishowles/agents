@@ -222,6 +222,8 @@ main() {
 	fi
 
 	load_managed_paths
+	# shellcheck source=scripts/lib/cli-style-output.sh
+	source "$REPO_DIR/scripts/lib/cli-style-output.sh"
 
 	if [ "$setup_helpers" = true ]; then
 		preflight_agent_tools "$target" || exit 1
@@ -265,14 +267,13 @@ main() {
 	if [ "$setup_helpers" = true ] && cli_style_install_needed; then
 		printf 'Running: %s\n' "${cli_style_install_command[*]}"
 		"${cli_style_install_command[@]}"
-	fi
-	# Helper setup always loads styled output, so a cli-style that is still missing
-	# after the install stops setup with guidance. Other runs fall back to plain output.
-	if [ "$setup_helpers" = true ] || ! cli_style_install_needed; then
+		# Load the output helpers again so the rest of setup uses the cli-style
+		# that was just installed.
 		# shellcheck source=scripts/lib/cli-style-output.sh
 		source "$REPO_DIR/scripts/lib/cli-style-output.sh"
-	else
-		enable_plain_setup_output
+		if cli_style_install_needed; then
+			cli_status warning 'cli-style' 'still not found after install; check that the global bin folder is on PATH'
+		fi
 	fi
 
 	case "$target" in
@@ -300,22 +301,6 @@ main() {
 	cli_status success "Done."
 }
 
-# Defines plain versions of the cli-style output functions for runs where
-# cli-style is not installed, such as skills only. The plain cli_group_status
-# defined below already covers link results.
-enable_plain_setup_output() {
-	cli_section() { printf '\n%s\n' "$1"; }
-	cli_group_begin() { printf '%s\n' "$1"; }
-	cli_group_end() { :; }
-	cli_status() {
-		printf '%s' "$2"
-		if [ -n "${3:-}" ]; then
-			printf ': %s' "$3"
-		fi
-		printf '\n'
-	}
-}
-
 # Sets the folders, files and links that both the preview and the installer
 # manage, so the preview and the installer read the same lists. Call it after
 # the agent folders are known.
@@ -337,27 +322,6 @@ load_managed_paths() {
 	CODEX_HOOKS_LABEL='Codex hooks'
 	# Folders HCOM grants to the Codex agents it starts.
 	HCOM_FOLDERS=("$REPO_DIR" "$HOME/.agents" "$HOME/.Trash" "$HOME/Library/Caches/org.swift.swiftpm" "$HOME/Library/org.swift.swiftpm")
-}
-
-# Prints a plain skill problem, such as a duplicate skill name, while the plan is
-# built and before cli-style may be installed. Loading the cli-style output
-# library after confirmation replaces this with styled output.
-#
-# @param  {string}  result
-#     The kind of result, such as warning or error.
-# @param  {string}  label
-#     What the message is about.
-# @param  {string}  detail
-#     Further explanation, if any.
-cli_group_status() {
-	# The kind of result.
-	local result="$1"
-	# What the message is about.
-	local label="$2"
-	# Further explanation, if any.
-	local detail="${3:-}"
-
-	printf '%s: %s (%s)\n' "$label" "$detail" "$result" >&2
 }
 
 # Returns success when saving the requested skill exclusions would change the

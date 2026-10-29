@@ -139,4 +139,56 @@ check_section "plain heading" "Generated outputs" ""
 check_section "supporting text" 'A "quote" and a \ slash' $'detail\twith\nlines'
 check_section "control and Unicode text" "$controls" 'café € 😀'
 
+# When CLI_STYLE_BIN points at a missing file, the shared output functions
+# still print plain text, so setup, doctor, sync and validate keep working.
+(
+	# The override belongs only to this plain-output case.
+	# shellcheck disable=SC2030
+	CLI_STYLE_BIN="$TEST_ROOT/missing-cli-style"
+	# shellcheck source=SCRIPTDIR/../scripts/lib/cli-style-output.sh
+	source "$REPO_DIR/scripts/lib/cli-style-output.sh"
+	cli_section 'Generated outputs' 'Build dist files and manifests'
+	cli_status success 'synced' 'dist/codex/AGENTS.md'
+	cli_group_begin 'Checks'
+	cli_group_status error 'skill manifests' 'failed'
+	cli_group_end
+) > "$TEST_ROOT/actual" 2> "$TEST_ROOT/plain-error"
+cat > "$TEST_ROOT/expected" <<'EOF'
+
+Generated outputs
+synced: dist/codex/AGENTS.md
+Checks
+error: skill manifests: failed
+EOF
+if ! cmp -s "$TEST_ROOT/actual" "$TEST_ROOT/expected"; then
+	fail 'Missing cli-style did not produce readable plain output'
+fi
+if [ -s "$TEST_ROOT/plain-error" ]; then
+	fail 'Missing cli-style printed an error while loading the output helpers'
+fi
+
+# With no override and no cli-style on PATH, the shared helpers still print
+# plain output, including the result of warnings and errors.
+(
+	unset CLI_STYLE_BIN
+	PATH=/usr/bin:/bin
+	# shellcheck source=SCRIPTDIR/../scripts/lib/cli-style-output.sh
+	source "$REPO_DIR/scripts/lib/cli-style-output.sh"
+	cli_status warning 'cli-style' 'missing'
+	cli_status failed 'check' 'failed'
+	cli_status info 'guidance' 'available'
+	cli_status skipped 'optional check' 'skipped'
+	cli_status muted 'unchanged'
+) > "$TEST_ROOT/actual"
+cat > "$TEST_ROOT/expected" <<'EOF'
+warning: cli-style: missing
+error: check: failed
+info: guidance: available
+optional check: skipped
+unchanged
+EOF
+if ! cmp -s "$TEST_ROOT/actual" "$TEST_ROOT/expected"; then
+	fail 'No cli-style on PATH did not produce readable plain output'
+fi
+
 printf '✓ cli-style output tests passed\n'

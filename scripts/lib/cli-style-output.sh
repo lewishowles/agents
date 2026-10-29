@@ -1,19 +1,26 @@
 #!/usr/bin/env bash
-# Shared cli-style rendering helpers for repository scripts.
-
-# The global install command to show when cli-style is missing or cannot run.
-CLI_STYLE_INSTALL_GUIDANCE='Run: bun add -g @lewishowles/cli-style (or npm install -g @lewishowles/cli-style)'
+# Shared output helpers for repository scripts. Output is styled through
+# cli-style when it is installed and printed as plain text when it is not, so
+# every script still runs on a machine without cli-style.
 
 # The cli-style executable that the rendering helpers call: CLI_STYLE_BIN when
-# the caller sets it, otherwise the cli-style command on PATH.
+# the caller sets it, otherwise the cli-style command on PATH, or empty when
+# neither exists.
 if [ -z "${CLI_STYLE_BIN:-}" ]; then
 	CLI_STYLE_BIN=$(command -v cli-style || true)
-	if [ -z "$CLI_STYLE_BIN" ]; then
-		printf 'cli-style is not installed. %s\n' "$CLI_STYLE_INSTALL_GUIDANCE" >&2
-		exit 1
-	fi
 fi
 export CLI_STYLE_BIN
+
+# True when CLI_STYLE_BIN can run, so output is styled, and false when output is
+# plain text.
+CLI_STYLE_AVAILABLE=false
+if [ -n "$CLI_STYLE_BIN" ] && [ -x "$CLI_STYLE_BIN" ]; then
+	CLI_STYLE_AVAILABLE=true
+	# The cli-style binary prints the adapter's path when the script runs, so the
+	# path is unknown to shellcheck.
+	# shellcheck disable=SC1090
+	source "$("$CLI_STYLE_BIN" adapter-path bash)"
+fi
 
 # The label of the status group whose rows are being counted, or empty when no group is active.
 CLI_STYLE_GROUP_LABEL=""
@@ -30,17 +37,9 @@ CLI_STYLE_GROUP_WARNING=0
 # The number of failed rows in the current group.
 CLI_STYLE_GROUP_FAILED=0
 
-if [ ! -x "$CLI_STYLE_BIN" ]; then
-	printf 'cli-style is not executable: %s. %s\n' "$CLI_STYLE_BIN" "$CLI_STYLE_INSTALL_GUIDANCE" >&2
-	exit 1
-fi
-
-# The cli-style binary prints the adapter's path when the script runs, so the
-# path is unknown to shellcheck.
-# shellcheck disable=SC1090
-source "$("$CLI_STYLE_BIN" adapter-path bash)"
-
-# Renders a status row through the installed cli-style binary.
+# Renders a status row through cli-style. When cli-style is missing, prints the
+# label and any detail as plain text, starting with "error:" for error and
+# failed results, and "warning:" or "info:" for those results.
 #
 # @param  {string}  type
 #     Status result type.
@@ -55,6 +54,20 @@ cli_status() {
 	local label="$2"
 	# Optional detail shown beside the status label.
 	local detail="${3:-}"
+
+	if [ "$CLI_STYLE_AVAILABLE" = false ]; then
+		case "$type" in
+			error|failed) printf 'error: ' ;;
+			info) printf 'info: ' ;;
+			warning) printf 'warning: ' ;;
+		esac
+		printf '%s' "$label"
+		if [ -n "$detail" ]; then
+			printf ': %s' "$detail"
+		fi
+		printf '\n'
+		return
+	fi
 
 	case "$type" in
 		error) type="failed" ;;
@@ -92,7 +105,8 @@ cli_group() {
 	cli_status "$type" "$label" "$summary"
 }
 
-# Renders a compact section divider for major script phases.
+# Renders a compact section divider for major script phases. Without
+# cli-style, prints only the title, after a blank line.
 #
 # @param  {string}  title
 #     Section title.
@@ -105,6 +119,10 @@ cli_section() {
 	local detail="${2:-}"
 
 	printf '\n'
+	if [ "$CLI_STYLE_AVAILABLE" = false ]; then
+		printf '%s\n' "$title"
+		return
+	fi
 	# The divider text: the heading, followed by any supporting text.
 	local label="$title"
 	if [[ -n "$detail" ]]; then
@@ -225,13 +243,19 @@ cli_json_string() {
 	REPLY="$result\""
 }
 
-# Starts collecting status rows for one grouped summary.
+# Starts collecting status rows for one grouped summary. Without cli-style,
+# prints the group label straight away and collects nothing.
 #
 # @param  {string}  label
 #     Group label.
 cli_group_begin() {
 	# The label of the new group of status rows.
 	local label="$1"
+
+	if [ "$CLI_STYLE_AVAILABLE" = false ]; then
+		printf '%s\n' "$label"
+		return
+	fi
 
 	CLI_STYLE_GROUP_LABEL="$label"
 	CLI_STYLE_GROUP_SUCCESS=0
@@ -243,6 +267,7 @@ cli_group_begin() {
 }
 
 # Records and optionally renders a status row inside the active group.
+# Without cli-style, prints every row as a plain status row.
 #
 # @param  {string}  type
 #     Status result type.
@@ -260,6 +285,11 @@ cli_group_status() {
 	# The status type with any alias replaced by its result type.
 	local normalised_type
 
+	if [ "$CLI_STYLE_AVAILABLE" = false ]; then
+		cli_status "$type" "$label" "$detail"
+		return
+	fi
+
 	normalised_type=$(cli_normalise_status_type "$type")
 
 	if [[ "$CLI_STYLE_GROUP_LABEL" == "" ]]; then
@@ -276,8 +306,12 @@ cli_group_status() {
 	cli_status "$normalised_type" "$label" "$detail"
 }
 
-# Renders the active group summary and clears the group state.
+# Renders the active group summary and clears the group state. Without
+# cli-style there is no summary, so it prints nothing.
 cli_group_end() {
+	if [ "$CLI_STYLE_AVAILABLE" = false ]; then
+		return
+	fi
 	# The overall result type and the count text for the group that is ending.
 	local result summary
 

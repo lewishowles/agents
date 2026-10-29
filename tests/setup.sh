@@ -205,7 +205,8 @@ EOF
 
 # Makes a command path with a package manager but no cli-style command. The
 # package manager stand-in records its arguments and then links the cli-style
-# stub, as a real global install would.
+# stub, as a real global install would, unless SETUP_TEST_SKIP_CLI_STYLE_LINK is
+# true, which stands in for an install whose global bin folder is not on PATH.
 #
 # @param  {string}  bin_dir
 #     Directory that receives the test commands.
@@ -222,7 +223,9 @@ create_cli_style_install_stubs() {
 	cat > "$bin_dir/$manager" <<'EOF'
 #!/bin/sh
 printf '%s\n' "$*" > "$HOME/cli-style-install-call"
-ln -s "$SETUP_TEST_CLI_STYLE_STUB" "$(dirname "$0")/cli-style"
+if [ "${SETUP_TEST_SKIP_CLI_STYLE_LINK:-}" != true ]; then
+	ln -s "$SETUP_TEST_CLI_STYLE_STUB" "$(dirname "$0")/cli-style"
+fi
 EOF
 	chmod +x "$bin_dir/$manager"
 }
@@ -928,6 +931,24 @@ test_global_cli_style_install_with_bun() {
 # Checks the global cli-style install when npm is the only package manager.
 test_global_cli_style_install_with_npm() {
 	test_global_cli_style_install npm
+}
+
+# Setup warns when a package manager completes but cli-style is not on PATH.
+test_global_cli_style_install_not_on_path() {
+	# The isolated home for the setup run.
+	local home_dir="$TEST_ROOT/global-cli-style-not-on-path"
+	# The command path with Bun but no cli-style.
+	local bin_dir="$TEST_ROOT/bin-cli-style-not-on-path"
+	# The setup output.
+	local output="$TEST_ROOT/global-cli-style-not-on-path.txt"
+
+	create_cli_style_install_stubs "$bin_dir" bun
+	SETUP_TEST_PATH="$bin_dir:/usr/bin:/bin" SETUP_TEST_CLI_STYLE_BIN='' \
+		SETUP_TEST_SKIP_CLI_STYLE_LINK=true \
+		run_setup_target "$home_dir" --claude > "$output" 2>&1
+
+	assert_contains "$output" 'warning: cli-style: still not found after install; check that the global bin folder is on PATH'
+	assert_contains "$output" 'Done.'
 }
 
 # A working CLI_STYLE_BIN skips the global install even without cli-style on PATH.
@@ -2224,6 +2245,7 @@ run_setup_cases() {
 		test_skills_only_without_cli_style
 		test_global_cli_style_install_with_bun
 		test_global_cli_style_install_with_npm
+		test_global_cli_style_install_not_on_path
 		test_global_cli_style_override_skips_install
 		test_missing_cli_style_and_package_manager
 		test_pick_preset_installs_selected_features

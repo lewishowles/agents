@@ -69,7 +69,8 @@ main() {
 	# The agents set up in this home: claude, codex, both, or empty for neither.
 	local target
 
-	initialise_output
+	# shellcheck source=scripts/lib/cli-style-output.sh
+	source "$SCRIPT_DIR/lib/cli-style-output.sh"
 	load_skill_exclusions
 	load_skill_inclusions
 	cli_section 'Agent configuration doctor'
@@ -127,45 +128,6 @@ cleanup_doctor() {
 	fi
 }
 
-# Sets up styled output when cli-style is installed, and plain text rows
-# otherwise.
-initialise_output() {
-	if ! cli_style_install_needed; then
-		# shellcheck source=scripts/lib/cli-style-output.sh
-		source "$SCRIPT_DIR/lib/cli-style-output.sh"
-	else
-		# Prints a section heading as plain text.
-		#
-		# @param  {string}  heading
-		#     The section name to show.
-		cli_section() {
-			printf '\n%s\n' "$1"
-		}
-		# Prints a status row as the label and optional detail, ignoring its kind.
-		#
-		# @param  {string}  kind
-		#     The status kind, unused in plain output.
-		# @param  {string}  label
-		#     The item being reported.
-		# @param  {string}  detail
-		#     Optional detail about its state.
-		cli_status() {
-			printf '%s' "$2"
-			if [ -n "${3:-}" ]; then
-				printf ': %s' "$3"
-			fi
-			printf '\n'
-		}
-	fi
-	# The shared skill collector reports duplicate skill names through this.
-	#
-	# @param  {string}  ...
-	#     The kind, label and detail passed to cli_status.
-	cli_group_status() {
-		cli_status "$@"
-	}
-}
-
 # Returns success when a core link points into this checkout.
 #
 # @param  {string}  agent
@@ -185,10 +147,9 @@ agent_is_present() {
 }
 
 # Reports cli-style, then the helper commands the selected agents use and fzf,
-# hcom and uv. A missing cli-style fails the doctor, because setup installs it
-# and the setup, sync and validate scripts use it. A missing helper or tool
-# shows as not installed and does not fail the doctor, because not every user
-# needs them.
+# hcom and uv. A missing cli-style fails the doctor, because setup installs it.
+# A missing helper or tool shows as not installed and does not fail the doctor,
+# because not every user needs them.
 #
 # @param  {string}  target
 #     The agents to check: claude, codex or both. Empty checks only cli-style,
@@ -200,8 +161,6 @@ check_tools() {
 	local command_name
 	cli_section 'Commands'
 	if cli_style_install_needed; then
-		# The shared install text is defined only once cli-style is installed, so
-		# it is repeated here for the case where cli-style is missing.
 		required_problem 'cli-style' 'missing; run: bun add -g @lewishowles/cli-style (or npm install -g @lewishowles/cli-style)'
 	else
 		cli_status success 'cli-style' 'installed'

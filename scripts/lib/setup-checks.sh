@@ -11,7 +11,7 @@
 #     load_skill_exclusions and load_skill_inclusions read to add to
 #     excluded_skills and included_collections. Start both as empty arrays
 #     before calling the loaders. The report also needs cli_section and
-#     cli_status from cli-style-output.sh or plain-text versions of them.
+#     cli_status from cli-style-output.sh.
 #   - Codex config: setup_hooks and setup_permissions. Pass a temporary file
 #     as the output path, because the builder writes the new config there.
 # choose_cli_style_install_command stores its answer in
