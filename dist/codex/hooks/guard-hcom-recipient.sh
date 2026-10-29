@@ -24,6 +24,8 @@ command_str="$(printf '%s' "$input" | jq -r '.tool_input.command // empty' 2>/de
 # Python splits the command into separate shell commands and arguments, which
 # a shell pattern cannot do reliably once quotes and heredocs are involved.
 python3 - "$command_str" <<'PY'
+"""Find HCOM sends whose arguments omit a recipient before the message body."""
+
 import os
 import re
 import shlex
@@ -35,15 +37,20 @@ from typing import Iterator, Optional
 CORE_ROLES = {"orchestrator", "scout", "implementer", "reviewer"}
 
 
-# Returns the command with heredoc bodies and unquoted # comments removed.
-# A heredoc body is message text, so an @ or `hcom send` inside it must not
-# count. A comment is removed because an apostrophe in it would otherwise open
-# a quote that swallows the lines after it. A `<<` inside quotes is ordinary
-# text, not a heredoc.
-#
-# @param  {str}  command
-#     The full shell command from the tool call.
 def without_heredoc_bodies(command: str) -> str:
+	"""Remove heredoc bodies and unquoted comments before looking for sends.
+
+	A heredoc body is message text, so an @ or `hcom send` inside it must not
+	count. A comment is removed because an apostrophe in it would otherwise open
+	a quote that swallows the lines after it. A `<<` inside quotes is ordinary
+	text, not a heredoc.
+
+	Args:
+		command: The full shell command from the tool call.
+
+	Returns:
+		The command with heredoc bodies and unquoted comments removed.
+	"""
 	# Command lines outside any heredoc body.
 	kept = []
 	# End markers of the heredocs still open, in order.
@@ -53,6 +60,7 @@ def without_heredoc_bodies(command: str) -> str:
 	# A heredoc operator, never a `<<<` here-string, and its end marker, which may be quoted.
 	heredoc = re.compile(r"(?<!<)<<(?!<)-?\s*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\1")
 
+	# Current command line, including its original line ending.
 	for line in command.splitlines(keepends=True):
 		if delimiters:
 			if line.strip() == delimiters[0]:
@@ -64,6 +72,7 @@ def without_heredoc_bodies(command: str) -> str:
 		# Where an unquoted # comment starts (a # at the start of a word), or the line length when there is none.
 		comment_start = len(line)
 
+		# Character position and value used to find quotes, comments, and heredocs.
 		for index, character in enumerate(line):
 			if escaped:
 				escaped = False
@@ -87,6 +96,7 @@ def without_heredoc_bodies(command: str) -> str:
 				break
 
 			if character == "<":
+				# Heredoc opening at the current character, if one is present.
 				match = heredoc.match(line, index)
 				if match:
 					delimiters.append(match.group(2))
@@ -96,12 +106,19 @@ def without_heredoc_bodies(command: str) -> str:
 	return "".join(kept)
 
 
-# Splits a compound command into its separate commands at `;`, `&`, `|`,
-# newlines, brackets and backticks, ignoring those characters inside quotes.
-#
-# @param  {str}  command
-#     The shell command with heredoc bodies already removed.
 def shell_commands(command: str) -> list[str]:
+	"""Split a compound command into its separate commands.
+
+	The split happens at `;`, `&`, `|`, newlines, brackets and backticks, and
+	those characters inside quotes are ignored.
+
+	Args:
+		command: The shell command with heredoc bodies already removed.
+
+	Returns:
+		The separate shell commands in order. The text after the last separator
+		is included, and empty commands can appear between adjacent separators.
+	"""
 	# Finished commands.
 	commands = []
 	# Characters of the command being read.
@@ -111,6 +128,7 @@ def shell_commands(command: str) -> list[str]:
 	# Whether the previous character was a backslash.
 	escaped = False
 
+	# Current character of the command being split.
 	for character in command:
 		if escaped:
 			current.append(character)
@@ -168,6 +186,7 @@ def recipient_role(recipient: str) -> Optional[str]:
 # @param  {str}  command
 #     The full shell command from the tool call.
 def send_recipients(command: str) -> Iterator[list[str]]:
+	# Separate commands that may each contain an HCOM send.
 	for segment in shell_commands(without_heredoc_bodies(command)):
 		try:
 			# The command's arguments, unquoted.
@@ -175,6 +194,7 @@ def send_recipients(command: str) -> Iterator[list[str]]:
 		except ValueError:
 			continue
 
+		# Remove leading shell variable assignments before checking the executable.
 		while words and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*=.*", words[0]):
 			words.pop(0)
 
@@ -196,6 +216,7 @@ def send_recipients(command: str) -> Iterator[list[str]]:
 		arguments = iter(words[position + 1:])
 		# Recipients named before the message body.
 		recipients = []
+		# Current send argument, checked only before the message body.
 		for argument in arguments:
 			if argument == "--":
 				yield recipients

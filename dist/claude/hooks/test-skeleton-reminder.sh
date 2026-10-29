@@ -8,23 +8,30 @@ set -euo pipefail
 
 command -v jq &>/dev/null || exit 0
 
+# The hook payload for the file Claude is about to edit.
 input=$(cat)
+# The path of the file Claude is about to edit, from the hook payload.
 file_path=$(echo "$input" | jq -r '.tool_input.file_path // ""' 2>/dev/null)
 
 [ -z "$file_path" ] && exit 0
 
+# The file name, used to spot test files and to label the reminder.
 filename=$(basename "$file_path")
+# The file extension, which decides whether the file needs a test and where its tests live.
 extension="${filename##*.}"
 
-# Returns 0 if the path looks like a test file, based on name patterns and
-# directory conventions for JS/TS/Vue and Swift projects.
+# Checks whether a path follows test-file naming or directory conventions for
+# JS, TS, Vue or Swift projects.
+# Returns 0 for a test file, or 1 otherwise.
 #
 # @param  {string}  path
-#     Full file path being edited.
+#     Path to the file being edited.
 # @param  {string}  name
 #     Basename of the file (used for pattern matching).
 is_test_file() {
+	# The edited file's full path.
 	local path="$1"
+	# The edited file's basename.
 	local name="$2"
 
 	[[ "$name" =~ \.(test|spec)\.(js|ts|tsx|vue)$ ]] && return 0
@@ -35,8 +42,9 @@ is_test_file() {
 	return 1
 }
 
-# Returns 0 if the file extension is a testable implementation type.
+# Checks whether the edited file has a testable implementation extension.
 # Reads $extension from the outer scope.
+# Returns 0 for a testable extension, or 1 otherwise.
 is_implementation_file() {
 	case "$extension" in
 		js|ts|tsx|vue|swift) return 0 ;;
@@ -44,9 +52,11 @@ is_implementation_file() {
 	esac
 }
 
-# Returns 0 if the project has a recognisable test runner.
-# Checks for Swift package structure or npm test scripts (Vitest, Jest, Playwright, Cypress).
+# Checks whether the project in the current folder has a recognisable test setup.
+# For Swift files it looks for a Tests folder or Package.swift; otherwise it looks
+# for Vitest, Jest, Playwright or Cypress in the package.json scripts or dependencies.
 # Reads $extension from the outer scope.
+# Returns 0 when a test setup is found, or a non-zero status otherwise.
 has_test_stack() {
 	if [ "$extension" = "swift" ]; then
 		[ -d "Tests" ] || [ -f "Package.swift" ]
@@ -72,14 +82,17 @@ has_test_stack() {
 	fi
 }
 
-# Prints candidate test file paths for a given implementation file.
-# Generates conventional locations based on file extension and directory layout.
+# Prints candidate test file paths for a given implementation file, using
+# conventional locations based on its extension and directory layout.
 #
 # @param  {string}  path
-#     Full path to the implementation file.
+#     Path to the implementation file.
 test_candidates() {
+	# The implementation file that needs a matching test.
 	local path="$1"
+	# The implementation file's containing folder.
 	local dir
+	# The implementation file's name without its extension.
 	local base
 
 	dir=$(dirname "$path")
@@ -99,9 +112,11 @@ test_candidates() {
 	esac
 }
 
-# Returns 0 if any candidate test path for $file_path already exists on disk.
+# Checks whether any candidate test path for $file_path already exists on disk.
 # Reads $file_path from the outer scope.
+# Returns 0 when a matching test exists, or 1 otherwise.
 matching_test_exists() {
+	# One suggested test path checked for an existing file.
 	local candidate
 
 	while IFS= read -r candidate; do
@@ -115,6 +130,7 @@ if ! is_implementation_file || is_test_file "$file_path" "$filename" || ! has_te
 	exit 0
 fi
 
+# The first conventional test path suggested for the edited file.
 first_candidate=$(test_candidates "$file_path" | sed -n '1p')
 # The suggested test path, relative to the project when it sits inside it.
 display_candidate="${first_candidate#"$PWD"/}"

@@ -13,10 +13,13 @@ set -euo pipefail
 
 command -v jq >/dev/null 2>&1 || exit 0
 
+# The hook payload, read from standard input.
 input="$(cat)"
+# The tool the agent is about to call.
 tool_name="$(printf '%s' "$input" | jq -r '.tool_name // empty' 2>/dev/null)" || exit 0
 [[ "$tool_name" == "Bash" ]] || exit 0
 
+# The shell command the agent wants to run.
 command_str="$(printf '%s' "$input" | jq -r '.tool_input.command // empty' 2>/dev/null)" || exit 0
 [[ -n "$command_str" ]] || exit 0
 

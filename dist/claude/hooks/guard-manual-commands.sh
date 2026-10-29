@@ -225,7 +225,8 @@ extract_command_words() {
 }
 
 # Prints `playwright` or `cypress` when COMMAND_WORDS runs one, either directly, by
-# path, or through npx, bunx, yarn, pnpm, uv run or npm exec. Returns 1 otherwise.
+# path, or through npx, bunx, yarn, pnpm, uv run or npm exec.
+# Returns 0 when it prints a browser runner, or 1 when there is none.
 find_browser_runner() {
 	# First executable word after shell prefixes.
 	local first_word="${COMMAND_WORDS[0]:-}"
@@ -320,8 +321,9 @@ find_browser_runner() {
 	esac
 }
 
-# Returns 0 when a program might be a registered command. Everyday shell tools
-# return 1 so that most commands never wait for agent-run.
+# Checks whether a program might be a registered command, so everyday shell
+# tools do not wait for agent-run.
+# Returns 0 for a possible registered command, or 1 for an everyday shell tool.
 #
 # @param  {string}  first_word
 #     The program name, which may include a path.
@@ -341,9 +343,9 @@ is_registry_candidate() {
 	esac
 }
 
-# Returns 0 when any command in REGISTRY_COMMANDS_JSON starts with the words of a
-# registered command marked manual. A missing or failing agent-run counts as having
-# no registrations, so this never blocks because agent-run is unavailable.
+# Checks whether any command in REGISTRY_COMMANDS_JSON starts with the words of a
+# registered command marked manual.
+# Returns 0 for a manual match, or 1 when there is no match or agent-run is unavailable.
 has_manual_registration() {
 	# JSON response from agent-run.
 	local list_json=""

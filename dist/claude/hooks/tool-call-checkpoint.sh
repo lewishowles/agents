@@ -22,18 +22,23 @@ set -euo pipefail
 readonly DEFAULT_TOOL_CALL_LIMIT=20
 # Calls before the advisory for HCOM Scouts and Implementers, whose startup reads need room before the first review point.
 readonly WORKER_TOOL_CALL_LIMIT=40
+# Advice shown before compaction, independent of the tool-call counter.
 readonly COMPACTION_CONTEXT="CONTEXT CHECKPOINT: This session is about to compact. Before continuing, hand off or record the current scope, changed paths, verification, blockers and next decision. Do not expand scope or reset peers."
 # Resolve managed hook symlinks so the companion remains beside the generated script.
+# Path of this script or its current symlink target.
 script_path="${BASH_SOURCE[0]}"
 while [[ -L "$script_path" ]]; do
+	# Directory containing the current symlink, used for relative targets.
 	script_directory="$(cd -P "$(dirname "$script_path")" && pwd)"
 	script_path="$(readlink "$script_path")"
 	if [[ "$script_path" != /* ]]; then
 		script_path="$script_directory/$script_path"
 	fi
 done
+# The folder that holds the real script, where its message file lives.
 SCRIPT_DIR="$(cd -P "$(dirname "$script_path")" && pwd)"
 readonly SCRIPT_DIR
+# File containing the advice shown when the call limit is reached.
 readonly TOOL_CALL_CONTEXT_FILE="$SCRIPT_DIR/tool-call-checkpoint-message.md"
 
 # Writes an opt-in, non-sensitive summary of the received hook event.
@@ -43,7 +48,9 @@ readonly TOOL_CALL_CONTEXT_FILE="$SCRIPT_DIR/tool-call-checkpoint-message.md"
 # @param  {string}  input
 #     Hook input whose values must not be recorded.
 trace_event_structure() {
+	# Temporary trace file for the current session.
 	local trace_file="$1"
+	# Hook payload from which only structural fields are recorded.
 	local input="$2"
 
 	[[ "${AGENT_TOOL_CALL_CHECKPOINT_TRACE:-}" == "1" ]] || return 0
@@ -76,6 +83,7 @@ resolve_tool_call_limit() {
 TOOL_CALL_LIMIT="$(resolve_tool_call_limit)"
 readonly TOOL_CALL_LIMIT
 
+# Agent that runs this hook, passed as the first argument by its hook settings.
 runtime="${1:-}"
 case "$runtime" in
 claude|codex) ;;
@@ -84,7 +92,9 @@ esac
 
 command -v jq >/dev/null 2>&1 || exit 0
 
+# Hook payload for the current event.
 input="$(cat)"
+# Event type that selects compaction, reset, or counting.
 event_name="$(printf '%s' "$input" | jq -r '.hook_event_name // empty' 2>/dev/null)" || exit 0
 
 if [[ "$event_name" == "PreCompact" ]]; then
@@ -109,20 +119,26 @@ if [[ "$event_name" == "PreToolUse" && ( "${HCOM_PLANNING_WORKFLOW:-}" == "1" ||
 	exit 0
 fi
 
+# Session identifier used to keep counters separate.
 session_id="$(printf '%s' "$input" | jq -r '.session_id // empty' 2>/dev/null)" || exit 0
 
 [[ "$session_id" =~ ^[A-Za-z0-9._-]+$ ]] || exit 0
 
+# Temporary directory containing the session counters.
 state_dir="${TMPDIR:-/tmp}/agent-tool-call-checkpoints"
 mkdir -p "$state_dir" 2>/dev/null || exit 0
 
 # Holds "<count> <limit>" on one line; the Claude status line reads it to show
 # the count, so keep this format in step with statusline.sh.
 state_file="$state_dir/$runtime-$session_id"
+# Trace of event shapes beside the session counter, written only when tracing is turned on.
 trace_file="$state_file.trace.jsonl"
+# Directory used as the counter's lock.
 lock_dir="$state_file.lock"
+# Whether this invocation acquired the counter lock.
 locked=false
 
+# Try to take the lock up to 20 times, 50 milliseconds apart.
 for _ in {1..20}; do
 	if mkdir "$lock_dir" 2>/dev/null; then
 		locked=true
@@ -135,6 +151,7 @@ done
 trap 'rmdir "$lock_dir" 2>/dev/null || true' EXIT
 
 if [[ "$event_name" == "SessionStart" ]]; then
+	# How the session started; only /clear resets the counter.
 	source="$(printf '%s' "$input" | jq -r '.source // empty' 2>/dev/null)" || exit 0
 	[[ "$source" == "clear" ]] || exit 0
 	printf '0 %s\n' "$TOOL_CALL_LIMIT" > "$state_file"
@@ -145,8 +162,10 @@ fi
 
 trace_event_structure "$trace_file" "$input"
 
+# Number of tool calls already counted for this session.
 count=0
 if [[ -f "$state_file" ]]; then
+	# Read the stored count and skip the stored limit, because the current limit applies.
 	read -r count _ < "$state_file" || true
 	[[ "$count" =~ ^[0-9]+$ ]] || count=0
 fi
@@ -160,8 +179,9 @@ printf '%s %s\n' "$count" "$TOOL_CALL_LIMIT" > "$state_file"
 
 [[ -f "$TOOL_CALL_CONTEXT_FILE" ]] || exit 0
 
-# Replace the message placeholder with the limit that fired for this session.
+# Checkpoint advice read from the companion message file.
 checkpoint_context="$(<"$TOOL_CALL_CONTEXT_FILE")"
+# Replace the message placeholder with the limit that fired for this session.
 checkpoint_context="${checkpoint_context//\{\{TOOL_CALL_LIMIT\}\}/$TOOL_CALL_LIMIT}"
 
 jq -n \
