@@ -202,7 +202,9 @@ assert_not_contains "$TEST_ROOT/advisory-context.txt" 'TOOL_CALL_LIMIT'
 # The advisory shows the option in Markdown backticks, so the shell must not run it as a command.
 # shellcheck disable=SC2016
 assert_contains "$TEST_ROOT/advisory-context.txt" 'After sending either report with `--intent inform`, stop making tool calls and end your turn: inform means the recipient will not reply.'
-assert_contains "$TEST_ROOT/advisory-context.txt" 'After a complete report, wait for a new packet. After an incomplete checkpoint, wait for the human decision, sent either directly by the human or in a new packet from your sender.'
+assert_contains "$TEST_ROOT/advisory-context.txt" 'begin with "State: stopped; decision required."'
+assert_not_contains "$TEST_ROOT/advisory-context.txt" 'human decision required'
+assert_contains "$TEST_ROOT/advisory-context.txt" 'After a complete report, wait for a new packet. After an incomplete checkpoint, wait for a continuation from the Orchestrator (directly or through your sender) or a decision from the human. Only the human may approve extra scope or perform a reset.'
 assert_not_contains "$TEST_ROOT/advisory-context.txt" 'Outside HCOM'
 assert_silent "Write" "20"
 assert_silent "Read" "20"

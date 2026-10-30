@@ -28,13 +28,13 @@ Before your first `team-send`, load the delegation skill and follow its `## HCOM
 
 At a tool-call checkpoint, use the three-way classification in `src/hooks/shared/tool-call-checkpoint-message.md`: normal completion, edits-complete verification handoff, or incomplete checkpoint.
 
-If the assigned scope needs another independently reviewable outcome, a decision, or a human continuation or reset decision, stop and send one compact checkpoint. Use the shared checkpoint fields in the delegation skill's `## HCOM roles` section:
+If the assigned scope needs another independently reviewable outcome, a decision, or a continuation or reset decision, stop and send one compact checkpoint. Use the shared checkpoint fields in the delegation skill's `## HCOM roles` section:
 
 ```sh
 team-send orchestrator --intent inform --reply-to <assignment-id> < "$body_file" # Body: CHECKPOINT. <shared checkpoint fields>.
 ```
 
-After the checkpoint, wait for an Orchestrator packet or direct human instruction. A direct continuation keeps this session and its working context. A reset starts fresh and needs a self-contained continuation packet.
+After the checkpoint, wait for an Orchestrator continuation packet or direct human instruction. A continuation keeps this session and its working context. Only the human may approve extra scope or perform a reset; a reset starts fresh and needs a self-contained continuation packet.
 
 ## Completion report
 

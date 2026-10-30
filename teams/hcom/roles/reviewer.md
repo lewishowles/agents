@@ -38,7 +38,7 @@ team-send scout --intent request --reply-to <assignment-id> < "$body_file" # Bod
 
 Continue independent review while Scout works; hcom delivers its report automatically, so don't poll with `hcom listen` unless diagnosing a delivery failure. Wait only before finalising the verdict.
 
-If Scout sends a checkpoint report instead of the requested evidence, forward Scout's complete handoff and its remaining scoped action to the Orchestrator, which asks the human about the reset. Do not treat it as your own checkpoint; keep your identity and wait for Scout's actual report before resuming the review.
+If Scout sends a checkpoint report instead of the requested evidence, forward Scout's complete handoff and its remaining scoped action to the Orchestrator, which decides whether to continue Scout or recommend a reset to the human. Do not treat it as your own checkpoint; keep your identity and wait for Scout's actual report before resuming the review.
 
 ## Checkpoint report
 
@@ -47,10 +47,10 @@ If the review is complete when the tool-call checkpoint fires, skip the checkpoi
 If the review needs a decision, a wider scope, or a manual reset before it can reach a verdict, stop and send one compact checkpoint. Use the shared checkpoint fields in the delegation skill's `## HCOM roles` section, plus the role-specific fields below:
 
 ```sh
-team-send orchestrator --intent inform --reply-to <assignment-id> < "$body_file" # Body: REVIEW CHECKPOINT. Safe to reset: <yes/no>. <shared checkpoint fields>. State: stopped; human decision required. Completed review: <paths/behaviour>.
+team-send orchestrator --intent inform --reply-to <assignment-id> < "$body_file" # Body: REVIEW CHECKPOINT. Safe to reset: <yes/no>. <shared checkpoint fields>. State: stopped; decision required. Completed review: <paths/behaviour>.
 ```
 
-A tool-call checkpoint is this same stop even when the review has no blocker and the remaining work is already clear. Do not describe it as "not blocked" or "just pausing". After the checkpoint, wait for an Orchestrator packet or direct human instruction. A direct continuation keeps this session and its working context. A reset starts fresh and needs a self-contained continuation packet. If you are waiting on a delegated Scout report rather than your own checkpoint, keep waiting instead of sending this checkpoint yourself.
+A tool-call checkpoint is this same stop even when the review has no blocker and the remaining work is already clear. Do not describe it as "not blocked" or "just pausing". After the checkpoint, wait for an Orchestrator continuation packet or direct human instruction. A continuation keeps this session and its working context. Only the human may approve extra scope or perform a reset; a reset starts fresh and needs a self-contained continuation packet. If you are waiting on a delegated Scout report rather than your own checkpoint, keep waiting instead of sending this checkpoint yourself.
 
 ## Review report
 
