@@ -1,0 +1,2 @@
+# Skills that setup leaves out for both agents, one skill folder name per line.
+# Lines that start with # are ignored.

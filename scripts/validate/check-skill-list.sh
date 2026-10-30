@@ -12,7 +12,6 @@ python3 - "$REPO_DIR" <<'PY'
 """Check skill-list size, links, reference files, and retired names without installing skills."""
 
 import re
-import shlex
 import sys
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
@@ -21,7 +20,7 @@ from urllib.parse import unquote, urlsplit
 # The repository containing the canonical skills and validation sources.
 REPO_DIR = Path(sys.argv[1]).resolve()
 # The largest allowed default skill list, in estimated tokens. Lower it to the new size after each merge.
-SKILL_LIST_LIMIT = 3891
+SKILL_LIST_LIMIT = 4394
 # The size of Codex's whole skill list for gpt-6-sol, shared with Codex's own and external skills.
 CODEX_LIST_BUDGET = 5440
 # Skill names removed by family merges; add names here when retiring them.
@@ -45,38 +44,38 @@ def main() -> int:
 	problems: list[str] = []
 	# Canonical skill files in collection and name order.
 	skill_files = sorted((REPO_DIR / "skills").glob("*/*/SKILL.md"))
-	# Collections excluded from a fresh setup.
-	default_off = read_default_off_collections()
-	# Estimated tokens in the Codex lines for skills installed by default.
+	# Skill names excluded from setup.
+	excluded_skills = read_skill_exclusions()
+	# Estimated tokens in the Codex lines for installed skills.
 	skill_list_size = 0
 	# Number of skills included in the size check.
-	default_skill_count = 0
+	installed_skill_count = 0
 
 	for skill_file in skill_files:
 		# The name and description Codex shows for this skill.
 		skill_name, description = read_metadata(skill_file)
 
-		if skill_file.parent.parent.name not in default_off:
+		if skill_name not in excluded_skills:
 			# The installed path Codex prints after each description.
 			locator = Path.home() / ".agents" / "skills" / skill_name / "SKILL.md"
 			# This skill's line in Codex's list, in the format Codex 0.164.0 uses.
 			line = f"- {skill_name}: {description} (file: {locator})"
 			# Estimate tokens as bytes divided by four, rounded up for each line.
 			skill_list_size += (len(line.encode("utf-8")) + 3) // 4
-			default_skill_count += 1
+			installed_skill_count += 1
 
 		problems.extend(check_links(skill_file))
 
 	problems.extend(check_retired_names())
 	print(
-		f"Default skill list: {skill_list_size}/{SKILL_LIST_LIMIT} estimated tokens "
-		f"across {default_skill_count} skills; "
+		f"Installed skill list: {skill_list_size}/{SKILL_LIST_LIMIT} estimated tokens "
+		f"across {installed_skill_count} skills; "
 		f"{CODEX_LIST_BUDGET - skill_list_size} tokens remain in Codex's full "
 		f"{CODEX_LIST_BUDGET}-token budget."
 	)
 	if skill_list_size > SKILL_LIST_LIMIT:
 		problems.append(
-			f"Default skill list exceeds the recorded limit by "
+			f"Installed skill list exceeds the recorded limit by "
 			f"{skill_list_size - SKILL_LIST_LIMIT} estimated tokens."
 		)
 
@@ -85,22 +84,18 @@ def main() -> int:
 	return 1 if problems else 0
 
 
-def read_default_off_collections() -> set[str]:
-	"""Read the skill collections a fresh setup leaves out, so the size check counts what gets installed.
+def read_skill_exclusions() -> set[str]:
+	"""Read the repository skill exclusion list used by setup and doctor.
 
 	Returns:
-		The names of the collections setup does not install by default.
-
-	Raises:
-		ValueError: scripts/lib/setup-selection.sh no longer defines default_off_collections.
+		The skill names setup leaves out.
 	"""
-	# The setup library that owns the default-off collection list.
-	setup_source = (REPO_DIR / "scripts" / "lib" / "setup-selection.sh").read_text()
-	# The shell array contents from the setup library.
-	match = re.search(r"(?m)^\s*default_off_collections=\(([^)]*)\)", setup_source)
-	if match is None:
-		raise ValueError("Cannot read default_off_collections from scripts/lib/setup-selection.sh")
-	return set(shlex.split(match.group(1)))
+	# The repository list of excluded skill names.
+	exclusion_file = REPO_DIR / "scripts" / "skill-exclusions.txt"
+	return {
+		line for line in exclusion_file.read_text().splitlines()
+		if line and not line.startswith("#")
+	}
 
 
 def read_metadata(skill_file: Path) -> tuple[str, str]:

@@ -422,42 +422,29 @@ plan_prune_stale_repo_links() {
 	done
 }
 
-# Adds the skill links that setup will create, and the links to excluded skills
-# it will remove, to the setup preview. Skills in a default-off collection that
-# has not been opted in to are left out, matching link_configured_skills.
+# Adds the skill links that setup will create, and the excluded skill links
+# it will remove, to the setup preview.
 #
 # @param  {string}  target_dir
 #     The installed skill directory.
-# @param  {string}  ...
-#     Skill names excluded from this setup run.
 plan_skill_links() {
 	# The installed skill directory.
 	local target_dir="$1"
-	shift
-	# The skill names excluded from this setup run.
-	local -a excluded=("$@")
 	# The repository skill folder currently being checked.
 	local skill
 	# The skill's name, which is also its installed folder name.
 	local slug
 	# The installed path for the current skill.
 	local skill_link
-	# Whether the current skill is excluded.
-	local is_excluded
 
 	for skill in "${skill_paths[@]}"; do
 		slug=${skill##*/}
 		skill_link="$target_dir/$slug"
-		is_excluded=false
-		if [ "${#excluded[@]}" -gt 0 ] && skill_is_excluded "$slug" "${excluded[@]}"; then
-			is_excluded=true
-		fi
-
-		if [ "$is_excluded" = true ]; then
+		if ! skill_is_selected "$skill"; then
 			if is_repo_owned_link "$skill" "$skill_link"; then
 				plan_change "Links" "Remove excluded skill $(display_path "$skill_link")"
 			fi
-		elif ! collection_is_off "$(picker_collection_of "$skill")"; then
+		else
 			plan_link_path "$skill" "$skill_link"
 		fi
 	done

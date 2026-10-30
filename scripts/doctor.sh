@@ -50,16 +50,8 @@ main() {
 	CLAUDE_DIR="$HOME/.claude"
 	# The Codex configuration folder.
 	CODEX_DIR="$HOME/.codex"
-	# The file listing skills the user excluded from setup.
-	skill_exclusions_file="$HOME/.agents/skill-exclusions"
-	# The file listing optional skill collections the user included.
-	skill_inclusions_file="$HOME/.agents/skill-inclusions"
-	# Collections that stay off unless the user includes them.
-	default_off_collections=(apple)
 	# The excluded skill names, filled in by load_skill_exclusions.
 	excluded_skills=()
-	# The included collections, filled in by load_skill_inclusions.
-	included_collections=()
 	# Whether setup adds the managed hooks to the Codex config.
 	setup_hooks=false
 	# Whether setup writes the managed permission profile.
@@ -74,7 +66,6 @@ main() {
 	# shellcheck source=scripts/lib/cli-style-output.sh
 	source "$SCRIPT_DIR/lib/cli-style-output.sh"
 	load_skill_exclusions
-	load_skill_inclusions
 	cli_section 'Agent configuration doctor'
 
 	if agent_is_present claude; then
@@ -148,14 +139,14 @@ agent_is_present() {
 	esac
 }
 
-# Reports cli-style, then the helper commands the selected agents use and fzf,
-# hcom and uv. A missing cli-style fails the doctor, because setup installs it.
+# Reports cli-style, then the helper commands the selected agents use, hcom
+# and uv. A missing cli-style fails the doctor, because setup installs it.
 # A missing helper or tool shows as not installed and does not fail the doctor,
 # because not every user needs them.
 #
 # @param  {string}  target
 #     The agents to check: claude, codex or both. Empty checks only cli-style,
-#     fzf, hcom and uv.
+#     hcom and uv.
 check_tools() {
 	# The agents to check.
 	local target="$1"
@@ -173,7 +164,7 @@ check_tools() {
 		else
 			cli_status skipped "$command_name" 'not installed'
 		fi
-	done < <(required_agent_tools "$target"; printf '%s\n' fzf hcom uv)
+	done < <(required_agent_tools "$target"; printf '%s\n' hcom uv)
 }
 
 # Checks the core Claude links, and each optional feature that has at least one
@@ -368,10 +359,10 @@ check_link() {
 	fi
 }
 
-# Reports whether each skill is installed, excluded, off by default, missing or
-# conflicting for the selected agents, with the command that fixes each one.
-# A missing or wrong link for a selected skill counts as a doctor failure.
-# Leftover links for unselected skills show as skipped and unmanaged content
+# Reports whether each skill is installed, excluded, missing or conflicting
+# for the selected agents, with the command that fixes each one.
+# A missing or wrong link for an installed skill counts as a doctor failure.
+# Leftover links for excluded skills show as skipped and unmanaged content
 # as a warning; neither fails. Returns 1 after printing the error when two
 # skills share a name.
 #
@@ -396,12 +387,6 @@ report_skill_status() {
 	local status_name
 	# The installed skill path checked for a link or conflict.
 	local status_link
-	# The collection containing the skill currently reported.
-	local status_collection
-	# Whether the current skill belongs to a collection that is off.
-	local collection_off
-	# The command that opts in to the current collection.
-	local opt_in_hint
 
 	case "$target" in
 		claude) status_agents=("claude") ;;
@@ -430,38 +415,21 @@ report_skill_status() {
 			for status_skill in "${skill_paths[@]}"; do
 				status_name=$(basename "$status_skill")
 				status_link="$status_skills_dir/$status_name"
-				status_collection=$(picker_collection_of "$status_skill")
-				collection_off=false
-				if collection_is_off "$status_collection"; then
-					collection_off=true
-				fi
-				opt_in_hint="the $status_collection collection is off; run: scripts/setup.sh --$status_agent --include $status_name (adds every $status_collection skill)"
-
 				if skill_is_selected "$status_skill"; then
 					if is_repo_owned_link "$status_skill" "$status_link" && [ -e "$status_link" ]; then
 						cli_status success "installed $status_name" "skills/$status_name"
 					elif [ -e "$status_link" ] || [ -L "$status_link" ]; then
 						check_link "$status_skill" "$status_link" "skills/$status_name"
 					else
-						required_problem "missing $status_name" "run: scripts/setup.sh --$status_agent --include $status_name"
+						required_problem "missing $status_name" "run: scripts/setup.sh --$status_agent"
 					fi
 				elif { [ -e "$status_link" ] || [ -L "$status_link" ]; } && ! is_repo_owned_link "$status_skill" "$status_link"; then
-					if excluded_skill_exists "$status_name"; then
-						cli_status warning "conflicting $status_name" "run: trash $(display_path "$status_link")"
-					else
-						cli_status warning "conflicting $status_name" "$opt_in_hint"
-					fi
+					cli_status warning "conflicting $status_name" "run: trash $(display_path "$status_link")"
 				elif excluded_skill_exists "$status_name"; then
 					if is_repo_owned_link "$status_skill" "$status_link"; then
-						cli_status skipped "excluded $status_name" "link still present; run: scripts/setup.sh --$status_agent --exclude $status_name"
+						cli_status skipped "excluded $status_name" "link still present; run: scripts/setup.sh --$status_agent"
 					else
-						cli_status skipped "excluded $status_name" "saved in ~/.agents/skill-exclusions"
-					fi
-				elif [ "$collection_off" = true ]; then
-					if is_repo_owned_link "$status_skill" "$status_link"; then
-						cli_status skipped "off by default $status_name" "link still present; $opt_in_hint, or run: trash $(display_path "$status_link")"
-					else
-						cli_status skipped "off by default $status_name" "$opt_in_hint"
+						cli_status skipped "excluded $status_name" "listed in scripts/skill-exclusions.txt"
 					fi
 				fi
 			done
@@ -470,7 +438,7 @@ report_skill_status() {
 	report_stale_skill_exclusions
 }
 
-# Warns about each saved exclusion that names no skill in this checkout, such
+# Warns about each repository exclusion that names no skill in this checkout, such
 # as a skill that was renamed or merged. Reads the skill list that
 # report_skill_status has just collected, so it must be called from there.
 report_stale_skill_exclusions() {
@@ -499,10 +467,10 @@ report_stale_skill_exclusions() {
 			# Both agents share the exclusions file, so its warnings get their
 			# own heading instead of appearing under the last agent's skills.
 			if [ "$heading_printed" = false ]; then
-				cli_section 'Saved skill exclusions (~/.agents/skill-exclusions)'
+				cli_section 'Repository skill exclusions (scripts/skill-exclusions.txt)'
 				heading_printed=true
 			fi
-			cli_status warning "stale exclusion $excluded_skill" 'remove it from ~/.agents/skill-exclusions, or run: scripts/setup.sh --include-all'
+			cli_status warning "stale exclusion $excluded_skill" 'remove it from scripts/skill-exclusions.txt'
 		fi
 	done
 }

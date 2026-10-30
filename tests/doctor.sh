@@ -138,12 +138,39 @@ install_claude_fixture() {
 	done
 	for file_path in "$REPO_DIR"/skills/*/*; do
 		[ -d "$file_path" ] || continue
-		# Apple skills are off by default, so a complete install leaves them out.
-		case "$file_path" in
-			"$REPO_DIR"/skills/apple/*) continue ;;
-		esac
 		ln -s "$file_path" "$TEST_HOME/.claude/skills/${file_path##*/}"
 	done
+}
+
+# Checks excluded, conflicting, and stale skills against an editable repository list.
+test_repository_skill_exclusions() {
+	# The repository copy whose exclusion list this case changes.
+	local copy_dir="$TEST_ROOT/repo-skill-exclusions"
+	# A top-level repository file or folder, linked into the copy so that only
+	# scripts/ is a real copy the case can edit.
+	local entry
+
+	mkdir -p "$copy_dir"
+	for entry in "$REPO_DIR"/*; do
+		ln -s "$entry" "$copy_dir/${entry##*/}"
+	done
+	trash "$copy_dir/scripts"
+	/bin/cp -R "$REPO_DIR/scripts" "$copy_dir/scripts"
+	# The repository the doctor checks for the rest of this case. Declared local so
+	# later cases run against the real repository again.
+	local REPO_DIR="$copy_dir"
+
+	trash "$TEST_HOME"
+	mkdir -p "$TEST_HOME"
+	install_claude_fixture
+	printf 'writing\nstale-doctor-test-skill\n' > "$REPO_DIR/scripts/skill-exclusions.txt"
+	check_doctor 0 'excluded writing' "$CLI_STYLE_STUB" src/hooks/git "$TEST_PATH" 'link still present; run: scripts/setup.sh --claude'
+	check_doctor 0 'stale exclusion stale-doctor-test-skill' "$CLI_STYLE_STUB" src/hooks/git "$TEST_PATH" 'remove it from scripts/skill-exclusions.txt'
+
+	trash "$TEST_HOME/.claude/skills/writing"
+	check_doctor 0 'excluded writing' "$CLI_STYLE_STUB" src/hooks/git "$TEST_PATH" 'listed in scripts/skill-exclusions.txt'
+	printf 'other\n' > "$TEST_HOME/.claude/skills/writing"
+	check_doctor 0 'conflicting writing' "$CLI_STYLE_STUB"
 }
 
 # Installs the Codex links and writes the config through setup's config builder.
@@ -169,10 +196,6 @@ install_codex_fixture() (
 	fi
 	for file_path in "$REPO_DIR"/skills/*/*; do
 		[ -d "$file_path" ] || continue
-		# Apple skills are off by default, so a complete install leaves them out.
-		case "$file_path" in
-			"$REPO_DIR"/skills/apple/*) continue ;;
-		esac
 		if [ ! -L "$TEST_HOME/.agents/skills/${file_path##*/}" ]; then
 			ln -s "$file_path" "$TEST_HOME/.agents/skills/${file_path##*/}"
 		fi
@@ -212,7 +235,7 @@ main() {
 	check_doctor 1 'Claude hooks: not installed'
 	check_doctor 1 'Claude themes: not installed'
 	check_doctor 1 'trash wrapper: not installed'
-	check_doctor 1 'missing writing: run: scripts/setup.sh --claude --include writing'
+	check_doctor 1 'missing writing: run: scripts/setup.sh --claude'
 
 	mkdir -p "$TEST_HOME/.claude/hooks"
 	ln -s "$REPO_DIR/dist/claude/hooks/guard-search-boundaries.sh" "$TEST_HOME/.claude/hooks/guard-search-boundaries.sh"
@@ -256,10 +279,9 @@ main() {
 	ln -s "$REPO_DIR/dist/codex/AGENTS.md" "$TEST_HOME/.agents/AGENTS.md"
 	printf 'custom = true\n' > "$TEST_HOME/.codex/config.toml"
 
-	printf 'writing\n' > "$TEST_HOME/.agents/skill-exclusions"
 	ln -s "$REPO_DIR/skills/writing/writing" "$TEST_HOME/.agents/skills/writing"
-	check_doctor 1 'excluded writing: link still present'
-	trash "$TEST_HOME/.agents/skill-exclusions" "$TEST_HOME/.agents/skills/writing"
+	check_doctor 1 'installed writing' "$CLI_STYLE_STUB"
+	trash "$TEST_HOME/.agents/skills/writing"
 	ln -s "$TEST_ROOT/absent" "$TEST_HOME/.agents/skills/writing"
 	check_doctor 1 'skills/writing: broken link to wrong target'
 
@@ -275,32 +297,24 @@ main() {
 		printf 'The doctor changed the repository.\n' >&2
 		return 1
 	fi
-	check_doctor 0 'off by default mac-app' "$CLI_STYLE_STUB" src/hooks/git "$TEST_PATH" 'the apple collection is off; run: scripts/setup.sh --claude --include mac-app (adds every apple skill)'
-	ln -s "$REPO_DIR/skills/apple/mac-app" "$TEST_HOME/.claude/skills/mac-app"
-	check_doctor 0 'off by default mac-app link still present' "$CLI_STYLE_STUB"
+	check_doctor 0 'installed mac-app' "$CLI_STYLE_STUB"
 	trash "$TEST_HOME/.claude/skills/mac-app"
+	check_single_problem 'missing mac-app run: scripts/setup.sh --claude'
+	ln -s "$REPO_DIR/skills/apple/mac-app" "$TEST_HOME/.claude/skills/mac-app"
 
 	trash "$TEST_HOME/.claude/skills/writing"
-	mkdir -p "$TEST_HOME/.agents"
-	printf 'writing\n' > "$TEST_HOME/.agents/skill-exclusions"
-	check_doctor 0 'excluded writing saved in ~/.agents/skill-exclusions' "$CLI_STYLE_STUB"
+	check_single_problem 'missing writing run: scripts/setup.sh --claude'
 	ln -s "$REPO_DIR/skills/writing/writing" "$TEST_HOME/.claude/skills/writing"
-	trash "$TEST_HOME/.agents/skill-exclusions"
-	printf 'retired-skill\n' > "$TEST_HOME/.agents/skill-exclusions"
-	check_doctor 0 'stale exclusion retired-skill' "$CLI_STYLE_STUB" src/hooks/git "$TEST_PATH" 'remove it from ~/.agents/skill-exclusions, or run: scripts/setup.sh --include-all'
-	trash "$TEST_HOME/.agents/skill-exclusions"
 
 	trash "$TEST_HOME/.claude/skills/code-style"
 	mkdir -p "$TEST_HOME/.claude/skills/code-style"
 	printf 'keep this content\n' > "$TEST_HOME/.claude/skills/code-style/keep.txt"
 	check_single_problem 'skills/code-style real file in the way'
-	printf 'code-style\n' > "$TEST_HOME/.agents/skill-exclusions"
-	check_doctor 0 'conflicting code-style' "$CLI_STYLE_STUB" src/hooks/git "$TEST_PATH" 'run: trash ~/.claude/skills/code-style'
 	if [ "$(cat "$TEST_HOME/.claude/skills/code-style/keep.txt")" != 'keep this content' ]; then
 		printf 'The doctor changed unmanaged skill content.\n' >&2
 		return 1
 	fi
-	trash "$TEST_HOME/.claude/skills/code-style" "$TEST_HOME/.agents/skill-exclusions"
+	trash "$TEST_HOME/.claude/skills/code-style"
 	ln -s "$REPO_DIR/skills/code/code-style" "$TEST_HOME/.claude/skills/code-style"
 	check_doctor 0 'No required problems found' "$CLI_STYLE_STUB"
 	/bin/cp -R "$TEST_ROOT/bin" "$TEST_ROOT/missing-helper-bin"
@@ -322,7 +336,7 @@ main() {
 	ln -s "$REPO_DIR/dist/claude/.mcp.json" "$TEST_HOME/.claude/.mcp.json"
 
 	trash "$TEST_HOME/.claude/skills/writing"
-	check_single_problem 'missing writing run: scripts/setup.sh --claude --include writing'
+	check_single_problem 'missing writing run: scripts/setup.sh --claude'
 	ln -s "$TEST_ROOT/other-mcp.json" "$TEST_HOME/.claude/skills/writing"
 	check_single_problem 'skills/writing wrong target'
 	trash "$TEST_HOME/.claude/skills/writing"
@@ -330,6 +344,7 @@ main() {
 
 	trash "$TEST_HOME/.claude/hooks/guard-search-boundaries.sh"
 	check_single_problem 'Claude hooks/guard-search-boundaries.sh missing'
+	test_repository_skill_exclusions
 
 	printf 'doctor tests passed\n'
 }

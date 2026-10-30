@@ -24,8 +24,7 @@ source "$REPO_DIR/scripts/lib/setup-selection.sh"
 #     Command-line options passed to the script.
 main() {
 	parse_setup_options "$@"
-	choose_setup_features
-	choose_setup_skills
+	load_skill_exclusions
 
 	load_managed_paths
 	# shellcheck source=scripts/lib/cli-style-output.sh
@@ -33,12 +32,6 @@ main() {
 
 	if [ "$setup_helpers" = true ]; then
 		preflight_agent_tools "$target" || exit 1
-	fi
-
-	report_excluded_skills
-
-	if [ "$refresh" = true ]; then
-		bash "$REPO_DIR/scripts/sync.sh"
 	fi
 
 	build_setup_plan "$target"
@@ -64,12 +57,6 @@ main() {
 		esac
 	fi
 
-	if [ "$skill_options_requested" = true ] && skill_exclusions_changed; then
-		save_skill_exclusions
-	fi
-	if [ "$skill_options_requested" = true ] && skill_inclusions_changed; then
-		save_skill_inclusions
-	fi
 	if [ "$setup_helpers" = true ] && cli_style_install_needed; then
 		printf 'Running: %s\n' "${cli_style_install_command[*]}"
 		"${cli_style_install_command[@]}"
@@ -136,21 +123,6 @@ build_setup_plan() {
 		return 1
 	fi
 
-	if [ "$skill_options_requested" = true ] && skill_exclusions_changed; then
-		if [ "${#excluded_skills[@]}" -eq 0 ]; then
-			plan_change "Selection" "Remove $(display_path "$skill_exclusions_file")"
-		else
-			plan_change "Selection" "Write $(display_path "$skill_exclusions_file") with the selected exclusions"
-		fi
-	fi
-	if [ "$skill_options_requested" = true ] && skill_inclusions_changed; then
-		if [ "${#included_collections[@]}" -eq 0 ]; then
-			plan_change "Selection" "Remove $(display_path "$skill_inclusions_file")"
-		else
-			plan_change "Selection" "Write $(display_path "$skill_inclusions_file") with the collections you opted in to"
-		fi
-	fi
-
 	if [ "$setup_helpers" = true ] && cli_style_install_needed; then
 		choose_cli_style_install_command || return 1
 		plan_change "Helper commands" "Run ${cli_style_install_command[*]}"
@@ -202,7 +174,7 @@ print_setup_plan() {
 		return
 	fi
 
-	for kind in "Directories" "Backups" "Links" "Helper commands" "Codex settings" "HCOM" "Selection" "Git hooks"; do
+	for kind in "Directories" "Backups" "Links" "Helper commands" "Codex settings" "HCOM" "Git hooks"; do
 		# Whether this section contains at least one planned change.
 		local shown=false
 		for item in "${plan_items[@]}"; do
@@ -252,11 +224,7 @@ plan_claude_setup() {
 	fi
 
 	plan_prune_stale_repo_links "$CLAUDE_DIR/skills" "$REPO_DIR"
-	if [ "${#excluded_skills[@]}" -gt 0 ]; then
-		plan_skill_links "$CLAUDE_DIR/skills" "${excluded_skills[@]}"
-	else
-		plan_skill_links "$CLAUDE_DIR/skills"
-	fi
+	plan_skill_links "$CLAUDE_DIR/skills"
 
 	if [ "$setup_hooks" = true ]; then
 		plan_prune_stale_repo_links "$CLAUDE_DIR/hooks" "$REPO_DIR/dist/claude/hooks"
@@ -358,11 +326,7 @@ plan_codex_setup() {
 
 	plan_prune_stale_repo_links "$HOME/.agents/skills" "$REPO_DIR"
 	plan_prune_stale_repo_links "$CODEX_DIR/skills" "$REPO_DIR" 1
-	if [ "${#excluded_skills[@]}" -gt 0 ]; then
-		plan_skill_links "$HOME/.agents/skills" "${excluded_skills[@]}"
-	else
-		plan_skill_links "$HOME/.agents/skills"
-	fi
+	plan_skill_links "$HOME/.agents/skills"
 
 	if [ "$setup_hcom" = true ]; then
 		plan_hcom_folders
@@ -570,8 +534,8 @@ ensure_doc_paths() {
 	cli_group_status success "doc-paths" "installed globally"
 }
 
-# Links selected skills, removes links for user exclusions, and leaves links
-# already present for default-off collections that have not been opted in to.
+# Links every skill except the names in the repository exclusion list.
+# Removes installed links for excluded skills.
 # Returns 1 without creating any links when two collections hold a skill with
 # the same name.
 #
@@ -584,8 +548,6 @@ link_configured_skills() {
 	local skill_path
 	# The installed link for the skill currently being checked.
 	local skill_link
-	# The collection containing the current skill.
-	local collection_name
 	# The canonical skills, collected with duplicate-name checks.
 	local skill_paths=()
 
@@ -598,16 +560,11 @@ link_configured_skills() {
 
 	for skill_path in "${skill_paths[@]}"; do
 		skill_link="$target_dir/${skill_path##*/}"
-		if excluded_skill_exists "${skill_path##*/}"; then
+		if ! skill_is_selected "$skill_path"; then
 			if is_repo_owned_link "$skill_path" "$skill_link"; then
 				trash "$skill_link"
 				cli_group_status warning "removed excluded skill" "skills/${skill_path##*/}"
 			fi
-			continue
-		fi
-
-		collection_name=$(picker_collection_of "$skill_path")
-		if collection_is_off "$collection_name"; then
 			continue
 		fi
 

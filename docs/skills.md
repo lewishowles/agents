@@ -61,7 +61,7 @@ Claude reads shared skills from `~/.claude/skills/`, while Codex reads them from
 
 ## Keep the skill list within budget
 
-`scripts/validate/check-skill-list.sh` estimates the Codex list shown for skills installed by default. It counts each skill's name, description and installed path at one token per four bytes, rounded up per line. Collections that `scripts/setup.sh` leaves off by default are excluded. The report shows the current size, the recorded limit and the room left in Codex's full 5,440-token skill-list budget. The installed path uses the current machine's home directory, so the measured count can differ on a machine with a different home path length.
+`scripts/validate/check-skill-list.sh` estimates the Codex list shown for installed skills. It counts each skill's name, description and installed path at one token per four bytes, rounded up per line. Skills listed in `scripts/skill-exclusions.txt` are excluded. The report shows the current size, the recorded limit and the room left in Codex's full 5,440-token skill-list budget. The installed path uses the current machine's home directory, so the measured count can differ on a machine with a different home path length.
 
 The recorded limit starts at the current size. After merging a skill family, lower `SKILL_LIST_LIMIT` in the check to the new measured count. To raise it deliberately, change that value and explain why the extra list space is needed in the review. The check also finds broken relative links in skill guides, reference files that no guide or other reference links to, and retired skill names left in maintained source. It skips the unlinked-reference check for upstream skill folders that contain `SOURCE.md`; their links are still checked. Add each merged-away name to `RETIRED_SKILL_NAMES` in the same script.
 
@@ -123,4 +123,4 @@ Nothing creates a local `.claude/settings.json` by default. Prefer `AGENTS.md` a
 The skill-manifest check also rejects front-matter keys outside the Agent Skills standard list and the allowed `disable-model-invocation` runtime extension.
 
 After `scripts/setup.sh`, shared skills are available to Claude via `~/.claude/skills/` and to Codex via `~/.agents/skills/`.
-See [choose which skills to install](setup.md#choose-which-skills-to-install) to leave skills out, add them back, or check what is installed.
+To leave out a skill, list its folder name in `scripts/skill-exclusions.txt`. See [install the agent configuration](setup.md#install-the-agent-configuration) to check what is installed.

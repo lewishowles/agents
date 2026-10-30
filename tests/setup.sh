@@ -249,89 +249,10 @@ link_test_commands_without_cli_style() {
 	done
 }
 
-# Creates an fzf stand-in that reports SETUP_FZF_VERSION (default:
-# "0.74.5 (Homebrew)") for --version, otherwise records the arguments and skill list it
-# receives, then prints a chosen set of skills.
-#
-# @param  {string}  bin_dir
-#     Directory that receives the test-only fzf command.
-create_fzf_stub() {
-	# Directory that receives the test-only fzf command.
-	local bin_dir="$1"
-
-	mkdir -p "$bin_dir"
-
-	cat > "$bin_dir/fzf" <<'EOF'
-#!/bin/bash
-if [ "${1:-}" = '--version' ]; then
-	printf '%s\n' "${SETUP_FZF_VERSION-0.74.5 (Homebrew)}"
-	exit 0
-fi
-printf '%s\n' "$@" > "$SETUP_FZF_ARGUMENTS"
-cat > "$SETUP_FZF_INPUT"
-printf '%s\n' "${SETUP_FZF_SELECTION:-}"
-exit "${SETUP_FZF_STATUS:-0}"
-EOF
-
-	chmod +x "$bin_dir/fzf"
-}
-
-# Checks that fzf leaves Apple unticked and honours a saved exclusion.
-#
-# @param  {string}  arguments_path
-#     File containing the fzf command arguments.
-# @param  {string}  input_path
-#     File containing the ordered skill entries passed to fzf.
-# @param  {string}  excluded_skill
-#     Saved exclusion that fzf must leave unticked.
-assert_fzf_start_selection() {
-	# File containing the fzf command arguments.
-	local arguments_path="$1"
-	# File containing the ordered skill entries passed to fzf.
-	local input_path="$2"
-	# Saved exclusion that fzf must leave unticked.
-	local excluded_skill="$3"
-	# Start action sequence received by the fzf stand-in.
-	local fzf_bind
-	# Start actions that have not yet matched an input skill.
-	local remaining_actions
-	# Action expected for the current canonical skill.
-	local expected_action
-	# Action generated for the current canonical skill.
-	local actual_action
-	# Canonical skill currently being matched to a start action.
-	local skill_name
-	# Whether the input row is a heading or skill.
-	local row_kind
-	# The collection containing the current skill row.
-	local collection_name=''
-
-	fzf_bind=$(grep '^load:' "$arguments_path")
-	remaining_actions="${fzf_bind#load:}"
-
-	while IFS=$'\t' read -r row_kind skill_name _; do
-		if [ "$row_kind" = heading ]; then
-			collection_name="$skill_name"
-		fi
-		if [ "$row_kind" = heading ] || [ "$collection_name" = apple ] || [ "$skill_name" = "$excluded_skill" ]; then
-			expected_action='down'
-		else
-			expected_action='toggle+down'
-		fi
-
-		actual_action="${remaining_actions:0:${#expected_action}}"
-		assert_equals "$actual_action" "$expected_action"
-		remaining_actions="${remaining_actions#"$actual_action"}"
-		remaining_actions="${remaining_actions#+}"
-	done < "$input_path"
-
-	assert_equals "$remaining_actions" 'first'
-}
-
-# Creates a Codex configuration that setup must replace.
+# Creates a Codex config that setup must back up before replacing it.
 #
 # @param  {string}  home_dir
-#     Isolated home directory for one setup run.
+#     Isolated home directory for the setup run.
 create_existing_config() {
 	# The isolated home where the existing Codex config is created.
 	local home_dir="$1"
@@ -430,30 +351,6 @@ run_setup_target() {
 			/usr/bin/expect -f - bash "$REPO_DIR/scripts/setup.sh" ${target:+"$target"} "$@" <<'EXPECT'
 set timeout 20
 spawn {*}$argv
-if {[info exists env(SETUP_TEST_PRESET_INPUT)]} {
-	expect {
-		-exact "Choose a setup preset: \[1\] Skills only  \[2\] Pick features  \[3\] Everything (or q to cancel): " {}
-		timeout { puts stderr "Preset prompt did not appear within 20 seconds"; exit 1 }
-		eof { puts stderr "Preset prompt did not appear before setup exited"; exit 1 }
-	}
-	send -- $env(SETUP_TEST_PRESET_INPUT)
-}
-if {[info exists env(SETUP_TEST_TARGET_INPUT)]} {
-	expect {
-		-exact "Which agent(s)? \[1\] Claude  \[2\] Codex  \[3\] Both: " {}
-		timeout { puts stderr "Target prompt did not appear within 20 seconds"; exit 1 }
-		eof { puts stderr "Target prompt did not appear before setup exited"; exit 1 }
-	}
-	send -- $env(SETUP_TEST_TARGET_INPUT)
-}
-if {[info exists env(SETUP_TEST_FEATURE_INPUT)]} {
-	expect {
-		-exact "Enter feature numbers separated by spaces (all for everything, q to cancel): " {}
-		timeout { puts stderr "Feature prompt did not appear within 20 seconds"; exit 1 }
-		eof { puts stderr "Feature prompt did not appear before setup exited"; exit 1 }
-	}
-	send -- $env(SETUP_TEST_FEATURE_INPUT)
-}
 if {[info exists env(SETUP_TEST_CONFIRMATION_INPUT)]} {
 	expect {
 		-exact "Apply these changes? \[y/N\] " {}
@@ -565,7 +462,8 @@ test_status_option_is_rejected_without_changes() {
 	assert_not_exists "$home_dir/setup-calls.log"
 }
 
-test_default_setup_skips_repository_refresh() {
+# Setup does not regenerate repository output during installation.
+test_setup_does_not_regenerate_repository_output() {
 	# The isolated home for the default setup run.
 	local home_dir="$TEST_ROOT/default-setup"
 	# The file recording any repository refresh calls.
@@ -603,10 +501,9 @@ test_preflight_reports_missing_uv_without_changes() {
 	trash "$bin_dir/friction" "$bin_dir/team-send" "$bin_dir/doc-paths" "$bin_dir/uv"
 	mkdir -p "$home_dir/.agents"
 	create_agent_tools_checkout "$home_dir"
-	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
 	before=$(snapshot_test_directory "$home_dir")
 
-	if SETUP_TEST_PATH="$bin_dir:/usr/bin:/bin:/usr/sbin:/sbin" run_setup_target "$home_dir" "--both" --exclude accessibility > "$output" 2>&1; then
+	if SETUP_TEST_PATH="$bin_dir:/usr/bin:/bin:/usr/sbin:/sbin" run_setup_target "$home_dir" "--both" > "$output" 2>&1; then
 		fail 'Expected setup to stop when uv is missing'
 	fi
 
@@ -637,7 +534,7 @@ test_preflight_reports_missing_checkout_without_changes() {
 	mkdir -p "$home_dir"
 	before=$(snapshot_test_directory "$home_dir")
 
-	if SETUP_TEST_PATH="$bin_dir:/usr/bin:/bin:/usr/sbin:/sbin" run_setup_target "$home_dir" "--both" --include-all > "$output" 2>&1; then
+	if SETUP_TEST_PATH="$bin_dir:/usr/bin:/bin:/usr/sbin:/sbin" run_setup_target "$home_dir" "--both" > "$output" 2>&1; then
 		fail 'Expected setup to stop when the agent-tools checkout is missing'
 	fi
 
@@ -646,7 +543,6 @@ test_preflight_reports_missing_checkout_without_changes() {
 	assert_contains "$output" "doc-paths is not installed. Clone agent-tools to $source_dir so setup can install it."
 	assert_contains "$output" 'Setup stopped before changing anything.'
 	assert_equals "$(snapshot_test_directory "$home_dir")" "$before"
-	assert_not_exists "$home_dir/.agents/skill-exclusions"
 }
 
 # Installed commands need neither uv nor the package checkout.
@@ -714,22 +610,7 @@ test_codex_installs_missing_doc_paths() {
 	assert_file "$bin_dir/doc-paths"
 }
 
-# Refresh runs the repository sync, which validates the output itself, so setup
-# does not run validation a second time.
-test_refresh_runs_repository_sync() {
-	# The isolated home for the refresh setup run.
-	local home_dir="$TEST_ROOT/refresh"
-	# The file recording repository refresh calls.
-	local calls="$home_dir/setup-calls.log"
-
-	create_existing_config "$home_dir"
-	run_setup "$home_dir" --refresh > /dev/null
-
-	assert_contains "$calls" "$REPO_DIR/scripts/sync.sh"
-	assert_not_contains "$calls" "$REPO_DIR/scripts/validate.sh"
-}
-
-# A script without --yes sees the whole plan and leaves its home untouched.
+# A scripted run without --yes shows the plan and leaves the home unchanged.
 test_non_terminal_plan_requires_yes() {
 	# The isolated home and captured preview for this run.
 	local home_dir="$TEST_ROOT/preview-without-yes" output="$TEST_ROOT/preview-without-yes.txt"
@@ -737,18 +618,17 @@ test_non_terminal_plan_requires_yes() {
 	local before
 	create_existing_config "$home_dir"
 	before=$(snapshot_test_directory "$home_dir")
-	if SETUP_TEST_WITHOUT_YES=true run_setup_target "$home_dir" --codex --exclude accessibility > "$output" 2>&1; then
+	if SETUP_TEST_WITHOUT_YES=true run_setup_target "$home_dir" --codex > "$output" 2>&1; then
 		fail 'Setup applied without --yes in a non-terminal'
 	fi
 	assert_contains "$output" 'Codex settings:'
 	assert_contains "$output" 'Links:'
-	assert_contains "$output" 'Selection:'
 	assert_contains "$output" 'Setup needs --yes'
 	assert_equals "$(snapshot_test_directory "$home_dir")" "$before"
 	assert_not_exists "$home_dir/setup-calls.log"
 }
 
-# Declining at the final terminal question leaves the selection and links untouched.
+# Declining at the final terminal question leaves the home unchanged.
 test_terminal_decline_preserves_home() {
 	# The isolated home and captured terminal output.
 	local home_dir="$TEST_ROOT/preview-decline" output="$TEST_ROOT/preview-decline.txt"
@@ -756,7 +636,7 @@ test_terminal_decline_preserves_home() {
 	local before
 	create_existing_config "$home_dir"
 	before=$(snapshot_test_directory "$home_dir")
-	SETUP_TEST_WITHOUT_YES=true SETUP_TEST_TERMINAL=true SETUP_TEST_CONFIRMATION_INPUT=$'n\r' run_setup_target "$home_dir" --codex --exclude accessibility > "$output"
+	SETUP_TEST_WITHOUT_YES=true SETUP_TEST_TERMINAL=true SETUP_TEST_CONFIRMATION_INPUT=$'n\r' run_setup_target "$home_dir" --codex > "$output"
 	assert_contains "$output" 'Apply these changes?'
 	assert_contains "$output" 'Setup cancelled. Nothing changed.'
 	assert_equals "$(snapshot_test_directory "$home_dir")" "$before"
@@ -782,9 +662,9 @@ test_nothing_to_change_exits_without_yes() {
 	local home_dir="$TEST_ROOT/preview-no-change" output="$TEST_ROOT/preview-no-change.txt"
 	# The home state after the first setup run.
 	local before
-	run_setup_target "$home_dir" "" --both --preset everything > /dev/null
+	run_setup_target "$home_dir" "" --both > /dev/null
 	before=$(snapshot_test_directory "$home_dir")
-	if ! SETUP_TEST_WITHOUT_YES=true run_setup_target "$home_dir" "" --both --preset everything > "$output"; then
+	if ! SETUP_TEST_WITHOUT_YES=true run_setup_target "$home_dir" "" --both > "$output"; then
 		cat "$output"
 		fail 'A completed setup still has a planned change'
 	fi
@@ -792,50 +672,6 @@ test_nothing_to_change_exits_without_yes() {
 	assert_equals "$(snapshot_test_directory "$home_dir")" "$before"
 }
 
-# Skills only links the chosen agents' skills and installs nothing else.
-test_skills_only_preset_installs_only_skills() {
-	# The isolated home receiving only skill links.
-	local home_dir="$TEST_ROOT/preset-skills-only"
-	# The setup preview and status messages.
-	local output="$TEST_ROOT/preset-skills-only.txt"
-
-	run_setup_target "$home_dir" --both --preset skills-only > "$output"
-
-	assert_dir_link "$home_dir/.claude/skills/accessibility"
-	assert_dir_link "$home_dir/.agents/skills/accessibility"
-	assert_not_exists "$home_dir/.claude/CLAUDE.md"
-	assert_not_exists "$home_dir/.claude/hooks"
-	assert_not_exists "$home_dir/.codex"
-	assert_not_exists "$home_dir/.local/bin/trash"
-	assert_not_exists "$home_dir/uv-calls.log"
-	assert_not_exists "$home_dir/hcom-codex-args"
-	assert_not_contains "$output" 'Git hooks:'
-	assert_not_contains "$output" 'Helper commands:'
-	assert_not_contains "$output" 'Codex settings:'
-}
-
-# Skills only prints plain status messages when cli-style has not been installed.
-test_skills_only_without_cli_style() {
-	# The isolated home used without the cli-style renderer.
-	local home_dir="$TEST_ROOT/preset-skills-no-cli-style"
-	# The plain setup preview and status messages.
-	local output="$TEST_ROOT/preset-skills-no-cli-style.txt"
-
-	SETUP_TEST_CLI_STYLE_BIN="$TEST_ROOT/missing-cli-style" \
-		run_setup_target "$home_dir" --both --preset skills-only > "$output" 2>&1
-
-	assert_dir_link "$home_dir/.claude/skills/accessibility"
-	assert_dir_link "$home_dir/.agents/skills/accessibility"
-	assert_contains "$output" 'linked: skills/accessibility'
-	assert_contains "$output" 'Done.'
-	assert_not_contains "$output" 'Done.: success'
-	assert_not_exists "$home_dir/setup-calls.log"
-}
-
-# Checks that setup prints and runs the global cli-style install command.
-#
-# @param  {string}  manager
-#     The available package manager, bun or npm.
 test_global_cli_style_install() {
 	# The available package manager.
 	local manager="$1"
@@ -928,242 +764,6 @@ test_missing_cli_style_and_package_manager() {
 	assert_not_exists "$home_dir/.claude"
 }
 
-# Pick features uses the existing skill picker and installs only selected extras.
-test_pick_preset_installs_selected_features() {
-	# The isolated home receiving the picked features.
-	local home_dir="$TEST_ROOT/preset-pick"
-	# The picker, preview and setup status messages.
-	local output="$TEST_ROOT/preset-pick.txt"
-	# Directory containing the fzf stand-in.
-	local fzf_dir="$TEST_ROOT/preset-pick-bin"
-	# Arguments received by the fzf stand-in.
-	local fzf_arguments="$home_dir/fzf-arguments.txt"
-	# Skills passed to the fzf stand-in.
-	local fzf_input="$home_dir/fzf-input.txt"
-
-	create_fzf_stub "$fzf_dir"
-	SETUP_FZF_ARGUMENTS="$fzf_arguments" SETUP_FZF_INPUT="$fzf_input" \
-		SETUP_FZF_SELECTION=$'skill\twriting\t  writing' \
-		SETUP_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:/usr/bin:/bin" SETUP_TEST_TERMINAL=true \
-		SETUP_TEST_FEATURE_INPUT=$'1 5\r' \
-		run_setup_target "$home_dir" --codex --preset pick > "$output"
-
-	assert_contains "$fzf_arguments" '--multi'
-	assert_not_exists "$home_dir/.agents/skills/accessibility"
-	assert_dir_link "$home_dir/.agents/skills/writing"
-	assert_link "$home_dir/.codex/hooks.json"
-	assert_link "$home_dir/.local/bin/trash"
-	assert_not_contains "$home_dir/.codex/config.toml" '[permissions.project-edit]'
-	assert_not_contains "$home_dir/.codex/config.toml" 'default_permissions ='
-	assert_not_exists "$home_dir/hcom-codex-args"
-	assert_not_exists "$home_dir/uv-calls.log"
-	assert_contains "$output" 'Git hooks:'
-}
-
-# Leaving hooks out keeps the user's hook settings in both agent configurations.
-test_pick_preset_without_hooks_preserves_user_settings() {
-	# The isolated home with user-owned Claude and Codex settings.
-	local home_dir="$TEST_ROOT/preset-pick-no-hooks"
-	# The preview and status messages for the selected features.
-	local output="$TEST_ROOT/preset-pick-no-hooks.txt"
-	# Directory containing the fzf stand-in.
-	local fzf_dir="$TEST_ROOT/preset-pick-no-hooks-bin"
-	# Arguments received by the fzf stand-in.
-	local fzf_arguments="$home_dir/fzf-arguments.txt"
-	# Skills passed to the fzf stand-in.
-	local fzf_input="$home_dir/fzf-input.txt"
-
-	mkdir -p "$home_dir/.claude" "$home_dir/.codex"
-	printf '%s\n' '{"user_setting":"keep"}' > "$home_dir/.claude/settings.json"
-	printf 'custom_setting = "keep"\n\n[features]\nhooks = false\n' > "$home_dir/.codex/config.toml"
-
-	create_fzf_stub "$fzf_dir"
-	SETUP_FZF_ARGUMENTS="$fzf_arguments" SETUP_FZF_INPUT="$fzf_input" \
-		SETUP_FZF_SELECTION=$'skill\twriting\t  writing' \
-		SETUP_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:/usr/bin:/bin" SETUP_TEST_TERMINAL=true \
-		SETUP_TEST_FEATURE_INPUT=$'4\r' \
-		run_setup_target "$home_dir" --both --preset pick > "$output"
-
-	assert_equals "$(cat "$home_dir/.claude/settings.json")" '{"user_setting":"keep"}'
-	if [ -L "$home_dir/.claude/settings.json" ]; then
-		fail 'Claude settings.json was replaced by a symlink without hooks selected'
-	fi
-	assert_not_exists "$home_dir/.claude/hooks"
-	assert_not_exists "$home_dir/.codex/hooks.json"
-	assert_contains "$home_dir/.codex/config.toml" 'hooks = false'
-}
-
-# Claude-only feature selection offers themes without Codex-specific choices.
-test_pick_preset_claude_features_hide_codex_choices() {
-	# The isolated home receiving Claude themes only.
-	local home_dir="$TEST_ROOT/preset-pick-claude"
-	# The feature question and setup output.
-	local output="$TEST_ROOT/preset-pick-claude.txt"
-	# Directory containing the fzf stand-in.
-	local fzf_dir="$TEST_ROOT/preset-pick-claude-bin"
-	# Arguments received by the fzf stand-in.
-	local fzf_arguments="$home_dir/fzf-arguments.txt"
-	# Skills passed to the fzf stand-in.
-	local fzf_input="$home_dir/fzf-input.txt"
-
-	create_fzf_stub "$fzf_dir"
-	SETUP_FZF_ARGUMENTS="$fzf_arguments" SETUP_FZF_INPUT="$fzf_input" \
-		SETUP_FZF_SELECTION=$'skill\twriting\t  writing' \
-		SETUP_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:/usr/bin:/bin" SETUP_TEST_TERMINAL=true \
-		SETUP_TEST_FEATURE_INPUT=$'2\r' \
-		run_setup_target "$home_dir" --claude --preset pick > "$output"
-
-	assert_contains "$output" 'Choose features: [1] Hooks  [2] Themes  [3] Trash wrapper  [4] Helper commands'
-	assert_not_contains "$output" 'Codex permission profile'
-	assert_not_contains "$output" 'HCOM additions'
-	if [ ! -d "$home_dir/.claude/themes" ]; then
-		fail 'Claude themes were not installed after choosing the theme feature'
-	fi
-	assert_not_exists "$home_dir/.claude/hooks"
-	assert_not_exists "$home_dir/.local/bin/trash"
-}
-
-# Invalid Claude feature choices fail before changing the home.
-test_pick_preset_claude_rejects_unknown_features() {
-	# The isolated home for each rejected choice.
-	local home_dir
-	# The feature prompt and error for each rejected choice.
-	local output
-	# A choice that is outside the offered list or is not a number.
-	local choice
-	# The unchanged home contents before each setup attempt.
-	local before
-	# Directory containing the supported fzf stand-in.
-	local fzf_dir="$TEST_ROOT/preset-pick-claude-invalid-bin"
-	# Command path with fzf so setup reaches the feature question.
-	local setup_path="$fzf_dir:$TEST_ROOT/bin:/usr/bin:/bin"
-
-	create_fzf_stub "$fzf_dir"
-
-	for choice in 5 0 '*'; do
-		home_dir="$TEST_ROOT/preset-pick-claude-invalid-$choice"
-		output="$TEST_ROOT/preset-pick-claude-invalid-$choice.txt"
-		mkdir -p "$home_dir"
-		before=$(snapshot_test_directory "$home_dir")
-
-		if SETUP_TEST_PATH="$setup_path" SETUP_TEST_TERMINAL=true \
-			SETUP_TEST_FEATURE_INPUT="${choice}"$'\r' run_setup_target "$home_dir" --claude --preset pick > "$output" 2>&1; then
-			fail "Expected feature choice $choice to fail"
-		fi
-
-		assert_contains "$output" "Unknown feature number: $choice"
-		assert_equals "$(snapshot_test_directory "$home_dir")" "$before"
-	done
-}
-
-# Everything installs the full setup, including the Codex permission profile
-# and Git hooks.
-test_everything_preset_installs_all_features() {
-	# The isolated home receiving the full setup.
-	local home_dir="$TEST_ROOT/preset-everything"
-	# The full setup preview and status messages.
-	local output="$TEST_ROOT/preset-everything.txt"
-
-	run_setup_target "$home_dir" --both --preset everything > "$output"
-
-	assert_link "$home_dir/.claude/CLAUDE.md"
-	assert_link "$home_dir/.codex/hooks.json"
-	assert_link "$home_dir/.local/bin/trash"
-	assert_dir_link "$home_dir/.agents/skills/accessibility"
-	assert_contains "$home_dir/.codex/config.toml" '[permissions.project-edit]'
-	assert_contains "$output" 'Git hooks:'
-}
-
-# An interactive run without selection options asks for a preset first.
-test_interactive_setup_asks_for_preset() {
-	# The isolated home for the prompted setup run.
-	local home_dir="$TEST_ROOT/preset-prompt"
-	# The preset prompt and setup status messages.
-	local output="$TEST_ROOT/preset-prompt.txt"
-
-	SETUP_TEST_TERMINAL=true SETUP_TEST_PRESET_INPUT=$'1\r' \
-		SETUP_TEST_TARGET_INPUT=$'2\r' run_setup_target "$home_dir" "" > "$output"
-
-	assert_contains "$output" 'Choose a setup preset:'
-	assert_dir_link "$home_dir/.agents/skills/accessibility"
-	assert_not_exists "$home_dir/.codex"
-}
-
-# Cancelling the first preset question reports that setup left the home untouched.
-test_interactive_preset_cancel_reports_no_changes() {
-	# The isolated home used for the cancelled prompt.
-	local home_dir="$TEST_ROOT/preset-cancel"
-	# The prompt and cancellation message.
-	local output="$TEST_ROOT/preset-cancel.txt"
-
-	SETUP_TEST_TERMINAL=true SETUP_TEST_PRESET_INPUT=$'q\r' \
-		run_setup_target "$home_dir" "" > "$output"
-
-	assert_contains "$output" 'Setup cancelled. Nothing changed.'
-	assert_not_exists "$home_dir/.agents"
-	assert_not_exists "$home_dir/.claude"
-}
-
-# Pick needs a terminal so it can ask for features and skills.
-test_pick_preset_requires_terminal() {
-	# The isolated home that must stay unchanged when there is no terminal.
-	local home_dir="$TEST_ROOT/preset-pick-no-terminal"
-	# The error explaining why feature selection did not start.
-	local output="$TEST_ROOT/preset-pick-no-terminal.txt"
-
-	if run_setup_target "$home_dir" --codex --preset pick > "$output" 2>&1; then
-		fail 'Expected pick without a terminal to be rejected'
-	fi
-
-	assert_contains "$output" '--preset pick requires a terminal'
-	assert_not_exists "$home_dir/.agents"
-}
-
-# The pick preset stops when fzf is missing, before it asks about agents or
-# features or changes any files.
-test_pick_preset_requires_fzf_before_questions() {
-	# The isolated home that must stay unchanged when fzf is unavailable.
-	local home_dir="$TEST_ROOT/preset-pick-no-fzf"
-	# The error and any prompts printed by setup.
-	local output="$TEST_ROOT/preset-pick-no-fzf.txt"
-	# The command path without fzf.
-	local setup_path="$TEST_ROOT/bin:/usr/bin:/bin"
-	# The error status from setup.
-	local exit_code=0
-
-	SETUP_TEST_PATH="$setup_path" SETUP_TEST_TERMINAL=true run_setup_target "$home_dir" "" --preset pick > "$output" 2>&1 || exit_code=$?
-
-	assert_equals "$exit_code" '1'
-	assert_contains "$output" 'Interactive skill selection needs fzf 0.74 or newer. Install it, or choose skills with --include and --exclude.'
-	assert_not_contains "$output" 'Which agent(s)?'
-	assert_not_contains "$output" 'Choose features:'
-	assert_not_exists "$home_dir/.agents"
-	assert_not_exists "$home_dir/.claude"
-	assert_not_exists "$home_dir/.codex"
-}
-
-# Naming skills with --include lets the pick preset reach the feature question
-# when fzf is not installed.
-test_pick_preset_with_include_skips_fzf_check() {
-	# The isolated home that must stay unchanged when feature selection is cancelled.
-	local home_dir="$TEST_ROOT/preset-pick-include-no-fzf"
-	# The feature question and cancellation message from setup.
-	local output="$TEST_ROOT/preset-pick-include-no-fzf.txt"
-	# The command path without fzf.
-	local setup_path="$TEST_ROOT/bin:/usr/bin:/bin"
-
-	SETUP_TEST_PATH="$setup_path" SETUP_TEST_TERMINAL=true \
-		SETUP_TEST_FEATURE_INPUT=$'q\r' \
-		run_setup_target "$home_dir" --codex --preset pick --include writing > "$output" 2>&1
-
-	assert_contains "$output" 'Choose features:'
-	assert_contains "$output" 'Setup cancelled. Nothing changed.'
-	assert_not_contains "$output" 'Interactive skill selection needs fzf'
-	assert_not_exists "$home_dir/.agents"
-}
-
-# Setup backs up an existing Codex config with a timestamp before replacing it
-# with the managed settings.
 test_config_replacement_creates_timestamped_backup() {
 	# The isolated home with a Codex config to back up.
 	local home_dir="$TEST_ROOT/backup"
@@ -1474,172 +1074,53 @@ test_skills_are_installed_and_editable() {
 	assert_contains "$source_marker" 'visible through the installed link'
 }
 
-# Apple stays out of a plain setup run even when an older exclusions file exists.
-test_apple_stays_off_without_an_opt_in() {
-	# Isolated home directory for the setup run.
-	local home_dir="$TEST_ROOT/apple-default-off"
+# Setup installs Apple skills without an opt-in, leaves out listed skills, and
+# removes an installed link once its skill is added to the list.
+test_repository_skill_exclusions() {
+	create_test_repo_copy test_repository_skill_exclusions
+	# An isolated home for the setup run.
+	local home_dir="$TEST_ROOT/repository-skill-exclusions"
+	# A script copy that lets this case edit the repository exclude list.
+	local scripts_dir="$REPO_DIR/scripts"
+	# The plan printed when an installed skill becomes excluded.
+	local output="$TEST_ROOT/repository-skill-exclusions.txt"
 
-	mkdir -p "$home_dir/.agents"
-	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
+	trash "$scripts_dir"
+	/bin/cp -R "$SOURCE_REPO_DIR/scripts" "$scripts_dir"
 	run_setup "$home_dir" > /dev/null
 
-	assert_not_exists "$home_dir/.agents/skills/mac-app"
-	assert_not_exists "$home_dir/.claude/skills/mac-app"
-	assert_dir_link "$home_dir/.agents/skills/bash"
-	assert_not_exists "$home_dir/.agents/skill-inclusions"
-	assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'writing'
-}
-
-# A plain setup run leaves an existing Apple skill link in place while Apple is off.
-test_apple_link_survives_without_an_opt_in() {
-	# Isolated home directory with an Apple link from an earlier setup.
-	local home_dir="$TEST_ROOT/apple-link-kept"
-	# Existing repository-owned Apple skill link.
-	local apple_link="$home_dir/.agents/skills/mac-app"
-
-	mkdir -p "$(dirname "$apple_link")"
-	ln -s "$REPO_DIR/skills/apple/mac-app" "$apple_link"
-	run_setup "$home_dir" > /dev/null
-
-	assert_equals "$(readlink "$apple_link")" "$REPO_DIR/skills/apple/mac-app"
-	assert_not_exists "$home_dir/.claude/skills/mac-app"
-	assert_not_exists "$home_dir/.agents/skill-inclusions"
-}
-
-# Including one Apple skill opts in the collection for later setup runs.
-test_apple_opt_in_is_remembered() {
-	# Isolated home directory for the setup runs.
-	local home_dir="$TEST_ROOT/apple-included"
-
-	run_setup "$home_dir" --include mac-app > /dev/null
-	assert_equals "$(cat "$home_dir/.agents/skill-inclusions")" 'apple'
-	assert_dir_link "$home_dir/.agents/skills/mac-app"
-	assert_dir_link "$home_dir/.agents/skills/apple-frameworks"
-	assert_dir_link "$home_dir/.agents/skills/bash"
-
-	run_setup_target "$home_dir" "--claude" > /dev/null
-	assert_dir_link "$home_dir/.claude/skills/mac-app"
-	assert_equals "$(cat "$home_dir/.agents/skill-inclusions")" 'apple'
-}
-
-test_exclusions_persist_and_report() {
-	# Isolated home directory for the setup run.
-	local home_dir="$TEST_ROOT/skill-exclusions"
-	# Output from the initial exclusion run.
-	local output="$TEST_ROOT/skill-exclusions.txt"
-	# Output from the persisted exclusion run.
-	local rerun_output="$TEST_ROOT/skill-exclusions-rerun.txt"
-	# Output after including one skill.
-	local include_output="$TEST_ROOT/skill-exclusions-include.txt"
-	# Output after including all skills.
-	local include_all_output="$TEST_ROOT/skill-exclusions-include-all.txt"
-	# Expected exclusion status line.
-	local excluded_message='Excluded: accessibility, agent-retrospective (from ~/.agents/skill-exclusions; run with --include-all to restore)'
-
-	run_setup_target "$home_dir" "" --exclude accessibility,agent-retrospective > "$output"
-	assert_contains "$output" "$excluded_message"
-	assert_contains "$home_dir/.agents/skill-exclusions" 'accessibility'
-	assert_contains "$home_dir/.agents/skill-exclusions" 'agent-retrospective'
-	assert_not_exists "$home_dir/.agents/skills/accessibility"
-	assert_not_exists "$home_dir/.agents/skills/agent-retrospective"
-	assert_not_exists "$home_dir/.claude/skills/accessibility"
-	assert_not_exists "$home_dir/.claude/skills/agent-retrospective"
-
-	run_setup_target "$home_dir" "--both" > "$rerun_output"
-	assert_contains "$rerun_output" "$excluded_message"
-	assert_not_exists "$home_dir/.agents/skills/accessibility"
-	assert_not_exists "$home_dir/.claude/skills/accessibility"
-
-	run_setup_target "$home_dir" "" --include accessibility > "$include_output"
-	assert_contains "$include_output" 'Excluded: agent-retrospective (from ~/.agents/skill-exclusions; run with --include-all to restore)'
-	assert_dir_link "$home_dir/.agents/skills/accessibility"
-	assert_dir_link "$home_dir/.claude/skills/accessibility"
-	assert_not_exists "$home_dir/.agents/skills/agent-retrospective"
-
-	run_setup_target "$home_dir" "" --include-all > "$include_all_output"
-	assert_not_contains "$include_all_output" 'Excluded:'
-	assert_dir_link "$home_dir/.agents/skills/agent-retrospective"
-	assert_dir_link "$home_dir/.claude/skills/agent-retrospective"
-	assert_not_exists "$home_dir/.agents/skill-exclusions"
-	assert_equals "$(cat "$home_dir/.agents/skill-inclusions")" 'apple'
+	assert_dir_link "$home_dir/.agents/skills/writing"
+	printf 'writing\n' > "$scripts_dir/skill-exclusions.txt"
+	run_setup "$home_dir" > "$output"
+	assert_contains "$output" 'Remove excluded skill ~/.agents/skills/writing'
+	assert_not_exists "$home_dir/.agents/skills/writing"
 	assert_dir_link "$home_dir/.agents/skills/mac-app"
 }
 
-test_new_skill_installs_after_exclusion() {
-	create_test_repo_copy test_new_skill_installs_after_exclusion
+# Retired selection options fail before setup changes the home.
+test_removed_skill_options_are_unknown() {
+	# An isolated home for rejected option runs.
+	local home_dir="$TEST_ROOT/removed-skill-options"
+	# Output from the current rejected option.
+	local output="$TEST_ROOT/removed-skill-options.txt"
+	# The option currently being checked.
+	local option
+	# The home snapshot before the rejected runs.
+	local before
 
-	# Isolated home directory for the setup run.
-	local home_dir="$TEST_ROOT/new-skill"
-
-	run_setup "$home_dir" --exclude accessibility > /dev/null
-	create_added_skill
-	run_setup "$home_dir" > /dev/null
-
-	assert_dir_link "$home_dir/.agents/skills/$ADDED_SKILL_NAME"
-	assert_not_exists "$home_dir/.agents/skills/accessibility"
+	mkdir -p "$home_dir"
+	before=$(snapshot_test_directory "$home_dir")
+	for option in --preset --select --exclude --include --include-all --refresh; do
+		if run_setup_target "$home_dir" --both "$option" > "$output" 2>&1; then
+			fail "Expected $option to be rejected"
+		fi
+		assert_contains "$output" "Unknown option: $option"
+		assert_equals "$(snapshot_test_directory "$home_dir")" "$before"
+	done
 }
 
-test_claude_only_exclusion_creates_agents_directory() {
-	# Isolated home directory for the setup run.
-	local home_dir="$TEST_ROOT/claude-only-exclusion"
-	# Output from the Claude-only exclusion run.
-	local output="$TEST_ROOT/claude-only-exclusion.txt"
-
-	run_setup_target "$home_dir" "--claude" --exclude accessibility > "$output"
-
-	assert_dir "$home_dir/.agents"
-	assert_file "$home_dir/.agents/skill-exclusions"
-	assert_not_exists "$home_dir/.codex"
-	assert_not_exists "$home_dir/.claude/skills/accessibility"
-	assert_contains "$output" 'Excluded: accessibility (from ~/.agents/skill-exclusions; run with --include-all to restore)'
-}
-
-test_unknown_skill_fails_without_changes() {
-	# Isolated home directory for the setup run.
-	local home_dir="$TEST_ROOT/unknown-skill"
-	# Output from the rejected setup run.
-	local output="$TEST_ROOT/unknown-skill.txt"
-
-	mkdir -p "$home_dir/.agents"
-	printf 'accessibility\n' > "$home_dir/.agents/skill-exclusions"
-	if run_setup "$home_dir" --exclude missing-setup-skill > "$output" 2>&1; then
-		fail 'Expected an unknown skill to be rejected'
-	fi
-
-	assert_contains "$output" 'Unknown skill: missing-setup-skill'
-	assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'accessibility'
-	assert_not_exists "$home_dir/.codex"
-	assert_not_exists "$home_dir/.claude"
-}
-
-test_removed_skill_can_be_included() {
-	# Isolated home directory for the setup run.
-	local home_dir="$TEST_ROOT/removed-skill"
-	# Saved exclusion with no canonical skill folder.
-	local removed_skill='removed-setup-skill'
-
-	mkdir -p "$home_dir/.agents"
-	printf '%s\n' "$removed_skill" > "$home_dir/.agents/skill-exclusions"
-	run_setup "$home_dir" --include-all --include "$removed_skill" > /dev/null
-
-	assert_not_exists "$home_dir/.agents/skill-exclusions"
-}
-
-test_unmanaged_excluded_directory_survives() {
-	# Isolated home directory for the setup run.
-	local home_dir="$TEST_ROOT/unmanaged-excluded"
-	# Content that an exclusion must preserve.
-	local marker="$home_dir/.agents/skills/accessibility/keep.txt"
-
-	run_setup "$home_dir" --exclude accessibility > /dev/null
-	mkdir -p "$(dirname "$marker")"
-	printf 'keep this directory\n' > "$marker"
-	run_setup "$home_dir" > /dev/null
-
-	assert_file "$marker"
-}
-
-test_unmanaged_included_skill_is_backed_up() {
+# An unmanaged skill folder is backed up before setup installs its link.
+test_unmanaged_skill_folder_is_backed_up() {
 	# Isolated home directory for the setup run.
 	local home_dir="$TEST_ROOT/unmanaged-included"
 	# Output from the setup run.
@@ -1656,301 +1137,6 @@ test_unmanaged_included_skill_is_backed_up() {
 	assert_file "${backups[0]}/keep.txt"
 	assert_dir_link "$home_dir/.agents/skills/accessibility"
 	assert_contains "$output" 'backup at ~/.agents/backups/skills/accessibility.bak.'
-}
-
-# Ensures an older fzf stops setup without changing saved choices.
-test_select_old_fzf_stops_without_changes() {
-	assert_fzf_version_stops_without_changes '0.60.0' 'select-old-fzf'
-}
-
-# Checks that a supported fzf version opens the interactive picker.
-#
-# @param  {string}  version
-#     The version reported by the fzf stand-in.
-# @param  {string}  case_name
-#     Unique name for the isolated test files.
-assert_fzf_version_opens_picker() {
-	# The version reported by the fzf stand-in.
-	local version="$1"
-	# Unique name for the isolated test files.
-	local case_name="$2"
-	# Isolated home directory for this version.
-	local home_dir="$TEST_ROOT/$case_name"
-	# Output from the picker.
-	local output="$TEST_ROOT/$case_name.txt"
-	# Directory containing the fzf stand-in.
-	local fzf_dir="$TEST_ROOT/$case_name-bin"
-	# Arguments captured when fzf opens.
-	local fzf_arguments="$home_dir/fzf-arguments.txt"
-	# Skills passed to fzf.
-	local fzf_input="$home_dir/fzf-input.txt"
-
-	create_fzf_stub "$fzf_dir"
-	# PATH here is this test's own value; ShellCheck confuses it with the copy run_setup_target changes in its subshell.
-	# shellcheck disable=SC2031
-	SETUP_FZF_VERSION="$version" SETUP_FZF_ARGUMENTS="$fzf_arguments" SETUP_FZF_INPUT="$fzf_input" SETUP_FZF_STATUS=1 SETUP_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output" 2>&1
-
-	assert_contains "$output" 'Skill selection cancelled. Nothing changed.'
-}
-
-# Checks that an unsupported or unreadable fzf version stops setup.
-#
-# @param  {string}  version
-#     The version reported by the fzf stand-in.
-# @param  {string}  case_name
-#     Unique name for the isolated test files.
-assert_fzf_version_stops_without_changes() {
-	# The version reported by the fzf stand-in.
-	local version="$1"
-	# Unique name for the isolated test files.
-	local case_name="$2"
-	# Isolated home directory for this version.
-	local home_dir="$TEST_ROOT/$case_name"
-	# Standard output from the rejected picker run.
-	local stdout="$TEST_ROOT/$case_name.stdout.txt"
-	# Standard error from the rejected picker run.
-	local stderr="$TEST_ROOT/$case_name.stderr.txt"
-	# Directory containing the fzf stand-in.
-	local fzf_dir="$TEST_ROOT/$case_name-bin"
-	# Arguments that would be captured if fzf opened.
-	local fzf_arguments="$home_dir/fzf-arguments.txt"
-	# The error status from setup.
-	local exit_code=0
-
-	create_fzf_stub "$fzf_dir"
-	# expect joins setup's output and errors into one terminal stream, so this
-	# bash stand-in starts setup with each stream written to its own file.
-	cat > "$fzf_dir/bash" <<'EOF'
-#!/bin/sh
-exec /bin/bash "$@" > "$SETUP_TEST_STDOUT" 2> "$SETUP_TEST_STDERR"
-EOF
-	chmod +x "$fzf_dir/bash"
-	mkdir -p "$home_dir/.agents"
-	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
-	printf 'apple\n' > "$home_dir/.agents/skill-inclusions"
-	# PATH here is this test's own value; ShellCheck confuses it with the copy run_setup_target changes in its subshell.
-	# shellcheck disable=SC2031
-	SETUP_FZF_VERSION="$version" SETUP_FZF_ARGUMENTS="$fzf_arguments" SETUP_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_TEST_TERMINAL=true SETUP_TEST_STDOUT="$stdout" SETUP_TEST_STDERR="$stderr" run_setup_target "$home_dir" "" --select > /dev/null 2>&1 || exit_code=$?
-
-	assert_equals "$exit_code" '1'
-	assert_contains "$stderr" 'Interactive skill selection needs fzf 0.74 or newer. Install it, or choose skills with --include and --exclude.'
-	assert_not_contains "$stdout" 'Interactive skill selection needs fzf 0.74 or newer. Install it, or choose skills with --include and --exclude.'
-	assert_not_exists "$fzf_arguments"
-	assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'writing'
-	assert_equals "$(cat "$home_dir/.agents/skill-inclusions")" 'apple'
-	assert_not_exists "$home_dir/.claude"
-	assert_not_exists "$home_dir/.codex"
-}
-
-# Ensures missing fzf stops setup without changing saved choices or links.
-test_select_missing_fzf_stops_without_changes() {
-	# Isolated home directory for the rejected picker run.
-	local home_dir="$TEST_ROOT/select-missing-fzf"
-	# Output from the rejected picker run.
-	local output="$TEST_ROOT/select-missing-fzf.txt"
-	# Command path without fzf.
-	local setup_path="$TEST_ROOT/bin:/usr/bin:/bin"
-	# The error status from setup.
-	local exit_code=0
-
-	mkdir -p "$home_dir/.agents"
-	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
-	printf 'apple\n' > "$home_dir/.agents/skill-inclusions"
-	SETUP_TEST_PATH="$setup_path" SETUP_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output" 2>&1 || exit_code=$?
-
-	assert_equals "$exit_code" '1'
-	assert_contains "$output" 'Interactive skill selection needs fzf 0.74 or newer. Install it, or choose skills with --include and --exclude.'
-	assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'writing'
-	assert_equals "$(cat "$home_dir/.agents/skill-inclusions")" 'apple'
-	assert_not_exists "$home_dir/.claude"
-	assert_not_exists "$home_dir/.codex"
-}
-
-# Checks that the first supported fzf release opens the picker.
-test_select_fzf_minimum_version_opens_picker() {
-	assert_fzf_version_opens_picker '0.74.0' 'select-fzf-minimum'
-}
-
-# Checks that the release just below the minimum stops setup.
-test_select_fzf_below_minimum_stops_without_changes() {
-	assert_fzf_version_stops_without_changes '0.73.9' 'select-fzf-below-minimum'
-}
-
-# Checks that a newer major version opens the picker.
-test_select_fzf_new_major_opens_picker() {
-	assert_fzf_version_opens_picker '1.0.0' 'select-fzf-new-major'
-}
-
-# Checks that empty version output stops setup.
-test_select_fzf_empty_version_stops_without_changes() {
-	assert_fzf_version_stops_without_changes '' 'select-fzf-empty-version'
-}
-
-# Ensures fzf lets several skills be ticked and saves the chosen skills.
-test_select_fzf_updates_skill_exclusions() {
-	create_test_repo_copy test_select_fzf_updates_skill_exclusions
-
-	# Isolated home directory for the fzf selection run.
-	local home_dir="$TEST_ROOT/select-fzf"
-	# Output from the fzf selection run.
-	local output="$TEST_ROOT/select-fzf.txt"
-	# Directory containing the fzf stand-in.
-	local fzf_dir="$TEST_ROOT/fzf-bin"
-	# Arguments received by the fzf stand-in.
-	local fzf_arguments="$home_dir/fzf-arguments.txt"
-	# Skills displayed to the fzf stand-in.
-	local fzf_input="$home_dir/fzf-input.txt"
-
-	create_fzf_stub "$fzf_dir"
-	mkdir -p "$home_dir/.agents"
-	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
-	# The fzf capture files, chosen skill, command path, and terminal setting for this picker run.
-	# PATH here is this test's own value; ShellCheck confuses it with the copy run_setup_target changes in its subshell.
-	# shellcheck disable=SC2031
-	SETUP_FZF_ARGUMENTS="$fzf_arguments" SETUP_FZF_INPUT="$fzf_input" SETUP_FZF_SELECTION=$'skill\taccessibility\t  accessibility  When editing HTML' SETUP_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
-
-	assert_contains "$fzf_arguments" '--multi'
-	assert_fzf_start_selection "$fzf_arguments" "$fzf_input" 'writing'
-	assert_dir_link "$home_dir/.agents/skills/accessibility"
-	assert_dir_link "$home_dir/.claude/skills/accessibility"
-	assert_not_exists "$home_dir/.agents/skills/writing"
-	assert_contains "$home_dir/.agents/skill-exclusions" 'writing'
-}
-
-# Choosing an Apple skill in fzf remembers the collection for later setup runs.
-test_select_fzf_remembers_apple_collection() {
-	# Isolated home directory for the picker and plain setup runs.
-	local home_dir="$TEST_ROOT/select-fzf-apple"
-	# Output from the picker run.
-	local output="$TEST_ROOT/select-fzf-apple.txt"
-	# Directory containing the fzf stand-in.
-	local fzf_dir="$TEST_ROOT/select-fzf-apple-bin"
-	# Arguments received by the fzf stand-in.
-	local fzf_arguments="$home_dir/fzf-arguments.txt"
-	# Skills displayed to the fzf stand-in.
-	local fzf_input="$home_dir/fzf-input.txt"
-
-	create_fzf_stub "$fzf_dir"
-	# PATH here is this test's own value; ShellCheck confuses it with the copy run_setup_target changes in its subshell.
-	# shellcheck disable=SC2031
-	SETUP_FZF_ARGUMENTS="$fzf_arguments" SETUP_FZF_INPUT="$fzf_input" SETUP_FZF_SELECTION=$'skill\tmac-app\t  mac-app' SETUP_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
-
-	assert_fzf_start_selection "$fzf_arguments" "$fzf_input" ''
-	assert_equals "$(cat "$home_dir/.agents/skill-inclusions")" 'apple'
-	assert_dir_link "$home_dir/.agents/skills/mac-app"
-	assert_not_exists "$home_dir/.agents/skills/apple-frameworks"
-
-	run_setup "$home_dir" > /dev/null
-	assert_dir_link "$home_dir/.claude/skills/mac-app"
-	assert_not_exists "$home_dir/.agents/skills/apple-frameworks"
-}
-
-# Ensures a returned collection heading is never saved as a skill, so returning
-# only a heading excludes every skill without failing on macOS Bash.
-test_select_fzf_excludes_every_skill() {
-	# Isolated home directory for a selection holding only a heading.
-	local home_dir="$TEST_ROOT/select-fzf-empty"
-	# Output from the fzf run that returns only a heading.
-	local output="$TEST_ROOT/select-fzf-empty.txt"
-	# Directory containing the fzf stand-in.
-	local fzf_dir="$TEST_ROOT/fzf-empty-bin"
-	# Arguments received by the fzf stand-in.
-	local fzf_arguments="$home_dir/fzf-arguments.txt"
-	# Skills displayed to the fzf stand-in.
-	local fzf_input="$home_dir/fzf-input.txt"
-
-	create_fzf_stub "$fzf_dir"
-	# The fzf capture files, chosen skills, command path, and terminal setting for this picker run.
-	# PATH here is this test's own value; ShellCheck confuses it with the copy run_setup_target changes in its subshell.
-	# shellcheck disable=SC2031
-	SETUP_FZF_ARGUMENTS="$fzf_arguments" SETUP_FZF_INPUT="$fzf_input" SETUP_FZF_SELECTION=$'heading\tagent-improvement\tagent-improvement (2)' SETUP_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
-
-	assert_contains "$home_dir/.agents/skill-exclusions" 'accessibility'
-	assert_contains "$home_dir/.agents/skill-exclusions" 'agent-retrospective'
-	assert_contains "$home_dir/.agents/skill-exclusions" 'skill-craft'
-	assert_contains "$home_dir/.agents/skill-exclusions" 'writing'
-	assert_not_contains "$home_dir/.agents/skill-exclusions" 'heading'
-	assert_not_exists "$home_dir/.agents/skills/accessibility"
-	assert_not_exists "$home_dir/.claude/skills/accessibility"
-}
-
-# Ensures fzf cancellation leaves the saved exclusions and links untouched.
-test_select_fzf_cancel_preserves_existing_state() {
-	# Isolated home directory for the cancelled fzf selection.
-	local home_dir="$TEST_ROOT/select-fzf-cancel"
-	# Output from the cancelled fzf selection.
-	local output="$TEST_ROOT/select-fzf-cancel.txt"
-	# Directory containing the fzf stand-in.
-	local fzf_dir="$TEST_ROOT/fzf-cancel-bin"
-	# Arguments received by the fzf stand-in.
-	local fzf_arguments="$home_dir/fzf-arguments.txt"
-	# Skills displayed to the fzf stand-in.
-	local fzf_input="$home_dir/fzf-input.txt"
-
-	create_fzf_stub "$fzf_dir"
-	mkdir -p "$home_dir/.agents"
-	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
-	# The fzf capture files, cancelled picker status, command path, and terminal setting for this picker run.
-	# PATH here is this test's own value; ShellCheck confuses it with the copy run_setup_target changes in its subshell.
-	# shellcheck disable=SC2031
-	SETUP_FZF_ARGUMENTS="$fzf_arguments" SETUP_FZF_INPUT="$fzf_input" SETUP_FZF_STATUS=1 SETUP_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output"
-
-	assert_contains "$output" 'Skill selection cancelled. Nothing changed.'
-	assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'writing'
-	assert_not_exists "$home_dir/.claude"
-	assert_not_exists "$home_dir/.codex"
-}
-
-# Ensures --select rejects other skill options without changing saved exclusions or links.
-test_select_rejects_other_skill_options_without_changes() {
-	# Isolated home directory for rejected option combinations.
-	local home_dir="$TEST_ROOT/select-with-skill-options"
-	# Output from each rejected setup run.
-	local output="$TEST_ROOT/select-with-skill-options.txt"
-	# Skill option currently combined with --select.
-	local option
-	# Arguments for the current skill option.
-	local -a option_args=()
-
-	run_setup_target "$home_dir" "" --exclude writing > /dev/null
-	for option in --exclude --include --include-all; do
-		case "$option" in
-			--exclude) option_args=(--exclude accessibility) ;;
-			--include) option_args=(--include writing) ;;
-			--include-all) option_args=(--include-all) ;;
-		esac
-
-		if run_setup_target "$home_dir" "" --select "${option_args[@]}" > "$output" 2>&1; then
-			fail "Expected --select with $option to be rejected"
-		fi
-
-		assert_contains "$output" '--select cannot be combined with --exclude, --include, or --include-all.'
-		assert_contains "$output" 'Usage:'
-		assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'writing'
-		assert_dir_link "$home_dir/.agents/skills/accessibility"
-		assert_dir_link "$home_dir/.claude/skills/accessibility"
-		assert_not_exists "$home_dir/.agents/skills/writing"
-		assert_not_exists "$home_dir/.claude/skills/writing"
-	done
-}
-
-# Ensures --select fails safely when standard input is not a terminal.
-test_select_rejects_non_terminal_input() {
-	# Isolated home directory for the rejected selection run.
-	local home_dir="$TEST_ROOT/select-non-terminal"
-	# Output from the rejected selection run.
-	local output="$TEST_ROOT/select-non-terminal.txt"
-
-	mkdir -p "$home_dir/.agents"
-	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
-	if run_setup_target "$home_dir" "" --select < /dev/null > "$output" 2>&1; then
-		fail 'Expected --select without a terminal to be rejected'
-	fi
-
-	assert_contains "$output" '--select requires a terminal. Use --exclude or --include when standard input is not a terminal.'
-	assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'writing'
-	assert_not_exists "$home_dir/.claude"
-	assert_not_exists "$home_dir/.codex"
 }
 
 test_skip_backup_environment_does_not_bypass_backup() {
@@ -2103,7 +1289,7 @@ run_setup_cases() {
 		test_help_hides_backup_bypass
 		test_public_backup_bypass_is_rejected
 		test_status_option_is_rejected_without_changes
-		test_default_setup_skips_repository_refresh
+		test_setup_does_not_regenerate_repository_output
 		test_existing_doc_paths_is_preserved
 		test_preflight_reports_missing_uv_without_changes
 		test_preflight_reports_missing_checkout_without_changes
@@ -2111,28 +1297,15 @@ run_setup_cases() {
 		test_preflight_checks_only_codex_commands
 		test_missing_doc_paths_is_installed
 		test_codex_installs_missing_doc_paths
-		test_refresh_runs_repository_sync
 		test_non_terminal_plan_requires_yes
 		test_terminal_decline_preserves_home
 		test_terminal_accept_creates_links
 		test_nothing_to_change_exits_without_yes
-		test_skills_only_preset_installs_only_skills
-		test_skills_only_without_cli_style
 		test_global_cli_style_install_with_bun
 		test_global_cli_style_install_with_npm
 		test_global_cli_style_install_not_on_path
 		test_global_cli_style_override_skips_install
 		test_missing_cli_style_and_package_manager
-		test_pick_preset_installs_selected_features
-		test_pick_preset_without_hooks_preserves_user_settings
-		test_pick_preset_claude_features_hide_codex_choices
-		test_pick_preset_claude_rejects_unknown_features
-		test_everything_preset_installs_all_features
-		test_interactive_setup_asks_for_preset
-		test_interactive_preset_cancel_reports_no_changes
-		test_pick_preset_requires_terminal
-		test_pick_preset_requires_fzf_before_questions
-		test_pick_preset_with_include_skips_fzf_check
 		test_config_replacement_creates_timestamped_backup
 		test_user_config_is_rewritten_once
 		test_hook_file_is_replaced_with_managed_link
@@ -2145,28 +1318,9 @@ run_setup_cases() {
 		test_stale_repo_link_has_no_backup_in_plan
 		test_permission_profile_keeps_roots_and_drops_git_config_rule
 		test_skills_are_installed_and_editable
-		test_apple_stays_off_without_an_opt_in
-		test_apple_link_survives_without_an_opt_in
-		test_apple_opt_in_is_remembered
-		test_exclusions_persist_and_report
-		test_new_skill_installs_after_exclusion
-		test_claude_only_exclusion_creates_agents_directory
-		test_unknown_skill_fails_without_changes
-		test_removed_skill_can_be_included
-		test_unmanaged_excluded_directory_survives
-		test_unmanaged_included_skill_is_backed_up
-		test_select_missing_fzf_stops_without_changes
-		test_select_old_fzf_stops_without_changes
-		test_select_fzf_minimum_version_opens_picker
-		test_select_fzf_below_minimum_stops_without_changes
-		test_select_fzf_new_major_opens_picker
-		test_select_fzf_empty_version_stops_without_changes
-		test_select_fzf_updates_skill_exclusions
-		test_select_fzf_remembers_apple_collection
-		test_select_fzf_excludes_every_skill
-		test_select_fzf_cancel_preserves_existing_state
-		test_select_rejects_other_skill_options_without_changes
-		test_select_rejects_non_terminal_input
+		test_repository_skill_exclusions
+		test_removed_skill_options_are_unknown
+		test_unmanaged_skill_folder_is_backed_up
 		test_skip_backup_environment_does_not_bypass_backup
 		test_failed_backup_preserves_existing_config
 		test_hcom_adds_missing_codex_folders
