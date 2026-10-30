@@ -139,7 +139,7 @@ Run `scripts/doctor.sh` to check the installed configuration without changing it
 
 If a file or folder that setup did not create already sits where a skill's link belongs, setup moves it to a timestamped `.bak` backup under `~/.claude/backups/skills/` or `~/.agents/backups/skills/` and prints `backup at <path>`. Content at an excluded skill's name is left untouched.
 
-Setup prints a grouped plan before changing installed files. It lists directories and links it will create or replace, the backups it will make and the older backups it will remove, helper commands it will install, Codex settings, HCOM folder additions, and this repository's Git hook setting. On a terminal, answer `y` to **Apply these changes?**; pressing Enter or answering `n` leaves installed files unchanged. In a script or other non-terminal session, pass `--yes` to apply the plan. Without `--yes`, setup prints the plan and exits with an error. If everything is already set up, it prints `Nothing to change.` and exits successfully without asking. `--help` never asks for confirmation.
+Setup applies changes straight away and reports each step as it runs. It backs up files it replaces and removes older backups of those files. If everything is already set up, it prints `Nothing to change.` and exits successfully. Use `scripts/doctor.sh` to check an installation without changing it.
 
 Setup writes `~/.codex/config.toml` in a fixed layout. If your copy uses different spacing or section order, the next run rewrites it once and saves a backup first.
 

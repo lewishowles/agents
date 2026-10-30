@@ -163,7 +163,7 @@ is_repo_owned_link() {
 
 # Calls a function once for each link in one group of repository links, apart
 # from skills, giving it the repository file, the installed path and the label
-# to show. This is the only place those links are listed: the setup preview,
+# to show. This is the only place those links are listed: the setup plan,
 # the installer and the doctor all read them from here, and each caller decides
 # which groups the chosen features need.
 #
@@ -306,7 +306,7 @@ link_path() {
 	fi
 }
 
-# Adds a directory creation or replacement to the setup preview.
+# Adds a directory creation or replacement to the setup plan.
 #
 # @param  {string}  path
 #     The directory setup will ensure.
@@ -323,7 +323,7 @@ plan_container_dir() {
 }
 
 # Adds the backup a replacement will save, and the older backups of the same
-# path it will remove, to the setup preview.
+# path it will remove, to the setup plan.
 #
 # @param  {string}  path
 #     The existing path that setup will replace.
@@ -346,7 +346,7 @@ plan_backup() {
 	plan_change "Backups" "Save $(display_path "$path") in $(display_path "$backup_dir") with a timestamp"
 }
 
-# Adds a link to the setup preview unless the installed path already points at
+# Adds a link to the setup plan unless the installed path already points at
 # the repository source. Anything else at that path is listed for backup first,
 # unless the stale-link cleanup will remove it before linking.
 #
@@ -385,7 +385,7 @@ plan_link_path() {
 	plan_change "Links" "Link $(display_path "$target") to $(display_path "$source")"
 }
 
-# Adds the repository links that setup will remove to the setup preview. By
+# Adds the repository links that setup will remove to the setup plan. By
 # default only broken links are listed, matching prune_stale_repo_links. Each
 # listed link is also added to planned_pruned_links, so plan_link_path does not
 # list a backup for it.
@@ -423,7 +423,7 @@ plan_prune_stale_repo_links() {
 }
 
 # Adds the skill links that setup will create, and the excluded skill links
-# it will remove, to the setup preview.
+# it will remove, to the setup plan.
 #
 # @param  {string}  target_dir
 #     The installed skill directory.

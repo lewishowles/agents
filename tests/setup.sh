@@ -286,13 +286,8 @@ run_setup() {
 	run_setup_target "$home_dir" "--codex" "$@"
 }
 
-# Runs setup with a selected target or without an explicit target.
-#
-# When SETUP_TEST_TERMINAL is true, setup runs in a terminal driven by
-# expect. Each optional prompt response is typed after its prompt appears.
-# The run waits for setup to exit and returns setup's exit status. It fails if
-# a prompt does not appear within 20 seconds, setup does not exit within 20
-# seconds after the prompt, or setup is killed by a signal.
+# Runs setup in an isolated home, with a selected target or without an explicit
+# target, and returns its exit status.
 #
 # @param  {string}  home_dir
 #     Isolated home directory for the setup run.
@@ -312,12 +307,6 @@ run_setup_target() {
 	# Command path used by the setup process.
 	local setup_path="${SETUP_TEST_PATH:-$bin_dir:$PATH}"
 	shift 2
-	# Most cases accept the setup plan with --yes. The confirmation cases set
-	# SETUP_TEST_WITHOUT_YES so they can see the prompt or the refusal.
-	if [ "${SETUP_TEST_WITHOUT_YES:-false}" != true ]; then
-		set -- "$@" --yes
-	fi
-
 	mkdir -p "$home_dir"
 
 	(
@@ -345,34 +334,7 @@ run_setup_target() {
 		export SETUP_TEST_FAIL_BACKUP_MOVE="$fail_backup_move"
 
 		# An empty target expands to nothing so setup picks the target itself.
-		if [ "${SETUP_TEST_TERMINAL:-false}" = true ]; then
-			# The expect script is read from standard input because expect 5.45
-			# does not set argv for a script passed with -c.
-			/usr/bin/expect -f - bash "$REPO_DIR/scripts/setup.sh" ${target:+"$target"} "$@" <<'EXPECT'
-set timeout 20
-spawn {*}$argv
-if {[info exists env(SETUP_TEST_CONFIRMATION_INPUT)]} {
-	expect {
-		-exact "Apply these changes? \[y/N\] " {}
-		timeout { puts stderr "Confirmation prompt did not appear within 20 seconds"; exit 1 }
-		eof { puts stderr "Confirmation prompt did not appear before setup exited"; exit 1 }
-	}
-	send -- $env(SETUP_TEST_CONFIRMATION_INPUT)
-}
-expect {
-	eof {}
-	timeout { puts stderr "Setup did not exit within 20 seconds"; exit 1 }
-}
-set status [wait]
-if {[lindex $status 4] eq "CHILDKILLED"} {
-	puts stderr "Setup was killed by [lindex $status 5]"
-	exit 1
-}
-exit [lindex $status 3]
-EXPECT
-		else
-			bash "$REPO_DIR/scripts/setup.sh" ${target:+"$target"} "$@"
-		fi
+		bash "$REPO_DIR/scripts/setup.sh" ${target:+"$target"} "$@"
 	)
 }
 
@@ -610,61 +572,30 @@ test_codex_installs_missing_doc_paths() {
 	assert_file "$bin_dir/doc-paths"
 }
 
-# A scripted run without --yes shows the plan and leaves the home unchanged.
-test_non_terminal_plan_requires_yes() {
-	# The isolated home and captured preview for this run.
-	local home_dir="$TEST_ROOT/preview-without-yes" output="$TEST_ROOT/preview-without-yes.txt"
-	# The home state before setup is offered.
-	local before
-	create_existing_config "$home_dir"
-	before=$(snapshot_test_directory "$home_dir")
-	if SETUP_TEST_WITHOUT_YES=true run_setup_target "$home_dir" --codex > "$output" 2>&1; then
-		fail 'Setup applied without --yes in a non-terminal'
-	fi
-	assert_contains "$output" 'Codex settings:'
-	assert_contains "$output" 'Links:'
-	assert_contains "$output" 'Setup needs --yes'
-	assert_equals "$(snapshot_test_directory "$home_dir")" "$before"
-	assert_not_exists "$home_dir/setup-calls.log"
-}
+# Setup applies when standard input is not a terminal.
+test_non_terminal_setup_applies() {
+	# The isolated home and captured setup output.
+	local home_dir="$TEST_ROOT/non-terminal-setup" output="$TEST_ROOT/non-terminal-setup.txt"
 
-# Declining at the final terminal question leaves the home unchanged.
-test_terminal_decline_preserves_home() {
-	# The isolated home and captured terminal output.
-	local home_dir="$TEST_ROOT/preview-decline" output="$TEST_ROOT/preview-decline.txt"
-	# The home state before the plan is printed.
-	local before
-	create_existing_config "$home_dir"
-	before=$(snapshot_test_directory "$home_dir")
-	SETUP_TEST_WITHOUT_YES=true SETUP_TEST_TERMINAL=true SETUP_TEST_CONFIRMATION_INPUT=$'n\r' run_setup_target "$home_dir" --codex > "$output"
-	assert_contains "$output" 'Apply these changes?'
-	assert_contains "$output" 'Setup cancelled. Nothing changed.'
-	assert_equals "$(snapshot_test_directory "$home_dir")" "$before"
-	assert_not_exists "$home_dir/setup-calls.log"
-}
+	run_setup_target "$home_dir" --codex < /dev/null > "$output"
 
-# Accepting the terminal confirmation creates the planned links.
-test_terminal_accept_creates_links() {
-	# The isolated home and captured terminal output.
-	local home_dir="$TEST_ROOT/preview-accept" output="$TEST_ROOT/preview-accept.txt"
-
-	SETUP_TEST_WITHOUT_YES=true SETUP_TEST_TERMINAL=true SETUP_TEST_CONFIRMATION_INPUT=$'y\r' run_setup_target "$home_dir" --codex > "$output"
-
-	assert_contains "$output" 'Apply these changes?'
+	assert_not_contains "$output" 'Apply these changes?'
+	assert_not_contains "$output" 'Codex settings:'
+	assert_not_contains "$output" 'Links:'
 	assert_link "$home_dir/.agents/AGENTS.md"
 	assert_link "$home_dir/.codex/hooks.json"
 	assert_link "$home_dir/.local/bin/trash"
 }
 
-# A second run with every feature installed needs no confirmation and leaves the home folder unchanged.
-test_nothing_to_change_exits_without_yes() {
+# A second run with every feature installed leaves the home folder unchanged.
+test_nothing_to_change_exits_cleanly() {
 	# The isolated home and captured second-run output.
-	local home_dir="$TEST_ROOT/preview-no-change" output="$TEST_ROOT/preview-no-change.txt"
+	local home_dir="$TEST_ROOT/no-change" output="$TEST_ROOT/no-change.txt"
 	# The home state after the first setup run.
 	local before
 	run_setup_target "$home_dir" "" --both > /dev/null
 	before=$(snapshot_test_directory "$home_dir")
-	if ! SETUP_TEST_WITHOUT_YES=true run_setup_target "$home_dir" "" --both > "$output"; then
+	if ! run_setup_target "$home_dir" "" --both > "$output"; then
 		cat "$output"
 		fail 'A completed setup still has a planned change'
 	fi
@@ -679,7 +610,7 @@ test_global_cli_style_install() {
 	local home_dir="$TEST_ROOT/global-cli-style-$manager"
 	# The command path with one package manager and no cli-style.
 	local bin_dir="$TEST_ROOT/bin-cli-style-$manager"
-	# The setup preview and output.
+	# The setup output.
 	local output="$TEST_ROOT/global-cli-style-$manager.txt"
 	# The command arguments expected for the chosen package manager.
 	local expected_arguments='add -g @lewishowles/cli-style'
@@ -693,7 +624,6 @@ test_global_cli_style_install() {
 		SETUP_TEST_CLI_STYLE_STUB="$TEST_ROOT/bin/cli-style" \
 		run_setup_target "$home_dir" --claude > "$output" 2>&1
 
-	assert_contains "$output" "Run $manager $expected_arguments"
 	assert_contains "$output" "Running: $manager $expected_arguments"
 	assert_equals "$(cat "$home_dir/cli-style-install-call")" "$expected_arguments"
 	assert_contains "$output" 'Done.'
@@ -733,7 +663,7 @@ test_global_cli_style_override_skips_install() {
 	local home_dir="$TEST_ROOT/global-cli-style-override"
 	# The command path with Bun but no cli-style.
 	local bin_dir="$TEST_ROOT/bin-cli-style-override"
-	# The setup preview and output.
+	# The setup output.
 	local output="$TEST_ROOT/global-cli-style-override.txt"
 
 	create_cli_style_install_stubs "$bin_dir" bun
@@ -821,7 +751,7 @@ CONFIG
 	assert_contains "$home_dir/.codex/config.toml" '[profiles.work]'
 	assert_contains "$home_dir/.codex/config.toml" 'model = "keep"'
 	assert_not_contains "$home_dir/.codex/config.toml" 'command = "old-mdn"'
-	if ! SETUP_TEST_WITHOUT_YES=true run_setup "$home_dir" > "$output"; then
+	if ! run_setup "$home_dir" > "$output"; then
 		cat "$output"
 		fail 'The rewritten Codex config changed again on the second run'
 	fi
@@ -984,17 +914,12 @@ test_trash_wrapper_preserves_symlinked_bin_directory() {
 	local bin_link="$home_dir/.local/bin"
 	# Any backup of the bin directory made by setup.
 	local backups
-	# The setup preview printed before it applies the links.
-	local output="$TEST_ROOT/trash-symlinked-bin.txt"
 
 	mkdir -p "$home_dir/.local" "$bin_dir"
 	ln -s "$bin_dir" "$bin_link"
 
-	run_setup_target "$home_dir" "--both" > "$output"
+	run_setup_target "$home_dir" "--both" > /dev/null
 
-	assert_not_contains "$output" 'Replace ~/.local/bin with a directory'
-	assert_not_contains "$output" 'Save ~/.local/bin in'
-	assert_not_contains "$output" 'Remove older backup ~/.local/bin.bak.'
 	assert_dir_link "$bin_link"
 	assert_equals "$(readlink "$bin_link")" "$bin_dir"
 	backups=("$home_dir/.local/bin.bak."*)
@@ -1003,11 +928,11 @@ test_trash_wrapper_preserves_symlinked_bin_directory() {
 	assert_equals "$(readlink "$bin_dir/trash")" "$REPO_DIR/src/bin/trash"
 }
 
-# A broken repository link is removed before setup links its replacement, so the
-# preview lists no backup for it.
-test_stale_repo_link_has_no_backup_in_plan() {
-	# The isolated home and captured setup preview.
-	local home_dir="$TEST_ROOT/stale-link-plan" output="$TEST_ROOT/stale-link-plan.txt"
+# A broken repository link is removed before setup links its replacement, with
+# no new backup for the stale link.
+test_stale_repo_link_has_no_backup() {
+	# The isolated home for the setup run.
+	local home_dir="$TEST_ROOT/stale-link"
 	# The managed hook path occupied by a broken repository link.
 	local link="$home_dir/.codex/hooks/tool-call-checkpoint.sh"
 	# Any backup of the broken link.
@@ -1016,12 +941,8 @@ test_stale_repo_link_has_no_backup_in_plan() {
 	mkdir -p "$home_dir/.codex/hooks"
 	ln -s "$REPO_DIR/dist/codex/hooks/missing-tool-call-checkpoint.sh" "$link"
 	printf 'keep an older backup\n' > "$link.bak.20200101-000000"
-	run_setup "$home_dir" > "$output"
+	run_setup "$home_dir" > /dev/null
 
-	assert_contains "$output" 'Remove ~/.codex/hooks/tool-call-checkpoint.sh'
-	assert_contains "$output" 'Link ~/.codex/hooks/tool-call-checkpoint.sh to'
-	assert_not_contains "$output" 'Save ~/.codex/hooks/tool-call-checkpoint.sh in'
-	assert_not_contains "$output" 'Remove older backup ~/.codex/hooks/tool-call-checkpoint.sh.bak.'
 	assert_link "$link"
 	assert_equals "$(readlink "$link")" "$REPO_DIR/dist/codex/hooks/tool-call-checkpoint.sh"
 	backups=("$home_dir/.codex/hooks/tool-call-checkpoint.sh.bak."*)
@@ -1082,8 +1003,6 @@ test_repository_skill_exclusions() {
 	local home_dir="$TEST_ROOT/repository-skill-exclusions"
 	# A script copy that lets this case edit the repository exclude list.
 	local scripts_dir="$REPO_DIR/scripts"
-	# The plan printed when an installed skill becomes excluded.
-	local output="$TEST_ROOT/repository-skill-exclusions.txt"
 
 	trash "$scripts_dir"
 	/bin/cp -R "$SOURCE_REPO_DIR/scripts" "$scripts_dir"
@@ -1091,8 +1010,7 @@ test_repository_skill_exclusions() {
 
 	assert_dir_link "$home_dir/.agents/skills/writing"
 	printf 'writing\n' > "$scripts_dir/skill-exclusions.txt"
-	run_setup "$home_dir" > "$output"
-	assert_contains "$output" 'Remove excluded skill ~/.agents/skills/writing'
+	run_setup "$home_dir" > /dev/null
 	assert_not_exists "$home_dir/.agents/skills/writing"
 	assert_dir_link "$home_dir/.agents/skills/mac-app"
 }
@@ -1110,7 +1028,7 @@ test_removed_skill_options_are_unknown() {
 
 	mkdir -p "$home_dir"
 	before=$(snapshot_test_directory "$home_dir")
-	for option in --preset --select --exclude --include --include-all --refresh; do
+	for option in --preset --select --exclude --include --include-all --refresh --yes; do
 		if run_setup_target "$home_dir" --both "$option" > "$output" 2>&1; then
 			fail "Expected $option to be rejected"
 		fi
@@ -1297,10 +1215,8 @@ run_setup_cases() {
 		test_preflight_checks_only_codex_commands
 		test_missing_doc_paths_is_installed
 		test_codex_installs_missing_doc_paths
-		test_non_terminal_plan_requires_yes
-		test_terminal_decline_preserves_home
-		test_terminal_accept_creates_links
-		test_nothing_to_change_exits_without_yes
+		test_non_terminal_setup_applies
+		test_nothing_to_change_exits_cleanly
 		test_global_cli_style_install_with_bun
 		test_global_cli_style_install_with_npm
 		test_global_cli_style_install_not_on_path
@@ -1315,7 +1231,7 @@ run_setup_cases() {
 		test_trash_wrapper_links_once_for_each_mode
 		test_trash_wrapper_backs_up_existing_file
 		test_trash_wrapper_preserves_symlinked_bin_directory
-		test_stale_repo_link_has_no_backup_in_plan
+		test_stale_repo_link_has_no_backup
 		test_permission_profile_keeps_roots_and_drops_git_config_rule
 		test_skills_are_installed_and_editable
 		test_repository_skill_exclusions

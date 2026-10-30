@@ -30,34 +30,15 @@ main() {
 	# shellcheck source=scripts/lib/cli-style-output.sh
 	source "$REPO_DIR/scripts/lib/cli-style-output.sh"
 
-	if [ "$setup_helpers" = true ]; then
-		preflight_agent_tools "$target" || exit 1
-	fi
+	preflight_agent_tools "$target" || exit 1
 
 	build_setup_plan "$target"
-	print_setup_plan
 	if [ "$plan_count" -eq 0 ]; then
 		printf '%s\n' 'Nothing to change.'
 		exit 0
 	fi
 
-	if [ "$yes_requested" != true ]; then
-		if ! [ -t 0 ]; then
-			printf '%s\n' 'Setup needs --yes when standard input is not a terminal.' >&2
-			exit 1
-		fi
-
-		printf 'Apply these changes? [y/N] '
-		# The answer to the final setup confirmation.
-		local answer
-		IFS= read -r answer || answer=''
-		case "$answer" in
-			y|Y|yes|YES) ;;
-			*) printf '%s\n' 'Setup cancelled. Nothing changed.'; exit 0 ;;
-		esac
-	fi
-
-	if [ "$setup_helpers" = true ] && cli_style_install_needed; then
+	if cli_style_install_needed; then
 		printf 'Running: %s\n' "${cli_style_install_command[*]}"
 		"${cli_style_install_command[@]}"
 		# Load the output helpers again so the rest of setup uses the cli-style
@@ -77,18 +58,14 @@ main() {
 
 	# Link the trash wrapper once, outside the per-agent setup, because ~/.local/bin is shared by
 	# both agents and the user's own shell.
-	if [ "$setup_trash" = true ]; then
-		cli_section "Shared command-line tools"
-		cli_group_begin "Trash wrapper"
-		# mkdir -p follows a symlinked ~/.local/bin, such as one kept in dotfiles, instead of replacing it.
-		mkdir -p "$HOME/.local/bin"
-		managed_links shared trash link_path
-		cli_group_end
-	fi
+	cli_section "Shared command-line tools"
+	cli_group_begin "Trash wrapper"
+	# mkdir -p follows a symlinked ~/.local/bin, such as one kept in dotfiles, instead of replacing it.
+	mkdir -p "$HOME/.local/bin"
+	managed_links shared trash link_path
+	cli_group_end
 
-	if [ "$setup_core" = true ]; then
-		configure_git_hooks
-	fi
+	configure_git_hooks
 
 	printf '\n'
 	cli_status success "Done."
@@ -102,9 +79,9 @@ load_managed_paths() {
 
 # Gathers every change setup would make for the chosen agents into plan_items
 # and plan_count, without changing installed files. Also fills
-# planned_pruned_links with the stale links the preview lists for removal, so
-# the same paths are not listed for backup too. Returns 1 when the skills cannot
-# be read, or when cli-style is missing and no package manager can install it.
+# planned_pruned_links with stale links so they are not counted for backup too.
+# Returns 1 when the skills cannot be read, or when cli-style is missing and
+# no package manager can install it.
 #
 # @param  {string}  target
 #     The agents to set up: claude, codex or both.
@@ -123,7 +100,7 @@ build_setup_plan() {
 		return 1
 	fi
 
-	if [ "$setup_helpers" = true ] && cli_style_install_needed; then
+	if cli_style_install_needed; then
 		choose_cli_style_install_command || return 1
 		plan_change "Helper commands" "Run ${cli_style_install_command[*]}"
 	fi
@@ -136,21 +113,17 @@ build_setup_plan() {
 		plan_codex_setup
 	fi
 
-	if [ "$setup_trash" = true ]; then
-		if [ ! -e "$HOME/.local/bin" ] && [ ! -L "$HOME/.local/bin" ]; then
-			plan_change "Directories" "Create $(display_path "$HOME/.local/bin")"
-		fi
-		managed_links shared trash plan_link_path
+	if [ ! -e "$HOME/.local/bin" ] && [ ! -L "$HOME/.local/bin" ]; then
+		plan_change "Directories" "Create $(display_path "$HOME/.local/bin")"
 	fi
-	if [ "$setup_core" = true ]; then
-		hooks_path=$(git -C "$REPO_DIR" config --get core.hooksPath 2>/dev/null || true)
-		if [ "$hooks_path" != src/hooks/git ]; then
-			plan_change "Git hooks" "Set core.hooksPath to src/hooks/git in this checkout"
-		fi
+	managed_links shared trash plan_link_path
+	hooks_path=$(git -C "$REPO_DIR" config --get core.hooksPath 2>/dev/null || true)
+	if [ "$hooks_path" != src/hooks/git ]; then
+		plan_change "Git hooks" "Set core.hooksPath to src/hooks/git in this checkout"
 	fi
 }
 
-# Records one change under the kind printed in the preview.
+# Records one planned change under its kind.
 #
 # @param  {string}  kind
 #     The section that owns the change.
@@ -162,87 +135,39 @@ plan_change() {
 	plan_count=$((plan_count + 1))
 }
 
-# Prints the collected changes grouped by the part of setup they affect, in a
-# fixed section order. Prints nothing when there are no changes.
-print_setup_plan() {
-	# The section currently being printed.
-	local kind
-	# One recorded change, stored as "kind|description".
-	local item
-
-	if [ "$plan_count" -eq 0 ]; then
-		return
-	fi
-
-	for kind in "Directories" "Backups" "Links" "Helper commands" "Codex settings" "HCOM" "Git hooks"; do
-		# Whether this section contains at least one planned change.
-		local shown=false
-		for item in "${plan_items[@]}"; do
-			if [ "${item%%|*}" != "$kind" ]; then
-				continue
-			fi
-
-			if [ "$shown" = false ]; then
-				printf '\n%s:\n' "$kind"
-				shown=true
-			fi
-
-			printf '  - %s\n' "${item#*|}"
-		done
-	done
-}
-
 # Adds the Claude folders, links, stale links and missing helper commands to the
-# setup preview.
+# setup plan.
 plan_claude_setup() {
 	# The helper command currently being checked.
 	local command_name
 
 	plan_container_dir "$CLAUDE_DIR"
 	plan_container_dir "$CLAUDE_DIR/skills"
-	if [ "$setup_core" = true ]; then
-		plan_container_dir "$CLAUDE_DIR/rules"
-	fi
-	if [ "$setup_hooks" = true ]; then
-		plan_container_dir "$CLAUDE_DIR/hooks"
-	fi
-	if [ "$setup_themes" = true ]; then
-		plan_container_dir "$CLAUDE_DIR/themes"
-	fi
+	plan_container_dir "$CLAUDE_DIR/rules"
+	plan_container_dir "$CLAUDE_DIR/hooks"
+	plan_container_dir "$CLAUDE_DIR/themes"
 
-	if [ "$setup_helpers" = true ]; then
-		while IFS= read -r command_name; do
-			plan_helper_command "$command_name"
-		done < <(required_agent_tools claude)
-	fi
+	while IFS= read -r command_name; do
+		plan_helper_command "$command_name"
+	done < <(required_agent_tools claude)
 
-	if [ "$setup_core" = true ]; then
-		managed_links claude core plan_link_path
-		if [ "$setup_hooks" = true ]; then
-			managed_links claude settings plan_link_path
-		fi
-	fi
+	managed_links claude core plan_link_path
+	managed_links claude settings plan_link_path
 
 	plan_prune_stale_repo_links "$CLAUDE_DIR/skills" "$REPO_DIR"
 	plan_skill_links "$CLAUDE_DIR/skills"
 
-	if [ "$setup_hooks" = true ]; then
-		plan_prune_stale_repo_links "$CLAUDE_DIR/hooks" "$REPO_DIR/dist/claude/hooks"
-		managed_links claude hooks plan_link_path
-	fi
+	plan_prune_stale_repo_links "$CLAUDE_DIR/hooks" "$REPO_DIR/dist/claude/hooks"
+	managed_links claude hooks plan_link_path
 
-	if [ "$setup_themes" = true ]; then
-		plan_prune_stale_repo_links "$CLAUDE_DIR/themes" "$REPO_DIR/dist/claude/themes"
-		managed_links claude themes plan_link_path
-	fi
+	plan_prune_stale_repo_links "$CLAUDE_DIR/themes" "$REPO_DIR/dist/claude/themes"
+	managed_links claude themes plan_link_path
 
-	if [ "$setup_core" = true ]; then
-		plan_prune_stale_repo_links "$CLAUDE_DIR/rules" "$REPO_DIR/dist/claude/rules"
-		managed_links claude rules plan_link_path
-	fi
+	plan_prune_stale_repo_links "$CLAUDE_DIR/rules" "$REPO_DIR/dist/claude/rules"
+	managed_links claude rules plan_link_path
 }
 
-# Adds the install of a missing agent-tools command to the setup preview. A
+# Adds the install of a missing agent-tools command to the setup plan. A
 # command both agents need is listed once.
 #
 # @param  {string}  command_name
@@ -266,75 +191,46 @@ plan_helper_command() {
 }
 
 # Adds the Codex folders, links, config changes, HCOM folder additions and
-# missing helper commands to the setup preview.
+# missing helper commands to the setup plan.
 plan_codex_setup() {
 	# The helper command currently being checked.
 	local command_name
 	# The Codex config setup would write, compared with the user's current file.
 	local config_temp
-	# The settings the preview says the Codex config will hold.
-	local config_description
-	# The position of the last setting named in the config description.
-	local last_item
 
 	plan_container_dir "$HOME/.agents"
 	plan_container_dir "$HOME/.agents/skills"
-	if [ "$setup_core" = true ]; then
-		plan_container_dir "$CODEX_DIR"
-	fi
-	if [ "$setup_hooks" = true ]; then
-		plan_container_dir "$CODEX_DIR/hooks"
-	fi
+	plan_container_dir "$CODEX_DIR"
+	plan_container_dir "$CODEX_DIR/hooks"
 
-	if [ "$setup_helpers" = true ]; then
-		while IFS= read -r command_name; do
-			plan_helper_command "$command_name"
-		done < <(required_agent_tools codex)
-	fi
+	while IFS= read -r command_name; do
+		plan_helper_command "$command_name"
+	done < <(required_agent_tools codex)
 
-	if [ "$setup_core" = true ]; then
-		managed_links codex core plan_link_path
-	fi
-	if [ "$setup_hooks" = true ]; then
-		managed_links codex manifest plan_link_path
-		plan_prune_stale_repo_links "$CODEX_DIR/hooks" "$REPO_DIR/dist/codex/hooks"
-		managed_links codex hooks plan_link_path
-	fi
+	managed_links codex core plan_link_path
+	managed_links codex manifest plan_link_path
+	plan_prune_stale_repo_links "$CODEX_DIR/hooks" "$REPO_DIR/dist/codex/hooks"
+	managed_links codex hooks plan_link_path
 
-	if [ "$setup_core" = true ]; then
-		config_temp=$(mktemp)
-		prepare_codex_config "$CODEX_DIR/config.toml" "$config_temp"
-		if [ ! -f "$CODEX_DIR/config.toml" ] || ! cmp -s "$CODEX_DIR/config.toml" "$config_temp"; then
-			if [ -e "$CODEX_DIR/config.toml" ] || [ -L "$CODEX_DIR/config.toml" ]; then
-				plan_backup "$CODEX_DIR/config.toml"
-			fi
-			# The Codex settings included in the planned config update.
-			local -a config_items=('managed defaults' 'MCP servers' 'TUI settings')
-			if [ "$setup_permissions" = true ]; then
-				config_items+=('the permission profile')
-			fi
-			if [ "$setup_hooks" = true ]; then
-				config_items+=('hooks')
-			fi
-			last_item=$((${#config_items[@]} - 1))
-			config_description=$(printf '%s, ' "${config_items[@]:0:$last_item}")
-			config_description="${config_description%, } and ${config_items[$last_item]}"
-			plan_change "Codex settings" "Write $(display_path "$CODEX_DIR/config.toml") with $config_description"
+	config_temp=$(mktemp)
+	prepare_codex_config "$CODEX_DIR/config.toml" "$config_temp"
+	if [ ! -f "$CODEX_DIR/config.toml" ] || ! cmp -s "$CODEX_DIR/config.toml" "$config_temp"; then
+		if [ -e "$CODEX_DIR/config.toml" ] || [ -L "$CODEX_DIR/config.toml" ]; then
+			plan_backup "$CODEX_DIR/config.toml"
 		fi
-		rm "$config_temp"
+		plan_change "Codex settings" "Write $(display_path "$CODEX_DIR/config.toml") with managed defaults, MCP servers, TUI settings, the permission profile and hooks"
 	fi
+	rm "$config_temp"
 
 	plan_prune_stale_repo_links "$HOME/.agents/skills" "$REPO_DIR"
 	plan_prune_stale_repo_links "$CODEX_DIR/skills" "$REPO_DIR" 1
 	plan_skill_links "$HOME/.agents/skills"
 
-	if [ "$setup_hcom" = true ]; then
-		plan_hcom_folders
-	fi
+	plan_hcom_folders
 }
 
 # Adds the folders that setup will append to HCOM's Codex arguments to the
-# setup preview. ~/.agents is listed even before it exists, because setup
+# setup plan. ~/.agents is listed even before it exists, because setup
 # creates it before updating HCOM.
 plan_hcom_folders() {
 	# The current HCOM argument string for Codex agents.
@@ -382,8 +278,7 @@ plan_hcom_folders() {
 	done
 }
 
-# Installs Claude's skill links, plus its main configuration, hooks, themes and
-# helper commands when the matching setup_* flag is true.
+# Installs Claude's skill links, main configuration, hooks, themes and helper commands.
 setup_claude() {
 	# The managed folder or generated file currently installed for Claude.
 	local file
@@ -400,59 +295,41 @@ setup_claude() {
 		fi
 		ensure_container_dir "$file" "$label"
 	done
-	if [ "$setup_core" = true ]; then
-		ensure_container_dir "$CLAUDE_DIR/rules" rules
-	fi
-	if [ "$setup_hooks" = true ]; then
-		ensure_container_dir "$CLAUDE_DIR/hooks" hooks
-	fi
-	if [ "$setup_themes" = true ]; then
-		ensure_container_dir "$CLAUDE_DIR/themes" themes
-	fi
+	ensure_container_dir "$CLAUDE_DIR/rules" rules
+	ensure_container_dir "$CLAUDE_DIR/hooks" hooks
+	ensure_container_dir "$CLAUDE_DIR/themes" themes
 	cli_group_end
 
-	if [ "$setup_helpers" = true ]; then
-		cli_group_begin "Claude command-line tools"
-		ensure_friction
-		ensure_team_send
-		ensure_doc_paths
-		cli_group_end
-	fi
+	cli_group_begin "Claude command-line tools"
+	ensure_friction
+	ensure_team_send
+	ensure_doc_paths
+	cli_group_end
 
-	if [ "$setup_core" = true ]; then
-		cli_group_begin "Claude files"
-		managed_links claude core link_path
-		if [ "$setup_hooks" = true ]; then
-			managed_links claude settings link_path
-		fi
-		cli_group_end
-	fi
+	cli_group_begin "Claude files"
+	managed_links claude core link_path
+	managed_links claude settings link_path
+	cli_group_end
 
 	cli_group_begin "Claude skills"
 	prune_stale_repo_links "$CLAUDE_DIR/skills" "$REPO_DIR" "skills"
 	link_configured_skills "$CLAUDE_DIR/skills"
 	cli_group_end
 
-	if [ "$setup_hooks" = true ]; then
-		cli_group_begin "Claude hooks"
-		prune_stale_repo_links "$CLAUDE_DIR/hooks" "$REPO_DIR/dist/claude/hooks" "hooks"
-		managed_links claude hooks link_path
-		cli_group_end
-	fi
+	cli_group_begin "Claude hooks"
+	prune_stale_repo_links "$CLAUDE_DIR/hooks" "$REPO_DIR/dist/claude/hooks" "hooks"
+	managed_links claude hooks link_path
+	cli_group_end
 
-	if [ "$setup_themes" = true ]; then
-		cli_group_begin "Claude themes"
-		prune_stale_repo_links "$CLAUDE_DIR/themes" "$REPO_DIR/dist/claude/themes" "themes"
-		managed_links claude themes link_path
-		cli_group_end
-	fi
+	cli_group_begin "Claude themes"
+	prune_stale_repo_links "$CLAUDE_DIR/themes" "$REPO_DIR/dist/claude/themes" "themes"
+	managed_links claude themes link_path
+	cli_group_end
 
-	if [ "$setup_core" = true ]; then
-		cli_group_begin "Claude rules"
-		prune_stale_repo_links "$CLAUDE_DIR/rules" "$REPO_DIR/dist/claude/rules" "rules"
-		managed_links claude rules link_path
-		cli_group_end
-	fi
+	cli_group_begin "Claude rules"
+	prune_stale_repo_links "$CLAUDE_DIR/rules" "$REPO_DIR/dist/claude/rules" "rules"
+	managed_links claude rules link_path
+	cli_group_end
 }
 
 # Ensures the friction command is available for the central Claude hook.
@@ -572,8 +449,8 @@ link_configured_skills() {
 	done
 }
 
-# Installs Codex's skill links, plus its main configuration, hooks, permission
-# profile, HCOM folders and helper commands when the matching setup_* flag is true.
+# Installs Codex's skill links, main configuration, hooks, permission profile,
+# HCOM folders and helper commands.
 setup_codex() {
 	# The managed Codex folder currently ensured by setup.
 	local folder
@@ -587,36 +464,22 @@ setup_codex() {
 		label=$(display_path "$folder")
 		ensure_container_dir "$folder" "$label"
 	done
-	if [ "$setup_core" = true ]; then
-		ensure_container_dir "$CODEX_DIR" "$(display_path "$CODEX_DIR")"
-	fi
-	if [ "$setup_hooks" = true ]; then
-		ensure_container_dir "$CODEX_DIR/hooks" hooks
-	fi
+	ensure_container_dir "$CODEX_DIR" "$(display_path "$CODEX_DIR")"
+	ensure_container_dir "$CODEX_DIR/hooks" hooks
 	cli_group_end
 
-	if [ "$setup_helpers" = true ]; then
-		cli_group_begin "Codex command-line tools"
-		ensure_team_send
-		ensure_doc_paths
-		cli_group_end
-	fi
+	cli_group_begin "Codex command-line tools"
+	ensure_team_send
+	ensure_doc_paths
+	cli_group_end
 
-	if [ "$setup_core" = true ] || [ "$setup_hooks" = true ]; then
-		cli_group_begin "Codex files"
-		if [ "$setup_core" = true ]; then
-			managed_links codex core link_path
-		fi
-		if [ "$setup_hooks" = true ]; then
-			managed_links codex manifest link_path
-			prune_stale_repo_links "$CODEX_DIR/hooks" "$REPO_DIR/dist/codex/hooks" "hooks"
-			managed_links codex hooks link_path
-		fi
-		if [ "$setup_core" = true ]; then
-			ensure_codex_config
-		fi
-		cli_group_end
-	fi
+	cli_group_begin "Codex files"
+	managed_links codex core link_path
+	managed_links codex manifest link_path
+	prune_stale_repo_links "$CODEX_DIR/hooks" "$REPO_DIR/dist/codex/hooks" "hooks"
+	managed_links codex hooks link_path
+	ensure_codex_config
+	cli_group_end
 
 	cli_group_begin "Codex skills"
 	prune_stale_repo_links "$HOME/.agents/skills" "$REPO_DIR" "skills"
@@ -624,9 +487,7 @@ setup_codex() {
 	link_configured_skills "$HOME/.agents/skills"
 	cli_group_end
 
-	if [ "$setup_hcom" = true ]; then
-		setup_hcom_codex_folders
-	fi
+	setup_hcom_codex_folders
 }
 
 # Ensures $CODEX_DIR/config.toml contains the managed defaults, MCP server

@@ -111,8 +111,8 @@ preflight_agent_tools() {
 }
 
 # Writes the Codex config that setup would install to a separate file, leaving
-# the user's file unchanged, so the preview and the installer compare the same
-# result. Unrelated settings in the existing config are kept.
+# the user's file unchanged, so setup's plan, the installer and doctor compare
+# the same result. Unrelated settings in the existing config are kept.
 #
 # @param  {string}  config
 #     The existing Codex configuration, or a missing path on first setup.

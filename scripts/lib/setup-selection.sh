@@ -13,22 +13,13 @@ skill_exclusions_file="$REPO_DIR/scripts/skill-exclusions.txt"
 parse_setup_options() {
 	# The agents to set up, or both when no agent is specified.
 	target="both"
-	# Whether a scripted run may apply its printed plan without a terminal.
-	yes_requested=false
-	# Whether to install each agent's main configuration and Git hooks.
-	setup_core=true
-	# Whether to install each agent's hooks.
+	# Whether hooks are installed. Setup always installs them; doctor reads the
+	# answer from the machine, and the shared Codex config builder uses it.
 	setup_hooks=true
-	# Whether to add the managed Codex permission profile.
+	# Whether the managed Codex permission profile is installed. Setup always
+	# installs it; doctor reads the answer from the machine, and the shared Codex
+	# config builder uses it.
 	setup_permissions=true
-	# Whether to grant folders to Codex agents started by HCOM.
-	setup_hcom=true
-	# Whether to link Claude themes.
-	setup_themes=true
-	# Whether to link the shared trash wrapper.
-	setup_trash=true
-	# Whether to install missing helper commands and cli-style.
-	setup_helpers=true
 	# The Claude configuration folder, overridable for a second account.
 	CLAUDE_DIR="$HOME/.claude"
 	# The Codex configuration folder, overridable for a second account.
@@ -57,7 +48,6 @@ parse_setup_options() {
 				fi
 				shift
 				;;
-			--yes) yes_requested=true ;;
 			--help) usage; exit 0 ;;
 			*) printf 'Unknown option: %s\n' "$1" >&2; usage >&2; exit 1 ;;
 		esac
@@ -67,7 +57,7 @@ parse_setup_options() {
 
 # Prints the supported setup options.
 usage() {
-	printf 'Usage: %s [--claude|--codex|--both] [--claude-dir <path>] [--codex-dir <path>] [--yes]\n' "$(basename "$0")"
+	printf 'Usage: %s [--claude|--codex|--both] [--claude-dir <path>] [--codex-dir <path>]\n' "$(basename "$0")"
 }
 
 # Fills excluded_skills from the repository exclusion list, skipping blank

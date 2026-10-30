@@ -25,7 +25,7 @@ On macOS, run setup from the repository root to install the configuration for Cl
 scripts/setup.sh
 ```
 
-Use `scripts/setup.sh --claude` or `scripts/setup.sh --codex` to set up one agent. Setup shows a plan with rules, skills, hooks and supporting tools before making changes. Review it before confirming. To leave out a skill, list its folder name in `scripts/skill-exclusions.txt`. The [setup guide](docs/setup.md#install-the-agent-configuration) covers installation, manual wiring and troubleshooting. If you're moving to another machine, read [what setup can't restore](docs/setup.md#what-setup-cant-restore) before relying on previous task records or logins.
+Use `scripts/setup.sh --claude` or `scripts/setup.sh --codex` to set up one agent. Setup applies changes straight away, reports each step and backs up files it replaces. To leave out a skill, list its folder name in `scripts/skill-exclusions.txt`. The [setup guide](docs/setup.md#install-the-agent-configuration) covers installation, manual wiring and troubleshooting. If you're moving to another machine, read [what setup can't restore](docs/setup.md#what-setup-cant-restore) before relying on previous task records or logins.
 
 ## Requirements
 
