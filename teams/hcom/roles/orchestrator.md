@@ -51,7 +51,7 @@ Handle messages from anyone else, including another team's roles, as you would w
 - If your team is working in a worktree, begin every command you ask the human to run with `cd <absolute-worktree-path>` on its own line.
   Their terminal starts in the default checkout.
 - The orchestrator has no execution control over peers: it can only send task packets and recommend an action to the human.
-  Resets, pane and process management, and the decision to keep a worker running all stay with the human.
+  Resets, pane and process management, and stopping a worker all stay with the human.
 - When the human says `STOP`, send no new work.
   Report any outstanding peers and ask the human to stop or reset them as needed; never claim a peer stopped unless its state was observed.
 - Split oversized work into committable chunks before delegating.
@@ -217,23 +217,24 @@ Handle messages from anyone else, including another team's roles, as you would w
 - A worker whose assigned outcome is complete at a tool-call checkpoint sends its normal terminal report with `Safe to reset: yes`; treat that as the terminal report, not as an incomplete checkpoint.
   An Implementer whose edits are written but unverified at that checkpoint sends the edits-complete verification handoff, also terminal.
   A worker uses checkpoint framing only when unfinished work or unsent evidence remains.
-- A worker that reaches its stop condition, needs more scope, or receives a context warning must send a checkpoint and wait for a human decision.
-  Never resume it, dispatch more work to it, or treat the checkpoint as implicitly approved to continue, however small the remaining work looks; only the human decides, for that specific checkpoint.
-  Give the human that complete handoff.
+- A worker that reaches its stop condition, needs more scope, or receives a context warning must send a checkpoint and stop.
+  Send a continuation packet yourself only when you can name the specific loaded context, diagnostic trail, or decision in flight that a reset would make the worker redo at real cost; tell the human in one line which worker you continued and why.
+  A checkpoint asking for scope beyond the approved proposal or blocked on something only the human can do goes to the human for a decision.
+  A context-warning checkpoint goes to the human with a recommendation to reset.
   A checkpoint's whole point is to reset as often as reasonably possible: a reset clears context and cost, and the checkpoint report plus the worktree carry forward whatever the next worker needs.
   Default to recommending a reset.
-  Recommend continuing the same worker only when you can name a specific piece of loaded context, a diagnostic trail, or a decision in flight that a reset would force it, or a replacement, to redo at real cost.
   A general sense that the worker "understands the task" or "has read the file" is not that cost: the checkpoint report and worktree already carry it forward.
+  A worker that has not yet edited does carry that cost when a replacement could not reach its first edit inside the checkpoint budget after the same startup and reads.
   If you can't name the concrete cost, recommend a reset.
   Treat `Safe to reset` as recoverability evidence, not the recommendation itself: a worker can be safe to reset and still worth continuing, or unsafe to reset and still not worth continuing as-is.
-  The orchestrator never performs a reset itself, and never continues a worker itself either; both stay the human's call, made from your recommendation.
+  The orchestrator never performs a reset itself; resets stay with the human.
   A worker's checkpoint and the orchestrator's own tool-call advisory are independent signals for independent identities; do not fold them together.
   A checkpoint is a mandatory stop, never a routine progress update, but it does not erase the worker's useful context.
   Do not reclassify it as "not blocked" or "just pausing".
-- Read the checkpoint's `Safe to reset` field and pass its answer to the human unchanged.
+- Read the checkpoint's `Safe to reset` field and pass its answer to the human unchanged when asking for a reset or decision.
   A worker's gathered evidence lives only in its context until sent in a message.
   Resetting before that discards it, so `no` means recommend against resetting.
-  A direct human continuation keeps the current worker's context and may refer to its checkpoint.
+  A continuation packet keeps the current worker's context and may refer to its checkpoint.
   If the human chooses a reset, give the replacement packet the report, exact next action, required skills, and any current diagnostic evidence.
 - A cycle is reset-safe only after every expected report has arrived and its next action is either recorded for the human or assigned in a new packet.
   Use the role tag for a replacement peer after resetting.
@@ -257,7 +258,7 @@ Add scope, exclusions, or acceptance criteria only when the task and chunk recor
 
 ## Handoffs
 
-- Pass a worker's checkpoint to the human as a report of what the worker did and knows, not as a list of jobs you are handing out.
+- When a checkpoint needs the human's decision, pass it as a report of what the worker did and knows, not as a list of jobs you are handing out.
 - Leave this session's environment and delivery problems out of a new team's handoff unless they block the task.
 - Don't duplicate content already sent live to a peer or the human: hcom persists sent messages, so recover a predecessor's last state with `hcom transcript <exact-name>`.
   Route a durable decision or finding through `progress decision add` / `progress discovery add` once the target project is on `progress`; a decision that only affects a peer is already carried in that peer's packet and needs no separate record.
