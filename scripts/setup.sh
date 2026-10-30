@@ -95,7 +95,7 @@ main() {
 		cli_group_begin "Trash wrapper"
 		# mkdir -p follows a symlinked ~/.local/bin, such as one kept in dotfiles, instead of replacing it.
 		mkdir -p "$HOME/.local/bin"
-		link_path "$REPO_DIR/src/bin/trash" "$HOME/.local/bin/trash" "$(display_path "$HOME/.local/bin/trash")"
+		managed_links shared trash link_path
 		cli_group_end
 	fi
 
@@ -107,25 +107,8 @@ main() {
 	cli_status success "Done."
 }
 
-# Sets the folders, files and links that both the preview and the installer
-# manage, so the preview and the installer read the same lists. Call it after
-# the agent folders are known.
+# Sets the folders HCOM grants to Codex agents after the repository path is known.
 load_managed_paths() {
-	# The generated files linked from dist/claude into the Claude folder.
-	CLAUDE_FILES=(CLAUDE.md settings.json .mcp.json statusline.sh)
-	# The generated files linked for Codex core setup, in the same order as the
-	# installed paths and labels below.
-	CODEX_LINK_SOURCES=("$REPO_DIR/dist/codex/AGENTS.md" "$REPO_DIR/dist/codex/AGENTS.md")
-	# The installed paths for the Codex core links.
-	CODEX_LINK_TARGETS=("$HOME/.agents/AGENTS.md" "$CODEX_DIR/AGENTS.md")
-	# The names shown for the Codex core links.
-	CODEX_LINK_LABELS=(AGENTS.md 'Codex AGENTS.md')
-	# The generated Codex hook manifest, installed only when hooks are chosen.
-	CODEX_HOOKS_SOURCE="$REPO_DIR/dist/codex/hooks.json"
-	# The installed Codex hook manifest path.
-	CODEX_HOOKS_TARGET="$CODEX_DIR/hooks.json"
-	# The name shown for the Codex hook manifest.
-	CODEX_HOOKS_LABEL='Codex hooks'
 	# Folders HCOM grants to the Codex agents it starts.
 	HCOM_FOLDERS=("$REPO_DIR" "$HOME/.agents" "$HOME/.Trash" "$HOME/Library/Caches/org.swift.swiftpm" "$HOME/Library/org.swift.swiftpm")
 }
@@ -185,7 +168,7 @@ build_setup_plan() {
 		if [ ! -e "$HOME/.local/bin" ] && [ ! -L "$HOME/.local/bin" ]; then
 			plan_change "Directories" "Create $(display_path "$HOME/.local/bin")"
 		fi
-		plan_link_path "$REPO_DIR/src/bin/trash" "$HOME/.local/bin/trash"
+		managed_links shared trash plan_link_path
 	fi
 	if [ "$setup_core" = true ]; then
 		hooks_path=$(git -C "$REPO_DIR" config --get core.hooksPath 2>/dev/null || true)
@@ -240,8 +223,6 @@ print_setup_plan() {
 # Adds the Claude folders, links, stale links and missing helper commands to the
 # setup preview.
 plan_claude_setup() {
-	# The managed folder or generated file currently being checked.
-	local file
 	# The helper command currently being checked.
 	local command_name
 
@@ -264,12 +245,10 @@ plan_claude_setup() {
 	fi
 
 	if [ "$setup_core" = true ]; then
-		for file in "${CLAUDE_FILES[@]}"; do
-			if [ "$file" = settings.json ] && [ "$setup_hooks" = false ]; then
-				continue
-			fi
-			plan_link_path "$REPO_DIR/dist/claude/$file" "$CLAUDE_DIR/$file"
-		done
+		managed_links claude core plan_link_path
+		if [ "$setup_hooks" = true ]; then
+			managed_links claude settings plan_link_path
+		fi
 	fi
 
 	plan_prune_stale_repo_links "$CLAUDE_DIR/skills" "$REPO_DIR"
@@ -281,26 +260,17 @@ plan_claude_setup() {
 
 	if [ "$setup_hooks" = true ]; then
 		plan_prune_stale_repo_links "$CLAUDE_DIR/hooks" "$REPO_DIR/dist/claude/hooks"
-		for file in "$REPO_DIR"/dist/claude/hooks/*; do
-			[ -f "$file" ] || continue
-			plan_link_path "$file" "$CLAUDE_DIR/hooks/${file##*/}"
-		done
+		managed_links claude hooks plan_link_path
 	fi
 
 	if [ "$setup_themes" = true ]; then
 		plan_prune_stale_repo_links "$CLAUDE_DIR/themes" "$REPO_DIR/dist/claude/themes"
-		for file in "$REPO_DIR"/dist/claude/themes/*.json; do
-			[ -f "$file" ] || continue
-			plan_link_path "$file" "$CLAUDE_DIR/themes/${file##*/}"
-		done
+		managed_links claude themes plan_link_path
 	fi
 
 	if [ "$setup_core" = true ]; then
 		plan_prune_stale_repo_links "$CLAUDE_DIR/rules" "$REPO_DIR/dist/claude/rules"
-		for file in "$REPO_DIR"/dist/claude/rules/*.md; do
-			[ -f "$file" ] || continue
-			plan_link_path "$file" "$CLAUDE_DIR/rules/${file##*/}"
-		done
+		managed_links claude rules plan_link_path
 	fi
 }
 
@@ -330,12 +300,8 @@ plan_helper_command() {
 # Adds the Codex folders, links, config changes, HCOM folder additions and
 # missing helper commands to the setup preview.
 plan_codex_setup() {
-	# The managed folder or generated file currently being checked.
-	local file
 	# The helper command currently being checked.
 	local command_name
-	# The position of the current managed Codex link.
-	local index
 	# The Codex config setup would write, compared with the user's current file.
 	local config_temp
 	# The settings the preview says the Codex config will hold.
@@ -359,17 +325,12 @@ plan_codex_setup() {
 	fi
 
 	if [ "$setup_core" = true ]; then
-		for index in "${!CODEX_LINK_SOURCES[@]}"; do
-			plan_link_path "${CODEX_LINK_SOURCES[$index]}" "${CODEX_LINK_TARGETS[$index]}"
-		done
+		managed_links codex core plan_link_path
 	fi
 	if [ "$setup_hooks" = true ]; then
-		plan_link_path "$CODEX_HOOKS_SOURCE" "$CODEX_HOOKS_TARGET"
+		managed_links codex manifest plan_link_path
 		plan_prune_stale_repo_links "$CODEX_DIR/hooks" "$REPO_DIR/dist/codex/hooks"
-		for file in "$REPO_DIR"/dist/codex/hooks/*; do
-			[ -f "$file" ] || continue
-			plan_link_path "$file" "$CODEX_DIR/hooks/${file##*/}"
-		done
+		managed_links codex hooks plan_link_path
 	fi
 
 	if [ "$setup_core" = true ]; then
@@ -496,12 +457,10 @@ setup_claude() {
 
 	if [ "$setup_core" = true ]; then
 		cli_group_begin "Claude files"
-		for file in "${CLAUDE_FILES[@]}"; do
-			if [ "$file" = settings.json ] && [ "$setup_hooks" = false ]; then
-				continue
-			fi
-			link_path "$REPO_DIR/dist/claude/$file" "$CLAUDE_DIR/$file" "$file"
-		done
+		managed_links claude core link_path
+		if [ "$setup_hooks" = true ]; then
+			managed_links claude settings link_path
+		fi
 		cli_group_end
 	fi
 
@@ -513,36 +472,21 @@ setup_claude() {
 	if [ "$setup_hooks" = true ]; then
 		cli_group_begin "Claude hooks"
 		prune_stale_repo_links "$CLAUDE_DIR/hooks" "$REPO_DIR/dist/claude/hooks" "hooks"
-		# The generated hook file currently being linked into Claude's configuration.
-		local hook
-		for hook in "$REPO_DIR"/dist/claude/hooks/*; do
-			[ -f "$hook" ] || continue
-			link_path "$hook" "$CLAUDE_DIR/hooks/$(basename "$hook")" "hooks/$(basename "$hook")"
-		done
+		managed_links claude hooks link_path
 		cli_group_end
 	fi
 
 	if [ "$setup_themes" = true ]; then
 		cli_group_begin "Claude themes"
 		prune_stale_repo_links "$CLAUDE_DIR/themes" "$REPO_DIR/dist/claude/themes" "themes"
-		# The generated theme file linked into Claude's configuration folder.
-		local theme
-		for theme in "$REPO_DIR"/dist/claude/themes/*.json; do
-			[ -f "$theme" ] || continue
-			link_path "$theme" "$CLAUDE_DIR/themes/$(basename "$theme")" "themes/$(basename "$theme")"
-		done
+		managed_links claude themes link_path
 		cli_group_end
 	fi
 
 	if [ "$setup_core" = true ]; then
 		cli_group_begin "Claude rules"
 		prune_stale_repo_links "$CLAUDE_DIR/rules" "$REPO_DIR/dist/claude/rules" "rules"
-		# The generated rule file linked into Claude's configuration folder.
-		local rule
-		for rule in "$REPO_DIR"/dist/claude/rules/*.md; do
-			[ -f "$rule" ] || continue
-			link_path "$rule" "$CLAUDE_DIR/rules/$(basename "$rule")" "rules/$(basename "$rule")"
-		done
+		managed_links claude rules link_path
 		cli_group_end
 	fi
 }
@@ -678,8 +622,6 @@ setup_codex() {
 	local folder
 	# The label displayed when a Codex folder needs replacement.
 	local label
-	# The position of the current managed Codex link.
-	local index
 
 	cli_section "Codex global setup ($(display_path "$CODEX_DIR"))"
 
@@ -706,19 +648,12 @@ setup_codex() {
 	if [ "$setup_core" = true ] || [ "$setup_hooks" = true ]; then
 		cli_group_begin "Codex files"
 		if [ "$setup_core" = true ]; then
-			for index in "${!CODEX_LINK_SOURCES[@]}"; do
-				link_path "${CODEX_LINK_SOURCES[$index]}" "${CODEX_LINK_TARGETS[$index]}" "${CODEX_LINK_LABELS[$index]}"
-			done
+			managed_links codex core link_path
 		fi
 		if [ "$setup_hooks" = true ]; then
-			link_path "$CODEX_HOOKS_SOURCE" "$CODEX_HOOKS_TARGET" "$CODEX_HOOKS_LABEL"
+			managed_links codex manifest link_path
 			prune_stale_repo_links "$CODEX_DIR/hooks" "$REPO_DIR/dist/codex/hooks" "hooks"
-			# The generated hook file currently being linked into Codex's configuration.
-			local hook
-			for hook in "$REPO_DIR"/dist/codex/hooks/*; do
-				[ -f "$hook" ] || continue
-				link_path "$hook" "$CODEX_DIR/hooks/$(basename "$hook")" "hooks/$(basename "$hook")"
-			done
+			managed_links codex hooks link_path
 		fi
 		if [ "$setup_core" = true ]; then
 			ensure_codex_config

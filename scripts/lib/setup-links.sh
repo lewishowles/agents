@@ -161,6 +161,79 @@ is_repo_owned_link() {
 	[ "$current" = "$source" ]
 }
 
+# Calls a function once for each link in one group of repository links, apart
+# from skills, giving it the repository file, the installed path and the label
+# to show. This is the only place those links are listed: the setup preview,
+# the installer and the doctor all read them from here, and each caller decides
+# which groups the chosen features need.
+#
+# @param  {string}  agent
+#     The agent whose links are listed: claude, codex, or shared for the trash
+#     wrapper.
+# @param  {string}  group
+#     The group to list: core, settings, hooks, themes, rules, manifest or
+#     trash.
+# @param  {string}  callback
+#     The function to call with the source, target and label of each link.
+managed_links() {
+	# The agent and group whose links are listed.
+	local agent="$1" group="$2"
+	# The function called with each link.
+	local callback="$3"
+	# The generated file currently listed, and its installed filename.
+	local source name
+	# The directory receiving hook links, and the extension for themes or rules.
+	local target_dir extension
+
+	case "$agent:$group" in
+		claude:core)
+			for name in CLAUDE.md .mcp.json statusline.sh; do
+				"$callback" "$REPO_DIR/dist/claude/$name" "$CLAUDE_DIR/$name" "$name"
+			done
+			;;
+		claude:settings)
+			"$callback" "$REPO_DIR/dist/claude/settings.json" "$CLAUDE_DIR/settings.json" settings.json
+			;;
+		claude:hooks|codex:hooks)
+			if [ "$agent" = claude ]; then
+				target_dir="$CLAUDE_DIR/hooks"
+			else
+				target_dir="$CODEX_DIR/hooks"
+			fi
+			for source in "$REPO_DIR/dist/$agent/hooks/"*; do
+				[ -f "$source" ] || continue
+				name=${source##*/}
+				"$callback" "$source" "$target_dir/$name" "hooks/$name"
+			done
+			;;
+		claude:themes|claude:rules)
+			if [ "$group" = themes ]; then
+				extension=json
+			else
+				extension=md
+			fi
+			for source in "$REPO_DIR/dist/claude/$group/"*."$extension"; do
+				[ -f "$source" ] || continue
+				name=${source##*/}
+				"$callback" "$source" "$CLAUDE_DIR/$group/$name" "$group/$name"
+			done
+			;;
+		codex:core)
+			"$callback" "$REPO_DIR/dist/codex/AGENTS.md" "$HOME/.agents/AGENTS.md" 'global AGENTS.md'
+			"$callback" "$REPO_DIR/dist/codex/AGENTS.md" "$CODEX_DIR/AGENTS.md" AGENTS.md
+			;;
+		codex:manifest)
+			"$callback" "$REPO_DIR/dist/codex/hooks.json" "$CODEX_DIR/hooks.json" hooks.json
+			;;
+		shared:trash)
+			"$callback" "$REPO_DIR/src/bin/trash" "$HOME/.local/bin/trash" 'trash wrapper'
+			;;
+		*)
+			return 1
+			;;
+	esac
+}
+
 # Collects each canonical skill directory and rejects duplicate folder names.
 # The caller must declare a local skill_paths array before calling this helper.
 collect_canonical_skills() {

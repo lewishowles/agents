@@ -107,7 +107,7 @@ main() {
 			check_codex_links
 			check_codex_config
 		fi
-		check_optional_link "$REPO_DIR/src/bin/trash" "$HOME/.local/bin/trash" 'trash wrapper'
+		check_managed_group shared trash optional 'trash wrapper'
 		if ! report_skill_status "$target"; then
 			# The skill report fails when two skills share a name and has already
 			# printed that error, so only count it here.
@@ -179,42 +179,36 @@ check_tools() {
 # Checks the core Claude links, and each optional feature that has at least one
 # file installed.
 check_claude_links() {
-	# A core file, hook, theme, or rule provided by setup.
-	local file_path
-	# Whether any Claude hook path is present.
-	local hooks_present=false
+	# Whether missing hook links fail the check, which they do once settings or
+	# any hook is installed.
+	local hooks_requirement=optional
 	cli_section 'Claude links'
-	for file_path in CLAUDE.md .mcp.json statusline.sh; do
-		check_link "$REPO_DIR/dist/claude/$file_path" "$CLAUDE_DIR/$file_path" "Claude $file_path"
-	done
-	if hooks_installed "$CLAUDE_DIR/settings.json" "$REPO_DIR/dist/claude/hooks" "$CLAUDE_DIR/hooks"; then
-		hooks_present=true
-		check_link "$REPO_DIR/dist/claude/settings.json" "$CLAUDE_DIR/settings.json" 'Claude settings.json'
+	check_managed_group claude core required
+	if hooks_installed claude "$CLAUDE_DIR/settings.json"; then
+		hooks_requirement=required
+		check_managed_group claude settings required
 	else
 		cli_status skipped 'Claude settings.json' 'not installed'
 	fi
-	check_optional_group 'Claude hooks' "$REPO_DIR/dist/claude/hooks" "$CLAUDE_DIR/hooks" '*' "$hooks_present"
-	check_optional_group 'Claude themes' "$REPO_DIR/dist/claude/themes" "$CLAUDE_DIR/themes" '*.json'
-	for file_path in "$REPO_DIR"/dist/claude/rules/*.md; do
-		[ -f "$file_path" ] || continue
-		check_link "$file_path" "$CLAUDE_DIR/rules/${file_path##*/}" "Claude rules/${file_path##*/}"
-	done
+	check_managed_group claude hooks "$hooks_requirement"
+	check_managed_group claude themes optional
+	check_managed_group claude rules required
 }
 
 # Checks the core Codex links, and the hooks when any hook file is installed.
 check_codex_links() {
-	# Whether any Codex hook path is present.
-	local hooks_present=false
+	# Whether missing hook links fail the check, which they do once the hook
+	# manifest or any hook is installed.
+	local hooks_requirement=optional
 	cli_section 'Codex links'
-	check_link "$REPO_DIR/dist/codex/AGENTS.md" "$HOME/.agents/AGENTS.md" 'Codex global AGENTS.md'
-	check_link "$REPO_DIR/dist/codex/AGENTS.md" "$CODEX_DIR/AGENTS.md" 'Codex AGENTS.md'
-	if hooks_installed "$CODEX_DIR/hooks.json" "$REPO_DIR/dist/codex/hooks" "$CODEX_DIR/hooks"; then
-		hooks_present=true
-		check_link "$REPO_DIR/dist/codex/hooks.json" "$CODEX_DIR/hooks.json" 'Codex hooks.json'
+	check_managed_group codex core required
+	if hooks_installed codex "$CODEX_DIR/hooks.json"; then
+		hooks_requirement=required
+		check_managed_group codex manifest required
 	else
 		cli_status skipped 'Codex hooks.json' 'not installed'
 	fi
-	check_optional_group 'Codex hooks' "$REPO_DIR/dist/codex/hooks" "$CODEX_DIR/hooks" '*' "$hooks_present"
+	check_managed_group codex hooks "$hooks_requirement"
 }
 
 # Compares the Codex settings with what setup would write for the features
@@ -231,7 +225,7 @@ check_codex_config() {
 	fi
 	proposed=$(mktemp)
 	doctor_config_temp="$proposed"
-	if hooks_installed "$CODEX_DIR/hooks.json" "$REPO_DIR/dist/codex/hooks" "$CODEX_DIR/hooks"; then
+	if hooks_installed codex "$CODEX_DIR/hooks.json"; then
 		setup_hooks=true
 	fi
 	# Setup writes this table only when it installs the permission profile; a
@@ -256,67 +250,91 @@ check_codex_config() {
 
 # Returns success when a hook settings file or any managed hook is present.
 #
+# @param  {string}  agent
+#     The agent whose hooks are checked: claude or codex.
 # @param  {string}  settings_file
 #     The installed hook settings file.
-# @param  {string}  source_dir
-#     The directory containing managed hooks.
-# @param  {string}  target_dir
-#     The directory containing installed hooks.
 hooks_installed() {
-	# The settings file, managed hook directory, and installed hook directory.
-	local settings_file="$1" source_dir="$2" target_dir="$3"
-	[ -e "$settings_file" ] || [ -L "$settings_file" ] ||
-		optional_group_present "$source_dir" "$target_dir" '*'
+	# The agent and installed hook settings file.
+	local agent="$1" settings_file="$2"
+	# Whether any managed hook is installed.
+	local present=false
+	if [ -e "$settings_file" ] || [ -L "$settings_file" ]; then
+		return 0
+	fi
+	managed_links "$agent" hooks check_managed_link_presence
+	[ "$present" = true ]
 }
 
-# Reports an optional file as not installed when it is absent, and otherwise
-# checks its link like a required one.
+# Checks each link in one group that setup manages. An optional group with
+# nothing installed is reported as skipped, but once any of its links is
+# installed, every link is checked so a partial install fails.
+#
+# @param  {string}  agent
+#     The agent whose links are checked: claude, codex, or shared.
+# @param  {string}  group
+#     The group of links, as named by managed_links.
+# @param  {string}  requirement
+#     Either required, or optional when the group may not be installed.
+# @param  {string}  skip_label
+#     The name shown when a shared group is not installed. Shared groups
+#     need it because they have no agent name to show. Optional.
+check_managed_group() {
+	# The agent and link group being checked.
+	local agent="$1" group="$2"
+	# Whether a missing group counts as a failure.
+	local requirement="$3"
+	# The agent name shown before each label. The link callbacks below read it.
+	local link_prefix=''
+	# The name shown when an optional group is skipped.
+	local group_label="${4:-$group}"
+	# Whether any link in the group is installed. The presence callback sets it.
+	local present=false
+
+	if [ "$agent" = claude ]; then
+		link_prefix='Claude '
+	elif [ "$agent" = codex ]; then
+		link_prefix='Codex '
+	fi
+	if [ -n "$link_prefix" ]; then
+		group_label="$link_prefix$group"
+	fi
+	if [ "$requirement" = optional ]; then
+		managed_links "$agent" "$group" check_managed_link_presence
+		if [ "$present" = false ]; then
+			cli_status skipped "$group_label" 'not installed'
+			return
+		fi
+	fi
+	managed_links "$agent" "$group" check_managed_link
+}
+
+# Notes whether one link in an optional group is installed, counting a broken
+# symlink as installed. It sets present to true in the calling function.
 #
 # @param  {string}  source
-#     The canonical file.
+#     The repository file, which this check ignores.
 # @param  {string}  target
-#     The installed path.
+#     The installed path to look for.
 # @param  {string}  label
-#     The name shown in the report.
-check_optional_link() {
-	# The canonical source, installed path, and report label.
-	local source="$1" target="$2" label="$3"
-	if [ -e "$target" ] || [ -L "$target" ]; then
-		check_link "$source" "$target" "$label"
-	else
-		cli_status skipped "$label" 'not installed'
+#     The link's label, which this check ignores.
+check_managed_link_presence() {
+	if [ -e "$2" ] || [ -L "$2" ]; then
+		present=true
 	fi
 }
 
-# Reports a group of optional files as not installed when none of them are.
-# Otherwise checks every file's link, so a partial install fails.
+# Checks one managed link and shows it with the agent name from the calling
+# check_managed_group, such as "Claude hooks/guard.sh".
 #
+# @param  {string}  source
+#     The repository file the link should point at.
+# @param  {string}  target
+#     The installed path to check.
 # @param  {string}  label
-#     The name shown when the group is absent.
-# @param  {string}  source_dir
-#     The directory containing canonical files.
-# @param  {string}  target_dir
-#     The installed directory.
-# @param  {string}  pattern
-#     The filename pattern to check.
-# @param  {string}  required
-#     True to check the group even when none of its files are installed,
-#     because another part of the same feature is.
-check_optional_group() {
-	# The group name, source folder, installed folder, and filename pattern.
-	local label="$1" source_dir="$2" target_dir="$3" pattern="$4"
-	# Whether another path in the feature requires this group.
-	local required="${5:-false}"
-	# A canonical path currently inspected.
-	local file_path
-	if [ "$required" = false ] && ! optional_group_present "$source_dir" "$target_dir" "$pattern"; then
-		cli_status skipped "$label" 'not installed'
-		return
-	fi
-	for file_path in "$source_dir"/$pattern; do
-		[ -f "$file_path" ] || continue
-		check_link "$file_path" "$target_dir/${file_path##*/}" "$label/${file_path##*/}"
-	done
+#     The link's label, without the agent name.
+check_managed_link() {
+	check_link "$1" "$2" "$link_prefix$3"
 }
 
 # Reports whether an installed path links to its file in this checkout, and
@@ -348,29 +366,6 @@ check_link() {
 	else
 		required_problem "$label" 'missing'
 	fi
-}
-
-# Returns success when at least one file in the group is installed, even as a
-# broken link.
-#
-# @param  {string}  source_dir
-#     The directory containing canonical files.
-# @param  {string}  target_dir
-#     The installed directory.
-# @param  {string}  pattern
-#     The filename pattern to check.
-optional_group_present() {
-	# The source folder, installed folder, and filename pattern.
-	local source_dir="$1" target_dir="$2" pattern="$3"
-	# A canonical file whose installed path is checked.
-	local file_path
-	for file_path in "$source_dir"/$pattern; do
-		[ -f "$file_path" ] || continue
-		if [ -e "$target_dir/${file_path##*/}" ] || [ -L "$target_dir/${file_path##*/}" ]; then
-			return 0
-		fi
-	done
-	return 1
 }
 
 # Reports whether each skill is installed, excluded, off by default, missing or
