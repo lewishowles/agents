@@ -328,56 +328,6 @@ assert_fzf_start_selection() {
 	assert_equals "$remaining_actions" 'first'
 }
 
-# Checks collection headings, counts and alphabetical skill order in a picker.
-#
-# @param  {string}  input_path
-#     File containing picker rows.
-# @param  {string}  picker_type
-#     Whether the rows come from fzf or the numbered picker.
-assert_picker_group_order() {
-	# The picker output to inspect.
-	local input_path="$1"
-	# The row format to parse.
-	local picker_type="$2"
-
-	if ! python3 - "$input_path" "$picker_type" <<'PY'; then
-import re
-import sys
-
-headings = []
-current = None
-skills = []
-
-with open(sys.argv[1], encoding="utf-8") as picker_output:
-	for line in picker_output:
-		row = line.strip()
-		if sys.argv[2] == "fzf":
-			kind, name, display = row.split("\t", 2)
-			heading = re.fullmatch(r"(\S+) \((\d+)\)", display) if kind == "heading" and name else None
-			skill = re.match(r"^([^\s]+)", name) if kind == "skill" else None
-		else:
-			heading = re.fullmatch(r"(\S+) \((\d+)\)", row)
-			skill = re.match(r"^\[[ x]\]\s+\d+\. ([^\s]+)", row)
-		if heading:
-			if current and len(skills) != current[1]:
-				sys.exit(f"{current[0]}: expected {current[1]} skills, found {len(skills)}")
-			current = (heading.group(1), int(heading.group(2)))
-			headings.append(current[0])
-			skills = []
-		elif skill and current:
-			skills.append(skill.group(1))
-			if skills != sorted(skills):
-				sys.exit(f"{current[0]}: skills out of order: {skills}")
-
-if not headings or headings != sorted(headings):
-	sys.exit(f"collection headings out of order: {headings}")
-if len(skills) != current[1]:
-	sys.exit(f"{current[0]}: expected {current[1]} skills, found {len(skills)}")
-PY
-		fail 'Expected alphabetical collections with sorted skills and correct counts'
-	fi
-}
-
 # Creates a Codex configuration that setup must replace.
 #
 # @param  {string}  home_dir
@@ -418,12 +368,10 @@ run_setup() {
 # Runs setup with a selected target or without an explicit target.
 #
 # When SETUP_TEST_TERMINAL is true, setup runs in a terminal driven by
-# expect. If SETUP_TEST_TERMINAL_INPUT is set, its value is typed exactly
-# as given once the numbered picker asks its question, so a test includes its
-# own carriage return or Ctrl-D. Without it, nothing is typed. Either way the
-# run waits for setup to exit and returns setup's exit status. The run fails if
-# the question does not appear within 20 seconds, if setup does not exit within
-# 20 seconds after that, or if setup is killed by a signal.
+# expect. Each optional prompt response is typed after its prompt appears.
+# The run waits for setup to exit and returns setup's exit status. It fails if
+# a prompt does not appear within 20 seconds, setup does not exit within 20
+# seconds after the prompt, or setup is killed by a signal.
 #
 # @param  {string}  home_dir
 #     Isolated home directory for the setup run.
@@ -505,14 +453,6 @@ if {[info exists env(SETUP_TEST_FEATURE_INPUT)]} {
 		eof { puts stderr "Feature prompt did not appear before setup exited"; exit 1 }
 	}
 	send -- $env(SETUP_TEST_FEATURE_INPUT)
-}
-if {[info exists env(SETUP_TEST_TERMINAL_INPUT)]} {
-	expect {
-		-exact "Enter skill numbers or collection names to toggle, separated by spaces (or q to cancel): " {}
-		timeout { puts stderr "Picker prompt did not appear within 20 seconds"; exit 1 }
-		eof { puts stderr "Picker prompt did not appear before setup exited"; exit 1 }
-	}
-	send -- $env(SETUP_TEST_TERMINAL_INPUT)
 }
 if {[info exists env(SETUP_TEST_CONFIRMATION_INPUT)]} {
 	expect {
@@ -994,14 +934,21 @@ test_pick_preset_installs_selected_features() {
 	local home_dir="$TEST_ROOT/preset-pick"
 	# The picker, preview and setup status messages.
 	local output="$TEST_ROOT/preset-pick.txt"
-	# The command path that keeps fzf out of this numbered-picker test.
-	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
+	# Directory containing the fzf stand-in.
+	local fzf_dir="$TEST_ROOT/preset-pick-bin"
+	# Arguments received by the fzf stand-in.
+	local fzf_arguments="$home_dir/fzf-arguments.txt"
+	# Skills passed to the fzf stand-in.
+	local fzf_input="$home_dir/fzf-input.txt"
 
-	SETUP_TEST_PATH="$fallback_path" SETUP_TEST_TERMINAL=true \
-		SETUP_TEST_FEATURE_INPUT=$'1 5\r' SETUP_TEST_TERMINAL_INPUT=$'accessibility\r' \
+	create_fzf_stub "$fzf_dir"
+	SETUP_FZF_ARGUMENTS="$fzf_arguments" SETUP_FZF_INPUT="$fzf_input" \
+		SETUP_FZF_SELECTION=$'skill\twriting\t  writing' \
+		SETUP_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:/usr/bin:/bin" SETUP_TEST_TERMINAL=true \
+		SETUP_TEST_FEATURE_INPUT=$'1 5\r' \
 		run_setup_target "$home_dir" --codex --preset pick > "$output"
 
-	assert_contains "$output" 'Enter skill numbers or collection names to toggle'
+	assert_contains "$fzf_arguments" '--multi'
 	assert_not_exists "$home_dir/.agents/skills/accessibility"
 	assert_dir_link "$home_dir/.agents/skills/writing"
 	assert_link "$home_dir/.codex/hooks.json"
@@ -1019,15 +966,22 @@ test_pick_preset_without_hooks_preserves_user_settings() {
 	local home_dir="$TEST_ROOT/preset-pick-no-hooks"
 	# The preview and status messages for the selected features.
 	local output="$TEST_ROOT/preset-pick-no-hooks.txt"
-	# The command path that uses the numbered skill picker.
-	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
+	# Directory containing the fzf stand-in.
+	local fzf_dir="$TEST_ROOT/preset-pick-no-hooks-bin"
+	# Arguments received by the fzf stand-in.
+	local fzf_arguments="$home_dir/fzf-arguments.txt"
+	# Skills passed to the fzf stand-in.
+	local fzf_input="$home_dir/fzf-input.txt"
 
 	mkdir -p "$home_dir/.claude" "$home_dir/.codex"
 	printf '%s\n' '{"user_setting":"keep"}' > "$home_dir/.claude/settings.json"
 	printf 'custom_setting = "keep"\n\n[features]\nhooks = false\n' > "$home_dir/.codex/config.toml"
 
-	SETUP_TEST_PATH="$fallback_path" SETUP_TEST_TERMINAL=true \
-		SETUP_TEST_FEATURE_INPUT=$'4\r' SETUP_TEST_TERMINAL_INPUT=$'accessibility\r' \
+	create_fzf_stub "$fzf_dir"
+	SETUP_FZF_ARGUMENTS="$fzf_arguments" SETUP_FZF_INPUT="$fzf_input" \
+		SETUP_FZF_SELECTION=$'skill\twriting\t  writing' \
+		SETUP_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:/usr/bin:/bin" SETUP_TEST_TERMINAL=true \
+		SETUP_TEST_FEATURE_INPUT=$'4\r' \
 		run_setup_target "$home_dir" --both --preset pick > "$output"
 
 	assert_equals "$(cat "$home_dir/.claude/settings.json")" '{"user_setting":"keep"}'
@@ -1045,11 +999,18 @@ test_pick_preset_claude_features_hide_codex_choices() {
 	local home_dir="$TEST_ROOT/preset-pick-claude"
 	# The feature question and setup output.
 	local output="$TEST_ROOT/preset-pick-claude.txt"
-	# The command path that uses the numbered skill picker.
-	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
+	# Directory containing the fzf stand-in.
+	local fzf_dir="$TEST_ROOT/preset-pick-claude-bin"
+	# Arguments received by the fzf stand-in.
+	local fzf_arguments="$home_dir/fzf-arguments.txt"
+	# Skills passed to the fzf stand-in.
+	local fzf_input="$home_dir/fzf-input.txt"
 
-	SETUP_TEST_PATH="$fallback_path" SETUP_TEST_TERMINAL=true \
-		SETUP_TEST_FEATURE_INPUT=$'2\r' SETUP_TEST_TERMINAL_INPUT=$'accessibility\r' \
+	create_fzf_stub "$fzf_dir"
+	SETUP_FZF_ARGUMENTS="$fzf_arguments" SETUP_FZF_INPUT="$fzf_input" \
+		SETUP_FZF_SELECTION=$'skill\twriting\t  writing' \
+		SETUP_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:/usr/bin:/bin" SETUP_TEST_TERMINAL=true \
+		SETUP_TEST_FEATURE_INPUT=$'2\r' \
 		run_setup_target "$home_dir" --claude --preset pick > "$output"
 
 	assert_contains "$output" 'Choose features: [1] Hooks  [2] Themes  [3] Trash wrapper  [4] Helper commands'
@@ -1072,8 +1033,8 @@ test_pick_preset_claude_rejects_unknown_features() {
 	local choice
 	# The unchanged home contents before each setup attempt.
 	local before
-	# The command path that uses the numbered skill picker.
-	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
+	# Command path without fzf; the feature choice fails before skills are chosen.
+	local setup_path="$TEST_ROOT/bin:/usr/bin:/bin"
 
 	for choice in 5 0 '*'; do
 		home_dir="$TEST_ROOT/preset-pick-claude-invalid-$choice"
@@ -1081,7 +1042,7 @@ test_pick_preset_claude_rejects_unknown_features() {
 		mkdir -p "$home_dir"
 		before=$(snapshot_test_directory "$home_dir")
 
-		if SETUP_TEST_PATH="$fallback_path" SETUP_TEST_TERMINAL=true \
+		if SETUP_TEST_PATH="$setup_path" SETUP_TEST_TERMINAL=true \
 			SETUP_TEST_FEATURE_INPUT="${choice}"$'\r' run_setup_target "$home_dir" --claude --preset pick > "$output" 2>&1; then
 			fail "Expected feature choice $choice to fail"
 		fi
@@ -1650,134 +1611,9 @@ test_unmanaged_included_skill_is_backed_up() {
 	assert_contains "$output" 'backup at ~/.agents/backups/skills/accessibility.bak.'
 }
 
-# Ensures the numbered selector defaults to both agents and saves its changes.
-test_select_fallback_updates_skill_exclusions() {
-	# Isolated home directory for the numbered selection run.
-	local home_dir="$TEST_ROOT/select-fallback"
-	# Output from the numbered selection run.
-	local output="$TEST_ROOT/select-fallback.txt"
-	# Command path without fzf.
-	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
-
-	# The stub command path and terminal input for this picker run.
-	NO_COLOR=1 COLUMNS=80 SETUP_TEST_PATH="$fallback_path" SETUP_TEST_TERMINAL=true SETUP_TEST_TERMINAL_INPUT=$'2 3\r' run_setup_target "$home_dir" "" --select > "$output"
-
-	assert_contains "$output" '[x]  1. accessibility'
-	assert_contains "$output" '[x]  2. agent-retrospective'
-	assert_contains "$output" '[x]  3. skill-craft'
-	assert_contains "$output" 'agent-improvement (2)'
-	assert_contains "$output" '…'
-	assert_not_contains "$output" 'Use this skill when editing HTML'
-	assert_not_contains "$output" $'\033[2m'
-	# Python counts UTF-8 characters even when the test shell uses a byte locale.
-	if ! python3 - "$output" <<'PY'; then
-import sys
-
-with open(sys.argv[1], encoding="utf-8") as picker_output:
-	for line in picker_output:
-		row = line.rstrip("\r\n")
-		if row.startswith(("[x]", "[ ]")) and len(row) > 80:
-			sys.exit(1)
-PY
-		fail 'Expected numbered skill rows to fit within 80 columns'
-	fi
-	assert_picker_group_order "$output" numbered
-	assert_contains "$home_dir/.agents/skill-exclusions" 'agent-retrospective'
-	assert_contains "$home_dir/.agents/skill-exclusions" 'skill-craft'
-	assert_not_exists "$home_dir/.agents/skills/agent-retrospective"
-	assert_not_exists "$home_dir/.claude/skills/agent-retrospective"
-	assert_not_exists "$home_dir/.agents/skills/skill-craft"
-	assert_not_exists "$home_dir/.claude/skills/skill-craft"
-	assert_dir_link "$home_dir/.agents/skills/bash"
-	assert_dir_link "$home_dir/.claude/skills/bash"
-}
-
-# Ensures a collection name and skill number can be left out together.
-test_select_fallback_excludes_collection_and_skill() {
-	# Isolated home directory for the grouped numbered picker.
-	local home_dir="$TEST_ROOT/select-fallback-collection"
-	# Output from the grouped numbered picker.
-	local output="$TEST_ROOT/select-fallback-collection.txt"
-	# Command path without fzf.
-	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
-
-	SETUP_TEST_PATH="$fallback_path" SETUP_TEST_TERMINAL=true SETUP_TEST_TERMINAL_INPUT=$'agent-improvement 1\r' run_setup_target "$home_dir" "" --select > "$output"
-
-	assert_contains "$home_dir/.agents/skill-exclusions" 'accessibility'
-	assert_contains "$home_dir/.agents/skill-exclusions" 'agent-retrospective'
-	assert_contains "$home_dir/.agents/skill-exclusions" 'skill-craft'
-	assert_not_exists "$home_dir/.agents/skills/accessibility"
-	assert_not_exists "$home_dir/.agents/skills/agent-retrospective"
-	assert_not_exists "$home_dir/.agents/skills/skill-craft"
-	assert_dir_link "$home_dir/.agents/skills/bash"
-}
-
-# Ensures an empty numbered selection keeps the default choices on macOS Bash.
-test_select_fallback_empty_selection_keeps_default_choices() {
-	# Isolated home directory for an empty numbered selection.
-	local home_dir="$TEST_ROOT/select-fallback-empty"
-	# Output from the empty numbered selection run.
-	local output="$TEST_ROOT/select-fallback-empty.txt"
-	# Command path without fzf.
-	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
-
-	# The stub command path and terminal input for this picker run.
-	SETUP_TEST_PATH="$fallback_path" SETUP_TEST_TERMINAL=true SETUP_TEST_TERMINAL_INPUT=$'\r' run_setup_target "$home_dir" "" --select > "$output"
-
-	assert_not_exists "$home_dir/.agents/skill-exclusions"
-	assert_dir_link "$home_dir/.agents/skills/accessibility"
-	assert_dir_link "$home_dir/.claude/skills/accessibility"
-}
-
-# The numbered picker starts with Apple unticked and remembers a group toggle.
-test_select_fallback_toggles_apple_collection() {
-	# Isolated home directory for both picker runs.
-	local home_dir="$TEST_ROOT/select-fallback-apple"
-	# Output from the first picker run.
-	local output="$TEST_ROOT/select-fallback-apple.txt"
-	# Output from the second picker run.
-	local rerun_output="$TEST_ROOT/select-fallback-apple-rerun.txt"
-	# Command path without fzf.
-	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
-
-	SETUP_TEST_PATH="$fallback_path" SETUP_TEST_TERMINAL=true SETUP_TEST_TERMINAL_INPUT=$'apple\r' run_setup_target "$home_dir" "" --select > "$output"
-	if ! grep -Eq '^\[ \] +[0-9]+\. mac-app' "$output"; then
-		fail 'Expected Apple to start unticked in the numbered picker'
-	fi
-	assert_equals "$(cat "$home_dir/.agents/skill-inclusions")" 'apple'
-	assert_dir_link "$home_dir/.agents/skills/mac-app"
-	assert_dir_link "$home_dir/.agents/skills/bash"
-
-	SETUP_TEST_PATH="$fallback_path" SETUP_TEST_TERMINAL=true SETUP_TEST_TERMINAL_INPUT=$'apple\r' run_setup_target "$home_dir" "" --select > "$rerun_output"
-	if ! grep -Eq '^\[x\] +[0-9]+\. mac-app' "$rerun_output"; then
-		fail 'Expected Apple to start ticked after an earlier choice'
-	fi
-	assert_not_exists "$home_dir/.agents/skill-inclusions"
-}
-
-# Ensures cancelling the numbered selector preserves the saved exclusions.
-test_select_fallback_cancel_preserves_existing_state() {
-	# Isolated home directory for the cancelled numbered selection.
-	local home_dir="$TEST_ROOT/select-fallback-cancel"
-	# Output from the cancelled numbered selection.
-	local output="$TEST_ROOT/select-fallback-cancel.txt"
-	# Command path without fzf.
-	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
-
-	mkdir -p "$home_dir/.agents"
-	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
-	# The stub command path and terminal input for this picker run.
-	SETUP_TEST_PATH="$fallback_path" SETUP_TEST_TERMINAL=true SETUP_TEST_TERMINAL_INPUT=$'q\r' run_setup_target "$home_dir" "" --select > "$output"
-
-	assert_contains "$output" 'Skill selection cancelled. Nothing changed.'
-	assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'writing'
-	assert_not_exists "$home_dir/.claude"
-	assert_not_exists "$home_dir/.codex"
-}
-
-# Ensures an older fzf uses the numbered selector and explains why.
-test_select_old_fzf_uses_numbered_list() {
-	assert_fzf_version_uses_numbered_list '0.60.0' 'select-old-fzf' 'fzf 0.60.0 cannot run this picker (it needs 0.74 or newer), so using the numbered list.'
+# Ensures an older fzf stops setup without changing saved choices.
+test_select_old_fzf_stops_without_changes() {
+	assert_fzf_version_stops_without_changes '0.60.0' 'select-old-fzf'
 }
 
 # Checks that a supported fzf version opens the interactive picker.
@@ -1808,43 +1644,79 @@ assert_fzf_version_opens_picker() {
 	SETUP_FZF_VERSION="$version" SETUP_FZF_ARGUMENTS="$fzf_arguments" SETUP_FZF_INPUT="$fzf_input" SETUP_FZF_STATUS=1 SETUP_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output" 2>&1
 
 	assert_contains "$output" 'Skill selection cancelled. Nothing changed.'
-	assert_not_contains "$output" 'Enter skill numbers or collection names to toggle'
 }
 
-# Checks that an unsupported or unreadable fzf version uses the numbered list.
+# Checks that an unsupported or unreadable fzf version stops setup.
 #
 # @param  {string}  version
 #     The version reported by the fzf stand-in.
 # @param  {string}  case_name
 #     Unique name for the isolated test files.
-# @param  {string}  notice
-#     The explanation printed before the numbered list.
-assert_fzf_version_uses_numbered_list() {
+assert_fzf_version_stops_without_changes() {
 	# The version reported by the fzf stand-in.
 	local version="$1"
 	# Unique name for the isolated test files.
 	local case_name="$2"
-	# The explanation printed before the numbered list.
-	local notice="$3"
 	# Isolated home directory for this version.
 	local home_dir="$TEST_ROOT/$case_name"
-	# Output from the numbered list.
-	local output="$TEST_ROOT/$case_name.txt"
+	# Standard output from the rejected picker run.
+	local stdout="$TEST_ROOT/$case_name.stdout.txt"
+	# Standard error from the rejected picker run.
+	local stderr="$TEST_ROOT/$case_name.stderr.txt"
 	# Directory containing the fzf stand-in.
 	local fzf_dir="$TEST_ROOT/$case_name-bin"
 	# Arguments that would be captured if fzf opened.
 	local fzf_arguments="$home_dir/fzf-arguments.txt"
+	# The error status from setup.
+	local exit_code=0
 
 	create_fzf_stub "$fzf_dir"
+	# expect joins setup's output and errors into one terminal stream, so this
+	# bash stand-in starts setup with each stream written to its own file.
+	cat > "$fzf_dir/bash" <<'EOF'
+#!/bin/sh
+exec /bin/bash "$@" > "$SETUP_TEST_STDOUT" 2> "$SETUP_TEST_STDERR"
+EOF
+	chmod +x "$fzf_dir/bash"
+	mkdir -p "$home_dir/.agents"
+	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
+	printf 'apple\n' > "$home_dir/.agents/skill-inclusions"
 	# PATH here is this test's own value; ShellCheck confuses it with the copy run_setup_target changes in its subshell.
 	# shellcheck disable=SC2031
-	SETUP_FZF_VERSION="$version" SETUP_FZF_ARGUMENTS="$fzf_arguments" SETUP_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_TEST_TERMINAL=true SETUP_TEST_TERMINAL_INPUT=$'q\r' run_setup_target "$home_dir" "" --select > "$output" 2>&1
+	SETUP_FZF_VERSION="$version" SETUP_FZF_ARGUMENTS="$fzf_arguments" SETUP_TEST_PATH="$fzf_dir:$TEST_ROOT/bin:$PATH" SETUP_TEST_TERMINAL=true SETUP_TEST_STDOUT="$stdout" SETUP_TEST_STDERR="$stderr" run_setup_target "$home_dir" "" --select > /dev/null 2>&1 || exit_code=$?
 
-	assert_contains "$output" "$notice"
-	assert_contains "$output" 'Enter skill numbers or collection names to toggle'
-	assert_contains "$output" 'Skill selection cancelled. Nothing changed.'
+	assert_equals "$exit_code" '1'
+	assert_contains "$stderr" 'Interactive skill selection needs fzf 0.74 or newer. Install it, or choose skills with --include and --exclude.'
+	assert_not_contains "$stdout" 'Interactive skill selection needs fzf 0.74 or newer. Install it, or choose skills with --include and --exclude.'
 	assert_not_exists "$fzf_arguments"
-	assert_not_exists "$home_dir/.agents/skill-exclusions"
+	assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'writing'
+	assert_equals "$(cat "$home_dir/.agents/skill-inclusions")" 'apple'
+	assert_not_exists "$home_dir/.claude"
+	assert_not_exists "$home_dir/.codex"
+}
+
+# Ensures missing fzf stops setup without changing saved choices or links.
+test_select_missing_fzf_stops_without_changes() {
+	# Isolated home directory for the rejected picker run.
+	local home_dir="$TEST_ROOT/select-missing-fzf"
+	# Output from the rejected picker run.
+	local output="$TEST_ROOT/select-missing-fzf.txt"
+	# Command path without fzf.
+	local setup_path="$TEST_ROOT/bin:/usr/bin:/bin"
+	# The error status from setup.
+	local exit_code=0
+
+	mkdir -p "$home_dir/.agents"
+	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
+	printf 'apple\n' > "$home_dir/.agents/skill-inclusions"
+	SETUP_TEST_PATH="$setup_path" SETUP_TEST_TERMINAL=true run_setup_target "$home_dir" "" --select > "$output" 2>&1 || exit_code=$?
+
+	assert_equals "$exit_code" '1'
+	assert_contains "$output" 'Interactive skill selection needs fzf 0.74 or newer. Install it, or choose skills with --include and --exclude.'
+	assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'writing'
+	assert_equals "$(cat "$home_dir/.agents/skill-inclusions")" 'apple'
+	assert_not_exists "$home_dir/.claude"
+	assert_not_exists "$home_dir/.codex"
 }
 
 # Checks that the first supported fzf release opens the picker.
@@ -1852,9 +1724,9 @@ test_select_fzf_minimum_version_opens_picker() {
 	assert_fzf_version_opens_picker '0.74.0' 'select-fzf-minimum'
 }
 
-# Checks that the release just below the minimum uses the numbered list.
-test_select_fzf_below_minimum_uses_numbered_list() {
-	assert_fzf_version_uses_numbered_list '0.73.9' 'select-fzf-below-minimum' 'fzf 0.73.9 cannot run this picker (it needs 0.74 or newer), so using the numbered list.'
+# Checks that the release just below the minimum stops setup.
+test_select_fzf_below_minimum_stops_without_changes() {
+	assert_fzf_version_stops_without_changes '0.73.9' 'select-fzf-below-minimum'
 }
 
 # Checks that a newer major version opens the picker.
@@ -1862,9 +1734,9 @@ test_select_fzf_new_major_opens_picker() {
 	assert_fzf_version_opens_picker '1.0.0' 'select-fzf-new-major'
 }
 
-# Checks that empty version output uses the numbered list.
-test_select_fzf_empty_version_uses_numbered_list() {
-	assert_fzf_version_uses_numbered_list '' 'select-fzf-empty-version' 'fzf version could not be read, so using the numbered list.'
+# Checks that empty version output stops setup.
+test_select_fzf_empty_version_stops_without_changes() {
+	assert_fzf_version_stops_without_changes '' 'select-fzf-empty-version'
 }
 
 # Ensures fzf lets several skills be ticked and saves the chosen skills.
@@ -1980,50 +1852,6 @@ test_select_fzf_cancel_preserves_existing_state() {
 	assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'writing'
 	assert_not_exists "$home_dir/.claude"
 	assert_not_exists "$home_dir/.codex"
-}
-
-# Ensures end-of-input cancels the numbered selector without changing state.
-test_select_fallback_end_of_input_preserves_existing_state() {
-	# Isolated home directory for the ended numbered selection.
-	local home_dir="$TEST_ROOT/select-fallback-end-of-input"
-	# Output from the ended numbered selection.
-	local output="$TEST_ROOT/select-fallback-end-of-input.txt"
-	# Command path without fzf.
-	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
-
-	mkdir -p "$home_dir/.agents"
-	printf 'writing\n' > "$home_dir/.agents/skill-exclusions"
-	# The stub command path and terminal input for this picker run.
-	SETUP_TEST_PATH="$fallback_path" SETUP_TEST_TERMINAL=true SETUP_TEST_TERMINAL_INPUT=$'\004' run_setup_target "$home_dir" "" --select > "$output"
-
-	assert_contains "$output" 'Skill selection cancelled. Nothing changed.'
-	assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'writing'
-	assert_not_exists "$home_dir/.claude"
-	assert_not_exists "$home_dir/.codex"
-}
-
-# Ensures an invalid skill number fails without changing saved exclusions or links.
-test_select_fallback_invalid_number_preserves_existing_state() {
-	# Isolated home directory for invalid numbered input.
-	local home_dir="$TEST_ROOT/select-fallback-invalid"
-	# Output from the rejected numbered selection.
-	local output="$TEST_ROOT/select-fallback-invalid.txt"
-	# Command path without fzf.
-	local fallback_path="$TEST_ROOT/bin:/usr/bin:/bin"
-
-	run_setup_target "$home_dir" "" --exclude writing > /dev/null
-	# The stub command path and terminal input for the invalid skill number.
-	if SETUP_TEST_PATH="$fallback_path" SETUP_TEST_TERMINAL=true SETUP_TEST_TERMINAL_INPUT=$'9999\r' run_setup_target "$home_dir" "" --select > "$output" 2>&1; then
-		fail 'Expected an invalid skill number to fail'
-	fi
-
-	assert_contains "$output" 'Invalid skill number: 9999'
-	assert_not_contains "$output" 'Skill selection cancelled. Nothing changed.'
-	assert_equals "$(cat "$home_dir/.agents/skill-exclusions")" 'writing'
-	assert_dir_link "$home_dir/.agents/skills/accessibility"
-	assert_dir_link "$home_dir/.claude/skills/accessibility"
-	assert_not_exists "$home_dir/.agents/skills/writing"
-	assert_not_exists "$home_dir/.claude/skills/writing"
 }
 
 # Ensures --select rejects other skill options without changing saved exclusions or links.
@@ -2278,22 +2106,16 @@ run_setup_cases() {
 		test_removed_skill_can_be_included
 		test_unmanaged_excluded_directory_survives
 		test_unmanaged_included_skill_is_backed_up
-		test_select_fallback_updates_skill_exclusions
-		test_select_fallback_excludes_collection_and_skill
-		test_select_fallback_empty_selection_keeps_default_choices
-		test_select_fallback_toggles_apple_collection
-		test_select_fallback_cancel_preserves_existing_state
-		test_select_old_fzf_uses_numbered_list
+		test_select_missing_fzf_stops_without_changes
+		test_select_old_fzf_stops_without_changes
 		test_select_fzf_minimum_version_opens_picker
-		test_select_fzf_below_minimum_uses_numbered_list
+		test_select_fzf_below_minimum_stops_without_changes
 		test_select_fzf_new_major_opens_picker
-		test_select_fzf_empty_version_uses_numbered_list
+		test_select_fzf_empty_version_stops_without_changes
 		test_select_fzf_updates_skill_exclusions
 		test_select_fzf_remembers_apple_collection
 		test_select_fzf_excludes_every_skill
 		test_select_fzf_cancel_preserves_existing_state
-		test_select_fallback_end_of_input_preserves_existing_state
-		test_select_fallback_invalid_number_preserves_existing_state
 		test_select_rejects_other_skill_options_without_changes
 		test_select_rejects_non_terminal_input
 		test_skip_backup_environment_does_not_bypass_backup
