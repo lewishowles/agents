@@ -92,14 +92,14 @@ def read_default_off_collections() -> set[str]:
 		The names of the collections setup does not install by default.
 
 	Raises:
-		ValueError: scripts/setup.sh no longer defines default_off_collections.
+		ValueError: scripts/lib/setup-selection.sh no longer defines default_off_collections.
 	"""
-	# The setup script that owns the default-off collection list.
-	setup_source = (REPO_DIR / "scripts" / "setup.sh").read_text()
-	# The shell array contents from the setup script.
+	# The setup library that owns the default-off collection list.
+	setup_source = (REPO_DIR / "scripts" / "lib" / "setup-selection.sh").read_text()
+	# The shell array contents from the setup library.
 	match = re.search(r"(?m)^\s*default_off_collections=\(([^)]*)\)", setup_source)
 	if match is None:
-		raise ValueError("Cannot read default_off_collections from scripts/setup.sh")
+		raise ValueError("Cannot read default_off_collections from scripts/lib/setup-selection.sh")
 	return set(shlex.split(match.group(1)))
 
 
