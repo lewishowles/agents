@@ -75,6 +75,7 @@ Enables autonomous multi-hour execution while keeping the main agent as architec
 - Apply the `project-plan-task` task-boundary gate before creating a standalone task.
 - For a multi-chunk task, create one progress chunk per reviewable outcome; work only on the first incomplete chunk unless the user asks for all.
 - Apply the `project-plan-task` review-size gate to every chunk: one primary review question, recorded as the chunk's `--review-question`, and a soft ceiling of three substantive files.
+- Apply the `project-plan-task` criteria when marking milestone chunks for outside review.
 - Multiple small sections over one large one; each independently reviewable
 - "Files likely to change" reduces re-exploration in future sessions
 - Record every known section as a chunk. Later chunks may stay concise until work starts, but their boundaries and order belong in `progress` as soon as they are known

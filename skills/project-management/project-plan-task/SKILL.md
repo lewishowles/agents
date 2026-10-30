@@ -109,6 +109,16 @@ Plan each task around one primary question for the reviewer. Before creating it,
 
 Give every chunk a `--review-question`: the one question a reviewer answers when reading its commit, such as "Is the retry policy right?". Write the question before the description, because it is the test of the chunk's boundary. If the question needs "and" to join two concerns that a reviewer could accept or reject separately, split the chunk. The same test applies to chunks added part-way through a task. When you narrow or split a chunk, update its question with `progress chunk edit --review-question`.
 
+Mark a milestone chunk for outside review by ending its review question with `Outside review:` followed by a question for the outside reviewer. Add the marker when the chunk:
+
+- sets how parts are split up, such as a new module or command, or the boundary between two parts
+- adds or changes a shared contract, such as a data model, a function other parts call, or a file format
+- sets how a tool behaves for the person or agent using it, such as its commands, help, output, exit codes, errors, or prompts
+- makes judgement calls that later work relies on, such as inferring fields, linking records, or choosing defaults
+- brings several parts together for the first time, such as an entry point that reads a complete input
+
+Most tasks need one or two marked chunks, usually the one that sets the design and the one that completes it. Leave the marker off routine bug fixes, review fixes, documentation, test-only changes, and small additions that follow a pattern already covered by outside review. Ask the outside reviewer about the chunk's design and craftsmanship; the internal review checks whether it works.
+
 Size each chunk so one session can finish it, including one round of fixes after review. When a session runs out of tool calls just before re-review or commit, the chunk passes to a new session, which repeats the same checks and review. If a chunk is likely to need more than one round of review fixes, split it, or say in its description why it cannot be split.
 
 Sibling chunks must not overlap. When splitting a coarse chunk, narrow or replace it so its scope does not subsume the new chunks. Do not leave the original broad chunk active beside the finer review boundaries.
