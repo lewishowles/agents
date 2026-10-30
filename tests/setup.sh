@@ -1033,8 +1033,12 @@ test_pick_preset_claude_rejects_unknown_features() {
 	local choice
 	# The unchanged home contents before each setup attempt.
 	local before
-	# Command path without fzf; the feature choice fails before skills are chosen.
-	local setup_path="$TEST_ROOT/bin:/usr/bin:/bin"
+	# Directory containing the supported fzf stand-in.
+	local fzf_dir="$TEST_ROOT/preset-pick-claude-invalid-bin"
+	# Command path with fzf so setup reaches the feature question.
+	local setup_path="$fzf_dir:$TEST_ROOT/bin:/usr/bin:/bin"
+
+	create_fzf_stub "$fzf_dir"
 
 	for choice in 5 0 '*'; do
 		home_dir="$TEST_ROOT/preset-pick-claude-invalid-$choice"
@@ -1112,6 +1116,49 @@ test_pick_preset_requires_terminal() {
 	fi
 
 	assert_contains "$output" '--preset pick requires a terminal'
+	assert_not_exists "$home_dir/.agents"
+}
+
+# The pick preset stops when fzf is missing, before it asks about agents or
+# features or changes any files.
+test_pick_preset_requires_fzf_before_questions() {
+	# The isolated home that must stay unchanged when fzf is unavailable.
+	local home_dir="$TEST_ROOT/preset-pick-no-fzf"
+	# The error and any prompts printed by setup.
+	local output="$TEST_ROOT/preset-pick-no-fzf.txt"
+	# The command path without fzf.
+	local setup_path="$TEST_ROOT/bin:/usr/bin:/bin"
+	# The error status from setup.
+	local exit_code=0
+
+	SETUP_TEST_PATH="$setup_path" SETUP_TEST_TERMINAL=true run_setup_target "$home_dir" "" --preset pick > "$output" 2>&1 || exit_code=$?
+
+	assert_equals "$exit_code" '1'
+	assert_contains "$output" 'Interactive skill selection needs fzf 0.74 or newer. Install it, or choose skills with --include and --exclude.'
+	assert_not_contains "$output" 'Which agent(s)?'
+	assert_not_contains "$output" 'Choose features:'
+	assert_not_exists "$home_dir/.agents"
+	assert_not_exists "$home_dir/.claude"
+	assert_not_exists "$home_dir/.codex"
+}
+
+# Naming skills with --include lets the pick preset reach the feature question
+# when fzf is not installed.
+test_pick_preset_with_include_skips_fzf_check() {
+	# The isolated home that must stay unchanged when feature selection is cancelled.
+	local home_dir="$TEST_ROOT/preset-pick-include-no-fzf"
+	# The feature question and cancellation message from setup.
+	local output="$TEST_ROOT/preset-pick-include-no-fzf.txt"
+	# The command path without fzf.
+	local setup_path="$TEST_ROOT/bin:/usr/bin:/bin"
+
+	SETUP_TEST_PATH="$setup_path" SETUP_TEST_TERMINAL=true \
+		SETUP_TEST_FEATURE_INPUT=$'q\r' \
+		run_setup_target "$home_dir" --codex --preset pick --include writing > "$output" 2>&1
+
+	assert_contains "$output" 'Choose features:'
+	assert_contains "$output" 'Setup cancelled. Nothing changed.'
+	assert_not_contains "$output" 'Interactive skill selection needs fzf'
 	assert_not_exists "$home_dir/.agents"
 }
 
@@ -2084,6 +2131,8 @@ run_setup_cases() {
 		test_interactive_setup_asks_for_preset
 		test_interactive_preset_cancel_reports_no_changes
 		test_pick_preset_requires_terminal
+		test_pick_preset_requires_fzf_before_questions
+		test_pick_preset_with_include_skips_fzf_check
 		test_config_replacement_creates_timestamped_backup
 		test_user_config_is_rewritten_once
 		test_hook_file_is_replaced_with_managed_link

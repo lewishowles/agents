@@ -1,17 +1,11 @@
 #!/usr/bin/env bash
-# Read-only checks shared by setup and the doctor: the commands setup needs,
-# the state of each skill link, and the Codex config.toml setup would write.
+# Read-only checks shared by setup and the doctor: the commands setup needs
+# and the Codex config.toml setup would write.
 # None of these functions change the install.
 #
-# Before sourcing this file, a script sets REPO_DIR and sources
-# setup-links.sh. It must also set the values each check reads:
+# Before sourcing this file, a script sets REPO_DIR. It must also set the
+# values each check reads:
 #   - Tool checks: AGENT_TOOLS_DIR.
-#   - Skill report: HOME, CLAUDE_DIR, default_off_collections, and
-#     skill_exclusions_file and skill_inclusions_file, which
-#     load_skill_exclusions and load_skill_inclusions read to add to
-#     excluded_skills and included_collections. Start both as empty arrays
-#     before calling the loaders. The report also needs cli_section and
-#     cli_status from cli-style-output.sh.
 #   - Codex config: setup_hooks and setup_permissions. Pass a temporary file
 #     as the output path, because the builder writes the new config there.
 # choose_cli_style_install_command stores its answer in
@@ -114,138 +108,6 @@ preflight_agent_tools() {
 		printf 'Setup stopped before changing anything.\n' >&2
 		return 1
 	fi
-}
-
-# Reads persisted skill exclusions without creating the exclusions file.
-load_skill_exclusions() {
-	# The saved skill name currently added to the exclusion list.
-	local skill_name
-
-	[ -f "$skill_exclusions_file" ] || return 0
-
-	while IFS= read -r skill_name; do
-		[ -n "$skill_name" ] || continue
-		if ! excluded_skill_exists "$skill_name"; then
-			excluded_skills+=("$skill_name")
-		fi
-	done < "$skill_exclusions_file"
-}
-
-# Reads saved collection opt-ins without creating the inclusions file.
-load_skill_inclusions() {
-	# The collection currently read from the saved file.
-	local collection_name
-
-	[ -f "$skill_inclusions_file" ] || return 0
-
-	while IFS= read -r collection_name; do
-		if default_off_collection_exists "$collection_name" && ! included_collection_exists "$collection_name"; then
-			included_collections+=("$collection_name")
-		fi
-	done < "$skill_inclusions_file"
-}
-
-# Returns success when a collection is off until explicitly selected.
-#
-# @param  {string}  collection_name
-#     The collection to check.
-default_off_collection_exists() {
-	# The collection to check against the default-off list.
-	local collection_name="$1"
-	# A collection in the default-off list.
-	local default_off_collection
-
-	for default_off_collection in "${default_off_collections[@]}"; do
-		[ "$default_off_collection" = "$collection_name" ] && return 0
-	done
-	return 1
-}
-
-# Returns success when a default-off collection was selected previously.
-#
-# @param  {string}  collection_name
-#     The collection to check.
-included_collection_exists() {
-	# The collection to check against saved opt-ins.
-	local collection_name="$1"
-	# A saved collection opt-in.
-	local included_collection
-
-	if [ "${#included_collections[@]}" -gt 0 ]; then
-		for included_collection in "${included_collections[@]}"; do
-			[ "$included_collection" = "$collection_name" ] && return 0
-		done
-	fi
-	return 1
-}
-
-# Returns success when a default-off collection has not been opted in to.
-#
-# @param  {string}  collection_name
-#     The collection to check.
-collection_is_off() {
-	# The collection checked against its default and saved choice.
-	local collection_name="$1"
-
-	if default_off_collection_exists "$collection_name" && ! included_collection_exists "$collection_name"; then
-		return 0
-	fi
-	return 1
-}
-
-# Returns success when the skill is not excluded and its default-off collection,
-# if any, has been opted in to.
-#
-# @param  {string}  skill_path
-#     The canonical skill folder.
-skill_is_selected() {
-	# The canonical skill folder being checked.
-	local skill_path="$1"
-	# The collection containing the skill.
-	local collection_name
-	collection_name=$(picker_collection_of "$skill_path")
-
-	if excluded_skill_exists "${skill_path##*/}"; then
-		return 1
-	fi
-	if collection_is_off "$collection_name"; then
-		return 1
-	fi
-	return 0
-}
-
-# Returns 0 when the current exclusion list contains a skill name.
-#
-# @param  {string}  skill_name
-#     Skill name to find in the current exclusion list.
-excluded_skill_exists() {
-	# The skill name looked up in the current exclusion list.
-	local skill_name="$1"
-	# The saved exclusion compared with the requested skill.
-	local excluded_skill
-
-	if [ "${#excluded_skills[@]}" -gt 0 ]; then
-		for excluded_skill in "${excluded_skills[@]}"; do
-			if [ "$excluded_skill" = "$skill_name" ]; then
-				return 0
-			fi
-		done
-	fi
-
-	return 1
-}
-
-# Prints the collection name for a canonical skill folder.
-#
-# @param  {string}  skill_path
-#     The canonical skill folder.
-picker_collection_of() {
-	# The canonical skill folder.
-	local skill_path="$1"
-	# The parent collection folder.
-	local collection_path="${skill_path%/*}"
-
-	printf '%s\n' "${collection_path##*/}"
 }
 
 # Writes the Codex config that setup would install to a separate file, leaving

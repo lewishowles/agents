@@ -233,27 +233,6 @@ link_path() {
 	fi
 }
 
-# Returns success when a skill name appears in an exclusion list.
-#
-# @param  {string}  slug
-#     The skill name to check.
-# @param  {string}  ...
-#     Excluded skill names.
-skill_is_excluded() {
-	# The skill name to look for.
-	local slug="$1"
-	# The excluded skill name currently being compared.
-	local excluded_skill
-	shift
-
-	for excluded_skill in "$@"; do
-		if [ "$excluded_skill" = "$slug" ]; then
-			return 0
-		fi
-	done
-	return 1
-}
-
 # Adds a directory creation or replacement to the setup preview.
 #
 # @param  {string}  path

@@ -14,6 +14,8 @@ source "$SCRIPT_DIR/lib/require-bash.sh"
 source "$SCRIPT_DIR/lib/setup-links.sh"
 # shellcheck source=scripts/lib/setup-checks.sh
 source "$SCRIPT_DIR/lib/setup-checks.sh"
+# shellcheck source=scripts/lib/setup-selection.sh
+source "$SCRIPT_DIR/lib/setup-selection.sh"
 
 # The number of required checks that found a problem.
 failed_checks=0
