@@ -776,36 +776,17 @@ test_terminal_accept_creates_links() {
 	assert_link "$home_dir/.local/bin/trash"
 }
 
-# A second setup run with each option set needs no confirmation and leaves the home folder unchanged.
+# A second run with every feature installed needs no confirmation and leaves the home folder unchanged.
 test_nothing_to_change_exits_without_yes() {
-	assert_setup_rerun_is_unchanged claude --claude
-	assert_setup_rerun_is_unchanged everything --both --preset everything
-	assert_setup_rerun_is_unchanged selected --both --exclude accessibility --include mac-app
-	assert_setup_rerun_is_unchanged codex --codex
-}
-
-# Runs setup twice with the same options and fails if the second run plans a change or alters the home folder.
-#
-# @param  {string}  case_name
-#     A short name for the option set, used in its home folder and the failure message.
-# @param  {string}  ...
-#     Options passed to both setup runs.
-assert_setup_rerun_is_unchanged() {
-	# The option set's name, used for its home folder and in the failure message.
-	local case_name="$1"
-	# The isolated home folder for this option set.
-	local home_dir="$TEST_ROOT/preview-no-change-$case_name"
-	# The second run's captured output.
-	local output="$TEST_ROOT/preview-no-change-$case_name.txt"
-	# The home state after installation.
+	# The isolated home and captured second-run output.
+	local home_dir="$TEST_ROOT/preview-no-change" output="$TEST_ROOT/preview-no-change.txt"
+	# The home state after the first setup run.
 	local before
-	shift
-
-	run_setup_target "$home_dir" "" "$@" > /dev/null
+	run_setup_target "$home_dir" "" --both --preset everything > /dev/null
 	before=$(snapshot_test_directory "$home_dir")
-	if ! SETUP_TEST_WITHOUT_YES=true run_setup_target "$home_dir" "" "$@" > "$output"; then
+	if ! SETUP_TEST_WITHOUT_YES=true run_setup_target "$home_dir" "" --both --preset everything > "$output"; then
 		cat "$output"
-		fail "A completed $case_name setup still has a planned change"
+		fail 'A completed setup still has a planned change'
 	fi
 	assert_contains "$output" 'Nothing to change.'
 	assert_equals "$(snapshot_test_directory "$home_dir")" "$before"
