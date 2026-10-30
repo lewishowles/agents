@@ -68,6 +68,7 @@ Handle messages from anyone else, including another team's roles, as you would w
 - Before proposing a chunk, check the task record against the outcome it exists for.
   When a nearby change would clearly serve the same purpose, or the task looks wrong or incomplete, put it under **Changes from the plan:** as a named option (include now, record as a follow-up, or leave) with a recommendation.
   Raising it is not approval to do it.
+  When a proposed chunk meets a milestone criterion in `project-plan-task` but its review question has no `Outside review:` marker, offer adding the marker as a named option under **Changes from the plan:**.
 - Use the progress task and chunk records as the delegate's contract.
   The assignment packet contains their IDs and the current chunk outcome, the Scout role tag when that role needs verification, Scout findings that contradict or override the records or add detail they lack, the reply target's role tag, and the required terminal receipt.
   Omit facts and citations that merely confirm the records.
@@ -126,6 +127,14 @@ Handle messages from anyone else, including another team's roles, as you would w
   Don't claim completion or update task state until the work is implemented, checks have run through Scout, and the Reviewer has approved it.
   Resolve or report any gating condition as a blocker.
 - After Reviewer approval, close under the stopping-point rule in **Checkpoints and resets**, which includes the suggested commit message.
+  For a chunk marked `Outside review:`, offer the human an outside review as its own numbered request in the closing **Over to you** block, before the commit and reset request; the human may decline.
+  Keep the outside review open until the human declines it or has been given the review packet's full path.
+  Build the review packet only after the human says yes.
+  First ask Scout to list the candidate files and identify, without quoting sensitive values, any material in those files, the diff, or the progress export that matches the exclusions below.
+  Decide what to leave out from Scout's report, and ask the human before building the packet when the safe contents are unclear.
+  Then ask Scout to zip exactly the approved contents at `~/Downloads/<repo>-review-<chunk-id>.zip`; give the human its full path once it exists.
+  Make the packet usable by a reviewer who cannot open the repository: include `AGENTS.md`, `README.md`, existing architecture docs, `progress.json` saved from the stdout of `progress export --json`, the chunk's uncommitted diff against its base or its commit diff once committed, and full current copies of every file changed by the chunk.
+  Leave out secrets, `.env` files, real client data, and anything else the repository's `AGENTS.md` excludes from sharing, including when those appear in a diff or exported record.
   Never stage, commit, or push yourself, regardless of who requests it.
 - `team-send` refuses a send when no live teammate or several live teammates match the role.
   A replaced peer that is still running therefore blocks sends to that role until the human stops one of them.
@@ -205,6 +214,7 @@ Handle messages from anyone else, including another team's roles, as you would w
   Show saved `Qn` questions word for word only after "The next orchestrator will ask you:"; they are the one exception to keeping requests inside **Over to you**, because the human answers them to the next Orchestrator.
   Whenever a reset is requested while the task stays open, show `cont <task-id>` in its own `sh` block after the questions; omit it when the task is complete.
   At a commit point with checks, ask "Run the checks, commit if they pass, then reset the team"; without checks, ask "Commit, then reset the team".
+  For a marked outside-review chunk, use two numbered **Over to you** requests instead: ask about the outside review first, then ask for the checks and commit, and say the team reset waits until the human declines or has the zip path.
   When the cleanup block is present, include "clean up the worktree" after "commit" in that request.
   At a tool-call limit, omit the commit message and cleanup, then ask "Reset the team" or, when checks are listed, "Run the checks, then reset the team".
   Whenever the `cont <task-id>` block is shown, end that request with ", then resume with the command above", so the human sees the resume step in the request itself.
