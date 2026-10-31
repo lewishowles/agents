@@ -81,7 +81,7 @@ Ask user via AskUserQuestion:
 
 ### Step 1: Read Templates
 
-Read `templates.md` for production Swift code and scripts.
+Read [templates.md](templates.md) for production Swift code and scripts.
 
 ### Step 2: Create App-Side Screenshot Mode
 
@@ -395,7 +395,7 @@ Run the full pipeline once to generate screenshots for every locale simultaneous
 
 ## References
 
-- **templates.md** -- All production Swift/XCTest templates for screenshot automation:
+- **[templates.md](templates.md)** -- All production Swift/XCTest templates for screenshot automation:
   - `ScreenshotModeController.swift` -- App-side screenshot mode detection
   - `ScreenshotPlan.swift` -- Screen/device/locale configuration
   - `ScreenshotUITests.swift` -- XCUITest capture class

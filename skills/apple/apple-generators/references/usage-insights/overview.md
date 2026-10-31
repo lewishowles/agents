@@ -84,7 +84,7 @@ Ask user via AskUserQuestion:
 
 ### Step 1: Read Templates
 
-Read `templates.md` for production Swift code.
+Read [templates.md](templates.md) for production Swift code.
 
 ### Step 2: Create Core Data Files
 
@@ -362,7 +362,7 @@ if let image = renderer.uiImage {
 
 ## References
 
-- **templates.md** — All production Swift templates
+- **[templates.md](templates.md)** — All production Swift templates
 - Related: `generators/share-card` — Render recap views as shareable images
 - Related: `generators/analytics-setup` — Backend analytics (complements on-device insights)
 - Related: `generators/streak-tracker` — Streak tracking pairs well with usage insights
