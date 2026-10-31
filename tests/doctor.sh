@@ -39,6 +39,8 @@ trap cleanup EXIT
 #     The command search path, defaulting to the test-only path.
 # @param  {string}  expected_summary
 #     An optional exact summary fragment to check as well.
+# @param  {string}  ...
+#     Any further fragments that must not appear in the report.
 check_doctor() {
 	# The expected process status and report text.
 	local expected_status="$1" expected_text="$2"
@@ -50,6 +52,8 @@ check_doctor() {
 	local command_path="${5-$TEST_PATH}"
 	# An optional second output assertion.
 	local expected_summary="${6:-}"
+	# A report fragment that must be absent.
+	local absent_text
 	# The doctor's actual status and output.
 	local actual_status=0 output
 	# Snapshots of the scratch home before and after the run.
@@ -70,18 +74,24 @@ check_doctor() {
 		printf 'Missing report summary: %s\n%s\n' "$expected_summary" "$output" >&2
 		return 1
 	fi
+	if [ "$#" -gt 6 ]; then
+		shift 6
+		for absent_text in "$@"; do
+			if grep -F -q "$absent_text" <<< "$output"; then
+				printf 'Unexpected report text: %s\n%s\n' "$absent_text" "$output" >&2
+				return 1
+			fi
+		done
+	fi
 	if ! cmp -s "$before" "$after"; then
 		printf 'The doctor changed the scratch home.\n' >&2
 		return 1
 	fi
 }
 
-# Proves that a single changed path accounts for exactly one required failure.
-#
-# @param  {string}  expected_text
-#     The specific error row expected from the changed path.
-check_single_problem() {
-	check_doctor 1 "$1" "$CLI_STYLE_STUB" src/hooks/git "$TEST_PATH" '1 required check(s) failed'
+# Runs setup in the scratch home with the same command stand-ins as doctor.
+run_scratch_setup() {
+	HOME="$TEST_HOME" CLI_STYLE_BIN="$CLI_STYLE_STUB" PATH="$TEST_PATH" GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0=src/hooks/git bash "$REPO_DIR/scripts/setup.sh" --both > "$TEST_ROOT/setup-output.txt"
 }
 
 # Creates command stand-ins so the doctor test does not use installed helpers.
@@ -90,7 +100,22 @@ create_command_stubs() {
 	local bin_dir="$TEST_ROOT/bin"
 	# A helper command installed in that directory.
 	local command_name
+	# A modern Bash kept inside the test path, so doctor does not add Homebrew
+	# commands ahead of the stand-ins when it restarts.
+	local bash_candidate
 	mkdir -p "$bin_dir"
+	for bash_candidate in /opt/homebrew/bin/bash /usr/local/bin/bash "$BASH"; do
+		# The candidate expands its own version when this command runs.
+		# shellcheck disable=SC2016
+		if [ -x "$bash_candidate" ] && "$bash_candidate" -c 'test "${BASH_VERSINFO[0]}" -ge 4'; then
+			ln -s "$bash_candidate" "$bin_dir/bash"
+			break
+		fi
+	done
+	if [ ! -L "$bin_dir/bash" ]; then
+		printf 'The doctor test needs Bash 4 or newer.\n' >&2
+		return 1
+	fi
 	cat > "$bin_dir/cli-style" <<'SH'
 #!/bin/sh
 printf '%s\n' "$(dirname "$0")/cli-style-adapter.sh"
@@ -114,238 +139,158 @@ cli_style_render() {
 	fi
 }
 SH
+	cat > "$bin_dir/hcom" <<'SH'
+#!/bin/sh
+# Stores test Codex arguments under the scratch home for setup and doctor.
+if [ "$1" != config ] || [ "$2" != codex_args ]; then
+	exit 2
+fi
+if [ "$#" -eq 2 ]; then
+	if [ -f "$HOME/.hcom/test-codex-args" ]; then
+		cat "$HOME/.hcom/test-codex-args"
+	fi
+else
+	mkdir -p "$HOME/.hcom"
+	printf '%s\n' "$3" > "$HOME/.hcom/test-codex-args"
+fi
+SH
 	for command_name in friction team-send doc-paths; do
 		printf '#!/bin/sh\nexit 0\n' > "$bin_dir/$command_name"
 	done
-	chmod +x "$bin_dir/cli-style" "$bin_dir/friction" "$bin_dir/team-send" "$bin_dir/doc-paths"
+	chmod +x "$bin_dir/cli-style" "$bin_dir/hcom" "$bin_dir/friction" "$bin_dir/team-send" "$bin_dir/doc-paths"
 }
 
-# Installs a complete Claude fixture so one changed path is the only failure.
-install_claude_fixture() {
-	# A core file, hook, rule, or skill linked into the scratch home.
-	local file_path
-	mkdir -p "$TEST_HOME/.claude/hooks" "$TEST_HOME/.claude/rules" "$TEST_HOME/.claude/skills"
-	for file_path in CLAUDE.md .mcp.json settings.json statusline.sh; do
-		ln -s "$REPO_DIR/dist/claude/$file_path" "$TEST_HOME/.claude/$file_path"
-	done
-	for file_path in "$REPO_DIR"/dist/claude/hooks/*; do
-		[ -f "$file_path" ] || continue
-		ln -s "$file_path" "$TEST_HOME/.claude/hooks/${file_path##*/}"
-	done
-	for file_path in "$REPO_DIR"/dist/claude/rules/*.md; do
-		[ -f "$file_path" ] || continue
-		ln -s "$file_path" "$TEST_HOME/.claude/rules/${file_path##*/}"
-	done
-	for file_path in "$REPO_DIR"/skills/*/*; do
-		[ -d "$file_path" ] || continue
-		ln -s "$file_path" "$TEST_HOME/.claude/skills/${file_path##*/}"
-	done
-}
-
-# Checks excluded, conflicting, and stale skills against an editable repository list.
+# Checks excluded skills using an editable repository exclusion list.
 test_repository_skill_exclusions() {
 	# The repository copy whose exclusion list this case changes.
 	local copy_dir="$TEST_ROOT/repo-skill-exclusions"
-	# A top-level repository file or folder, linked into the copy so that only
-	# scripts/ is a real copy the case can edit.
+	# A top-level repository entry linked into the copy.
 	local entry
-
 	mkdir -p "$copy_dir"
 	for entry in "$REPO_DIR"/*; do
 		ln -s "$entry" "$copy_dir/${entry##*/}"
 	done
 	trash "$copy_dir/scripts"
 	/bin/cp -R "$REPO_DIR/scripts" "$copy_dir/scripts"
-	# The repository the doctor checks for the rest of this case. Declared local so
-	# later cases run against the real repository again.
+	# The doctor reads the copy's edited list and its matching skill links.
 	local REPO_DIR="$copy_dir"
-
 	trash "$TEST_HOME"
 	mkdir -p "$TEST_HOME"
-	install_claude_fixture
+	run_scratch_setup
 	printf 'writing\nstale-doctor-test-skill\n' > "$REPO_DIR/scripts/skill-exclusions.txt"
-	check_doctor 0 'excluded writing' "$CLI_STYLE_STUB" src/hooks/git "$TEST_PATH" 'link still present; run: scripts/setup.sh --claude'
-	check_doctor 0 'stale exclusion stale-doctor-test-skill' "$CLI_STYLE_STUB" src/hooks/git "$TEST_PATH" 'remove it from scripts/skill-exclusions.txt'
-
+	check_doctor 1 'Remove excluded skill ~/.claude/skills/writing' "$CLI_STYLE_STUB" src/hooks/git "$TEST_PATH" 'excluded writing link still present'
+	check_doctor 1 'Remove excluded skill ~/.agents/skills/writing' "$CLI_STYLE_STUB" src/hooks/git "$TEST_PATH" 'stale exclusion stale-doctor-test-skill'
 	trash "$TEST_HOME/.claude/skills/writing"
-	check_doctor 0 'excluded writing' "$CLI_STYLE_STUB" src/hooks/git "$TEST_PATH" 'listed in scripts/skill-exclusions.txt'
+	check_doctor 1 'excluded writing listed in scripts/skill-exclusions.txt' "$CLI_STYLE_STUB"
 	printf 'other\n' > "$TEST_HOME/.claude/skills/writing"
-	check_doctor 0 'conflicting writing' "$CLI_STYLE_STUB"
+	check_doctor 1 'conflicting writing run: trash ~/.claude/skills/writing' "$CLI_STYLE_STUB"
 }
 
-# Installs the Codex links and writes the config through setup's config builder.
-# Runs in a subshell so the sourced setup files and their flags stay out of
-# the test.
+# Checks that a duplicate canonical skill name counts once and skips the plan.
 #
-# @param  {string}  permissions
-#     true to include the managed permission profile, false to leave it out.
-install_codex_fixture() (
-	# Whether the config builder includes the managed permission profile.
-	local permissions="$1"
-	# Where the config builder writes its output before it moves into the scratch home.
-	local proposed="$TEST_ROOT/codex-config.toml"
-	# A skill linked into the scratch Codex installation.
-	local file_path
-
-	mkdir -p "$TEST_HOME/.agents/skills" "$TEST_HOME/.codex"
-	if [ ! -L "$TEST_HOME/.agents/AGENTS.md" ]; then
-		ln -s "$REPO_DIR/dist/codex/AGENTS.md" "$TEST_HOME/.agents/AGENTS.md"
-	fi
-	if [ ! -L "$TEST_HOME/.codex/AGENTS.md" ]; then
-		ln -s "$REPO_DIR/dist/codex/AGENTS.md" "$TEST_HOME/.codex/AGENTS.md"
-	fi
-	for file_path in "$REPO_DIR"/skills/*/*; do
-		[ -d "$file_path" ] || continue
-		if [ ! -L "$TEST_HOME/.agents/skills/${file_path##*/}" ]; then
-			ln -s "$file_path" "$TEST_HOME/.agents/skills/${file_path##*/}"
-		fi
+# @param  {string}  copy_dir
+#     The editable repository copy created by the exclusion test.
+test_duplicate_skill_names() {
+	# The repository copy whose skills are changed.
+	local copy_dir="$1"
+	# A source skill folder used to make the duplicate.
+	local source_skills_dir="$REPO_DIR/skills"
+	# A skill group linked into the repository copy.
+	local entry
+	# The doctor's repository must be the copy when it checks these links.
+	local REPO_DIR="$copy_dir"
+	# A duplicate canonical name already fails in the skill section, so the
+	# setup plan must not count the same problem again.
+	trash "$copy_dir/skills"
+	mkdir -p "$copy_dir/skills/duplicate-doctor"
+	for entry in "$source_skills_dir"/*; do
+		[ -d "$entry" ] || continue
+		ln -s "$entry" "$copy_dir/skills/${entry##*/}"
 	done
+	ln -s "$source_skills_dir/writing/writing" "$copy_dir/skills/duplicate-doctor/writing"
+	check_doctor 1 'duplicate skill name' "$CLI_STYLE_STUB" src/hooks/git "$TEST_PATH" '1 required check(s) failed' 'Setup plan could not be built'
+	check_doctor 1 'cli-style: missing' "$TEST_ROOT/missing-cli-style" src/hooks/git "$TEST_ROOT/manager-bin:$TEST_PATH" '2 required check(s) failed' 'Setup changes'
+}
 
-	# The shared builder reads the same feature flags and templates as setup.
-	# shellcheck source=scripts/lib/setup-links.sh
-	source "$REPO_DIR/scripts/lib/setup-links.sh"
-	# shellcheck source=scripts/lib/setup-checks.sh
-	source "$REPO_DIR/scripts/lib/setup-checks.sh"
-	# The fixture installs no Codex hooks.
-	setup_hooks=false
-	# The builder adds the permission profile only when this is true.
-	setup_permissions="$permissions"
-	HOME="$TEST_HOME" prepare_codex_config "$TEST_HOME/.codex/config.toml" "$proposed"
-	mv "$proposed" "$TEST_HOME/.codex/config.toml"
-)
+# Checks individual plan changes for backups, links, commands and settings.
+test_plan_details() {
+	# A skill link replaced with a real folder for the backup case.
+	local skill_link
+	# A Codex hook link replaced with a broken repository link.
+	local hook_link
+	# A real folder in the way is saved, and any old backup is removed.
+	skill_link="$TEST_HOME/.claude/skills/code-style"
+	trash "$skill_link"
+	mkdir -p "$skill_link" "$TEST_HOME/.claude/backups/skills"
+	printf 'keep this content\n' > "$skill_link/keep.txt"
+	printf 'old backup\n' > "$TEST_HOME/.claude/backups/skills/code-style.bak.20200101-000000"
+	check_doctor 1 'Save ~/.claude/skills/code-style in ~/.claude/backups/skills with a timestamp' "$CLI_STYLE_STUB" src/hooks/git "$TEST_PATH" 'Remove older backup ~/.claude/backups/skills/code-style.bak.20200101-000000'
+	check_doctor 1 'Link ~/.claude/skills/code-style to' "$CLI_STYLE_STUB"
+	if [ "$(cat "$skill_link/keep.txt")" != 'keep this content' ]; then
+		printf 'The doctor changed unmanaged skill content.\n' >&2
+		return 1
+	fi
+	trash "$skill_link"
+	ln -s "$REPO_DIR/skills/code/code-style" "$skill_link"
 
-# Runs the doctor against a fresh home, partial installs, Codex settings with
-# and without the permission profile, and a complete Claude install with one
-# fault at a time.
-main() {
-	mkdir -p "$TEST_HOME"
-	create_command_stubs
-	check_doctor 1 'Claude: not set up'
-	check_doctor 1 'Codex: not set up'
-	check_doctor 1 'cli-style: missing'
-	check_doctor 1 'bun add -g @lewishowles/cli-style (or npm install -g @lewishowles/cli-style)'
-	check_doctor 0 'No required problems found' "$CLI_STYLE_STUB"
-	check_doctor 1 'Git core.hooksPath does not match src/hooks/git' "$CLI_STYLE_STUB" other/hooks
-	check_doctor 1 '1 required check(s) failed' "$CLI_STYLE_STUB" other/hooks
+	# Stale repository links are removed before relinking, with no backup.
+	hook_link="$TEST_HOME/.codex/hooks/tool-call-checkpoint.sh"
+	trash "$hook_link"
+	ln -s "$REPO_DIR/dist/codex/hooks/missing-tool-call-checkpoint.sh" "$hook_link"
+	check_doctor 1 'Remove ~/.codex/hooks/tool-call-checkpoint.sh' "$CLI_STYLE_STUB"
+	check_doctor 1 'Link ~/.codex/hooks/tool-call-checkpoint.sh to' "$CLI_STYLE_STUB"
+	trash "$hook_link"
+	ln -s "$REPO_DIR/dist/codex/hooks/tool-call-checkpoint.sh" "$hook_link"
 
-	mkdir -p "$TEST_HOME/.claude"
-	ln -s "$REPO_DIR/dist/claude/CLAUDE.md" "$TEST_HOME/.claude/CLAUDE.md"
-	check_doctor 1 'Claude CLAUDE.md: correct'
-	check_doctor 1 'Claude settings.json: not installed'
-	check_doctor 1 'Claude hooks: not installed'
-	check_doctor 1 'Claude themes: not installed'
-	check_doctor 1 'trash wrapper: not installed'
-	check_doctor 1 'missing writing: run: scripts/setup.sh --claude'
-
-	mkdir -p "$TEST_HOME/.claude/hooks"
-	ln -s "$REPO_DIR/dist/claude/hooks/guard-search-boundaries.sh" "$TEST_HOME/.claude/hooks/guard-search-boundaries.sh"
-	check_doctor 1 'Claude settings.json: missing'
-	trash "$TEST_HOME/.claude/hooks/guard-search-boundaries.sh"
-
-	ln -s "$TEST_ROOT/absent" "$TEST_HOME/.claude/settings.json"
-	check_doctor 1 'Claude settings.json: broken link to wrong target'
-
+	# Doctor also reports changes to hooks, settings, commands, and Git hooks.
 	trash "$TEST_HOME/.claude/settings.json"
-	printf 'other\n' > "$TEST_ROOT/other-settings.json"
-	ln -s "$TEST_ROOT/other-settings.json" "$TEST_HOME/.claude/settings.json"
-	check_doctor 1 'Claude settings.json: wrong target'
+	check_doctor 1 'Link ~/.claude/settings.json to' "$CLI_STYLE_STUB"
+	ln -s "$REPO_DIR/dist/claude/settings.json" "$TEST_HOME/.claude/settings.json"
+	trash "$TEST_HOME/.codex/hooks.json"
+	check_doctor 1 'Link ~/.codex/hooks.json to' "$CLI_STYLE_STUB"
+	ln -s "$REPO_DIR/dist/codex/hooks.json" "$TEST_HOME/.codex/hooks.json"
+	check_doctor 1 'Set core.hooksPath to src/hooks/git in this checkout' "$CLI_STYLE_STUB" other/hooks
+	/bin/cp -R "$TEST_ROOT/bin" "$TEST_ROOT/missing-helper-bin"
+	trash "$TEST_ROOT/missing-helper-bin/team-send"
+	check_doctor 1 'Install team-send with uv from' "$CLI_STYLE_STUB" src/hooks/git "$TEST_ROOT/missing-helper-bin:$SYSTEM_PATH"
 
-	trash "$TEST_HOME/.claude/settings.json"
-	printf 'conflict\n' > "$TEST_HOME/.claude/settings.json"
-	check_doctor 1 'Claude settings.json: real file in the way'
-
-	mkdir -p "$TEST_HOME/.agents/skills" "$TEST_HOME/.codex"
-	ln -s "$REPO_DIR/dist/codex/AGENTS.md" "$TEST_HOME/.agents/AGENTS.md"
-	printf 'custom = true\n' > "$TEST_HOME/.codex/config.toml"
-	check_doctor 1 'Codex config.toml: differs from setup'
 	mkdir -p "$TEST_ROOT/fail-bin"
 	printf '#!/usr/bin/env bash\nexit 1\n' > "$TEST_ROOT/fail-bin/awk"
 	chmod +x "$TEST_ROOT/fail-bin/awk"
-	check_doctor 1 'Codex config.toml could not compare' "$CLI_STYLE_STUB" src/hooks/git "$TEST_ROOT/fail-bin:$TEST_PATH"
+	check_doctor 1 'Codex config.toml could not compare' "$CLI_STYLE_STUB" src/hooks/git "$TEST_ROOT/fail-bin:$TEST_PATH" '' 'Save ~/.codex/config.toml' 'Write ~/.codex/config.toml'
+}
 
-	trash "$TEST_HOME"
-	mkdir -p "$TEST_HOME"
-	install_codex_fixture false
-	check_doctor 0 'Codex config.toml matches setup' "$CLI_STYLE_STUB" src/hooks/git "$TEST_PATH" 'Codex permission profile not installed'
-	install_codex_fixture true
-	check_doctor 0 'Codex config.toml matches setup' "$CLI_STYLE_STUB"
-	trash "$TEST_HOME/.codex/config.toml"
-	printf 'default_permissions = "custom"\n' > "$TEST_HOME/.codex/config.toml"
-	install_codex_fixture false
-	check_doctor 0 'Codex config.toml matches setup' "$CLI_STYLE_STUB" src/hooks/git "$TEST_PATH" 'Codex permission profile not installed'
-
-	trash "$TEST_HOME"
-	mkdir -p "$TEST_HOME/.agents/skills" "$TEST_HOME/.codex"
-	ln -s "$REPO_DIR/dist/codex/AGENTS.md" "$TEST_HOME/.agents/AGENTS.md"
-	printf 'custom = true\n' > "$TEST_HOME/.codex/config.toml"
-
-	ln -s "$REPO_DIR/skills/writing/writing" "$TEST_HOME/.agents/skills/writing"
-	check_doctor 1 'installed writing' "$CLI_STYLE_STUB"
-	trash "$TEST_HOME/.agents/skills/writing"
-	ln -s "$TEST_ROOT/absent" "$TEST_HOME/.agents/skills/writing"
-	check_doctor 1 'skills/writing: broken link to wrong target'
-
-	trash "$TEST_HOME"
-	mkdir -p "$TEST_HOME"
-	install_claude_fixture
-	# The repository's Git status before the doctor runs, compared afterwards
-	# because the doctor must not change the repository either.
+# Checks setup-plan details and confirms that doctor never changes the home.
+main() {
+	# The repository state before doctor runs, which must stay unchanged.
 	local repo_before
+	mkdir -p "$TEST_HOME"
+	create_command_stubs
+	mkdir -p "$TEST_ROOT/manager-bin"
+	printf '#!/bin/sh\nexit 0\n' > "$TEST_ROOT/manager-bin/bun"
+	chmod +x "$TEST_ROOT/manager-bin/bun"
+	check_doctor 1 'cli-style: missing' "$TEST_ROOT/missing-cli-style" src/hooks/git "$TEST_PATH" '1 required check(s) failed' 'Setup changes'
+	check_doctor 1 'cli-style: missing' "$TEST_ROOT/missing-cli-style" src/hooks/git "$TEST_ROOT/manager-bin:$TEST_PATH" '1 required check(s) failed' 'Setup changes'
+	check_doctor 0 'No required problems found' "$CLI_STYLE_STUB" src/hooks/git "$TEST_PATH" '' 'Setup changes'
 	repo_before=$(git -C "$REPO_DIR" status --porcelain --untracked-files=all)
-	check_doctor 0 'No required problems found' "$CLI_STYLE_STUB"
+	run_scratch_setup
+	check_doctor 0 'Nothing to change.' "$CLI_STYLE_STUB" src/hooks/git "$TEST_PATH" 'No required problems found'
+	# cli-style is counted by the plan when a package manager can install it.
+	check_doctor 1 'Run bun add -g @lewishowles/cli-style' "$TEST_ROOT/missing-cli-style" src/hooks/git "$TEST_ROOT/manager-bin:$TEST_PATH" '1 required check(s) failed'
+	check_doctor 1 'cannot list changes until cli-style is installed' "$TEST_ROOT/missing-cli-style" src/hooks/git "$TEST_PATH" '1 required check(s) failed'
+	# A failed HCOM read leaves its plan changes unlisted.
+	mkdir -p "$TEST_ROOT/hcom-fail-bin"
+	printf '#!/bin/sh\nexit 1\n' > "$TEST_ROOT/hcom-fail-bin/hcom"
+	chmod +x "$TEST_ROOT/hcom-fail-bin/hcom"
+	check_doctor 0 'HCOM arguments could not be read, so HCOM changes are not listed.' "$CLI_STYLE_STUB" src/hooks/git "$TEST_ROOT/hcom-fail-bin:$TEST_PATH" 'No required problems found'
 	if [ "$(git -C "$REPO_DIR" status --porcelain --untracked-files=all)" != "$repo_before" ]; then
 		printf 'The doctor changed the repository.\n' >&2
 		return 1
 	fi
-	check_doctor 0 'installed mac-app' "$CLI_STYLE_STUB"
-	trash "$TEST_HOME/.claude/skills/mac-app"
-	check_single_problem 'missing mac-app run: scripts/setup.sh --claude'
-	ln -s "$REPO_DIR/skills/apple/mac-app" "$TEST_HOME/.claude/skills/mac-app"
 
-	trash "$TEST_HOME/.claude/skills/writing"
-	check_single_problem 'missing writing run: scripts/setup.sh --claude'
-	ln -s "$REPO_DIR/skills/writing/writing" "$TEST_HOME/.claude/skills/writing"
-
-	trash "$TEST_HOME/.claude/skills/code-style"
-	mkdir -p "$TEST_HOME/.claude/skills/code-style"
-	printf 'keep this content\n' > "$TEST_HOME/.claude/skills/code-style/keep.txt"
-	check_single_problem 'skills/code-style real file in the way'
-	if [ "$(cat "$TEST_HOME/.claude/skills/code-style/keep.txt")" != 'keep this content' ]; then
-		printf 'The doctor changed unmanaged skill content.\n' >&2
-		return 1
-	fi
-	trash "$TEST_HOME/.claude/skills/code-style"
-	ln -s "$REPO_DIR/skills/code/code-style" "$TEST_HOME/.claude/skills/code-style"
-	check_doctor 0 'No required problems found' "$CLI_STYLE_STUB"
-	/bin/cp -R "$TEST_ROOT/bin" "$TEST_ROOT/missing-helper-bin"
-	trash "$TEST_ROOT/missing-helper-bin/team-send"
-	check_doctor 0 'team-send not installed' "$CLI_STYLE_STUB" src/hooks/git "$TEST_ROOT/missing-helper-bin:$SYSTEM_PATH" 'No required problems found'
-
-	trash "$TEST_HOME/.claude/.mcp.json"
-	check_single_problem 'Claude .mcp.json missing'
-	ln -s "$TEST_ROOT/absent" "$TEST_HOME/.claude/.mcp.json"
-	check_single_problem 'Claude .mcp.json broken link to wrong target'
-	trash "$TEST_HOME/.claude/.mcp.json"
-	printf 'other\n' > "$TEST_ROOT/other-mcp.json"
-	ln -s "$TEST_ROOT/other-mcp.json" "$TEST_HOME/.claude/.mcp.json"
-	check_single_problem 'Claude .mcp.json wrong target'
-	trash "$TEST_HOME/.claude/.mcp.json"
-	printf 'conflict\n' > "$TEST_HOME/.claude/.mcp.json"
-	check_single_problem 'Claude .mcp.json real file in the way'
-	trash "$TEST_HOME/.claude/.mcp.json"
-	ln -s "$REPO_DIR/dist/claude/.mcp.json" "$TEST_HOME/.claude/.mcp.json"
-
-	trash "$TEST_HOME/.claude/skills/writing"
-	check_single_problem 'missing writing run: scripts/setup.sh --claude'
-	ln -s "$TEST_ROOT/other-mcp.json" "$TEST_HOME/.claude/skills/writing"
-	check_single_problem 'skills/writing wrong target'
-	trash "$TEST_HOME/.claude/skills/writing"
-	ln -s "$REPO_DIR/skills/writing/writing" "$TEST_HOME/.claude/skills/writing"
-
-	trash "$TEST_HOME/.claude/hooks/guard-search-boundaries.sh"
-	check_single_problem 'Claude hooks/guard-search-boundaries.sh missing'
+	test_plan_details
 	test_repository_skill_exclusions
-
+	test_duplicate_skill_names "$TEST_ROOT/repo-skill-exclusions"
 	printf 'doctor tests passed\n'
 }
 

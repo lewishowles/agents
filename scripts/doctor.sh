@@ -16,11 +16,13 @@ source "$SCRIPT_DIR/lib/setup-links.sh"
 source "$SCRIPT_DIR/lib/setup-checks.sh"
 # shellcheck source=scripts/lib/setup-selection.sh
 source "$SCRIPT_DIR/lib/setup-selection.sh"
+# shellcheck source=scripts/lib/setup-plan.sh
+source "$SCRIPT_DIR/lib/setup-plan.sh"
 
 # The number of required checks that found a problem.
 failed_checks=0
-# A comparison file created by this run, removed when the doctor exits.
-doctor_config_temp=""
+# A temporary file created by this run, removed on exit.
+doctor_temp_file=""
 
 trap cleanup_doctor EXIT
 
@@ -45,23 +47,23 @@ main() {
 	# Stop Bun writing its transpiler cache under the user's home when cli-style
 	# starts.
 	export BUN_RUNTIME_TRANSPILER_CACHE_PATH=0
-	# The values below are read by the shared setup checks, so they are global.
-	# The Claude configuration folder.
-	CLAUDE_DIR="$HOME/.claude"
-	# The Codex configuration folder.
-	CODEX_DIR="$HOME/.codex"
-	# The excluded skill names, filled in by load_skill_exclusions.
-	excluded_skills=()
-	# Whether setup adds the managed hooks to the Codex config.
-	setup_hooks=false
-	# Whether setup writes the managed permission profile.
-	setup_permissions=false
+	# Start from setup's default settings, so the plan below matches what a
+	# plain setup run would change. Doctor takes no setup options.
+	# shellcheck disable=SC2119
+	parse_setup_options
+	load_managed_paths
 	# Whether this home contains a visible Claude installation.
 	local claude_found=false
 	# Whether this home contains a visible Codex installation.
 	local codex_found=false
 	# The agents set up in this home: claude, codex, both, or empty for neither.
 	local target
+	# Whether the repository skill list can be used to build the setup plan.
+	local skill_status_ok=true
+	# Whether the setup plan will run for this home.
+	local plan_will_run=false
+	# Whether setup can read the installed Codex configuration.
+	local codex_config_readable=true
 
 	# shellcheck source=scripts/lib/cli-style-output.sh
 	source "$SCRIPT_DIR/lib/cli-style-output.sh"
@@ -89,23 +91,25 @@ main() {
 	elif [ "$codex_found" = true ]; then
 		target=codex
 	fi
-	check_tools "$target"
 	if [ -n "$target" ]; then
-		if [ "$claude_found" = true ]; then
-			check_claude_links
-		fi
-		if [ "$codex_found" = true ]; then
-			check_codex_links
-			check_codex_config
-		fi
-		check_managed_group shared trash optional 'trash wrapper'
 		if ! report_skill_status "$target"; then
 			# The skill report fails when two skills share a name and has already
 			# printed that error, so only count it here.
 			failed_checks=$((failed_checks + 1))
+			skill_status_ok=false
 		fi
 	fi
-	check_git_hooks
+	if [ -n "$target" ] && [ "$skill_status_ok" = true ]; then
+		plan_will_run=true
+	fi
+	# A missing cli-style belongs to the plan only when that plan will run.
+	check_tools "$plan_will_run"
+	if [ "$plan_will_run" = true ]; then
+		if [ "$codex_found" = true ] && ! check_codex_config_read; then
+			codex_config_readable=false
+		fi
+		report_setup_plan "$target" "$codex_config_readable"
+	fi
 
 	if [ "$failed_checks" -gt 0 ]; then
 		cli_status error "$failed_checks required check(s) failed"
@@ -116,8 +120,8 @@ main() {
 
 # Removes a comparison file if a check exits before normal cleanup.
 cleanup_doctor() {
-	if [ -n "$doctor_config_temp" ]; then
-		rm -f "$doctor_config_temp"
+	if [ -n "$doctor_temp_file" ]; then
+		rm -f "$doctor_temp_file"
 	fi
 }
 
@@ -139,232 +143,157 @@ agent_is_present() {
 	esac
 }
 
-# Reports cli-style, then the helper commands the selected agents use, hcom
-# and uv. A missing cli-style fails the doctor, because setup installs it.
-# A missing helper or tool shows as not installed and does not fail the doctor,
-# because not every user needs them.
+# Reports cli-style, hcom and uv. The plan counts an installable cli-style
+# when it runs; this check counts it when no plan will run or no installer exists.
 #
-# @param  {string}  target
-#     The agents to check: claude, codex or both. Empty checks only cli-style,
-#     hcom and uv.
+# @param  {string}  plan_will_run
+#     true when the detected agents have a usable skill list for the plan.
 check_tools() {
-	# The agents to check.
-	local target="$1"
-	# The command currently being checked.
-	local command_name
+	# Whether setup's plan will report a missing cli-style.
+	local plan_will_run="$1"
 	cli_section 'Commands'
 	if cli_style_install_needed; then
-		required_problem 'cli-style' 'missing; run: bun add -g @lewishowles/cli-style (or npm install -g @lewishowles/cli-style)'
+		if [ "$plan_will_run" = true ] && choose_cli_style_install_command >/dev/null 2>&1; then
+			cli_status skipped 'cli-style' 'missing; setup will install it'
+		else
+			required_problem 'cli-style' 'missing; run: bun add -g @lewishowles/cli-style (or npm install -g @lewishowles/cli-style)'
+		fi
 	else
 		cli_status success 'cli-style' 'installed'
 	fi
-	while IFS= read -r command_name; do
+	# An optional command shown in the report.
+	local command_name
+	for command_name in hcom uv; do
 		if command -v "$command_name" >/dev/null 2>&1; then
 			cli_status success "$command_name" 'installed'
 		else
 			cli_status skipped "$command_name" 'not installed'
 		fi
-	done < <(required_agent_tools "$target"; printf '%s\n' hcom uv)
+	done
 }
 
-# Checks the core Claude links, and each optional feature that has at least one
-# file installed.
-check_claude_links() {
-	# Whether missing hook links fail the check, which they do once settings or
-	# any hook is installed.
-	local hooks_requirement=optional
-	cli_section 'Claude links'
-	check_managed_group claude core required
-	if hooks_installed claude "$CLAUDE_DIR/settings.json"; then
-		hooks_requirement=required
-		check_managed_group claude settings required
-	else
-		cli_status skipped 'Claude settings.json' 'not installed'
-	fi
-	check_managed_group claude hooks "$hooks_requirement"
-	check_managed_group claude themes optional
-	check_managed_group claude rules required
-}
-
-# Checks the core Codex links, and the hooks when any hook file is installed.
-check_codex_links() {
-	# Whether missing hook links fail the check, which they do once the hook
-	# manifest or any hook is installed.
-	local hooks_requirement=optional
-	cli_section 'Codex links'
-	check_managed_group codex core required
-	if hooks_installed codex "$CODEX_DIR/hooks.json"; then
-		hooks_requirement=required
-		check_managed_group codex manifest required
-	else
-		cli_status skipped 'Codex hooks.json' 'not installed'
-	fi
-	check_managed_group codex hooks "$hooks_requirement"
-}
-
-# Compares the Codex settings with what setup would write for the features
-# that are installed.
-check_codex_config() {
-	# The installed Codex settings file.
-	local config="$CODEX_DIR/config.toml"
-	# A temporary copy of the config that setup would write.
+# Fails the doctor when setup cannot build a new Codex config.toml from the
+# installed one, which also means the setup plan cannot compare them.
+check_codex_config_read() {
+	# The temporary output of the config builder.
 	local proposed
-	cli_section 'Codex settings'
-	if [ ! -f "$config" ]; then
-		required_problem 'Codex config.toml' 'missing'
-		return
-	fi
+	# Whether the installed config can be read.
+	local readable=true
 	proposed=$(mktemp)
-	doctor_config_temp="$proposed"
-	if hooks_installed codex "$CODEX_DIR/hooks.json"; then
-		setup_hooks=true
-	fi
-	# Setup writes this table only when it installs the permission profile; a
-	# root default_permissions key may be the user's own setting.
-	if grep -q '^\[permissions\.project-edit\]' "$config"; then
-		setup_permissions=true
-	else
-		cli_status skipped 'Codex permission profile' 'not installed'
-	fi
-	if ! prepare_codex_config "$config" "$proposed"; then
+	doctor_temp_file="$proposed"
+	if ! prepare_codex_config "$CODEX_DIR/config.toml" "$proposed"; then
 		required_problem 'Codex config.toml' 'could not compare'
-		return
-	fi
-	if cmp -s "$config" "$proposed"; then
-		cli_status success 'Codex config.toml' 'matches setup'
-	else
-		required_problem 'Codex config.toml' 'differs from setup'
+		readable=false
 	fi
 	rm -f "$proposed"
-	doctor_config_temp=""
+	doctor_temp_file=""
+	[ "$readable" = true ]
 }
 
-# Returns success when a hook settings file or any managed hook is present.
+# Lists each change setup would make, grouped by kind, and counts every one as
+# a required problem that the matching setup command fixes.
 #
-# @param  {string}  agent
-#     The agent whose hooks are checked: claude or codex.
-# @param  {string}  settings_file
-#     The installed hook settings file.
-hooks_installed() {
-	# The agent and installed hook settings file.
-	local agent="$1" settings_file="$2"
-	# Whether any managed hook is installed.
-	local present=false
-	if [ -e "$settings_file" ] || [ -L "$settings_file" ]; then
-		return 0
-	fi
-	managed_links "$agent" hooks check_managed_link_presence
-	[ "$present" = true ]
-}
-
-# Checks each link in one group that setup manages. An optional group with
-# nothing installed is reported as skipped, but once any of its links is
-# installed, every link is checked so a partial install fails.
-#
-# @param  {string}  agent
-#     The agent whose links are checked: claude, codex, or shared.
-# @param  {string}  group
-#     The group of links, as named by managed_links.
-# @param  {string}  requirement
-#     Either required, or optional when the group may not be installed.
-# @param  {string}  skip_label
-#     The name shown when a shared group is not installed. Shared groups
-#     need it because they have no agent name to show. Optional.
-check_managed_group() {
-	# The agent and link group being checked.
-	local agent="$1" group="$2"
-	# Whether a missing group counts as a failure.
-	local requirement="$3"
-	# The agent name shown before each label. The link callbacks below read it.
-	local link_prefix=''
-	# The name shown when an optional group is skipped.
-	local group_label="${4:-$group}"
-	# Whether any link in the group is installed. The presence callback sets it.
-	local present=false
-
-	if [ "$agent" = claude ]; then
-		link_prefix='Claude '
-	elif [ "$agent" = codex ]; then
-		link_prefix='Codex '
-	fi
-	if [ -n "$link_prefix" ]; then
-		group_label="$link_prefix$group"
-	fi
-	if [ "$requirement" = optional ]; then
-		managed_links "$agent" "$group" check_managed_link_presence
-		if [ "$present" = false ]; then
-			cli_status skipped "$group_label" 'not installed'
-			return
-		fi
-	fi
-	managed_links "$agent" "$group" check_managed_link
-}
-
-# Notes whether one link in an optional group is installed, counting a broken
-# symlink as installed. It sets present to true in the calling function.
-#
-# @param  {string}  source
-#     The repository file, which this check ignores.
 # @param  {string}  target
-#     The installed path to look for.
-# @param  {string}  label
-#     The link's label, which this check ignores.
-check_managed_link_presence() {
-	if [ -e "$2" ] || [ -L "$2" ]; then
-		present=true
-	fi
-}
+#     The detected agents: claude, codex or both.
+# @param  {string}  codex_config_readable
+#     Whether the Codex config can be compared with setup's output.
+report_setup_plan() {
+	# The detected setup target.
+	local target="$1"
+	# Whether to include planned Codex config changes.
+	local codex_config_readable="$2"
+	# The setup command that makes the listed changes.
+	local setup_command="scripts/setup.sh --$target"
+	# One kind of change, such as Links or Backups.
+	local kind
 
-# Checks one managed link and shows it with the agent name from the calling
-# check_managed_group, such as "Claude hooks/guard.sh".
-#
-# @param  {string}  source
-#     The repository file the link should point at.
-# @param  {string}  target
-#     The installed path to check.
-# @param  {string}  label
-#     The link's label, without the agent name.
-check_managed_link() {
-	check_link "$1" "$2" "$link_prefix$3"
-}
-
-# Reports whether an installed path links to its file in this checkout, and
-# counts any other state as a required problem.
-#
-# @param  {string}  source
-#     The canonical file or directory.
-# @param  {string}  target
-#     The installed path.
-# @param  {string}  label
-#     The name shown in the report.
-check_link() {
-	# The canonical source, installed path, and report label.
-	local source="$1" target="$2" label="$3"
-	if is_repo_owned_link "$source" "$target"; then
-		if [ -e "$target" ]; then
-			cli_status success "$label" 'correct'
+	if ! build_setup_plan "$target"; then
+		cli_section 'Setup changes'
+		# check_tools has already counted the missing cli-style.
+		if cli_style_install_needed && ! choose_cli_style_install_command >/dev/null 2>&1; then
+			cli_status skipped 'Setup' 'cannot list changes until cli-style is installed'
 		else
-			required_problem "$label" 'broken link'
+			required_problem 'Setup plan' 'could not be built'
 		fi
-	elif [ -L "$target" ]; then
-		if [ -e "$target" ]; then
-			required_problem "$label" 'wrong target'
-		else
-			required_problem "$label" 'broken link to wrong target'
-		fi
-	elif [ -e "$target" ]; then
-		required_problem "$label" 'real file in the way'
-	else
-		required_problem "$label" 'missing'
+		return
 	fi
+	if [ "$codex_config_readable" = false ]; then
+		omit_unreadable_codex_config_items
+	fi
+
+	cli_section 'Setup changes'
+	if [ "$plan_count" -eq 0 ]; then
+		cli_status success 'Setup' 'Nothing to change.'
+		return
+	fi
+
+	while IFS= read -r kind; do
+		report_plan_kind "$kind" "$setup_command"
+	done < <(plan_kinds)
 }
 
-# Reports whether each skill is installed, excluded, missing or conflicting
-# for the selected agents, with the command that fixes each one.
-# A missing or wrong link for an installed skill counts as a doctor failure.
-# Leftover links for excluded skills show as skipped and unmanaged content
-# as a warning; neither fails. Returns 1 after printing the error when two
-# skills share a name.
+# Removes Codex config changes from a plan when its source cannot be read.
+# The matched text follows plan_backup in setup-links.sh and the Codex settings
+# kind in setup-plan.sh; update these matches if either plan wording changes.
+omit_unreadable_codex_config_items() {
+	# The displayed path of the unreadable config.
+	local config_path
+	# A plan item being checked.
+	local item
+	# The plan items that can still be reported.
+	local -a readable_items=()
+	config_path=$(display_path "$CODEX_DIR/config.toml")
+	for item in "${plan_items[@]}"; do
+		case "$item" in
+			'Codex settings|'*|"Backups|Save $config_path in "*|"Backups|Remove older backup $config_path.bak."*) continue ;;
+		esac
+		readable_items+=("$item")
+	done
+	plan_items=("${readable_items[@]}")
+	plan_count=${#plan_items[@]}
+}
+
+# Prints each kind of planned change once, in the order setup planned them.
+plan_kinds() {
+	# One planned change, stored as kind|description.
+	local item
+	# The kinds already printed, so each appears once.
+	local -A seen_kinds=()
+	# The kind of the current change.
+	local kind
+
+	for item in "${plan_items[@]}"; do
+		kind="${item%%|*}"
+		if [ -z "${seen_kinds[$kind]:-}" ]; then
+			seen_kinds[$kind]=1
+			printf '%s\n' "$kind"
+		fi
+	done
+}
+
+# Lists the planned changes of one kind as required problems.
+#
+# @param  {string}  kind
+#     The kind of change to list.
+# @param  {string}  setup_command
+#     The setup command shown as the fix.
+report_plan_kind() {
+	# The kind to list and the command that fixes it.
+	local kind="$1" setup_command="$2"
+	# One planned change, stored as kind|description.
+	local item
+
+	cli_section "$kind"
+	for item in "${plan_items[@]}"; do
+		if [ "${item%%|*}" = "$kind" ]; then
+			required_problem "${item#*|}" "run: $setup_command"
+		fi
+	done
+}
+
+# Reports whether each skill is installed, excluded, missing or conflicting.
+# The setup plan counts changes to skill links as required problems. Returns 1
+# after printing the error when two skills share a name.
 #
 # @param  {string}  target
 #     The selected Claude, Codex, or both agent targets.
@@ -419,9 +348,9 @@ report_skill_status() {
 					if is_repo_owned_link "$status_skill" "$status_link" && [ -e "$status_link" ]; then
 						cli_status success "installed $status_name" "skills/$status_name"
 					elif [ -e "$status_link" ] || [ -L "$status_link" ]; then
-						check_link "$status_skill" "$status_link" "skills/$status_name"
+						cli_status skipped "conflicting $status_name" "run: scripts/setup.sh --$status_agent"
 					else
-						required_problem "missing $status_name" "run: scripts/setup.sh --$status_agent"
+						cli_status skipped "missing $status_name" "run: scripts/setup.sh --$status_agent"
 					fi
 				elif { [ -e "$status_link" ] || [ -L "$status_link" ]; } && ! is_repo_owned_link "$status_skill" "$status_link"; then
 					cli_status warning "conflicting $status_name" "run: trash $(display_path "$status_link")"
@@ -473,18 +402,6 @@ report_stale_skill_exclusions() {
 			cli_status warning "stale exclusion $excluded_skill" 'remove it from scripts/skill-exclusions.txt'
 		fi
 	done
-}
-
-# Reports whether this checkout's Git hooks come from src/hooks/git.
-check_git_hooks() {
-	# The configured Git hook directory, if any.
-	local hooks_path
-	hooks_path=$(git -C "$REPO_DIR" config --get core.hooksPath 2>/dev/null || true)
-	if [ "$hooks_path" = src/hooks/git ]; then
-		cli_status success 'Git core.hooksPath' 'src/hooks/git'
-	else
-		required_problem 'Git core.hooksPath' 'does not match src/hooks/git'
-	fi
 }
 
 # Counts and reports a required problem.

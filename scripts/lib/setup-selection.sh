@@ -13,12 +13,11 @@ skill_exclusions_file="$REPO_DIR/scripts/skill-exclusions.txt"
 parse_setup_options() {
 	# The agents to set up, or both when no agent is specified.
 	target="both"
-	# Whether hooks are installed. Setup always installs them; doctor reads the
-	# answer from the machine, and the shared Codex config builder uses it.
+	# Whether the Codex config builder adds the managed hooks. Setup always
+	# installs them.
 	setup_hooks=true
-	# Whether the managed Codex permission profile is installed. Setup always
-	# installs it; doctor reads the answer from the machine, and the shared Codex
-	# config builder uses it.
+	# Whether the Codex config builder adds the managed permission profile.
+	# Setup always installs it.
 	setup_permissions=true
 	# The Claude configuration folder, overridable for a second account.
 	CLAUDE_DIR="$HOME/.claude"
