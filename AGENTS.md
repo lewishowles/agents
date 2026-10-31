@@ -126,7 +126,8 @@ After pulling changes that remove or move skills, rerun `scripts/setup.sh --both
 Verification for any change in this repo:
 
 - `bash scripts/sync.sh` — regenerates all `dist/` output; run after editing anything under `src/`
-- `bash scripts/validate.sh` — must exit 0; pipes are misleading, check `$?` directly rather than a `tail`ed exit
+- `bash scripts/validate.sh --quick` — runs before each push, skipping the setup and doctor end-to-end tests
+- `bash scripts/validate.sh` — the full check to run before committing; must exit 0; pipes are misleading, check `$?` directly rather than a `tail`ed exit
 - `bash tests/friction-logging.sh` — covers the tool-failure hook, malformed input, and a missing `friction` CLI
 - `friction doctor --json` — confirms the globally installed friction CLI can open its database
 - `friction summary` — groups recurring friction by category, cwd and detail; excludes `check-fail` rows unless you pass `--include-check-fails`

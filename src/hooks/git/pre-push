@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Pre-push hook: runs validate.sh (including trigger tests) before pushing.
+# Pre-push hook: runs quick validation, skipping the setup and doctor end-to-end tests.
 # Installed via: scripts/setup.sh --claude|--both
 
 set -euo pipefail
@@ -7,5 +7,5 @@ set -euo pipefail
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 REPO_DIR=$(cd "$SCRIPT_DIR/../../.." && pwd)
 
-printf 'Running validate.sh before push…\n'
-bash "$REPO_DIR/scripts/validate.sh" 2>&1 | tail -30
+printf 'Running validate.sh --quick before push…\n'
+bash "$REPO_DIR/scripts/validate.sh" --quick 2>&1 | tail -30

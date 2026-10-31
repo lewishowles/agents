@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Runs all repository validation checks in a stable order.
+# Runs repository validation checks in a stable order; --quick skips the setup and doctor end-to-end tests.
 
 set -euo pipefail
 
@@ -14,6 +14,16 @@ source "$REPO_DIR/scripts/lib/cli-style-output.sh"
 
 # The number of validation commands that reported a failure.
 FAILED_CHECKS=0
+# Whether to skip the setup and doctor end-to-end tests.
+QUICK=false
+
+if [ "$#" -gt 0 ]; then
+	if [ "$#" -ne 1 ] || [ "$1" != "--quick" ]; then
+		printf 'Usage: %s [--quick]\n' "$0" >&2
+		exit 2
+	fi
+	QUICK=true
+fi
 
 cli_section "Validation" "Run repository checks"
 
@@ -60,8 +70,12 @@ run_check "hook sync"             bash "$REPO_DIR/scripts/validate/check-hook-sy
 run_check "dist sync"             bash "$REPO_DIR/scripts/validate/check-dist-sync.sh"
 run_check "docs tables"           python3 "$REPO_DIR/scripts/build/build-docs.py" --check
 run_check "agent-tools helpers"   bash "$REPO_DIR/scripts/validate/check-agent-tools-contract.sh"
-run_check "setup backup"          bash "$REPO_DIR/tests/setup.sh"
-run_check "setup doctor"          bash "$REPO_DIR/tests/doctor.sh"
+if [ "$QUICK" = true ]; then
+	cli_group_status skipped "setup and doctor tests (quick mode)"
+else
+	run_check "setup backup"          bash "$REPO_DIR/tests/setup.sh"
+	run_check "setup doctor"          bash "$REPO_DIR/tests/doctor.sh"
+fi
 run_check "cli-style output"      bash "$REPO_DIR/tests/cli-style-output.sh"
 run_check "Bash version guard"    bash "$REPO_DIR/tests/bash-guard.sh"
 run_check "HCOM acknowledgement guard" bash "$REPO_DIR/tests/hcom-ack-guard.sh"
