@@ -17,12 +17,22 @@ CLI_STYLE_STUB="$TEST_ROOT/bin/cli-style"
 SYSTEM_PATH="/usr/bin:/bin:/usr/sbin:/sbin"
 # The command search path for the doctor: the stand-in commands, then system commands.
 TEST_PATH="$TEST_ROOT/bin:$SYSTEM_PATH"
+# The archive of the scratch home after the last doctor run. The next run
+# starts from it instead of taking a new snapshot. Empty means take a new one.
+DOCTOR_AFTER_ARCHIVE=
 
 # Removes the scratch home and snapshots when the test exits.
 cleanup() {
 	trash "$TEST_ROOT"
 }
 trap cleanup EXIT
+
+# Makes the next doctor run take a new snapshot of the scratch home.
+# Call it before a test changes the home. A missed call makes the next run fail,
+# because the old snapshot no longer matches the home.
+discard_doctor_snapshot() {
+	DOCTOR_AFTER_ARCHIVE=
+}
 
 # Runs the doctor and checks both its result and its output.
 #
@@ -59,7 +69,15 @@ check_doctor() {
 	# Snapshots of the scratch home before and after the run.
 	local before="$TEST_ROOT/before.tar" after="$TEST_ROOT/after.tar"
 
-	tar -cf "$before" -C "$TEST_HOME" .
+	if [ -n "$DOCTOR_AFTER_ARCHIVE" ]; then
+		before="$DOCTOR_AFTER_ARCHIVE"
+		# Write the new snapshot to the other file so it cannot overwrite the old one.
+		if [ "$before" = "$after" ]; then
+			after="$TEST_ROOT/before.tar"
+		fi
+	else
+		tar -cf "$before" -C "$TEST_HOME" .
+	fi
 	output=$(HOME="$TEST_HOME" CLI_STYLE_BIN="$cli_style_bin" PATH="$command_path" GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0="$hooks_path" bash "$REPO_DIR/scripts/doctor.sh" 2>&1) || actual_status=$?
 	tar -cf "$after" -C "$TEST_HOME" .
 	if [ "$actual_status" -ne "$expected_status" ]; then
@@ -87,10 +105,12 @@ check_doctor() {
 		printf 'The doctor changed the scratch home.\n' >&2
 		return 1
 	fi
+	DOCTOR_AFTER_ARCHIVE="$after"
 }
 
 # Runs setup in the scratch home with the same command stand-ins as doctor.
 run_scratch_setup() {
+	discard_doctor_snapshot
 	HOME="$TEST_HOME" CLI_STYLE_BIN="$CLI_STYLE_STUB" PATH="$TEST_PATH" GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.hooksPath GIT_CONFIG_VALUE_0=src/hooks/git bash "$REPO_DIR/scripts/setup.sh" --both > "$TEST_ROOT/setup-output.txt"
 }
 
@@ -180,8 +200,10 @@ test_repository_skill_exclusions() {
 	printf 'writing\nstale-doctor-test-skill\n' > "$REPO_DIR/scripts/skill-exclusions.txt"
 	check_doctor 1 'Remove excluded skill ~/.claude/skills/writing' "$CLI_STYLE_STUB" src/hooks/git "$TEST_PATH" 'excluded writing link still present'
 	check_doctor 1 'Remove excluded skill ~/.agents/skills/writing' "$CLI_STYLE_STUB" src/hooks/git "$TEST_PATH" 'stale exclusion stale-doctor-test-skill'
+	discard_doctor_snapshot
 	trash "$TEST_HOME/.claude/skills/writing"
 	check_doctor 1 'excluded writing listed in scripts/skill-exclusions.txt' "$CLI_STYLE_STUB"
+	discard_doctor_snapshot
 	printf 'other\n' > "$TEST_HOME/.claude/skills/writing"
 	check_doctor 1 'conflicting writing run: trash ~/.claude/skills/writing' "$CLI_STYLE_STUB"
 }
@@ -220,6 +242,7 @@ test_plan_details() {
 	local hook_link
 	# A real folder in the way is saved, and any old backup is removed.
 	skill_link="$TEST_HOME/.claude/skills/code-style"
+	discard_doctor_snapshot
 	trash "$skill_link"
 	mkdir -p "$skill_link" "$TEST_HOME/.claude/backups/skills"
 	printf 'keep this content\n' > "$skill_link/keep.txt"
@@ -230,6 +253,7 @@ test_plan_details() {
 		printf 'The doctor changed unmanaged skill content.\n' >&2
 		return 1
 	fi
+	discard_doctor_snapshot
 	trash "$skill_link"
 	ln -s "$REPO_DIR/skills/code/code-style" "$skill_link"
 
@@ -239,15 +263,18 @@ test_plan_details() {
 	ln -s "$REPO_DIR/dist/codex/hooks/missing-tool-call-checkpoint.sh" "$hook_link"
 	check_doctor 1 'Remove ~/.codex/hooks/tool-call-checkpoint.sh' "$CLI_STYLE_STUB"
 	check_doctor 1 'Link ~/.codex/hooks/tool-call-checkpoint.sh to' "$CLI_STYLE_STUB"
+	discard_doctor_snapshot
 	trash "$hook_link"
 	ln -s "$REPO_DIR/dist/codex/hooks/tool-call-checkpoint.sh" "$hook_link"
 
 	# Doctor also reports changes to hooks, settings, commands, and Git hooks.
 	trash "$TEST_HOME/.claude/settings.json"
 	check_doctor 1 'Link ~/.claude/settings.json to' "$CLI_STYLE_STUB"
+	discard_doctor_snapshot
 	ln -s "$REPO_DIR/dist/claude/settings.json" "$TEST_HOME/.claude/settings.json"
 	trash "$TEST_HOME/.codex/hooks.json"
 	check_doctor 1 'Link ~/.codex/hooks.json to' "$CLI_STYLE_STUB"
+	discard_doctor_snapshot
 	ln -s "$REPO_DIR/dist/codex/hooks.json" "$TEST_HOME/.codex/hooks.json"
 	check_doctor 1 'Set core.hooksPath to src/hooks/git in this checkout' "$CLI_STYLE_STUB" other/hooks
 	/bin/cp -R "$TEST_ROOT/bin" "$TEST_ROOT/missing-helper-bin"
