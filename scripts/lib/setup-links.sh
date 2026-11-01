@@ -137,6 +137,48 @@ prune_stale_repo_links() {
 	done
 }
 
+# Whether read_link_target keeps each target it reads for the rest of the run.
+# Only the health check turns this on, because it never changes links; setup
+# replaces links partway through a run, so it reads every target fresh. A
+# script that turns it on must first declare the associative array
+# remembered_link_targets.
+remember_link_targets=false
+
+# Reads the target of a symlink into the named variable. It sets the variable
+# rather than printing, so a remembered target outlives the call. When
+# remember_link_targets is on, a link already read in this run is not read
+# again.
+#
+# Returns 1 and empties the variable when the link cannot be read.
+#
+# @param  {string}  link_path
+#     The symlink to read.
+# @param  {string}  result_var
+#     The name of the caller's variable that receives the target. It must not
+#     be link_path, result_var or link_text, which this function uses itself.
+read_link_target() {
+	# The symlink whose target is wanted.
+	local link_path="$1"
+	# The name of the caller's variable to set.
+	local result_var="$2"
+	# The target stored in the symlink.
+	local link_text
+
+	if [ "$remember_link_targets" = true ] && [ "${remembered_link_targets[$link_path]+present}" ]; then
+		link_text="${remembered_link_targets[$link_path]}"
+	else
+		if ! link_text=$(readlink "$link_path"); then
+			printf -v "$result_var" '%s' ''
+			return 1
+		fi
+		if [ "$remember_link_targets" = true ]; then
+			remembered_link_targets["$link_path"]="$link_text"
+		fi
+	fi
+
+	printf -v "$result_var" '%s' "$link_text"
+}
+
 # Returns 0 only when the target is a symlink whose link text is the expected
 # canonical source path. Comparing link text preserves a link to the same
 # checkout through another path form instead of replacing it.
@@ -157,7 +199,7 @@ is_repo_owned_link() {
 		return 1
 	fi
 
-	current=$(readlink "$target")
+	read_link_target "$target" current
 	[ "$current" = "$source" ]
 }
 
@@ -412,7 +454,7 @@ plan_prune_stale_repo_links() {
 
 	for link in "$dir"/*; do
 		[ -L "$link" ] || continue
-		target=$(readlink "$link")
+		read_link_target "$link" target
 		if [[ "$target" == "$repo_prefix"* ]] && {
 			[ "$remove_all" = 1 ] || [ ! -e "$link" ]
 		}; then

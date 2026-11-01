@@ -19,6 +19,10 @@ source "$SCRIPT_DIR/lib/setup-selection.sh"
 # shellcheck source=scripts/lib/setup-plan.sh
 source "$SCRIPT_DIR/lib/setup-plan.sh"
 
+# Link targets already read during this health check, by link path, so each
+# link is read once.
+declare -A remembered_link_targets=()
+
 # The number of required checks that found a problem.
 failed_checks=0
 # A temporary file created by this run, removed on exit.
@@ -41,6 +45,9 @@ main() {
 		printf 'Usage: scripts/doctor.sh\n' >&2
 		return 2
 	fi
+
+	# The health check never changes links, so a target read once stays correct.
+	remember_link_targets=true
 
 	# Stop Python helpers from writing bytecode under the user's home.
 	export PYTHONDONTWRITEBYTECODE=1
