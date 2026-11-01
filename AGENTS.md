@@ -49,7 +49,6 @@ Configuration/Agents/
 ├── .claude/skills/agent-config/  # repo-local maintenance skill
 ├── .agents/skills/agent-config     # symlink to the repo-local maintenance skill
 ├── scripts/
-│   ├── audit/               # tracked transcript and usage analysis tools
 │   ├── sync.sh               # full regeneration of target outputs and docs
 │   ├── validate.sh           # checks dist/ consistency; exits 0 on pass
 │   ├── setup.sh              # --claude|--codex|--both
@@ -87,7 +86,6 @@ repo/.agents/skills/agent-config → repo/.claude/skills/agent-config (repo-loca
 - A shared skill → `skills/<group>/<name>/SKILL.md` plus any support files
 - This repo's own maintenance skill → `.claude/skills/agent-config/SKILL.md`
 - Global symlink wiring → `scripts/setup.sh`
-- Transcript and usage analysis → `scripts/audit/`; generated reports stay under `.agent/audits/`
 
 **Skill vs. rule boundary:** if guidance should apply on every turn regardless of task, it belongs in `rules/`. If it is triggered by a specific task type or file context, it belongs in `skills/`. Do not add always-on conventions to a skill, and do not put task-specific workflows in a rule. Record lasting ownership splits between two skills in those skills' own files.
 
@@ -136,4 +134,3 @@ Gotchas:
 
 - `.agent/` is ignored by the global gitignore (`~/.config/git/ignore`), so review packets, specs, audits and logs are all untracked. The root `PROGRESS.md` is also ignored (by this repo's `.gitignore`) and only holds optional freeform backlog notes; task and chunk state lives in the `progress` database.
 - Editing `src/rules/global-rules.md` grows a file loaded on every turn in every project.
-- `scripts/audit/token_usage_report.py` supports two invocation styles: direct script execution (`python3 scripts/audit/token_usage_report.py`) and package import (`from scripts.audit import token_usage_report`, used by `tests/usage-driver-ledger.sh`). Sibling modules (`metrics.py`, `redundancy.py`, and `token_usage_types.py`, `tool_call_attribution.py`, `token_usage_parsing.py`, `token_usage_rendering.py`) must be imported with plain absolute imports after the file's `sys.path.insert(0, str(AUDIT_DIRECTORY))` shim, never relative imports (`from . import ...`) because direct execution runs the report module as `__main__`.

@@ -175,19 +175,3 @@ Run a one-off command with `agent-run run --json -- <argv>`. Manual-only command
 The default output omits the broad file tree. Pass `--tree-depth <number>` when a tree is useful.
 
 Put durable repository facts and gotchas in `AGENTS.md`, usage instructions in ordinary docs, and project commands or manual-only rules in agent-run's per-repo registrations. Keep each source focused on information agents can act on.
-
-## Checking token usage
-
-To inspect Claude and Codex token use for the last seven days:
-
-```bash
-python3 scripts/audit/token_usage_report.py --days 7
-```
-
-For repeatable historical output, pass an inclusive UTC date range:
-
-```bash
-python3 scripts/audit/token_usage_report.py --since 2026-08-01 --until 2026-08-06
-```
-
-Both commands replace `.agent/audits/usage/latest.md` (compact session summary), `.agent/audits/usage/latest-detail.md` (full driver-ledger detail), and `.agent/audits/usage/latest.json`. Reports contain token counts, not model pricing or monetary cost.
