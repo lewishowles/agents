@@ -32,8 +32,8 @@ chmod +x "$TEST_ROOT/cli-style"
 
 # The stand-in executable the output helpers call instead of the installed one.
 CLI_STYLE_BIN="$TEST_ROOT/cli-style"
-# shellcheck source=SCRIPTDIR/../scripts/lib/cli-style-output.sh
-source "$REPO_DIR/scripts/lib/cli-style-output.sh"
+# shellcheck source=SCRIPTDIR/../scripts/lib/script-output.sh
+source "$REPO_DIR/scripts/lib/script-output.sh"
 
 # Compares a status row with Python's original JSON output.
 #
@@ -145,8 +145,8 @@ check_section "control and Unicode text" "$controls" 'café € 😀'
 	# The override belongs only to this plain-output case.
 	# shellcheck disable=SC2030
 	CLI_STYLE_BIN="$TEST_ROOT/missing-cli-style"
-	# shellcheck source=SCRIPTDIR/../scripts/lib/cli-style-output.sh
-	source "$REPO_DIR/scripts/lib/cli-style-output.sh"
+	# shellcheck source=SCRIPTDIR/../scripts/lib/script-output.sh
+	source "$REPO_DIR/scripts/lib/script-output.sh"
 	cli_section 'Generated outputs' 'Build dist files and manifests'
 	cli_status success 'synced' 'dist/codex/AGENTS.md'
 	cli_group_begin 'Checks'
@@ -172,8 +172,8 @@ fi
 (
 	unset CLI_STYLE_BIN
 	PATH=/usr/bin:/bin
-	# shellcheck source=SCRIPTDIR/../scripts/lib/cli-style-output.sh
-	source "$REPO_DIR/scripts/lib/cli-style-output.sh"
+	# shellcheck source=SCRIPTDIR/../scripts/lib/script-output.sh
+	source "$REPO_DIR/scripts/lib/script-output.sh"
 	cli_status warning 'cli-style' 'missing'
 	cli_status failed 'check' 'failed'
 	cli_status info 'guidance' 'available'
@@ -191,4 +191,4 @@ if ! cmp -s "$TEST_ROOT/actual" "$TEST_ROOT/expected"; then
 	fail 'No cli-style on PATH did not produce readable plain output'
 fi
 
-printf '✓ cli-style output tests passed\n'
+printf '✓ script output tests passed\n'

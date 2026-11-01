@@ -10,7 +10,7 @@ REPO_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 
 # shellcheck source=SCRIPTDIR/lib/require-bash.sh
 source "$SCRIPT_DIR/lib/require-bash.sh"
-source "$REPO_DIR/scripts/lib/cli-style-output.sh"
+source "$REPO_DIR/scripts/lib/script-output.sh"
 
 # The number of validation commands that reported a failure.
 FAILED_CHECKS=0
@@ -94,7 +94,7 @@ else
 	run_check "setup backup"          bash "$REPO_DIR/tests/setup.sh"
 	run_check "setup doctor"          bash "$REPO_DIR/tests/doctor.sh"
 fi
-run_check "cli-style output"      bash "$REPO_DIR/tests/cli-style-output.sh"
+run_check "script output"         bash "$REPO_DIR/tests/script-output.sh"
 run_check "Bash version guard"    bash "$REPO_DIR/tests/bash-guard.sh"
 run_check "HCOM acknowledgement guard" bash "$REPO_DIR/tests/hcom-ack-guard.sh"
 run_check "HCOM recipient guard" bash "$REPO_DIR/tests/hcom-recipient-guard.sh"

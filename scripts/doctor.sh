@@ -72,8 +72,8 @@ main() {
 	# Whether setup can read the installed Codex configuration.
 	local codex_config_readable=true
 
-	# shellcheck source=scripts/lib/cli-style-output.sh
-	source "$SCRIPT_DIR/lib/cli-style-output.sh"
+	# shellcheck source=scripts/lib/script-output.sh
+	source "$SCRIPT_DIR/lib/script-output.sh"
 	load_skill_exclusions
 	cli_section 'Agent configuration doctor'
 

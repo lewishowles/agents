@@ -30,8 +30,8 @@ main() {
 	load_skill_exclusions
 
 	load_managed_paths
-	# shellcheck source=scripts/lib/cli-style-output.sh
-	source "$REPO_DIR/scripts/lib/cli-style-output.sh"
+	# shellcheck source=scripts/lib/script-output.sh
+	source "$REPO_DIR/scripts/lib/script-output.sh"
 
 	preflight_agent_tools "$target" || exit 1
 
@@ -46,8 +46,8 @@ main() {
 		"${cli_style_install_command[@]}"
 		# Load the output helpers again so the rest of setup uses the cli-style
 		# that was just installed.
-		# shellcheck source=scripts/lib/cli-style-output.sh
-		source "$REPO_DIR/scripts/lib/cli-style-output.sh"
+		# shellcheck source=scripts/lib/script-output.sh
+		source "$REPO_DIR/scripts/lib/script-output.sh"
 		if cli_style_install_needed; then
 			cli_status warning 'cli-style' 'still not found after install; check that the global bin folder is on PATH'
 		fi

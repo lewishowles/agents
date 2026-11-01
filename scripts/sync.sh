@@ -19,7 +19,7 @@ REPO_DIR=$(cd "$SCRIPT_DIR/.." && pwd)
 
 # shellcheck source=SCRIPTDIR/lib/require-bash.sh
 source "$SCRIPT_DIR/lib/require-bash.sh"
-source "$REPO_DIR/scripts/lib/cli-style-output.sh"
+source "$REPO_DIR/scripts/lib/script-output.sh"
 source "$REPO_DIR/scripts/lib/dist-targets.sh"
 
 # Clears dist/claude/hooks/ and repopulates it from the hook source dirs.
