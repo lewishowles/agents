@@ -16,6 +16,9 @@ source "$REPO_DIR/scripts/lib/cli-style-output.sh"
 FAILED_CHECKS=0
 # Whether to skip the setup and doctor end-to-end tests.
 QUICK=false
+# The wall-clock time when the run started, in seconds since the epoch. Bash 4
+# has no sub-second clock, so Python reads it.
+RUN_STARTED_AT=$(python3 -c 'import time; print(time.time())')
 
 if [ "$#" -gt 0 ]; then
 	if [ "$#" -ne 1 ] || [ "$1" != "--quick" ]; then
@@ -25,14 +28,19 @@ if [ "$#" -gt 0 ]; then
 	QUICK=true
 fi
 
+# Holds the elapsed time Bash reports for the check that just ran.
+TIMING_FILE=$(mktemp)
+trap 'rm -f "$TIMING_FILE"' EXIT
+
 cli_section "Validation" "Run repository checks"
 
 cli_group_begin "Checks"
 
 # Runs a command as a named validation check.
 # Records the result in the active group. Passing checks stay silent and are
-# reported in the group summary; failures print their output and a ✗ row.
-# Set CLI_STYLE_VERBOSE=1 to show a row for every check as it runs.
+# reported in the group summary; failures print their output and a ✗ row with
+# the time the check took. Set CLI_STYLE_VERBOSE=1 to show a row for every
+# check as it runs, with each passing check's time.
 #
 # @param  {string}  label
 #     Human-readable name recorded for the check.
@@ -44,20 +52,30 @@ run_check() {
 	# The command output, printed when the check fails or when the staleness check
 	# reports stale files.
 	local output
+	# The elapsed time displayed beside this check's result.
+	local duration
+	# The command's exit status, caught so a failing check is reported instead of
+	# stopping the script.
+	local check_status=0
+	# Makes the time keyword print only elapsed seconds, to one decimal place.
+	local TIMEFORMAT='%1R'
 	shift
 	if [ "${CLI_STYLE_VERBOSE:-0}" = "1" ]; then
 		cli_status info "Checking" "$label"
 	fi
-	if output=$("$@" 2>&1); then
+	{ time output=$("$@" 2>&1); } 2> "$TIMING_FILE" || check_status=$?
+	IFS= read -r duration < "$TIMING_FILE"
+	duration="${duration}s"
+	if [ "$check_status" -eq 0 ]; then
 		if [ "$label" = "staleness" ] && [ -n "$output" ]; then
 			printf '%s\n' "$output"
 		fi
-		cli_group_status success "$label"
+		cli_group_status success "$label" "$duration"
 	else
 		if [ -n "$output" ]; then
 			printf '%s\n' "$output" >&2
 		fi
-		cli_group_status error "$label" "failed"
+		cli_group_status error "$label" "failed after $duration"
 		FAILED_CHECKS=$((FAILED_CHECKS + 1))
 	fi
 }
@@ -94,10 +112,13 @@ run_check "staleness regression"  python3 "$REPO_DIR/tests/check-staleness.py"
 
 cli_group_end
 
+# The elapsed time displayed on the closing line.
+RUN_DURATION=$(python3 -c 'import sys, time; print(f"{time.time() - float(sys.argv[1]):.1f}s")' "$RUN_STARTED_AT")
+
 printf '\n'
 if [ "$FAILED_CHECKS" -gt 0 ]; then
-	cli_status error "$FAILED_CHECKS validation check(s) failed"
+	cli_status error "$FAILED_CHECKS validation check(s) failed in $RUN_DURATION"
 	exit 1
 fi
 
-cli_status success "All checks passed"
+cli_status success "All checks passed in $RUN_DURATION"
