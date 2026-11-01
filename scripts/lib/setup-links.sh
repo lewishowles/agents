@@ -61,14 +61,25 @@ backup_dir_for_path() {
 # @param  {string}  path
 #     The absolute path to display.
 display_path() {
+	display_path_to_reply "$1"
+	printf '%s' "$REPLY"
+}
+
+# Sets REPLY to a path with $HOME replaced by ~ for readable terminal output.
+# Code that runs once per skill or link uses this instead of display_path,
+# because capturing display_path's output starts a subshell on every call.
+#
+# @param  {string}  path
+#     The absolute path to display.
+display_path_to_reply() {
 	# The absolute path to shorten for terminal output.
 	local path="$1"
 
 	# The ~ is printed as text on purpose, to shorten home paths in the output.
 	# shellcheck disable=SC2088
 	case "$path" in
-		"$HOME"/*) printf '~/%s' "${path#"$HOME"/}" ;;
-		*) printf '%s' "$path" ;;
+		"$HOME"/*) REPLY="~/${path#"$HOME"/}" ;;
+		*) REPLY="$path" ;;
 	esac
 }
 
@@ -406,6 +417,10 @@ plan_link_path() {
 	# Whether stale-link cleanup removes the target before it is linked, so
 	# there is nothing left to back up.
 	local already_pruned=false
+	# The installed path shown in the plan.
+	local displayed_target
+	# The repository path shown in the plan.
+	local displayed_source
 
 	if is_repo_owned_link "$source" "$target"; then
 		return
@@ -424,7 +439,11 @@ plan_link_path() {
 		fi
 	fi
 
-	plan_change "Links" "Link $(display_path "$target") to $(display_path "$source")"
+	display_path_to_reply "$target"
+	displayed_target="$REPLY"
+	display_path_to_reply "$source"
+	displayed_source="$REPLY"
+	plan_change "Links" "Link $displayed_target to $displayed_source"
 }
 
 # Adds the repository links that setup will remove to the setup plan. By
@@ -458,7 +477,8 @@ plan_prune_stale_repo_links() {
 		if [[ "$target" == "$repo_prefix"* ]] && {
 			[ "$remove_all" = 1 ] || [ ! -e "$link" ]
 		}; then
-			plan_change "Links" "Remove $(display_path "$link")"
+			display_path_to_reply "$link"
+			plan_change "Links" "Remove $REPLY"
 			planned_pruned_links+=("$link")
 		fi
 	done
@@ -484,7 +504,8 @@ plan_skill_links() {
 		skill_link="$target_dir/$slug"
 		if ! skill_is_selected "$skill"; then
 			if is_repo_owned_link "$skill" "$skill_link"; then
-				plan_change "Links" "Remove excluded skill $(display_path "$skill_link")"
+				display_path_to_reply "$skill_link"
+				plan_change "Links" "Remove excluded skill $REPLY"
 			fi
 		else
 			plan_link_path "$skill" "$skill_link"

@@ -349,7 +349,7 @@ report_skill_status() {
 
 		if [ "${#skill_paths[@]}" -gt 0 ]; then
 			for status_skill in "${skill_paths[@]}"; do
-				status_name=$(basename "$status_skill")
+				status_name=${status_skill##*/}
 				status_link="$status_skills_dir/$status_name"
 				if skill_is_selected "$status_skill"; then
 					if is_repo_owned_link "$status_skill" "$status_link" && [ -e "$status_link" ]; then
@@ -360,7 +360,8 @@ report_skill_status() {
 						cli_status skipped "missing $status_name" "run: scripts/setup.sh --$status_agent"
 					fi
 				elif { [ -e "$status_link" ] || [ -L "$status_link" ]; } && ! is_repo_owned_link "$status_skill" "$status_link"; then
-					cli_status warning "conflicting $status_name" "run: trash $(display_path "$status_link")"
+					display_path_to_reply "$status_link"
+					cli_status warning "conflicting $status_name" "run: trash $REPLY"
 				elif excluded_skill_exists "$status_name"; then
 					if is_repo_owned_link "$status_skill" "$status_link"; then
 						cli_status skipped "excluded $status_name" "link still present; run: scripts/setup.sh --$status_agent"
