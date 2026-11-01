@@ -139,6 +139,33 @@ check_section "plain heading" "Generated outputs" ""
 check_section "supporting text" 'A "quote" and a \ slash' $'detail\twith\nlines'
 check_section "control and Unicode text" "$controls" 'café € 😀'
 
+# Passing rows in a group stay hidden unless the group asks to show them.
+# Verbose output is turned off so it cannot show the rows instead.
+CLI_STYLE_VERBOSE=0
+(
+	cli_group_begin 'Checks'
+	cli_group_status success 'hidden success' '0.1s'
+	cli_group_status skipped 'hidden skipped' 'not needed'
+	cli_group_status unchanged 'hidden unchanged' ''
+) > "$TEST_ROOT/actual"
+if [ -s "$TEST_ROOT/actual" ]; then
+	fail 'Passing group rows appeared without the group option'
+fi
+(
+	cli_group_begin 'Checks' true
+	cli_group_status success 'shown success' '0.1s'
+	cli_group_status skipped 'shown skipped' 'not needed'
+	cli_group_status unchanged 'shown unchanged' ''
+) > "$TEST_ROOT/actual"
+cat > "$TEST_ROOT/expected" <<'EOF'
+{"type": "success", "label": "shown success", "detail": "0.1s"}
+{"type": "skipped", "label": "shown skipped", "detail": "not needed"}
+{"type": "unchanged", "label": "shown unchanged", "detail": ""}
+EOF
+if ! cmp -s "$TEST_ROOT/actual" "$TEST_ROOT/expected"; then
+	fail 'The group option did not show every passing row'
+fi
+
 # When CLI_STYLE_BIN points at a missing file, the shared output functions
 # still print plain text, so setup, doctor, sync and validate keep working.
 (

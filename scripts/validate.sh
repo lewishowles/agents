@@ -34,13 +34,12 @@ trap 'rm -f "$TIMING_FILE"' EXIT
 
 cli_section "Validation" "Run repository checks"
 
-cli_group_begin "Checks"
+cli_group_begin "Checks" true
 
 # Runs a command as a named validation check.
-# Records the result in the active group. Passing checks stay silent and are
-# reported in the group summary; failures print their output and a ✗ row with
-# the time the check took. Set CLI_STYLE_VERBOSE=1 to show a row for every
-# check as it runs, with each passing check's time.
+# Records the result in the active group and prints a row with the time the
+# check took. Failures also print their output. CLI_STYLE_VERBOSE=1 prints a
+# "Checking" row before each check runs.
 #
 # @param  {string}  label
 #     Human-readable name recorded for the check.
@@ -57,14 +56,17 @@ run_check() {
 	# The command's exit status, caught so a failing check is reported instead of
 	# stopping the script.
 	local check_status=0
-	# Makes the time keyword print only elapsed seconds, to one decimal place.
-	local TIMEFORMAT='%1R'
+	# Makes the time keyword print only elapsed seconds, to three decimal places.
+	# The printf below rounds to one place, because Bash's own one-place format
+	# prints "0.:" instead of "1.0" when the tenths round up to ten.
+	local TIMEFORMAT='%3R'
 	shift
 	if [ "${CLI_STYLE_VERBOSE:-0}" = "1" ]; then
 		cli_status info "Checking" "$label"
 	fi
 	{ time output=$("$@" 2>&1); } 2> "$TIMING_FILE" || check_status=$?
 	IFS= read -r duration < "$TIMING_FILE"
+	printf -v duration '%.1f' "$duration"
 	duration="${duration}s"
 	if [ "$check_status" -eq 0 ]; then
 		if [ "$label" = "staleness" ] && [ -n "$output" ]; then

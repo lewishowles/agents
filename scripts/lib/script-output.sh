@@ -24,6 +24,8 @@ fi
 
 # The label of the status group whose rows are being counted, or empty when no group is active.
 CLI_STYLE_GROUP_LABEL=""
+# Whether the active group shows its passing rows even when verbose output is off.
+CLI_STYLE_GROUP_SHOW_PASSING_ROWS=false
 # The number of successful rows in the current group.
 CLI_STYLE_GROUP_SUCCESS=0
 # The number of skipped rows in the current group.
@@ -248,9 +250,14 @@ cli_json_string() {
 #
 # @param  {string}  label
 #     Group label.
+# @param  {boolean}  show_passing_rows
+#     Whether to show passing rows even when verbose output is off. Defaults to
+#     false, so passing rows appear only in the group summary.
 cli_group_begin() {
 	# The label of the new group of status rows.
 	local label="$1"
+	# Whether passing rows are shown as they are recorded.
+	local show_passing_rows="${2:-false}"
 
 	if [ "$CLI_STYLE_AVAILABLE" = false ]; then
 		printf '%s\n' "$label"
@@ -258,6 +265,7 @@ cli_group_begin() {
 	fi
 
 	CLI_STYLE_GROUP_LABEL="$label"
+	CLI_STYLE_GROUP_SHOW_PASSING_ROWS="$show_passing_rows"
 	CLI_STYLE_GROUP_SUCCESS=0
 	CLI_STYLE_GROUP_SKIPPED=0
 	CLI_STYLE_GROUP_SKIPPED_REASON=""
@@ -299,7 +307,7 @@ cli_group_status() {
 
 	cli_group_record "$normalised_type" "$label"
 
-	if [[ "${CLI_STYLE_VERBOSE:-0}" != "1" ]] && [[ "$normalised_type" =~ ^(success|skipped|unchanged)$ ]]; then
+	if [[ "${CLI_STYLE_VERBOSE:-0}" != "1" ]] && [[ "$CLI_STYLE_GROUP_SHOW_PASSING_ROWS" != true ]] && [[ "$normalised_type" =~ ^(success|skipped|unchanged)$ ]]; then
 		return
 	fi
 
