@@ -155,10 +155,62 @@ prune_stale_repo_links() {
 # remembered_link_targets.
 remember_link_targets=false
 
+# Remembers the target of every visible symlink in the folder that holds the
+# given link, using one readlink call for the whole folder. If the output does
+# not give exactly one line per link, because a target contains a newline or a
+# link changed during the read, each link is read on its own instead.
+#
+# @param  {string}  link_path
+#     A link in the folder whose targets should be remembered.
+remember_folder_link_targets() {
+	# The folder containing the requested link.
+	local link_dir="${1%/*}"
+	# The visible symlinks in that folder, in name order.
+	local -a folder_links=()
+	# Targets returned by one readlink call, in the same order.
+	local -a folder_targets=()
+	# A symlink being collected or read separately.
+	local link
+	# The complete output from readlink, including its final newline.
+	local link_text
+	# A target from a separate read.
+	local target
+	# An array position shared by the link and its target.
+	local index
+
+	for link in "$link_dir"/*; do
+		[ -L "$link" ] || continue
+		folder_links+=("$link")
+	done
+
+	[ "${#folder_links[@]}" -gt 0 ] || return 0
+
+	if link_text=$(readlink "${folder_links[@]}" && printf '.'); then
+		link_text="${link_text%.}"
+		while [[ "$link_text" == *$'\n'* ]]; do
+			folder_targets+=("${link_text%%$'\n'*}")
+			link_text="${link_text#*$'\n'}"
+		done
+
+		if [ -z "$link_text" ] && [ "${#folder_targets[@]}" -eq "${#folder_links[@]}" ]; then
+			for ((index = 0; index < ${#folder_links[@]}; index++)); do
+				remembered_link_targets["${folder_links[$index]}"]="${folder_targets[$index]}"
+			done
+			return 0
+		fi
+	fi
+
+	for link in "${folder_links[@]}"; do
+		if target=$(readlink "$link"); then
+			remembered_link_targets["$link"]="$target"
+		fi
+	done
+}
+
 # Reads the target of a symlink into the named variable. It sets the variable
 # rather than printing, so a remembered target outlives the call. When
 # remember_link_targets is on, a link already read in this run is not read
-# again.
+# again, and the first read in a folder remembers every link in that folder.
 #
 # Returns 1 and empties the variable when the link cannot be read.
 #
@@ -175,6 +227,10 @@ read_link_target() {
 	# The target stored in the symlink.
 	local link_text
 
+	if [ "$remember_link_targets" = true ] && [ ! "${remembered_link_targets[$link_path]+present}" ]; then
+		remember_folder_link_targets "$link_path"
+	fi
+
 	if [ "$remember_link_targets" = true ] && [ "${remembered_link_targets[$link_path]+present}" ]; then
 		link_text="${remembered_link_targets[$link_path]}"
 	else
@@ -182,6 +238,7 @@ read_link_target() {
 			printf -v "$result_var" '%s' ''
 			return 1
 		fi
+
 		if [ "$remember_link_targets" = true ]; then
 			remembered_link_targets["$link_path"]="$link_text"
 		fi

@@ -287,6 +287,41 @@ test_plan_details() {
 	check_doctor 1 'Codex config.toml could not compare' "$CLI_STYLE_STUB" src/hooks/git "$TEST_ROOT/fail-bin:$TEST_PATH" '' 'Save ~/.codex/config.toml' 'Write ~/.codex/config.toml'
 }
 
+# Checks that link reports stay correct for broken links, names with spaces, targets with newlines and absent folders.
+test_skill_link_targets() {
+	# An installed skill link that the first case points at a missing skill.
+	local broken_link="$TEST_HOME/.claude/skills/code-style"
+	# A broken repository skill link whose name contains spaces.
+	local spaced_link="$TEST_HOME/.claude/skills/old skill with spaces"
+	# A broken repository skill link whose target contains a newline.
+	local newline_link="$TEST_HOME/.claude/skills/old skill newline target"
+	# The installed skills folder saved during the missing-folder case.
+	local skills_backup="$TEST_ROOT/agents-skills-backup"
+
+	discard_doctor_snapshot
+	trash "$broken_link"
+	ln -s "$REPO_DIR/skills/code/missing-code-style" "$broken_link"
+	check_doctor 1 'conflicting code-style' "$CLI_STYLE_STUB" src/hooks/git "$TEST_PATH" 'Remove ~/.claude/skills/code-style'
+	discard_doctor_snapshot
+	trash "$broken_link"
+	ln -s "$REPO_DIR/skills/code/code-style" "$broken_link"
+
+	ln -s "$REPO_DIR/skills/code/missing-old-skill" "$spaced_link"
+	check_doctor 1 'Remove ~/.claude/skills/old skill with spaces' "$CLI_STYLE_STUB"
+	discard_doctor_snapshot
+	trash "$spaced_link"
+
+	ln -s "$REPO_DIR/skills/code/missing"$'\n'"skill" "$newline_link"
+	check_doctor 1 'Remove ~/.claude/skills/old skill newline target' "$CLI_STYLE_STUB" src/hooks/git "$TEST_PATH" '' 'Remove ~/.claude/skills/code-style'
+	discard_doctor_snapshot
+	trash "$newline_link"
+
+	mv "$TEST_HOME/.agents/skills" "$skills_backup"
+	check_doctor 1 'missing code-style' "$CLI_STYLE_STUB" src/hooks/git "$TEST_PATH" 'Link ~/.agents/skills/code-style to'
+	discard_doctor_snapshot
+	mv "$skills_backup" "$TEST_HOME/.agents/skills"
+}
+
 # Checks setup-plan details and confirms that doctor never changes the home.
 main() {
 	# The repository state before doctor runs, which must stay unchanged.
@@ -316,6 +351,7 @@ main() {
 	fi
 
 	test_plan_details
+	test_skill_link_targets
 	test_repository_skill_exclusions
 	test_duplicate_skill_names "$TEST_ROOT/repo-skill-exclusions"
 	printf 'doctor tests passed\n'
