@@ -118,6 +118,9 @@ preflight_agent_tools() {
 #     The existing Codex configuration, or a missing path on first setup.
 # @param  {string}  output
 #     The file that receives the managed configuration.
+# ShellCheck cannot tell that the remembered Codex config is filled and read
+# inside this one subshell.
+# shellcheck disable=SC2030
 prepare_codex_config() (
 	# The existing Codex configuration.
 	local config="$1"
@@ -133,6 +136,10 @@ prepare_codex_config() (
 	local temp=""
 	# The temporary config with legacy inline hooks removed, when needed.
 	local hooks_temp=""
+	# The managed settings, each named "section:key", and their values in the same order.
+	local -a remembered_codex_value_names=() remembered_codex_values=()
+	# The managed section names and the text of each section in the same order.
+	local -a remembered_codex_section_names=() remembered_codex_sections=()
 	# Deletes the temporary files however the function ends. The function body
 	# runs in a subshell so this trap does not replace the caller's EXIT trap.
 	trap 'rm -f "$defaults_temp" "$temp" "$hooks_temp"' EXIT
@@ -140,6 +147,7 @@ prepare_codex_config() (
 	if [ ! -f "$source" ]; then
 		source=/dev/null
 	fi
+	remember_codex_config
 	defaults_temp=$(mktemp)
 	temp=$(mktemp)
 	ensure_codex_defaults "$source" "$defaults_temp" || return 1
@@ -249,7 +257,84 @@ ensure_codex_defaults() {
 	' "$source" > "$destination"
 }
 
-# Prints one repository-managed Codex configuration value.
+# Reads the repository's Codex base config once and keeps every setting value
+# and section text for the lookups that follow in the same shell. The caller
+# declares the four remembered_codex_* arrays that this fills.
+# ShellCheck cannot tell that this runs in the subshell that declared them.
+# shellcheck disable=SC2031
+remember_codex_config() {
+	# The record type, section, setting name and text returned by the parser.
+	local record_type section key content
+
+	# The parser prints each setting and section as four NUL-separated fields:
+	# the record type, the section, the setting name (empty for a section) and
+	# the text. Only the first copy of a repeated setting or section is kept.
+	while IFS= read -r -d '' record_type && IFS= read -r -d '' section &&
+		IFS= read -r -d '' key && IFS= read -r -d '' content; do
+		if [ "$record_type" = value ]; then
+			remembered_codex_value_names+=("$section:$key")
+			remembered_codex_values+=("$content")
+		else
+			remembered_codex_section_names+=("$section")
+			remembered_codex_sections+=("$content")
+		fi
+	done < <(awk -v home="$HOME" '
+		# Prints a setting unless an earlier copy of it in the same section was printed.
+		function emit_value(section, key, value) {
+			if (!seen_values[section SUBSEP key]++) {
+				printf "value%c%s%c%s%c%s%c", 0, section, 0, key, 0, value, 0
+			}
+		}
+		# Prints the section just read, unless it is the root settings or an
+		# earlier copy of the same section was printed.
+		function emit_section() {
+			if (section != "root" && !seen_sections[section]++) {
+				printf "section%c%s%c%c%s%c", 0, section, 0, 0, section_text, 0
+			}
+		}
+		# Fills in {{HOME}} with the current home folder.
+		function expand_home(line) {
+			gsub(/\{\{HOME\}\}/, home, line)
+			return line
+		}
+		BEGIN { section = "root" }
+		/^\[/ {
+			emit_section()
+			section = substr($0, 2, length($0) - 2)
+			section_text = expand_home($0) "\n"
+			next
+		}
+		{
+			if (section != "root") {
+				section_text = section_text expand_home($0) "\n"
+			}
+			if ($0 !~ /^[^#[:space:]][^=]*=/) {
+				next
+			}
+			key = $0
+			sub(/[[:space:]]*=.*/, "", key)
+			value = $0
+			sub("^[^=]*=[[:space:]]*", "", value)
+
+			# Join an array written over several lines into one line, so the
+			# caller can write it back as a single setting.
+			while (value ~ /^\[/ && value !~ /\][[:space:]]*$/ && (getline line) > 0) {
+				if (section != "root") {
+					section_text = section_text expand_home(line) "\n"
+				}
+				sub("^[[:space:]]+", "", line)
+				value = value (value ~ /\[$/ ? "" : " ") line
+			}
+			sub(/,[[:space:]]*\]$/, "]", value)
+			emit_value(section, key, value)
+		}
+		END { emit_section() }
+	' "$REPO_DIR/src/adapters/codex/config.base.toml")
+}
+
+# Prints one repository-managed Codex configuration value from what
+# remember_codex_config kept in this shell. Prints nothing if that has not run
+# or the setting does not exist.
 #
 # @param  {string}  section
 #     TOML section name, or root for a root-level setting.
@@ -258,33 +343,15 @@ ensure_codex_defaults() {
 codex_config_value() {
 	# The config section and setting whose managed value is requested.
 	local section="$1" key="$2"
+	# The matching setting's position in the remembered values.
+	local index
 
-	awk -v section="$section" -v key="$key" '
-		BEGIN { in_section = section == "root" }
-		/^\[/ {
-			if (section == "root") {
-				exit
-			}
-
-			in_section = $0 == "[" section "]"
-			next
-		}
-		in_section && $0 ~ "^" key "[[:space:]]*=" {
-			sub("^[^=]*=[[:space:]]*", "")
-			value = $0
-
-			# Join an array written over several lines into one line, so the
-			# caller can write it back as a single setting.
-			while (value ~ /^\[/ && value !~ /\][[:space:]]*$/ && (getline line) > 0) {
-				sub("^[[:space:]]+", "", line)
-				value = value (value ~ /\[$/ ? "" : " ") line
-			}
-			sub(/,[[:space:]]*\]$/, "]", value)
-
-			print value
-			exit
-		}
-	' "$REPO_DIR/src/adapters/codex/config.base.toml"
+	for ((index = 0; index < ${#remembered_codex_value_names[@]}; index++)); do
+		if [ "${remembered_codex_value_names[$index]}" = "$section:$key" ]; then
+			printf '%s\n' "${remembered_codex_values[$index]}"
+			return 0
+		fi
+	done
 }
 
 # Sets selected keys from one repository-managed Codex section, keeping any
@@ -369,19 +436,24 @@ ensure_codex_section_settings() {
 	mv "$temp" "$config"
 }
 
-# Prints one repository-managed Codex TOML section.
+# Prints one repository-managed Codex TOML section from what
+# remember_codex_config kept in this shell. Prints nothing if that has not run
+# or the section does not exist.
 #
 # @param  {string}  section
 #     TOML section name to read.
 codex_config_section() {
 	# The section whose managed key lines are printed from the base config.
 	local section="$1"
+	# The matching section's position in the remembered text.
+	local index
 
-	sed "s|{{HOME}}|$HOME|g" "$REPO_DIR/src/adapters/codex/config.base.toml" | awk -v section="$section" '
-		$0 == "[" section "]" { in_section = 1 }
-		/^\[/ && in_section && $0 != "[" section "]" { exit }
-		in_section { print }
-	'
+	for ((index = 0; index < ${#remembered_codex_section_names[@]}; index++)); do
+		if [ "${remembered_codex_section_names[$index]}" = "$section" ]; then
+			printf '%s' "${remembered_codex_sections[$index]}"
+			return 0
+		fi
+	done
 }
 
 # Replaces the managed permission profile and removes incompatible sandbox settings.

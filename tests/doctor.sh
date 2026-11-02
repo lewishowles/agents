@@ -322,6 +322,125 @@ test_skill_link_targets() {
 	mv "$skills_backup" "$TEST_HOME/.agents/skills"
 }
 
+# Checks that every Codex setting and section setup reads from memory matches
+# what the old per-lookup parsers returned, including the multi-line status
+# line and the {{HOME}} paths.
+test_codex_config_cache() {
+	# The home used when the managed sections expand {{HOME}}.
+	local HOME="$TEST_HOME"
+	# The config read by both parsers.
+	local config="$REPO_DIR/src/adapters/codex/config.base.toml"
+	# The file holding the old parser's answer for the current comparison.
+	local expected="$TEST_ROOT/codex-config-expected"
+	# The settings, as "section:key", that setup reads when it builds Codex config.
+	local -a settings=(
+		root:approval_policy root:default_permissions root:model_reasoning_effort
+		root:model_verbosity root:model_reasoning_summary root:hide_agent_reasoning
+		root:suppress_unstable_features_warning tui:alternate_screen
+		tui:status_line tui:status_line_use_colors
+	)
+	# The sections that setup reads when it builds Codex config, plus the
+	# workspace roots section. Setup reads that one separately, but it is the
+	# only section that contains {{HOME}}.
+	local -a sections=(
+		features memories mcp_servers.codebase-memory-mcp mcp_servers.mdn
+		mcp_servers.sketch mcp_servers.sketch.tools.run_code
+		permissions.project-edit permissions.project-edit.network
+		permissions.project-edit.workspace_roots
+	)
+	# One requested setting or section.
+	local setting section key
+	# The arrays that remember_codex_config fills, kept local to this test.
+	# shellcheck disable=SC2034
+	local -a remembered_codex_value_names=() remembered_codex_values=()
+	# shellcheck disable=SC2034
+	local -a remembered_codex_section_names=() remembered_codex_sections=()
+
+	# Loads the lookups from this checkout so they read the same file as the
+	# old parsers below.
+	# shellcheck source=/dev/null
+	source "$REPO_DIR/scripts/lib/setup-checks.sh"
+	remember_codex_config
+
+	for setting in "${settings[@]}"; do
+		section="${setting%%:*}"
+		key="${setting#*:}"
+		read_old_codex_config_value "$config" "$section" "$key" > "$expected"
+
+		# An empty old answer means the list names a setting the config no
+		# longer has, so the comparison would no longer guard anything.
+		if [ ! -s "$expected" ] || ! cmp -s "$expected" <(codex_config_value "$section" "$key"); then
+			printf 'Codex setting changed: %s\n' "$setting" >&2
+			return 1
+		fi
+	done
+
+	for section in "${sections[@]}"; do
+		read_old_codex_config_section "$config" "$section" > "$expected"
+
+		if [ ! -s "$expected" ] || ! cmp -s "$expected" <(codex_config_section "$section"); then
+			printf 'Codex section changed: %s\n' "$section" >&2
+			return 1
+		fi
+	done
+
+	rm "$expected"
+}
+
+# Prints one Codex setting the way setup read it before it kept the config in
+# memory. Keep this a separate copy of the old parser: calling the new loader
+# here would make the test compare the loader with itself.
+#
+# @param  {string}  config
+#     The Codex base config file to read.
+# @param  {string}  section
+#     TOML section name, or root for a root-level setting.
+# @param  {string}  key
+#     Setting name to read.
+read_old_codex_config_value() {
+	# The config file, section and setting to read.
+	local config="$1" section="$2" key="$3"
+
+	awk -v section="$section" -v key="$key" '
+		BEGIN { in_section = section == "root" }
+		/^\[/ {
+			if (section == "root") exit
+			in_section = $0 == "[" section "]"
+			next
+		}
+		in_section && $0 ~ "^" key "[[:space:]]*=" {
+			sub("^[^=]*=[[:space:]]*", "")
+			value = $0
+			while (value ~ /^\[/ && value !~ /\][[:space:]]*$/ && (getline line) > 0) {
+				sub("^[[:space:]]+", "", line)
+				value = value (value ~ /\[$/ ? "" : " ") line
+			}
+			sub(/,[[:space:]]*\]$/, "]", value)
+			print value
+			exit
+		}
+	' "$config"
+}
+
+# Prints one Codex section with {{HOME}} filled in, the way setup read it
+# before it kept the config in memory. Keep this a separate copy of the old
+# parser for the same reason as read_old_codex_config_value.
+#
+# @param  {string}  config
+#     The Codex base config file to read.
+# @param  {string}  section
+#     TOML section name to read.
+read_old_codex_config_section() {
+	# The config file and section to read.
+	local config="$1" section="$2"
+
+	sed "s|{{HOME}}|$HOME|g" "$config" | awk -v section="$section" '
+		$0 == "[" section "]" { in_section = 1 }
+		/^\[/ && in_section && $0 != "[" section "]" { exit }
+		in_section { print }
+	'
+}
+
 # Checks setup-plan details and confirms that doctor never changes the home.
 main() {
 	# The repository state before doctor runs, which must stay unchanged.
@@ -352,6 +471,7 @@ main() {
 
 	test_plan_details
 	test_skill_link_targets
+	test_codex_config_cache
 	test_repository_skill_exclusions
 	test_duplicate_skill_names "$TEST_ROOT/repo-skill-exclusions"
 	printf 'doctor tests passed\n'
