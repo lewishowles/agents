@@ -464,8 +464,13 @@ main() {
 	printf '#!/bin/sh\nexit 1\n' > "$TEST_ROOT/hcom-fail-bin/hcom"
 	chmod +x "$TEST_ROOT/hcom-fail-bin/hcom"
 	check_doctor 0 'HCOM arguments could not be read, so HCOM changes are not listed.' "$CLI_STYLE_STUB" src/hooks/git "$TEST_ROOT/hcom-fail-bin:$TEST_PATH" 'No required problems found'
-	if [ "$(git -C "$REPO_DIR" status --porcelain --untracked-files=all)" != "$repo_before" ]; then
-		printf 'The doctor changed the repository.\n' >&2
+	# The repository's Git status after the doctor has run.
+	local repo_after
+	repo_after=$(git -C "$REPO_DIR" status --porcelain --untracked-files=all)
+
+	# The status covers the live checkout, so a commit or edit made during the test also ends up here.
+	if [ "$repo_after" != "$repo_before" ]; then
+		printf 'The Git status of the repository changed during the doctor test. The doctor may have changed it, or a commit or edit may have landed while the test ran.\nStatus before:\n%s\nStatus after:\n%s\n' "$repo_before" "$repo_after" >&2
 		return 1
 	fi
 
