@@ -10,7 +10,7 @@ Start, resume, complete, and hand off work using the `progress` CLI records, wit
 
 ## Progress records
 
-The `progress` CLI stores the current project, release, task, chunk, discovery, decision, and handoff records. At startup, find the selected task: the task the launch prompt names, otherwise the task `progress next --json` returns. Use `progress context get --task <task-id> --json` when the selected task's handoff needs more detail. If `progress next` returns no task, read the project-level context with `progress context get --json`. Before an HCOM Orchestrator dispatches substantive work without a task, create one with `progress task add --slug <slug> --title <title> --overview <overview> --done-when <criterion> --file <path>`, repeating `--file` for each path in scope, and use its task-scoped handoff.
+The `progress` CLI stores the current project, release, task, chunk, discovery, decision, and handoff records. At startup, find the selected task: the task the launch prompt names, otherwise the task `progress next --json` returns. Use `progress context get --task <task-id> --json` when the selected task's handoff needs more detail. If `progress next` returns no task, read the project-level context with `progress context get --json` unless the launch prompt's `Project handoff:` section holds it. Before an HCOM Orchestrator dispatches substantive work without a task, create one with `progress task add --slug <slug> --title <title> --overview <overview> --done-when <criterion> --file <path>`, repeating `--file` for each path in scope, and use its task-scoped handoff.
 
 Represent each implementation unit as a chunk. Do not infer completion from Git state.
 
@@ -48,15 +48,15 @@ Keep progress state in the CLI records. Use `agent-run run <name> --json` for re
 
 ## HCOM orchestration
 
-When acting as an HCOM Orchestrator, use `hcom list -v` only to identify a same-repository Scout. Send that Scout one bounded request for every factual resume receipt needed, including task or chunk state, outstanding peer reports, and worktree safety. Wait for the Scout's terminal report before deciding and presenting the next task.
+When acting as an HCOM Orchestrator, use `hcom list -v` only to identify a same-repository Scout. Use the task handoff, project handoff, and Git status supplied in the launch prompt when their labelled sections are present and do not say `Missing:`; read a missing fact yourself. Ask Scout for factual resume receipts still needed, including the chunk list and any outstanding peer reports. Wait for the Scout's terminal report before deciding and presenting the next task.
 
-Do not inspect source, task state, Git state, peer transcripts, or CLI syntax directly to reconstruct the session. The Scout reports facts; the Orchestrator keeps the decision and human-facing handoff.
+Apart from the direct actions the Orchestrator role allows, do not inspect source, task state, Git state, peer transcripts, or CLI syntax directly to reconstruct the session. The Scout reports remaining facts; the Orchestrator keeps the decision and human-facing handoff.
 
 On continuation, and before the active chunk is delegated for the first time, obtain `progress chunk list <task-id> --json`. An HCOM Orchestrator includes this check in the Scout's bounded resume request instead of running it directly. Review the active chunk and every incomplete sibling using the returned position, title, description, and status. Use `progress chunk get <chunk-id> --json` only when that metadata leaves a boundary vague or suggests an overlap. If the active chunk includes work assigned to a later incomplete sibling, stop before implementation or delegation and narrow or replace it through `project-plan-task`.
 
 ## Workflow
 
-1. **Read** — `progress context get --task <task-id> --json` first; stop unless the next step is unclear or the task needs deeper context
+1. **Read** — `progress context get --task <task-id> --json` first (an HCOM Orchestrator follows Session startup for this read); stop unless the next step is unclear or the task needs deeper context
 2. **Compact** — repair stale or missing handoff context; remove duplicate notes and obsolete TODOs; compress completed sub-tasks to one line
 3. **Verify** — spot-check recently-completed work landed
 4. **Reorient** — confirm active work still fits; move to upcoming if priorities changed
@@ -70,15 +70,15 @@ On continuation, and before the active chunk is delegated for the first time, ob
 
 Read only enough to orient. Stale sessions (5+ min idle) restart from scratch.
 
-- Read the handoff from `progress context get --task <task-id> --json`, including `current_goal`, `previous_step`, `next_step`, `standing_context`, `verify_with`, and `stop_marker`
-- An HCOM Orchestrator also reads `progress context get --json` without `--task`. If either handoff's `next_step` starts with `Ask the human first:`, ask those items first in the first human-facing reply, keeping their saved labels and wording, before other work. Once they are answered, remove them by rewriting all six handoff fields and keeping the values still needed, because `progress context set` clears any field it is not given.
+- Read the handoff from `progress context get --task <task-id> --json`, including `current_goal`, `previous_step`, `next_step`, `standing_context`, `verify_with`, and `stop_marker`. An HCOM Orchestrator uses `Task handoff for <task-id>:` in the launch prompt instead, and reads it only if that section is absent or says `Missing: the task handoff could not be read.`
+- An HCOM Orchestrator also uses `Project handoff:` in the launch prompt, and reads `progress context get --json` without `--task` only if that section is absent or says `Missing: the project handoff could not be read.` If either handoff's `next_step` starts with `Ask the human first:`, ask those items first in the first human-facing reply, keeping their saved labels and wording, before other work. Once they are answered, remove them by rewriting all six handoff fields and keeping the values still needed, because `progress context set` clears any field it is not given.
 - Read the whole handoff before acting, including any handoff document it links to. Leave alone any change it says not to touch, and don't count that change as part of the task.
 - Verify the active task and chunk records before starting: the CLI status is the source of truth. If the task record says `done` but accepted chunks remain incomplete, complete the chunk records and task through the CLI, then update release and queue state.
 - Check the handoff against the active records and worktree before following it. Treat current evidence as fresher. If the handoff's referenced task or chunk shows `done`/`completed` in the CLI records, the handoff is stale: silently prefer the selected task's current records and proceed, without asking the user to reconcile it. Surface a conflict to the user only when the handoff points at work the CLI still shows active or pending and disagrees with the selected task's records.
 - Read active task, chunk, discovery, decision, and risk details only when needed
 - Read linked feature specs only when active; skip unrelated specs
 - Skip completed tasks and old records unless the current task depends on their history
-- Run `git status --short` before editing to avoid overwriting work the user has not handled. Do not put its result in `PROGRESS.md`, or use it to infer task completion. Branch creation or switching is not part of task setup unless the user requests it.
+- Run `git status --short` before editing to avoid overwriting work the user has not handled. An HCOM Orchestrator uses `Git status for <working_directory>:` in the launch prompt when it names the current checkout and reports status or `Clean checkout (no changes).`; run the command if that section is absent or says `Missing: Git status could not be read.` Keep the separate status check immediately before starting a task or chunk. Do not put its result in `PROGRESS.md`, or use it to infer task completion. Branch creation or switching is not part of task setup unless the user requests it.
 - Read `AGENTS.md`, ordinary docs, and agent-run registrations before running local commands
 - Surface any open question recorded on a chunk before starting that chunk, and ask it rather than quietly adopting its recommended default
 - If the next task's title starts with `Needs planning:`, plan it through `project-plan-task` and get the user's approval before any implementation or delegation. Never hand it to an Implementer as it is
