@@ -21,7 +21,7 @@ Apply these extra instructions alongside `teams/hcom/roles/orchestrator.md`. You
 The Scout is an existing HCOM team member, not a sub-agent you create or spawn. Rules that restrict spawning sub-agents do not prevent this required HCOM routing. In this workflow, “peer” means the opposite planning reviewer, not your own Scout.
 
 ```sh
-team-send scout --intent request < "$body_file" # Body: Gather these factual receipts: (1) <question or command>; (2) <question or command>. Scope: <paths/area>. Report: <facts for each item>.
+team-send scout --intent request --body-file "$body_file" # Body: Gather these factual receipts: (1) <question or command>; (2) <question or command>. Scope: <paths/area>. Report: <facts for each item>.
 ```
 
 Report the one-line summary described in the review skill's Output section, then stop. Writing the file is what "delivers" the packet; no further message is needed.

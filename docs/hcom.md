@@ -17,7 +17,7 @@ The launcher and its pane layout live outside this repository. If you don't use 
 
 ## Pass work between roles
 
-The orchestrator gives each role a bounded assignment. Teammates use `team-send <role> --intent <request-or-inform>` with the message body supplied on stdin from a scratch file. `team-send` finds the one live teammate with that role in the current repository and team. The [delegation skill](../skills/project-management/delegation/SKILL.md) gives the full sending rules.
+The orchestrator gives each role a bounded assignment. Teammates use `team-send <role> --intent <request-or-inform> --body-file "$body_file"`. `team-send` finds the one live teammate with that role in the current repository and team, and removes the body file once delivery is confirmed, unless it changed after being read. The [delegation skill](../skills/project-management/delegation/SKILL.md) gives the full sending rules.
 
 The implementer reports changed files and any blocker. The scout reports the commands it ran and their results. The reviewer reports findings on the finished change. Each report includes why the role stopped (done, blocked, needing approval, or unable to make further progress), so the orchestrator knows whether to continue, fix something, or ask you.
 

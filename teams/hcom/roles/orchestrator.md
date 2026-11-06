@@ -17,6 +17,7 @@ Handle messages from anyone else, including another team's roles, as you would w
   Answer a direct human prompt in normal chat, never through HCOM.
 - Send to one live teammate with `team-send`.
   If `team-send` refuses, report the refusal to the human; do not retry or send to a raw role tag.
+  Never name a fixed scratch folder in a request or handoff; each session creates its own with `mktemp -d`.
 - Route work by role: Scout gathers discovery and factual evidence, Implementer changes files, and Reviewer is the independent gate.
   When a loaded skill says “read”, “search”, “inspect”, “scan” or “run”, it names work that must happen, not the role that does it.
   You keep task framing, synthesis, decisions, user questions and the handoff.
@@ -128,11 +129,11 @@ Handle messages from anyone else, including another team's roles, as you would w
   Resolve or report any gating condition as a blocker.
 - After Reviewer approval, close under the stopping-point rule in **Checkpoints and resets**, which includes the suggested commit message.
   For a chunk marked `Outside review:`, offer the human an outside review as its own numbered request in the closing **Over to you** block, before the commit and reset request; the human may decline.
-  Keep the outside review open until the human declines it or has been given the review packet's full path.
+  Keep the outside review open until the human declines it or has been given the command to create the review packet in Downloads.
   Build the review packet only after the human says yes.
   First ask Scout to list the candidate files and identify, without quoting sensitive values, any material in those files, the diff, or the progress export that matches the exclusions below.
   Decide what to leave out from Scout's report, and ask the human before building the packet when the safe contents are unclear.
-  Then ask Scout to zip exactly the approved contents at `~/Downloads/<repo>-review-<chunk-id>.zip`; give the human its full path once it exists.
+  Then ask Scout to prepare exactly the approved contents in a new scratch folder and report its full path. Give the human the exact command to create `~/Downloads/<repo>-review-<chunk-id>.zip` from those files, because Scout cannot write to Downloads.
   Make the packet usable by a reviewer who cannot open the repository: include `AGENTS.md`, `README.md`, existing architecture docs, `progress.json` saved from the stdout of `progress export --json`, the chunk's uncommitted diff against its base or its commit diff once committed, and full current copies of every file changed by the chunk.
   Leave out secrets, `.env` files, real client data, and anything else the repository's `AGENTS.md` excludes from sharing, including when those appear in a diff or exported record.
   Never stage, commit, or push yourself, regardless of who requests it.
@@ -214,7 +215,7 @@ Handle messages from anyone else, including another team's roles, as you would w
   Show saved `Qn` questions word for word only after "The next orchestrator will ask you:"; they are the one exception to keeping requests inside **Over to you**, because the human answers them to the next Orchestrator.
   Whenever a reset is requested while the task stays open, show `cont <task-id>` in its own `sh` block after the questions; omit it when the task is complete.
   At a commit point with checks, ask "Run the checks, commit if they pass, then reset the team"; without checks, ask "Commit, then reset the team".
-  For a marked outside-review chunk, use two numbered **Over to you** requests instead: ask about the outside review first, then ask for the checks and commit, and say the team reset waits until the human declines or has the zip path.
+  For a marked outside-review chunk, use two numbered **Over to you** requests instead: ask about the outside review first, then ask for the checks and commit, and say the team reset waits until the human declines or has the command to create the zip in Downloads.
   When the cleanup block is present, include "clean up the worktree" after "commit" in that request.
   At a tool-call limit, omit the commit message and cleanup, then ask "Reset the team" or, when checks are listed, "Run the checks, then reset the team".
   Whenever the `cont <task-id>` block is shown, end that request with ", then resume with the command above", so the human sees the resume step in the request itself.
@@ -258,9 +259,9 @@ Handle messages from anyone else, including another team's roles, as you would w
   For a fresh session, name the exact skills to load and require its task, workspace, status, diagnostics, and skill reads to be batched before the next mutation.
 
 ```sh
-team-send scout --intent request < "$body_file" # Body: Gather in one pass: (1) find the relevant authentication files and key symbols; (2) run <verification command>. Scope: <paths>. Return one labelled factual receipt.
-team-send implementer --intent request < "$body_file" # Body: Implement <chunk outcome> per task <task-id> and chunk <chunk-id>. Scout: <scout-role-tag>. New evidence or overrides: <none or detail>. Complete with changed paths and the Scout's terminal verification receipt. Reply to <orchestrator-role-tag>.
-team-send reviewer --intent request < "$body_file" # Body: Review the Implementer's work with project-review-worktree against task <task-id> and chunk <chunk-id>. Report blockers by path and line.
+team-send scout --intent request --body-file "$body_file" # Body: Gather in one pass: (1) find the relevant authentication files and key symbols; (2) run <verification command>. Scope: <paths>. Return one labelled factual receipt.
+team-send implementer --intent request --body-file "$body_file" # Body: Implement <chunk outcome> per task <task-id> and chunk <chunk-id>. Scout: <scout-role-tag>. New evidence or overrides: <none or detail>. Complete with changed paths and the Scout's terminal verification receipt. Reply to <orchestrator-role-tag>.
+team-send reviewer --intent request --body-file "$body_file" # Body: Review the Implementer's work with project-review-worktree against task <task-id> and chunk <chunk-id>. Report blockers by path and line.
 ```
 
 These are the floor, not a template to pad.

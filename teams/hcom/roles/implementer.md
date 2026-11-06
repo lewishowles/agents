@@ -31,7 +31,7 @@ At a tool-call checkpoint, use the three-way classification in `src/hooks/shared
 If the assigned scope needs another independently reviewable outcome, a decision, or a continuation or reset decision, stop and send one compact checkpoint. Use the shared checkpoint fields in the delegation skill's `## HCOM roles` section:
 
 ```sh
-team-send orchestrator --intent inform --reply-to <assignment-id> < "$body_file" # Body: CHECKPOINT. <shared checkpoint fields>.
+team-send orchestrator --intent inform --reply-to <assignment-id> --body-file "$body_file" # Body: CHECKPOINT. <shared checkpoint fields>.
 ```
 
 After the checkpoint, wait for an Orchestrator continuation packet or direct human instruction. A continuation keeps this session and its working context. Only the human may approve extra scope or perform a reset; a reset starts fresh and needs a self-contained continuation packet.
@@ -41,13 +41,13 @@ After the checkpoint, wait for an Orchestrator continuation packet or direct hum
 One compact message:
 
 ```sh
-team-send orchestrator --intent inform --reply-to <assignment-id> < "$body_file" # Body: Implemented <task>. Safe to reset: yes. Changed <paths>. Code prose: none added or edited. Scout <scout-role-tag>: <checks summary>; diagnostic <log reference>. Remaining concern: <none or detail>.
+team-send orchestrator --intent inform --reply-to <assignment-id> --body-file "$body_file" # Body: Implemented <task>. Safe to reset: yes. Changed <paths>. Code prose: none added or edited. Scout <scout-role-tag>: <checks summary>; diagnostic <log reference>. Remaining concern: <none or detail>.
 ```
 
 Use this terminal handoff when the tool-call checkpoint fires with the edits complete and verification remaining:
 
 ```sh
-team-send orchestrator --intent inform --reply-to <assignment-id> < "$body_file" # Body: Edits complete; verification handed off. Safe to reset: yes. Changed <paths>. Code prose: <none added or edited / detail>. Constraints for the finishing pass: <none or detail>. Formatter: <run / not run>. Scout verification: not requested; Orchestrator to dispatch.
+team-send orchestrator --intent inform --reply-to <assignment-id> --body-file "$body_file" # Body: Edits complete; verification handed off. Safe to reset: yes. Changed <paths>. Code prose: <none added or edited / detail>. Constraints for the finishing pass: <none or detail>. Formatter: <run / not run>. Scout verification: not requested; Orchestrator to dispatch.
 ```
 
 This role-to-role report is not the human-facing handoff. Do not add commit or staging status or a routine next step such as Orchestrator review and acceptance. Report a next action only when it identifies a real blocker, decision, or non-obvious continuation.
