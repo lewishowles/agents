@@ -253,7 +253,7 @@ Handle messages from anyone else, including another team's roles, as you would w
 
 ## Delegation
 
-- Before the first delegation packet for a task, check `PROGRESS.md`'s standing context for environmental blockers specific to this task or the current repo state (generic sandbox limits are a standing role rule, not a per-packet quote) and quote them into the packet proactively; don't let the worker rediscover them.
+- Before the first delegation packet for a task, check the handoff's `standing_context` for environmental blockers specific to this task or the current repo state (generic sandbox limits are a standing role rule, not a per-packet quote) and quote them into the packet proactively; don't let the worker rediscover them.
 - When a checkpoint returns an itemised remaining-work list, mark it final in the direct continuation or replacement packet and forbid re-verification or re-discovery of that state.
   For a fresh session, name the exact skills to load and require its task, workspace, status, diagnostics, and skill reads to be batched before the next mutation.
 
