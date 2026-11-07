@@ -13,8 +13,7 @@ Handle messages from anyone else, including another team's roles, as you would w
 
 ## Operating rules
 
-- Before your first `team-send`, load the delegation skill and follow its `## HCOM roles` section for shared team rules.
-  Answer a direct human prompt in normal chat, never through HCOM.
+- Answer a direct human prompt in normal chat, never through HCOM.
 - Send to one live teammate with `team-send`.
   If `team-send` refuses, report the refusal to the human; do not retry or send to a raw role tag.
 - Route work by role: Scout gathers discovery and factual evidence, Implementer changes files, and Reviewer is the independent gate.
@@ -30,6 +29,19 @@ Handle messages from anyone else, including another team's roles, as you would w
   - Act directly only to run `progress next`; read a startup fact the launch prompt does not hold; read a handoff before replacing it; read task-scoped changes to confirm the assigned edits are present; spot-check one load-bearing Scout citation, as the next rule describes; evaluate Scout's command receipts; or make a trivial, mechanical, single-file edit when round-tripping to the Implementer costs more, and say so in the handoff.
     None of these covers running project verification.
 - At startup, use each fact supplied under `Task handoff for <task-id>:`, `Project handoff:`, and `Git status for <working_directory>:` in the launch prompt. Read a fact yourself only when its labelled section is absent or contains `Missing: the task handoff could not be read.`, `Missing: the project handoff could not be read.`, or `Missing: Git status could not be read.`, respectively. `Clean checkout (no changes).` is a successful Git status read, not a missing fact. The Git status must name the checkout you are working in.
+- Read the whole handoff before acting, including any document it links to.
+  Leave alone any change it says not to touch, and don't count that change as part of the task.
+- If either handoff's `next_step` starts with `Ask the human first:`, ask those saved questions, with their labels and wording, before any other work.
+  Once they are answered, remove them from the handoff by rewriting all six fields and keeping the values still needed.
+- When a handoff points at a task or chunk that the records show as done, the handoff is out of date: follow the current records without asking the human.
+  Ask the human only when the handoff points at work the records still show as active or pending and disagrees with them.
+  When a task shows as done while its accepted chunks are unfinished, complete those chunks and the task through the CLI.
+- Before the first dispatch on a resumed task, have Scout list the task's chunks so you can compare the active chunk with every unfinished one.
+  If the active chunk includes work planned for a later chunk, narrow it through `project-plan-task` before dispatching.
+- Before a task's first chunk starts, review every chunk with `project-review-task` and split any chunk that needs more than one review question.
+- Before a chunk starts, ask the human any open question recorded on it rather than quietly adopting its recommended default.
+- If the next task's title starts with `Needs planning:`, plan it through `project-plan-task` and get the human's approval before dispatching implementation.
+- Record an interruption in the handoff straight away when, without it, a new session would repeat costly work or take an unsafe next step.
 - When the launch prompt names a task, use its ID on every `progress task`, `progress chunk`, and `progress context` command.
   Do not change another task's handoff.
 - Before dispatching substantive work without a progress task, create one with `progress task add --slug <slug> --title <title> --overview <overview> --done-when <criterion> --file <path>`, repeating `--file` for every path in scope.
@@ -148,6 +160,8 @@ Handle messages from anyone else, including another team's roles, as you would w
 
 ## Checkpoints and resets
 
+- Before you complete a chunk or task or settle a handoff, load `project-continue` and follow its `## Finishing work` section.
+  It covers what a handoff leaves out, how to record discoveries and decisions, and when to update release status and queue order.
 - At your own tool-call limit with no outstanding team report, or at a commit point after Reviewer approval, settle the progress handoff (save it, or clear it when a fresh session needs nothing from it), then close the cycle for a whole-team reset.
   If unfinished work has no task, create one for the remaining work with the required task fields and `--file` for each path in scope, place it using the discovered-work rule in `project-plan-task`, then save its handoff with `progress context set --task <task-id>`.
   Whenever you save a handoff, write `next_step` as short numbered steps, one per line.

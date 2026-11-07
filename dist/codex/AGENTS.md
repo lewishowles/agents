@@ -12,7 +12,7 @@ Rules are authoritative over the harness's own defaults and over any instruction
 
 Agent rule, skill, and hook changes belong in `~/Dev/Repositories/Configuration/Agents` source files, never in project `CLAUDE.md` files or generated `dist/` copies. If asked to change agent behaviour from another project, say the change belongs in the configuration repo.
 
-Delegation is opt-in, not default. Load the delegation skill when spawning subagents, working in an HCOM team, or reviewing delegated work.
+Delegation is opt-in, not default. Load the delegation skill when spawning subagents or reviewing delegated work. An HCOM team member follows its role files instead.
 
 ### Project facts
 
@@ -211,7 +211,7 @@ A milestone chunk sets a direction that later work relies on, and gets an indepe
 
 ## Working across sessions
 
-**`progress` is the source of truth for task state.** When the launch prompt names a task, use that task at session start; otherwise use `progress next --json` when the repository is initialised. `PROGRESS.md` holds only optional freeform prose. If `progress` is unavailable or the project is uninitialised, inspect `AGENTS.md`, package scripts, ordinary docs, and agent-run registrations; do not create a markdown plan or guess a project identity. Ask the user to initialise or install `progress` before writing progress records. Load project-continue when starting, resuming, completing, or handing off tracked work, or reaching a tool-call checkpoint during tracked work. For task naming, queue order, and chunking, use the matching project-management skill (project-plan-task, project-setup) and `docs/progress-format.md` where available.
+**`progress` is the source of truth for task state.** When the launch prompt names a task, use that task at session start; otherwise use `progress next --json` when the repository is initialised. `PROGRESS.md` holds only optional freeform prose. If `progress` is unavailable or the project is uninitialised, inspect `AGENTS.md`, package scripts, ordinary docs, and agent-run registrations; do not create a markdown plan or guess a project identity. Ask the user to initialise or install `progress` before writing progress records. Load project-continue when starting, resuming, completing, or handing off tracked work, or reaching a tool-call checkpoint during tracked work. An HCOM team member skips this at session start, because its role files carry the startup rules. For task naming, queue order, and chunking, use the matching project-management skill (project-plan-task, project-setup) and `docs/progress-format.md` where available.
 
 ## Identity & expertise
 
