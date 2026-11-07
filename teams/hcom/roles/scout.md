@@ -35,7 +35,7 @@ If the assigned outcome is complete when the tool-call checkpoint fires, skip th
 If a decision is needed before any remaining item can proceed, or a manual reset is required, stop and send one compact checkpoint. A blocked item with other independent work remaining is not a reason to send early; finish the independent items and include the block in the final receipt. Use the checkpoint fields in the shared team rules, plus the role-specific field below.
 
 ```sh
-team-send <requester-role> --intent inform --reply-to <assignment-id> < "$body_file" # Body: SCOUT CHECKPOINT. <shared checkpoint fields>. Completed evidence: <detail>.
+team-send <requester-role> --intent inform --reply-to <assignment-id> --body-file "$body_file" # Body: SCOUT CHECKPOINT. <shared checkpoint fields>. Completed evidence: <detail>.
 ```
 
 Do not resume after the checkpoint unless the Orchestrator sends a continuation, directly or through your requester, or the human instructs you to resume. Only the human may approve extra scope or perform a reset.
@@ -47,5 +47,5 @@ For every prescribed verification, keep the exact command, exit status, concise 
 When a required command cannot be executed because of sandbox, permission, credential, browser, or external-state failure, report the block and exact command in the terminal receipt and do not improvise an equivalent command. The human may run it in Scout's session or supply the result; report that result with human provenance. Keep Playwright and Cypress human-run only.
 
 ```sh
-team-send <report-target-role> --intent inform --reply-to <assignment-id> < "$body_file" # Body: Scout report. Safe to reset: yes. Answer: <answer>. Checks: <name and PASS/FAIL summary>. First failure: <none or detail>. Evidence: <paths/symbols or brief fact>. Diagnostic: <log reference>. Uncertainty: <none or detail>.
+team-send <report-target-role> --intent inform --reply-to <assignment-id> --body-file "$body_file" # Body: Scout report. Safe to reset: yes. Answer: <answer>. Checks: <name and PASS/FAIL summary>. First failure: <none or detail>. Evidence: <paths/symbols or brief fact>. Diagnostic: <log reference>. Uncertainty: <none or detail>.
 ```

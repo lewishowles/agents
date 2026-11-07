@@ -68,7 +68,7 @@ done <<< "$command_str"
 normalised_command="${command_without_heredocs//$'\n'/;}"
 # Finds an hcom send at the start of one command.
 hcom_send_pattern='^(command[[:space:]]+)?hcom[[:space:]]+send([[:space:]]|$)'
-# Finds a team-send to a core role, written role first as the team rules show it. Its body arrives on stdin, so only the intent can mark it as an acknowledgement.
+# Finds a team-send to a core role, written role first as the team rules show it. Its body is in a separate file, so only the intent can mark it as an acknowledgement.
 team_send_pattern='^(command[[:space:]]+)?([^[:space:]]+/)?team-send[[:space:]]+(orchestrator|scout|implementer|reviewer)([[:space:]]|$)'
 # Finds an explicit acknowledgement intent in a send's options.
 ack_intent_pattern='(^|[[:space:]])--intent(=|[[:space:]]+)ack([[:space:]]|$)'

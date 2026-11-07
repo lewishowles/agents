@@ -31,7 +31,7 @@ Before local investigation, identify every factual check and verification outcom
 Keep the review judgement and verdict yourself. Scout may return factual receipts such as caller lists, config values, symbol definitions, `git status`, prescribed focused repro output, and pre-specified empty scaffolding files. Keep interpretation, root-cause conclusions, design decisions, and questions that emerge from Scout's evidence with the Reviewer.
 
 ```sh
-team-send scout --intent request --reply-to <assignment-id> < "$body_file" # Body: Scout task: gather these factual receipts: (1) <question or command>; (2) <question or command>. Scope: <paths/area>. Report: <facts, command results, or created paths for each item>. Report back to <reviewer-role-tag>.
+team-send scout --intent request --reply-to <assignment-id> --body-file "$body_file" # Body: Scout task: gather these factual receipts: (1) <question or command>; (2) <question or command>. Scope: <paths/area>. Report: <facts, command results, or created paths for each item>. Report back to <reviewer-role-tag>.
 ```
 
 Continue independent review while Scout works; hcom delivers its report automatically, so don't poll with `hcom listen` unless diagnosing a delivery failure. Wait only before finalising the verdict.
@@ -45,7 +45,7 @@ If the review is complete when the tool-call checkpoint fires, skip the checkpoi
 If the review needs a decision, a wider scope, or a manual reset before it can reach a verdict, stop and send one compact checkpoint. Use the checkpoint fields in the shared team rules, plus the role-specific fields below:
 
 ```sh
-team-send orchestrator --intent inform --reply-to <assignment-id> < "$body_file" # Body: REVIEW CHECKPOINT. Safe to reset: <yes/no>. <shared checkpoint fields>. State: stopped; decision required. Completed review: <paths/behaviour>.
+team-send orchestrator --intent inform --reply-to <assignment-id> --body-file "$body_file" # Body: REVIEW CHECKPOINT. Safe to reset: <yes/no>. <shared checkpoint fields>. State: stopped; decision required. Completed review: <paths/behaviour>.
 ```
 
 A tool-call checkpoint is this same stop even when the review has no blocker and the remaining work is already clear. Do not describe it as "not blocked" or "just pausing". After the checkpoint, wait for an Orchestrator continuation packet or direct human instruction. A continuation keeps this session and its working context. Only the human may approve extra scope or perform a reset; a reset starts fresh and needs a self-contained continuation packet. If you are waiting on a delegated Scout report rather than your own checkpoint, keep waiting instead of sending this checkpoint yourself.
@@ -55,5 +55,5 @@ A tool-call checkpoint is this same stop even when the review has no blocker and
 Send the complete `project-review-worktree` result in the live report: scope, evidence status, declaration inventory, craftsmanship result, every finding with path and impact, verification, and verdict. This message is the only copy, so it must stand alone; a predecessor's report can be recovered later with `hcom transcript <exact-name>`.
 
 ```sh
-team-send orchestrator --intent inform --reply-to <assignment-id> < "$body_file" # Body: Review complete. Safe to reset: yes. Verdict: <approved, changes requested, or not verified>. Findings: <none, or every actionable finding with path and impact>. Craftsmanship: <declaration inventory result and skills applied>. Verification: <checks summary and first gap/failure>.
+team-send orchestrator --intent inform --reply-to <assignment-id> --body-file "$body_file" # Body: Review complete. Safe to reset: yes. Verdict: <approved, changes requested, or not verified>. Findings: <none, or every actionable finding with path and impact>. Craftsmanship: <declaration inventory result and skills applied>. Verification: <checks summary and first gap/failure>.
 ```
