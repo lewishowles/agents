@@ -20,7 +20,6 @@ Hooks are shell scripts that Claude Code runs automatically at specific points i
 | `guard-runaway-process` | Blocks a Bash command whose only loop is an unbounded busy spin (`while :`, `while true`, `until false`, `for (( ; ; ))`) with no `sleep`, `break`, or `timeout`. This is the shape that left an orphaned shell burning CPU for eight days. | PreToolUse (`Bash`) | `silent`; requires jq |
 | `guard-search-boundaries` | Blocks broad searches that bypass ignore rules or enter generated, dependency, cache, coverage, and browser-output directories. | PreToolUse (`Bash`) | `silent`; requires jq, python3 |
 | `plan-verify` | Warns when an exited plan is missing a validation section. | PostToolUse (`ExitPlanMode`) | `silent` |
-| `progress-resume` | Injects project progress context when the prompt asks to resume work. | UserPromptSubmit | `silent` |
 | `retina-shrink-read` | Gives Claude Code a halved copy of a local Retina image when it reads one. | PreToolUse (`Read`) | `silent`; requires jq, retina-shrink |
 | `test-skeleton-reminder` | Suggests matching tests when implementation files change. | PreToolUse (`Write\|Edit`) | `silent`; requires jq |
 | `tool-call-checkpoint` | Adds one advisory checkpoint when an HCOM team session reaches its tool-call limit (20 by default, 40 for HCOM Scouts and Implementers), and a context checkpoint before compaction in every session. | PreToolUse, PreCompact, SessionStart (`clear`) | `silent`; requires jq |
@@ -51,14 +50,6 @@ Recognised test stacks:
 | ------------- | --------------------------------------------------------------------------------------- |
 | JS / TS / Vue | `package.json` mentions Vitest, Jest, Playwright, or Cypress in scripts or dependencies |
 | Swift         | `Tests/` exists or `Package.swift` exists                                               |
-
-**Requires:** `jq`; silently skips if missing.
-
-### progress-resume.sh
-
-On every user message, looks for continue-intent phrases such as "continue", "resume", and "what's next". When one matches, it adds the root `PROGRESS.md` from the current working directory to Claude's context.
-
-It stays silent when the phrase does not match, when the project has no `PROGRESS.md`, or when `jq` is missing.
 
 **Requires:** `jq`; silently skips if missing.
 

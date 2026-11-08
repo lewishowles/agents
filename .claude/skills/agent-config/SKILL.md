@@ -131,7 +131,7 @@ Use the strongest layer that fits the failure mode. Don't place agent-critical b
 3. Run `bash scripts/sync.sh`
 4. Document it in commit message; `scripts/build/build-docs.py` updates `docs/hooks.md`
 
-A hook that injects per-turn context must only append content at its firing point, never edit, reorder, or remove content injected earlier in the session. Mutating an earlier point in the transcript changes the token prefix the model already processed, invalidating the prompt cache for everything after it and re-billing the rest of the session at full price. Every registered hook follows this today (`progress-resume` and `tool-call-checkpoint` inject at their own events, not retroactively) — keep new hooks the same shape.
+A hook that injects per-turn context must only append content at its firing point, never edit, reorder, or remove content injected earlier in the session. Mutating an earlier point in the transcript changes the token prefix the model already processed, invalidating the prompt cache for everything after it and re-billing the rest of the session at full price. The `tool-call-checkpoint` hook injects at its own event, not retroactively. Keep new hooks the same shape.
 
 ## Progress tracking
 
