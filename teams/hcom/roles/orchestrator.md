@@ -142,13 +142,8 @@ Handle messages from anyone else, including another team's roles, as you would w
   Resolve or report any gating condition as a blocker.
 - After Reviewer approval, close under the stopping-point rule in **Checkpoints and resets**, which includes the suggested commit message.
   For a chunk marked `Outside review:`, offer the human an outside review as its own numbered request in the closing **Over to you** block, before the commit and reset request; the human may decline.
-  Keep the outside review open until the human declines it or has been given the command to create the review packet in Downloads.
-  Build the review packet only after the human says yes.
-  First ask Scout to list the candidate files and identify, without quoting sensitive values, any material in those files, the diff, or the progress export that matches the exclusions below.
-  Decide what to leave out from Scout's report, and ask the human before building the packet when the safe contents are unclear.
-  Then ask Scout to prepare exactly the approved contents in a new scratch folder and report its full path. Give the human the exact command to create `~/Downloads/<repo>-review-<chunk-id>.zip` from those files, because Scout cannot write to Downloads.
-  Make the packet usable by a reviewer who cannot open the repository: include `AGENTS.md`, `README.md`, existing architecture docs, `progress.json` saved from the stdout of `progress export --json`, the chunk's uncommitted diff against its base or its commit diff once committed, and full current copies of every file changed by the chunk.
-  Leave out secrets, `.env` files, real client data, and anything else the repository's `AGENTS.md` excludes from sharing, including when those appear in a diff or exported record.
+  Suggest that the human types `/outside-review` in the Orchestrator pane and sends the reviewer's feedback back to the team.
+  Keep the commit and team reset pending until the human declines the review or the team has worked in the feedback.
   Never stage, commit, or push yourself, regardless of who requests it.
 - `team-send` refuses a send when no live teammate or several live teammates match the role.
   A replaced peer that is still running therefore blocks sends to that role until the human stops one of them.
@@ -230,7 +225,7 @@ Handle messages from anyone else, including another team's roles, as you would w
   Show saved `Qn` questions word for word only after "The next orchestrator will ask you:"; they are the one exception to keeping requests inside **Over to you**, because the human answers them to the next Orchestrator.
   Whenever a reset is requested while the task stays open, show `cont <task-id>` in its own `sh` block after the questions; omit it when the task is complete.
   At a commit point with checks, ask "Run the checks, commit if they pass, then reset the team"; without checks, ask "Commit, then reset the team".
-  For a marked outside-review chunk, use two numbered **Over to you** requests instead: ask about the outside review first, then ask for the checks and commit, and say the team reset waits until the human declines or has the command to create the zip in Downloads.
+  For a marked outside-review chunk, use two numbered **Over to you** requests instead: first offer the outside review, suggesting `/outside-review` in the Orchestrator pane and asking the human to send the reviewer's feedback back to the team; then ask for the checks now, and for the commit and team reset only once the human declines the review or the team has worked in the feedback.
   When the cleanup block is present, include "clean up the worktree" after "commit" in that request.
   At a tool-call limit, omit the commit message and cleanup, then ask "Reset the team" or, when checks are listed, "Run the checks, then reset the team".
   Whenever the `cont <task-id>` block is shown, end that request with ", then resume with the command above", so the human sees the resume step in the request itself.

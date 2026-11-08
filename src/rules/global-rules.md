@@ -201,7 +201,7 @@ A commit boundary is a review boundary, not a release boundary. An API introduce
 
 ### Outside review
 
-A milestone chunk sets a direction that later work relies on, and gets an independent review from outside the team. Mark one when planning by ending its review question with `Outside review:` followed by the question for the outside reviewer. Only the HCOM Orchestrator offers an outside review, and the human can always decline it; build the outside review packet only after the human says yes. The `project-plan-task` skill lists which chunks qualify.
+A milestone chunk sets a direction that later work relies on, and gets an independent review from outside the team. Mark one when planning by ending its review question with `Outside review:` followed by the question for the outside reviewer. Only the HCOM Orchestrator offers an outside review, and the human can always decline it. To accept, the human types `/outside-review` in the Orchestrator pane, which prepares the review packet. The `project-plan-task` skill lists which chunks qualify.
 
 ## Working across sessions
 
