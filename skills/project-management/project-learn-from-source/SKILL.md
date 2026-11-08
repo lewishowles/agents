@@ -78,7 +78,7 @@ Treat the source through `source-extraction`, not by reading raw content directl
 Then gather only local context needed to judge fit:
 
 1. Relevant project instructions and project command registrations
-2. `PROGRESS.md` when source may affect plans, rules, skills, or handoff
+2. Relevant `progress` task, chunk, and handoff records when the source may affect plans, rules, or skills; in repos without `progress`, `PROGRESS.md` if present
 3. Existing rules, skills, docs, source, tests, or config directly related
 4. Local commands or diagnostics only when verifying concrete claims
 

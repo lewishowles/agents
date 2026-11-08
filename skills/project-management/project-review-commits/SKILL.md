@@ -27,7 +27,7 @@ Read in order:
 
 1. `<project-root>/AGENTS.md`
 2. `agent-run list --json`
-3. `PROGRESS.md` — recent completed work, risks, release notes, handoff
+3. Relevant `progress` task, chunk, and handoff records for recent completed work, risks, and handoff notes, plus the `progress` release record when the task belongs to a release. In repos without `progress`, read `PROGRESS.md` if present.
 4. `git status --short`
 5. Requested Git range, or last tag to `HEAD`
 6. Commit messages, changed files, targeted diffs
@@ -68,7 +68,7 @@ If a relevant skill is unavailable, state that once and continue with the closes
 
 ## Review method
 
-1. Identify the intended goal from the user request, branch name, `PROGRESS.md`, release notes, commit messages, and changed files.
+1. Identify the intended goal from the user request, branch name, relevant `progress` task, chunk, and release records, commit messages, and changed files. In repos without `progress`, use `PROGRESS.md` if present.
 2. List the reviewed range and commits oldest to newest. Do not stage or commit.
 3. List the load-bearing review claims and the cheapest evidence that could settle each one.
 4. When a safe, focused check or repro is already known, run it early and use its result to direct later reads. If command discovery is needed, inspect only enough context to identify it. Use `agent-run run <name> --json` for registered checks.

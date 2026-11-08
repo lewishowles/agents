@@ -1,7 +1,7 @@
 ---
 name: project-review-worktree
 description: >
-  Use this skill when reviewing uncommitted work before commit, especially requests like "review the working tree", "check this before commit", "is this ready to commit", or "review these changes against PROGRESS.md". Assesses correctness, completeness, plan alignment, maintainability, tests, docs, and commit readiness without editing files.
+  Use this skill when reviewing uncommitted work before commit, especially requests like "review the working tree", "check this before commit", "is this ready to commit", or "review these changes against the task plan". Assesses correctness, completeness, plan alignment, maintainability, tests, docs, and commit readiness without editing files.
 ---
 
 # Project review worktree
@@ -14,7 +14,7 @@ Look for regressions, missing work, weak tests, documentation gaps, and quality 
 
 ## Startup
 
-Read `AGENTS.md`, `agent-run list --json`, `PROGRESS.md`, `git status --short`, and relevant changed files. If agent-run has no registrations, use `AGENTS.md`, package scripts, and ordinary docs.
+Read `AGENTS.md`, `agent-run list --json`, the relevant `progress` task and chunk records, `git status --short`, and relevant changed files. In repos without `progress`, read `PROGRESS.md` if present. If agent-run has no registrations, use `AGENTS.md`, package scripts, and ordinary docs.
 
 Gather routine orientation in one bounded call where possible. A supplied review packet may provide paths, prior results, exact commands, and unresolved risks; independently verify load-bearing claims instead of rediscovering unchanged facts.
 
@@ -33,7 +33,7 @@ Apply these core review checks directly: verify the claimed behaviour, edge and 
    Review the shape of every touched source file, not only changed lines. Flag a growing function or file with mixed jobs, or repeated parsing of one tool's output, even when each added line is correct. Use the code-style split signals as prompts to inspect responsibilities, not hard size limits.
 5. From the task-scoped diff, inventory every added or changed `const`/`let` and named function or class, including changed initializers and bodies. Check each against the core style checks above; missing prose is a finding. Exclude unrelated user work.
 6. Compare implementation and documentation with the plan, risks, verification, and generated-source boundary. Reference documentation must match code; roadmaps may describe future work.
-7. Re-check PROGRESS.md's deferred or forward-looking notes (e.g. "optional hardening", "if a third caller ever needs this") against this diff. If the stated trigger condition is now met, treat it as a finding, not a resolved deferral.
+7. Re-check deferred or forward-looking notes in the `progress` task and chunk records (e.g. "optional hardening", "if a third caller ever needs this") against this diff. In repos without `progress`, check `PROGRESS.md` if present. If a stated trigger condition is now met, treat it as a finding, not a resolved deferral.
 8. Run any remaining cheap, justified checks raised by source inspection.
 9. Run a separate cold craftsmanship pass over the current changed files after the correctness review. Inventory every changed prose unit, test or `describe` name, fixture or helper name and value, new structural grouping, and where each new declaration or setup call sits relative to its callers and the code it composes. For prose derived from an existing source, also inventory the claims, conditions, uncertainty, attribution, canonical terms, and working text contracts that must survive the edit. For visible UI, inventory the primary task and action hierarchy, canonical design-system choices, affected states, responsive transformations, and claims that need rendered or interactive evidence. Read each item without relying on task-record vocabulary, previous approval, or a sibling pattern to justify it. Check whether a reader can understand it without translating internal mechanics, whether its name describes observable behaviour and stays unambiguous next to the other names in its scope, whether its declaration sits where the reading order follows the data flow, whether protected meaning still matches its source, whether the UI remains usable across relevant states and layouts, and whether the added structure makes the file clearer. Existing precedent is context, not proof that the new item is good. After a craftsmanship finding is fixed, repeat this pass over the whole current chunk, not only the fix diff.
 10. Lead with findings and evidence gaps. State when no must-fix issue exists.
@@ -116,7 +116,7 @@ Use this shape:
 
 - <optional idea>.
 
-## Suggested updates to PROGRESS.md
+## Suggested plan updates
 
 - <specific update>.
 

@@ -36,7 +36,7 @@ Do not assess product code quality, UI accessibility, dependencies, or repositor
 1. Read root `AGENTS.md`. This repository is a configuration source, not a downstream project.
 2. Load `.claude/skills/agent-config/SKILL.md` for repo structure.
 3. Entry points: `scripts/validate.sh` and `scripts/sync.sh`.
-4. Inspect `PROGRESS.md` when active work or unfinished validation may affect recommendations.
+4. Read the relevant `progress` task and chunk records when active work or unfinished validation may affect recommendations. Read `PROGRESS.md` only for optional freeform backlog prose.
 5. Use targeted searches. Avoid broad reads of `dist/`, generated docs, external references, or logs unless findings point there.
 
 ## Review passes
@@ -107,7 +107,7 @@ Evidence order:
 
 1. Direct file contents or script output
 2. Validation scripts and fixtures
-3. `PROGRESS.md` decisions and discoveries
+3. `progress` task, chunk, decision, and discovery records
 4. Grouped friction from `friction summary --json`
 5. Inferred risk (clearly labelled)
 

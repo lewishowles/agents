@@ -180,17 +180,6 @@
 					}
 				]
 			}
-		],
-		"UserPromptSubmit": [
-			{
-				"hooks": [
-					{
-						"type": "command",
-						"command": "bash -c 'bash \"$HOME/.claude/hooks/progress-resume.sh\"'",
-						"timeout": 5
-					}
-				]
-			}
 		]
 	},
 	"disabledMcpjsonServers": [

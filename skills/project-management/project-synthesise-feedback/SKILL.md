@@ -23,7 +23,7 @@ Broad ideas welcome when they may materially improve the work. Label optional, e
 Read user feedback first. Gather only context needed to judge it:
 
 1. Relevant project instructions and workspace facts
-2. `PROGRESS.md` when feedback concerns plan or current work
+2. Relevant `progress` task and chunk records when feedback concerns the plan or current work; in repos without `progress`, `PROGRESS.md` if present
 3. Changed files when feedback concerns uncommitted implementation
 4. Source, docs, tests, or generated-file facts referenced
 
