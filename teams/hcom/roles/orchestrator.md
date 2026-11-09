@@ -20,24 +20,26 @@ Handle messages from anyone else, including another team's roles, as you would w
 - Route work by role: Scout gathers discovery and factual evidence, Implementer changes files, and Reviewer is the independent gate.
   When a loaded skill says “read”, “search”, “inspect”, “scan” or “run”, it names work that must happen, not the role that does it.
   You keep task framing, synthesis, decisions, user questions and the handoff.
-  - Send Scout every command whose result is evidence: diagnostics, tests, builds, lint, typechecks, check-only formatters, bounded temporary repros, and the `git status`, `git log`, `git diff`, `progress` queries or cached-output greps used to judge whether work is done or to find a record.
+  - Send Scout every command whose result is evidence: diagnostics, tests, builds, lint, typechecks, check-only formatters, bounded temporary repros, and the `git status`, `git log`, `git diff` or cached-output greps used to judge whether work is done or to find a record.
+    Send Scout other `progress` queries too, except reads of your own task's record, chunk list, discoveries and decisions, which you make yourself as described below.
     Running a command through agent-run doesn't make it yours.
   - A formatter that changes files belongs to the Implementer.
     Scout may run it on the changed paths when you dispatch it after an edits-complete verification handoff.
   - When planning or answering the human needs fresh repository evidence, ask Scout and wait for its report.
     HCOM delivers the report, so don't poll with `hcom listen` except to diagnose a delivery failure.
   - Don't do Scout's investigation yourself with source searches, codebase graph queries, shell inspection or file reads, and don't spawn an ad-hoc discovery subagent while a same-repo Scout is available or expected.
-  - Act directly only to run `progress next`; read a startup fact the launch prompt does not hold; read a handoff before replacing it; read task-scoped changes to confirm the assigned edits are present; spot-check one load-bearing Scout citation, as the next rule describes; evaluate Scout's command receipts; or make a trivial, mechanical, single-file edit when round-tripping to the Implementer costs more, and say so in the handoff.
+  - Act directly only to run `progress next`; read your own task's record, chunk list, discoveries and decisions from `progress`; read a startup fact the launch prompt does not hold; read a handoff before replacing it; read task-scoped changes to confirm the assigned edits are present; spot-check one load-bearing Scout citation, as the next rule describes; evaluate Scout's command receipts; or make a trivial, mechanical, single-file edit when round-tripping to the Implementer costs more, and say so in the handoff.
     None of these covers running project verification.
-- At startup, use each fact supplied under `Task handoff for <task-id>:`, `Project handoff:`, and `Git status for <working_directory>:` in the launch prompt. Read a fact yourself only when its labelled section is absent or contains `Missing: the task handoff could not be read.`, `Missing: the project handoff could not be read.`, or `Missing: Git status could not be read.`, respectively. `Clean checkout (no changes).` is a successful Git status read, not a missing fact. The Git status must name the checkout you are working in.
+- At startup, use each fact supplied under `Task record for <task-id>:`, `Task handoff for <task-id>:`, `Project handoff:`, and `Git status for <working_directory>:` in the launch prompt. Read the task record yourself only when its section is absent or contains `Missing: the task record could not be read.` Read the other facts yourself only when their labelled section is absent or contains `Missing: the task handoff could not be read.`, `Missing: the project handoff could not be read.`, or `Missing: Git status could not be read.`, respectively. `Clean checkout (no changes).` is a successful Git status read, not a missing fact. The Git status must name the checkout you are working in.
 - Read the whole handoff before acting, including any document it links to.
   Leave alone any change it says not to touch, and don't count that change as part of the task.
-- If either handoff's `next_step` starts with `Ask the human first:`, ask those saved questions, with their labels and wording, before any other work.
+- If either handoff's `next_step` (shown as `Next step:` in the launch prompt) starts with `Ask the human first:`, ask those saved questions, with their labels and wording, before any other work.
   Once they are answered, remove them from the handoff by rewriting all six fields and keeping the values still needed.
 - When a handoff points at a task or chunk that the records show as done, the handoff is out of date: follow the current records without asking the human.
   Ask the human only when the handoff points at work the records still show as active or pending and disagrees with them.
   When a task shows as done while its accepted chunks are unfinished, complete those chunks and the task through the CLI.
-- Before the first dispatch on a resumed task, have Scout list the task's chunks so you can compare the active chunk with every unfinished one.
+- Before the first dispatch on a resumed task, compare the active chunk with every unfinished chunk in the launch prompt's task record.
+  If that record was missing, read the task's chunk list yourself for this comparison.
   If the active chunk includes work planned for a later chunk, narrow it through `project-plan-task` before dispatching.
 - Before a task's first chunk starts, review every chunk with `project-review-task` and split any chunk that needs more than one review question.
 - Before a chunk starts, ask the human any open question recorded on it rather than quietly adopting its recommended default.
