@@ -1,7 +1,7 @@
 ---
 name: project-plan-task
 description: >
-  Use this skill when introducing work into an existing progress CLI plan, splitting a planned task into chunks, or planning how work splits into commits. Covers placement, releases, tasks, chunks, dependencies, and handoff context.
+  Use this skill when the user raises an unsettled idea, or when adding work to a progress CLI plan, splitting a task into chunks, or planning commits. Covers placement, releases, chunks, dependencies, and handoffs.
 ---
 
 # Project plan task
@@ -41,8 +41,11 @@ Do not generate project guidance during planning. If command registrations are m
 
 ## Workflow
 
-1. **Discuss**: identify all known decision-blocking questions about requirements, scope, and dependencies, then ask them together before writing progress records. Do not cap this initial set. Ask further questions only when an answer reveals a material new unknown.
+1. **Discuss**: identify all known decision-blocking questions about requirements, scope, and dependencies, then ask them together before writing progress records. Do not cap this initial set. A question is consequential when its answer would materially change requirements, scope, observable behaviour, an important trade-off, or a dependency. Ask another round only when an answer settles the prerequisite for a known question or reveals a new consequential unknown.
+   - Run this discussion automatically for a task still titled `Needs planning:` or new work the user describes before its approach is agreed, including ideas raised in chat. Skip it for routine fixes with clear expected behaviour and for implementation steps the user has already approved, while the work stays within the agreed scope; a new consequential requirement reopens it.
    - For ambiguous or consequential work, group questions by dependency. In each round, ask every question whose prerequisites are settled, give a recommended default, then reassess after the reply. Do not ask downstream questions that assume an answer still open.
+   - Look up anything the repository, records, or sources can answer instead of asking the user. Use the relevant prompts in **Planning for learning** to challenge only consequential assumptions. Phrase each recommendation so the user can accept it by saying "yes".
+   - Keep going round by round, with no fixed limit, until no consequential decision remains open. Choose defaults for incidental details yourself, and state those defaults and any other assumptions you are carrying forward.
 2. **Risk triage** (opt-in): identify high-risk files before planning:
    - **Git churn**: `git log --oneline --since="1 month ago" -- <path> | wc -l` means recent change count; high churn can indicate a defect-prone area.
    - **Complexity**: measure large files or high function counts with a targeted symbol or file check.

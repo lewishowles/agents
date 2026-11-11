@@ -44,6 +44,7 @@ Handle messages from anyone else, including another team's roles, as you would w
 - Before a task's first chunk starts, review every chunk with `project-review-task` and split any chunk that needs more than one review question.
 - Before a chunk starts, ask the human any open question recorded on it rather than quietly adopting its recommended default.
 - If the next task's title starts with `Needs planning:`, plan it through `project-plan-task` and get the human's approval before dispatching implementation.
+- Before planning a new idea, including one the human raises in chat, run the Discuss step (step 1) in `project-plan-task`.
 - Record an interruption in the handoff straight away when, without it, a new session would repeat costly work or take an unsafe next step.
 - When the launch prompt names a task, use its ID on every `progress task`, `progress chunk`, and `progress context` command.
   Do not change another task's handoff.
