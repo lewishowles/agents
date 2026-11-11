@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Runs repository validation checks in a stable order; --quick skips the setup and doctor end-to-end tests.
+# Runs repository validation checks side by side and reports them in a stable order; --quick skips the setup and doctor end-to-end tests.
 
 set -euo pipefail
 
@@ -28,44 +28,119 @@ if [ "$#" -gt 0 ]; then
 	QUICK=true
 fi
 
-# Holds the elapsed time Bash reports for the check that just ran.
-TIMING_FILE=$(mktemp)
-trap 'rm -f "$TIMING_FILE"' EXIT
+# The temporary folder where each check writes its output, exit status and elapsed time.
+RESULT_DIR=$(mktemp -d)
+# The labels for checks in their reporting order.
+CHECK_LABELS=()
+# The process IDs of checks running side by side.
+CHECK_PIDS=()
+
+# Gives each background check a process group so cleanup can stop its children.
+# Job control also stops Bash giving background checks empty input, so each check
+# reads from /dev/null below; otherwise a check that read input in a terminal
+# would be paused and validation would hang.
+set -m
+
+# Stops unfinished checks and removes their temporary results.
+cleanup() {
+	# The process ID of a check that may still be running.
+	local check_pid
+
+	for check_pid in ${CHECK_PIDS[@]+"${CHECK_PIDS[@]}"}; do
+		kill -TERM -- "-$check_pid" 2> /dev/null || true
+	done
+	for check_pid in ${CHECK_PIDS[@]+"${CHECK_PIDS[@]}"}; do
+		wait "$check_pid" 2> /dev/null || true
+	done
+	rm -rf "$RESULT_DIR"
+}
+
+trap cleanup EXIT
+# Turns an interrupt or terminate signal into a normal exit, so the cleanup above
+# still runs and the script reports the usual signal exit status.
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 cli_section "Validation" "Run repository checks"
 
 cli_group_begin "Checks" true
 
-# Runs a command as a named validation check.
-# Records the result in the active group and prints a row with the time the
-# check took. Failures also print their output. CLI_STYLE_VERBOSE=1 prints a
-# "Checking" row before each check runs.
+# Runs one check and writes its output, status and elapsed time to separate files.
 #
-# @param  {string}  label
-#     Human-readable name recorded for the check.
+# @param  {integer}  index
+#     The check's position in the reporting order.
 # @param  {string}  ...
 #     Command and arguments to execute.
-run_check() {
-	# The human-readable name shown for the current validation command.
-	local label="$1"
-	# The command output, printed when the check fails or when the staleness check
-	# reports stale files.
-	local output
-	# The elapsed time displayed beside this check's result.
-	local duration
-	# The command's exit status, caught so a failing check is reported instead of
-	# stopping the script.
+run_check_command() {
+	# The check's position in the reporting order.
+	local index="$1"
+	# The exit status written for the reporting step.
 	local check_status=0
-	# Makes the time keyword print only elapsed seconds, to three decimal places.
-	# The printf below rounds to one place, because Bash's own one-place format
-	# prints "0.:" instead of "1.0" when the tenths round up to ten.
+	# Makes the time keyword write elapsed seconds to three decimal places.
 	local TIMEFORMAT='%3R'
 	shift
-	if [ "${CLI_STYLE_VERBOSE:-0}" = "1" ]; then
-		cli_status info "Checking" "$label"
+
+	{ time "$@" < /dev/null > "$RESULT_DIR/$index.output" 2>&1; } 2> "$RESULT_DIR/$index.time" || check_status=$?
+	printf '%s\n' "$check_status" > "$RESULT_DIR/$index.status"
+}
+
+# Starts a named check and records where its result belongs in the report.
+#
+# @param  {string}  label
+#     Human-readable name shown for the check.
+# @param  {string}  ...
+#     Command and arguments to execute.
+start_check() {
+	# The check's position in the reporting order.
+	local index="${#CHECK_LABELS[@]}"
+	# The human-readable name shown for the check.
+	local label="$1"
+	shift
+
+	CHECK_LABELS+=("$label")
+	run_check_command "$index" "$@" &
+	CHECK_PIDS+=("$!")
+}
+
+# Waits for every side-by-side check before reporting or starting setup tests.
+wait_for_checks() {
+	# The process ID of a check to wait for.
+	local check_pid
+
+	for check_pid in ${CHECK_PIDS[@]+"${CHECK_PIDS[@]}"}; do
+		wait "$check_pid" || true
+	done
+	CHECK_PIDS=()
+}
+
+# Prints one check's result row and any output, and counts a failure.
+#
+# @param  {integer}  index
+#     The check's position in the reporting order.
+report_check() {
+	# The check's position in the reporting order.
+	local index="$1"
+	# The human-readable name shown for the check.
+	local label="${CHECK_LABELS[$index]}"
+	# The command output shown on failure or for a non-empty staleness result.
+	local output=""
+	# The elapsed time displayed beside the check's result.
+	local duration="0"
+	# A missing status file counts as a failed check.
+	local check_status=1
+
+	if [ -s "$RESULT_DIR/$index.status" ]; then
+		IFS= read -r check_status < "$RESULT_DIR/$index.status"
 	fi
-	{ time output=$("$@" 2>&1); } 2> "$TIMING_FILE" || check_status=$?
-	IFS= read -r duration < "$TIMING_FILE"
+	if [ -s "$RESULT_DIR/$index.time" ]; then
+		IFS= read -r duration < "$RESULT_DIR/$index.time"
+	fi
+	if [ -f "$RESULT_DIR/$index.output" ]; then
+		output=$(< "$RESULT_DIR/$index.output")
+	fi
+
+	# Rounds to one place here, because Bash's own one-place time format prints
+	# "0.:" instead of "1.0" when the tenths round up to ten.
 	printf -v duration '%.1f' "$duration"
 	duration="${duration}s"
 	if [ "$check_status" -eq 0 ]; then
@@ -82,35 +157,67 @@ run_check() {
 	fi
 }
 
-run_check "skill manifests"       bash "$REPO_DIR/scripts/validate/check-skill-manifests.sh"
-run_check "skill list and links"  bash "$REPO_DIR/scripts/validate/check-skill-list.sh"
-run_check "hook manifests"        bash "$REPO_DIR/scripts/validate/check-hook-manifests.sh"
-run_check "generated files"       bash "$REPO_DIR/scripts/validate/check-generated-files.sh"
-run_check "hook sync"             bash "$REPO_DIR/scripts/validate/check-hook-sync.sh"
-run_check "dist sync"             bash "$REPO_DIR/scripts/validate/check-dist-sync.sh"
-run_check "docs tables"           python3 "$REPO_DIR/scripts/build/build-docs.py" --check
-run_check "agent-tools helpers"   bash "$REPO_DIR/scripts/validate/check-agent-tools-contract.sh"
+# Runs one named check on its own and reports its result. The setup tests use
+# this because they are slow and fail more often when the machine is busy.
+#
+# @param  {string}  label
+#     Human-readable name shown for the check.
+# @param  {string}  ...
+#     Command and arguments to execute.
+run_single_check() {
+	# The check's position in the reporting order.
+	local index="${#CHECK_LABELS[@]}"
+
+	start_check "$@"
+	wait_for_checks
+	report_check "$index"
+}
+
+start_check "skill manifests"       bash "$REPO_DIR/scripts/validate/check-skill-manifests.sh"
+start_check "skill list and links"  bash "$REPO_DIR/scripts/validate/check-skill-list.sh"
+start_check "hook manifests"        bash "$REPO_DIR/scripts/validate/check-hook-manifests.sh"
+start_check "generated files"       bash "$REPO_DIR/scripts/validate/check-generated-files.sh"
+start_check "hook sync"             bash "$REPO_DIR/scripts/validate/check-hook-sync.sh"
+start_check "dist sync"             bash "$REPO_DIR/scripts/validate/check-dist-sync.sh"
+start_check "docs tables"           python3 "$REPO_DIR/scripts/build/build-docs.py" --check
+start_check "agent-tools helpers"   bash "$REPO_DIR/scripts/validate/check-agent-tools-contract.sh"
+# The position where the setup checks appear in the original report.
+SETUP_INSERT_INDEX=${#CHECK_LABELS[@]}
+start_check "script output"         bash "$REPO_DIR/tests/script-output.sh"
+start_check "Bash version guard"    bash "$REPO_DIR/tests/bash-guard.sh"
+start_check "HCOM acknowledgement guard" bash "$REPO_DIR/tests/hcom-ack-guard.sh"
+start_check "HCOM recipient guard" bash "$REPO_DIR/tests/hcom-recipient-guard.sh"
+start_check "trash guard"          bash "$REPO_DIR/tests/trash-guard.sh"
+start_check "no-pager guard"        bash "$REPO_DIR/tests/no-pager-guard.sh"
+start_check "runaway-process guard" bash "$REPO_DIR/tests/runaway-process-guard.sh"
+start_check "manual-command guard" bash "$REPO_DIR/tests/manual-command-guard.sh"
+start_check "tool-call checkpoint"  bash "$REPO_DIR/tests/tool-call-checkpoint.sh"
+start_check "commit-message guard"  bash "$REPO_DIR/tests/commit-message-guard.sh"
+start_check "search boundaries"     bash "$REPO_DIR/tests/search-boundaries.sh"
+start_check "friction logging"      bash "$REPO_DIR/tests/friction-logging.sh"
+start_check "dead path refs"        doc-paths --project-dir "$REPO_DIR"
+start_check "staleness"             python3 "$REPO_DIR/scripts/validate/check-staleness.py"
+start_check "staleness regression"  python3 "$REPO_DIR/tests/check-staleness.py"
+# The number of checks started together, before full-mode setup checks are added.
+QUICK_CHECK_COUNT=${#CHECK_LABELS[@]}
+
+wait_for_checks
+
+# Report the checks that come before the setup tests in the original report.
+for ((index = 0; index < SETUP_INSERT_INDEX; index++)); do
+	report_check "$index"
+done
+
 if [ "$QUICK" = true ]; then
 	cli_group_status skipped "setup and doctor tests (quick mode)"
 else
-	run_check "setup backup"          bash "$REPO_DIR/tests/setup.sh"
-	run_check "setup doctor"          bash "$REPO_DIR/tests/doctor.sh"
+	run_single_check "setup backup" bash "$REPO_DIR/tests/setup.sh"
+	run_single_check "setup doctor" bash "$REPO_DIR/tests/doctor.sh"
 fi
-run_check "script output"         bash "$REPO_DIR/tests/script-output.sh"
-run_check "Bash version guard"    bash "$REPO_DIR/tests/bash-guard.sh"
-run_check "HCOM acknowledgement guard" bash "$REPO_DIR/tests/hcom-ack-guard.sh"
-run_check "HCOM recipient guard" bash "$REPO_DIR/tests/hcom-recipient-guard.sh"
-run_check "trash guard"          bash "$REPO_DIR/tests/trash-guard.sh"
-run_check "no-pager guard"        bash "$REPO_DIR/tests/no-pager-guard.sh"
-run_check "runaway-process guard" bash "$REPO_DIR/tests/runaway-process-guard.sh"
-run_check "manual-command guard" bash "$REPO_DIR/tests/manual-command-guard.sh"
-run_check "tool-call checkpoint"  bash "$REPO_DIR/tests/tool-call-checkpoint.sh"
-run_check "commit-message guard"  bash "$REPO_DIR/tests/commit-message-guard.sh"
-run_check "search boundaries"     bash "$REPO_DIR/tests/search-boundaries.sh"
-run_check "friction logging"      bash "$REPO_DIR/tests/friction-logging.sh"
-run_check "dead path refs"        doc-paths --project-dir "$REPO_DIR"
-run_check "staleness"             python3 "$REPO_DIR/scripts/validate/check-staleness.py"
-run_check "staleness regression"  python3 "$REPO_DIR/tests/check-staleness.py"
+
+for ((index = SETUP_INSERT_INDEX; index < QUICK_CHECK_COUNT; index++)); do
+	report_check "$index"
+done
 
 cli_group_end
 
