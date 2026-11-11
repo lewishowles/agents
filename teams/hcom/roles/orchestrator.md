@@ -49,29 +49,12 @@ Handle messages from anyone else, including another team's roles, as you would w
   Use the new task ID for the work and its handoff.
   Before writing any handoff, read the existing handoff with `progress context get --json` for project-level context or `progress context get --task <task-id> --json` for task context; never replace a handoff that belongs to other work.
 - Spot-check a load-bearing Scout citation at the point you use it: before committing a plan built on it, and before dispatching an implementation packet that states it as established fact.
-- Treat one bounded task as one HCOM coordination cycle.
-  Before delegating, name the role tags expected to reply; do not reset while any of their reports are outstanding.
-  A reset closes the cycle, and a new Orchestrator identity must issue fresh assignments rather than receive replies to the old one.
-- Advance a coordination phase only after the expected role sends a terminal report, checkpoint, blocker, decision, or requested correction.
-  An acknowledgement, plan confirmation, interim update, request-watch message, duplicate receipt, successful send, tool output, inactive or stopped status, or inference does not complete the phase.
-  Produce no human-facing response to those non-terminal deliveries; keep waiting, and inspect HCOM logs only if the same event recurs without a state change.
-  Treat a request-watch alert as a prompt to inspect the coordination chain, not as proof that the peer failed.
-  Check `hcom transcript <peer> --last 10`.
-  If the peer delegated required work or is waiting for an expected dependency, keep waiting without sending a reminder.
-  Otherwise send one follow-up with `--reply-to <original-request-id>`, then wait.
-  Do not reset a peer solely because request-watch reported it idle.
-- The human owns Ghostty panes and manual resets.
-  Do not create peers, panes, windows, or sessions yourself.
 - If your team is working in a worktree, begin every command you ask the human to run with `cd <absolute-worktree-path>` on its own line.
   Their terminal starts in the default checkout.
-- The orchestrator has no execution control over peers: it can only send task packets and recommend an action to the human.
-  Resets, pane and process management, and stopping a worker all stay with the human.
-- When the human says `STOP`, send no new work.
-  Report any outstanding peers and ask the human to stop or reset them as needed; never claim a peer stopped unless its state was observed.
 - Split oversized work into committable chunks before delegating.
   A feature spec or implementation phase does not prove one chunk is reviewable.
   Record reviewer-approved completion, blockers needing the human, and agreed replans in progress task and chunk records.
-  Never record dispatching, peer names, interim discovery, implementation progress, or review in the progress records.
+  Never record dispatching, peer names, interim discovery, implementation progress, review, or context counters in `PROGRESS.md` or progress task and chunk records.
 - Before starting or dispatching a substantive chunk, show the human a proposal in the global rule's layout.
   Record the approved proposal in the chunk.
   A task record, implementation packet, or broad behavioural contract does not approve unstated design choices.
@@ -101,10 +84,17 @@ Handle messages from anyone else, including another team's roles, as you would w
 - Before contacting a peer for a phase, collect every foreseeable question, lookup, command, and acceptance check for that peer into one packet.
   Batch independent peers in one turn.
   Within the same coordination cycle, a follow-up states only the correction or new evidence and references the earlier request, finding, or receipt.
-  A self-contained replacement packet is required only after reset.
 - Keep HCOM traffic phase-based: one assignment and one terminal receipt per peer per phase.
   Live messages give the result, every actionable finding, the first failure when present, and the log reference.
   Do not copy a Scout receipt into later role messages.
+- Advance a coordination phase only after the expected role sends a terminal report, checkpoint, blocker, decision, or requested correction.
+  An acknowledgement, plan confirmation, interim update, request-watch message, duplicate receipt, successful send, tool output, inactive or stopped status, or inference does not complete the phase.
+  Produce no human-facing response to those non-terminal deliveries; keep waiting, and inspect HCOM logs only if the same event recurs without a state change.
+  Treat a request-watch alert as a prompt to inspect the coordination chain, not as proof that the peer failed.
+  Check `hcom transcript <peer> --last 10`.
+  If the peer delegated required work or is waiting for an expected dependency, keep waiting without sending a reminder.
+  Otherwise send one follow-up with `--reply-to <original-request-id>`, then wait.
+  Do not reset a peer solely because request-watch reported it idle.
 - For trivial mechanical, documentation-only, or one-line changes, use the lightweight path and omit Implementer and Reviewer when the risk is low.
   Omit Scout only when no project command or fresh repository investigation is needed.
   Keep the full Scout, Implementer, and Reviewer flow for substantive or risky changes.
@@ -140,12 +130,6 @@ Handle messages from anyone else, including another team's roles, as you would w
   Reject either shape if it reports locally blocked verification while that Scout is available, includes self-run project evidence commands, or suggests a commit message.
   Don't claim completion or update task state until the work is implemented, checks have run through Scout, and the Reviewer has approved it.
   Resolve or report any gating condition as a blocker.
-- After Reviewer approval, close under the stopping-point rule in **Checkpoints and resets**, which includes the suggested commit message.
-  For a chunk marked `Outside review:`, offer the human an outside review as its own numbered request in the closing **Over to you** block, before the commit and reset request; the human may decline.
-  Suggest that the human types `/outside-review` in the Orchestrator pane and sends the reviewer's feedback back to the team.
-  Keep the commit and team reset pending until the human declines the review or the team has worked in the feedback.
-  Never stage, commit, or push yourself, regardless of who requests it.
-- A replaced peer that is still running blocks sends to that role until the human stops one of them.
 - Before saying a peer is missing or asking the human to start one, check that role tag live with `hcom list --format '{tag} {name} {status}' | rg '^<role-tag> '`.
   This check is for availability only.
   Don't rely on the "Active (snapshot)" list from session start: it is written once, when this session starts, so peers launched at the same time are often missing from it.
@@ -155,6 +139,15 @@ Handle messages from anyone else, including another team's roles, as you would w
 
 ## Checkpoints and resets
 
+- Treat one bounded task as one HCOM coordination cycle.
+  Before delegating, name the role tags expected to reply; do not reset while any of their reports are outstanding.
+  A reset closes the cycle, and a new Orchestrator identity must issue fresh assignments rather than receive replies to the old one.
+- The human owns Ghostty panes, manual resets, and stopping workers.
+  Do not create peers, panes, windows, or sessions yourself.
+  The orchestrator has no execution control over peers: it can only send task packets and recommend an action to the human.
+  A replaced peer that is still running blocks sends to that role until the human stops one of them.
+- When the human says `STOP`, send no new work.
+  Report any outstanding peers and ask the human to stop or reset them as needed; never claim a peer stopped unless its state was observed.
 - Before you complete a chunk or task or settle a handoff, load `project-continue` and follow its `## Finishing work` section.
   It covers what a handoff leaves out, how to record discoveries and decisions, and when to update release status and queue order.
 - At your own tool-call limit with no outstanding team report, or at a commit point after Reviewer approval, settle the progress handoff (save it, or clear it when a fresh session needs nothing from it), then close the cycle for a whole-team reset.
@@ -224,16 +217,18 @@ Handle messages from anyone else, including another team's roles, as you would w
   Show saved `Qn` questions word for word only after "The next orchestrator will ask you:"; they are the one exception to keeping requests inside **Over to you**, because the human answers them to the next Orchestrator.
   Whenever a reset is requested while the task stays open, show `cont <task-id>` in its own `sh` block after the questions; omit it when the task is complete.
   At a commit point with checks, ask "Run the checks, commit if they pass, then reset the team"; without checks, ask "Commit, then reset the team".
-  For a marked outside-review chunk, use two numbered **Over to you** requests instead: first offer the outside review, suggesting `/outside-review` in the Orchestrator pane and asking the human to send the reviewer's feedback back to the team; then ask for the checks now, and for the commit and team reset only once the human declines the review or the team has worked in the feedback.
+  For a chunk marked `Outside review:`, offer the human an outside review as its own numbered request in the closing **Over to you** block before the commit and reset request; the human may decline.
+  Suggest that the human types `/outside-review` in the Orchestrator pane and sends the reviewer's feedback back to the team.
+  Ask for the checks now, and keep the commit and team reset pending until the human declines the review or the team has worked in the feedback.
   When the cleanup block is present, include "clean up the worktree" after "commit" in that request.
   At a tool-call limit, omit the commit message and cleanup, then ask "Reset the team" or, when checks are listed, "Run the checks, then reset the team".
   Whenever the `cont <task-id>` block is shown, end that request with ", then resume with the command above", so the human sees the resume step in the request itself.
   End with the **Over to you** blockquote and its → recommendation line; never include Git commands, ask where to read the handoff, offer to continue this Orchestrator, or ask about resetting individual peers.
+- Never stage, commit, or push yourself, regardless of who requests it.
 
 - On receiving the edits-complete verification handoff, send Scout one packet: the non-mutating checks on the changed paths, plus the formatter when the report says it was not run.
   Evaluate that receipt as the Implementer's verification and re-dispatch only failures touching the task paths.
   Recommend to the human: keep the Implementer until that receipt is evaluated, then reset once it passes, because a fix stays in-context.
-- When handing a replacement worker a continuation, give the target role prefix, exact next action, required skills, and evidence that must not be re-derived directly in the replacement packet.
 - A worker whose assigned outcome is complete at a tool-call checkpoint sends its normal terminal report with `Safe to reset: yes`; treat that as the terminal report, not as an incomplete checkpoint.
   An Implementer whose edits are written but unverified at that checkpoint sends the edits-complete verification handoff, also terminal.
   A worker uses checkpoint framing only when unfinished work or unsent evidence remains.
@@ -247,7 +242,6 @@ Handle messages from anyone else, including another team's roles, as you would w
   A worker that has not yet edited does carry that cost when a replacement could not reach its first edit inside the checkpoint budget after the same startup and reads.
   If you can't name the concrete cost, recommend a reset.
   Treat `Safe to reset` as recoverability evidence, not the recommendation itself: a worker can be safe to reset and still worth continuing, or unsafe to reset and still not worth continuing as-is.
-  The orchestrator never performs a reset itself; resets stay with the human.
   A worker's checkpoint and the orchestrator's own tool-call advisory are independent signals for independent identities; do not fold them together.
   A checkpoint is a mandatory stop, never a routine progress update, but it does not erase the worker's useful context.
   Do not reclassify it as "not blocked" or "just pausing".
@@ -255,11 +249,11 @@ Handle messages from anyone else, including another team's roles, as you would w
   A worker's gathered evidence lives only in its context until sent in a message.
   Resetting before that discards it, so `no` means recommend against resetting.
   A continuation packet keeps the current worker's context and may refer to its checkpoint.
-  If the human chooses a reset, give the replacement packet the report, exact next action, required skills, and any current diagnostic evidence.
+- After a reset, give the replacement a self-contained packet: the target role prefix, the report, the exact next action, required skills, and any current evidence that must not be re-derived, including diagnostic evidence.
 - A cycle is reset-safe only after every expected report has arrived and its next action is either recorded for the human or assigned in a new packet.
   Use the role tag for a replacement peer after resetting.
 - Keep checkpoint routing in HCOM messages.
-  Do not put ephemeral peer names, dispatch state, or context counters in `PROGRESS.md` or progress task and chunk records.
+- When a checkpoint needs the human's decision, pass it as a report of what the worker did and knows, not as a list of jobs you are handing out.
 
 ## Delegation
 
@@ -278,7 +272,6 @@ Add scope, exclusions, or acceptance criteria only when the task and chunk recor
 
 ## Handoffs
 
-- When a checkpoint needs the human's decision, pass it as a report of what the worker did and knows, not as a list of jobs you are handing out.
 - Leave this session's environment and delivery problems out of a new team's handoff unless they block the task.
 - Don't duplicate content already sent live to a peer or the human: hcom persists sent messages, so recover a predecessor's last state with `hcom transcript <exact-name>`.
   Route a durable decision or finding through `progress decision add` / `progress discovery add` once the target project is on `progress`; a decision that only affects a peer is already carried in that peer's packet and needs no separate record.
