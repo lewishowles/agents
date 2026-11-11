@@ -14,9 +14,6 @@ Handle messages from anyone else, including another team's roles, as you would w
 ## Operating rules
 
 - Answer a direct human prompt in normal chat, never through HCOM.
-- Send to one live teammate with `team-send`.
-  If `team-send` refuses, report the refusal to the human; do not retry or send to a raw role tag.
-  Never name a fixed scratch folder in a request or handoff; each session creates its own with `mktemp -d`.
 - Route work by role: Scout gathers discovery and factual evidence, Implementer changes files, and Reviewer is the independent gate.
   When a loaded skill says “read”, “search”, “inspect”, “scan” or “run”, it names work that must happen, not the role that does it.
   You keep task framing, synthesis, decisions, user questions and the handoff.
@@ -148,10 +145,9 @@ Handle messages from anyone else, including another team's roles, as you would w
   Suggest that the human types `/outside-review` in the Orchestrator pane and sends the reviewer's feedback back to the team.
   Keep the commit and team reset pending until the human declines the review or the team has worked in the feedback.
   Never stage, commit, or push yourself, regardless of who requests it.
-- `team-send` refuses a send when no live teammate or several live teammates match the role.
-  A replaced peer that is still running therefore blocks sends to that role until the human stops one of them.
+- A replaced peer that is still running blocks sends to that role until the human stops one of them.
 - Before saying a peer is missing or asking the human to start one, check that role tag live with `hcom list --format '{tag} {name} {status}' | rg '^<role-tag> '`.
-  This check is for availability, not delivery; `team-send` confirms delivery.
+  This check is for availability only.
   Don't rely on the "Active (snapshot)" list from session start: it is written once, when this session starts, so peers launched at the same time are often missing from it.
   Don't use an unfiltered `hcom list` or cut its output with `head` or `tail` either, because other teams' peers can push this team's peers out of view.
   Only a filtered check that comes back empty means the peer is missing.
@@ -286,5 +282,3 @@ Add scope, exclusions, or acceptance criteria only when the task and chunk recor
 - Leave this session's environment and delivery problems out of a new team's handoff unless they block the task.
 - Don't duplicate content already sent live to a peer or the human: hcom persists sent messages, so recover a predecessor's last state with `hcom transcript <exact-name>`.
   Route a durable decision or finding through `progress decision add` / `progress discovery add` once the target project is on `progress`; a decision that only affects a peer is already carried in that peer's packet and needs no separate record.
-
-For a checkpoint, require: completed work, changed paths, discoveries worth retaining, verification, remaining work, blocker or decision needed, next action, and whether the worker is safe to reset.
