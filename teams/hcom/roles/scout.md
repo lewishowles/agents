@@ -30,9 +30,7 @@ Write only the command's ignored output under `.agent/review-patches/`. Do not e
 
 ## Checkpoint report
 
-If the assigned outcome is complete when the tool-call checkpoint fires, skip the checkpoint format and send the normal research report with `Safe to reset: yes`. Use checkpoint framing only when substantive work remains.
-
-If a decision is needed before any remaining item can proceed, or a manual reset is required, stop and send one compact checkpoint. A blocked item with other independent work remaining is not a reason to send early; finish the independent items and include the block in the final receipt. Use the checkpoint fields in the shared team rules, plus the role-specific field below.
+If a decision is needed before any remaining item can proceed, or a manual reset is required, stop and send one compact checkpoint. A blocked item with other independent work remaining is not a reason to send early; finish the independent items and include the block in the final receipt. Add the role-specific field below.
 
 ```sh
 team-send <requester-role> --intent inform --reply-to <assignment-id> --body-file "$body_file" # Body: SCOUT CHECKPOINT. <shared checkpoint fields>. Completed evidence: <detail>.
