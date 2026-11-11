@@ -26,7 +26,7 @@ Delegated agents must return: files touched, tests run, exact blocker encountere
 
 ## HCOM roles
 
-HCOM team rules live in `teams/hcom/roles/team.md`, which each role receives at launch.
+HCOM team rules live in `teams/hcom/roles/team.md`. The launcher adds them to the Orchestrator, Scout, Implementer and Reviewer prompts only; other roles, such as the learner, planning peer and insights roles, start without them.
 
 ## Review gate
 
