@@ -8,7 +8,7 @@
 #   4. dist/claude/rules/code-style.md (copied from its Claude adapter source)
 #   5. dist/claude/CLAUDE.md and dist/codex/AGENTS.md (assembled from src/rules/)
 #   6. dist/claude/settings.json (build-settings.py)
-#   7. Validation (validate.sh)
+#   7. Quick validation (validate.sh --quick)
 
 set -euo pipefail
 
@@ -93,4 +93,4 @@ cli_status success "synced" "manifest-backed docs tables"
 cli_status success "synced" "dist/claude/settings.json"
 cli_status success "synced" "dist/codex/hooks.json"
 
-bash "$REPO_DIR/scripts/validate.sh"
+bash "$REPO_DIR/scripts/validate.sh" --quick

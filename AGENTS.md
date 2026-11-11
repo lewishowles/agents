@@ -113,7 +113,7 @@ Shared global skills: `skills/<group>/<name>/` — groups such as `vue/`, `swift
 ## Adding a skill
 
 1. Create `skills/<group>/<name>/SKILL.md` with `name` and `description` front matter, then add any support files beside it
-2. Run `bash scripts/sync.sh` to refresh generated docs and the Claude/Codex outputs; it runs `validate.sh` too, so check that it exits 0
+2. Run `bash scripts/sync.sh` to refresh generated docs and the Claude/Codex outputs; it runs the quick checks, so check that it exits 0. Run the full `bash scripts/validate.sh` before committing
 3. Rerun `setup.sh` after adding or removing a skill to refresh its symlinks; editing an installed skill needs no rebuild or setup
 
 After pulling changes that remove or move skills, rerun `scripts/setup.sh --both` so installed links no longer point at removed output.
@@ -122,7 +122,7 @@ After pulling changes that remove or move skills, rerun `scripts/setup.sh --both
 
 Verification for any change in this repo:
 
-- `bash scripts/sync.sh` — regenerates all `dist/` output and follows up with `scripts/validate.sh` to validate the current state. Run after editing anything under `src/`
+- `bash scripts/sync.sh` — regenerates all `dist/` output and runs `scripts/validate.sh --quick`. Run after editing anything under `src/`
 - `bash scripts/validate.sh --quick` — runs before each push, skipping the setup and doctor end-to-end tests
 - `bash scripts/validate.sh` — the full check to run before committing; must exit 0; pipes are misleading, check `$?` directly rather than a `tail`ed exit
 - `bash tests/friction-logging.sh` — covers the tool-failure hook, malformed input, and a missing `friction` CLI
