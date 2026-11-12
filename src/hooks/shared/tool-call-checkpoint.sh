@@ -3,9 +3,10 @@
 # tool-call-checkpoint — advisory work-cycle boundary for Claude and Codex.
 #
 # Counts Claude PostToolBatch and Codex PreModelRequest events per session in
-# temporary storage. When the count reaches the limit, a Claude agent gets the
-# limit note straight away. A Codex agent gets it with its next tool call,
-# because Codex can't send the agent text from PreModelRequest. PreCompact
+# temporary storage. Every five rounds the agent gets a note with its count, and
+# at the limit it gets the limit note instead. Claude gets each note as soon as
+# the reply's tools finish. Codex gets it with its next tool call, because
+# Codex can't send the agent text from PreModelRequest. PreCompact
 # returns a context checkpoint without changing the counter. A cleared session
 # resets its counter without touching project or HCOM state.
 #
@@ -46,6 +47,11 @@ SCRIPT_DIR="$(cd -P "$(dirname "$script_path")" && pwd)"
 readonly SCRIPT_DIR
 # File containing the advice shown when the limit is reached.
 readonly TOOL_CALL_CONTEXT_FILE="$SCRIPT_DIR/tool-call-checkpoint-message.md"
+# Saved in place of a Codex count note's text, so the note shows the count when
+# the agent receives it rather than when it was saved.
+readonly PENDING_COUNT_NOTE="count"
+# Number of rounds between count notes.
+readonly ROUND_NOTE_INTERVAL=5
 
 # Writes an opt-in, non-sensitive summary of the received hook event.
 #
@@ -92,7 +98,7 @@ should_count() {
 	[[ ( "$runtime" == "claude" && "$event_name" == "PostToolBatch" ) || ( "$runtime" == "codex" && "$event_name" == "PreModelRequest" ) ]]
 }
 
-# Returns success when this event can send a Codex agent its saved limit note:
+# Returns success when this event can send a Codex agent its saved note:
 # a Codex PreToolUse, the first event after the counting one that can reach the
 # agent.
 delivers_saved_note() {
@@ -122,6 +128,16 @@ update_stored_count() {
 	printf '%s %s\n' "$count" "$TOOL_CALL_LIMIT" > "$state_file"
 }
 
+# Returns success when this round needs a count or limit note.
+should_send_round_note() {
+	(( count == TOOL_CALL_LIMIT || count % ROUND_NOTE_INTERVAL == 0 ))
+}
+
+# Sets the note that tells the agent its round count and limit.
+write_count_note_context() {
+	checkpoint_context="Tool rounds so far: $count of $TOOL_CALL_LIMIT."
+}
+
 # Writes the context checkpoint in the format expected by the current runtime.
 write_precompact_output() {
 	if [[ "$runtime" == "claude" ]]; then
@@ -141,14 +157,14 @@ load_checkpoint_context() {
 	checkpoint_context="${checkpoint_context//\{\{TOOL_CALL_LIMIT\}\}/$TOOL_CALL_LIMIT}"
 }
 
-# Writes the Claude limit note after the reply's tools have finished.
+# Writes the Claude note after the reply's tools have finished.
 write_claude_posttoolbatch_output() {
 	jq -n \
 		--arg context "$checkpoint_context" \
 		'{hookSpecificOutput: {hookEventName: "PostToolBatch", additionalContext: $context}}'
 }
 
-# Writes the pending Codex limit note before the next tool call.
+# Writes the pending Codex note before the next tool call.
 write_codex_pretooluse_output() {
 	jq -n \
 		--arg context "$checkpoint_context" \
@@ -204,7 +220,7 @@ mkdir -p "$state_dir" 2>/dev/null || exit 0
 # Holds "<count> <limit>" on one line; the Claude status line reads it to show
 # the count, so keep this format in step with statusline.sh.
 state_file="$state_dir/$runtime-$session_id"
-# Holds a Codex limit note until the next tool call sends it; empty otherwise.
+# Holds a Codex note until the next tool call sends it; empty otherwise.
 pending_note_file="$state_file.pending-note"
 # Trace of event shapes beside the session counter, written only when tracing is turned on.
 trace_file="$state_file.trace.jsonl"
@@ -231,7 +247,7 @@ if [[ "$event_name" == "SessionStart" ]]; then
 	[[ "$source" == "clear" ]] || exit 0
 	printf '0 %s\n' "$TOOL_CALL_LIMIT" > "$state_file"
 
-	# A cleared Codex session also drops a limit note it has not yet sent.
+	# A cleared Codex session also drops a note it has not yet sent.
 	if [[ "$runtime" == "codex" ]]; then
 		: > "$pending_note_file"
 	fi
@@ -245,6 +261,11 @@ trace_event_structure "$trace_file" "$input"
 if delivers_saved_note; then
 	[[ -s "$pending_note_file" ]] || exit 0
 	checkpoint_context="$(<"$pending_note_file")"
+	if [[ "$checkpoint_context" == "$PENDING_COUNT_NOTE" ]]; then
+		read -r count _ < "$state_file" || exit 0
+		[[ "$count" =~ ^[0-9]+$ ]] || exit 0
+		write_count_note_context
+	fi
 	write_codex_pretooluse_output
 	: > "$pending_note_file"
 	exit 0
@@ -252,12 +273,17 @@ fi
 
 update_stored_count || exit 0
 
-(( count == TOOL_CALL_LIMIT )) || exit 0
+should_send_round_note || exit 0
 
-load_checkpoint_context || exit 0
+if (( count == TOOL_CALL_LIMIT )); then
+	load_checkpoint_context || exit 0
+elif [[ "$event_name" == "PostToolBatch" ]]; then
+	write_count_note_context
+else
+	checkpoint_context="$PENDING_COUNT_NOTE"
+fi
 
-# Claude can send the note now. Codex can't send text from PreModelRequest, so
-# the note waits for the next tool call.
+# Claude sends the note now. Codex saves it until its next tool call.
 if [[ "$event_name" == "PostToolBatch" ]]; then
 	write_claude_posttoolbatch_output
 else

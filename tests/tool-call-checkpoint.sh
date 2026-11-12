@@ -2,10 +2,12 @@
 # Covers the shared tool-call checkpoint. Only sessions with an HCOM team tag
 # count tool events, and the planning and insights review workflows skip the
 # count. Claude counts one PostToolBatch per reply; Codex counts each
-# PreModelRequest and sends its limit note on the next PreToolUse. HCOM Scouts
-# and Implementers get the larger worker limit from HCOM_TAG, and
-# AGENT_TOOL_CALL_LIMIT overrides every other limit for a session. PreCompact
-# returns the same handoff context with or without a team tag.
+# PreModelRequest and sends its saved note on the next PreToolUse. Every five
+# rounds the agent gets a note with its count, and at the limit it gets only the
+# limit note. HCOM Scouts and Implementers get the larger worker limit from
+# HCOM_TAG, and AGENT_TOOL_CALL_LIMIT overrides every other limit for a
+# session. PreCompact returns the same handoff context with or without a team
+# tag.
 
 set -euo pipefail
 
@@ -195,7 +197,30 @@ assert_advisory() {
 	assert_equals "$(jq -r '.hookSpecificOutput.hookEventName' "$output_file")" "PostToolBatch"
 }
 
-# Sends silent counted events until the counter reaches one below the limit.
+# Asserts that a Claude batch reports the current count and limit.
+#
+# @param  {string}  tool_name
+#     Tool name sent in the batch.
+# @param  {string}  expected_count
+#     Count shown in the note.
+# @param  {string}  expected_limit
+#     Limit shown in the note.
+assert_count_note() {
+	# Tool name sent in the batch.
+	local tool_name="$1"
+	# Count expected in the note.
+	local expected_count="$2"
+	# Limit expected in the note.
+	local expected_limit="$3"
+	# File holding the hook output.
+	local output_file="$TEST_ROOT/count-note.json"
+
+	run_hook "$tool_name" "$output_file"
+	assert_equals "$(jq -r '.hookSpecificOutput.hookEventName' "$output_file")" "PostToolBatch"
+	assert_equals "$(jq -r '.hookSpecificOutput.additionalContext' "$output_file")" "Tool rounds so far: $expected_count of $expected_limit."
+}
+
+# Sends counted events and checks each count note before the limit.
 #
 # @param  {string}  limit
 #     Limit whose final counted event is left for the caller to send.
@@ -210,7 +235,11 @@ fill_to_limit() {
 	read -r current_count _ < "$STATE_FILE"
 
 	for count in $(seq "$(( current_count + 1 ))" "$(( limit - 1 ))"); do
-		assert_silent "Write" "$count"
+		if (( count % 5 == 0 )); then
+			assert_count_note "Write" "$count" "$limit"
+		else
+			assert_silent "Write" "$count"
+		fi
 	done
 }
 
@@ -286,6 +315,18 @@ assert_not_contains "$TEST_ROOT/advisory-context.txt" 'Outside HCOM'
 assert_silent "Write" "20"
 assert_silent "Read" "20"
 
+# Claude stays silent at four and six rounds, reports five, and sends only the
+# limit note when a five-round boundary is also the limit.
+start_session "claude-count" "10"
+for count in 1 2 3 4; do
+	assert_silent "Read" "$count"
+done
+assert_count_note "Read" "5" "10"
+assert_silent "Read" "6"
+fill_to_limit 10
+assert_advisory "Read"
+assert_equals "$(jq -r '.hookSpecificOutput.additionalContext | startswith("Tool rounds so far:")' "$TEST_ROOT/advisory.json")" "false"
+
 # Two parallel tool uses leave the count unchanged until their one batch completes.
 start_session "parallel" "2"
 TRACE_ENABLED="1"
@@ -332,6 +373,57 @@ assert_contains "$TEST_ROOT/codex-context.txt" 'limit of 2 reached'
 run_codex_event "PreToolUse" "$TEST_ROOT/codex.json"
 assert_empty "$TEST_ROOT/codex.json"
 assert_equals "$(cat "$codex_state_file")" "2 2"
+
+# Codex saves the five-round note, shows the count at delivery, and replaces
+# an undelivered count note when it reaches the limit.
+start_session "codex-count" "10"
+codex_state_file="$TEST_ROOT/agent-tool-call-checkpoints/codex-$SESSION"
+for count in 1 2 3 4; do
+	run_codex_event "PreModelRequest" "$TEST_ROOT/codex.json"
+	assert_empty "$TEST_ROOT/codex.json"
+	assert_equals "$(cat "$codex_state_file")" "$count 10"
+done
+run_codex_event "PreToolUse" "$TEST_ROOT/codex.json"
+assert_empty "$TEST_ROOT/codex.json"
+run_codex_event "PreModelRequest" "$TEST_ROOT/codex.json"
+assert_empty "$TEST_ROOT/codex.json"
+assert_equals "$(cat "$codex_state_file.pending-note")" "count"
+run_codex_event "PreModelRequest" "$TEST_ROOT/codex.json"
+assert_empty "$TEST_ROOT/codex.json"
+run_codex_event "PreToolUse" "$TEST_ROOT/codex.json"
+assert_equals "$(jq -r '.hookSpecificOutput.additionalContext' "$TEST_ROOT/codex.json")" "Tool rounds so far: 6 of 10."
+run_codex_event "PreToolUse" "$TEST_ROOT/codex.json"
+assert_empty "$TEST_ROOT/codex.json"
+for count in 7 8 9 10; do
+	run_codex_event "PreModelRequest" "$TEST_ROOT/codex.json"
+	assert_empty "$TEST_ROOT/codex.json"
+done
+run_codex_event "PreToolUse" "$TEST_ROOT/codex.json"
+jq -r '.hookSpecificOutput.additionalContext' "$TEST_ROOT/codex.json" > "$TEST_ROOT/codex-count-limit.txt"
+assert_contains "$TEST_ROOT/codex-count-limit.txt" 'limit of 10 reached'
+assert_not_contains "$TEST_ROOT/codex-count-limit.txt" 'Tool rounds so far:'
+run_codex_event "PreToolUse" "$TEST_ROOT/codex.json"
+assert_empty "$TEST_ROOT/codex.json"
+
+# A count note saved at five rounds and still unsent at ten shows ten.
+start_session "codex-replace-count" "15"
+for count in $(seq 1 10); do
+	run_codex_event "PreModelRequest" "$TEST_ROOT/codex.json"
+	assert_empty "$TEST_ROOT/codex.json"
+done
+run_codex_event "PreToolUse" "$TEST_ROOT/codex.json"
+assert_equals "$(jq -r '.hookSpecificOutput.additionalContext' "$TEST_ROOT/codex.json")" "Tool rounds so far: 10 of 15."
+
+# The limit note replaces a count note that has not reached Codex yet.
+start_session "codex-replace-with-limit" "10"
+for count in $(seq 1 10); do
+	run_codex_event "PreModelRequest" "$TEST_ROOT/codex.json"
+	assert_empty "$TEST_ROOT/codex.json"
+done
+run_codex_event "PreToolUse" "$TEST_ROOT/codex.json"
+jq -r '.hookSpecificOutput.additionalContext' "$TEST_ROOT/codex.json" > "$TEST_ROOT/codex-replaced-limit.txt"
+assert_contains "$TEST_ROOT/codex-replaced-limit.txt" 'limit of 10 reached'
+assert_not_contains "$TEST_ROOT/codex-replaced-limit.txt" 'Tool rounds so far:'
 
 # Planning and insights review workflows skip Codex counting and note delivery;
 # a limit note saved outside the workflow waits until the workflow ends.
