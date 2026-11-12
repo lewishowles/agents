@@ -1,6 +1,6 @@
 {
 	"name": "tool-call-checkpoint",
-	"description": "Adds one advisory checkpoint when an HCOM team session reaches its tool-call limit (20 by default, 40 for HCOM Scouts and Implementers), and a context checkpoint before compaction in every session.",
+	"description": "Tells an HCOM team session its round count every 5 rounds and adds one advisory checkpoint when it reaches its round limit (20 rounds by default, 40 for HCOM Scouts and Implementers; a round is one agent reply with all its tool calls), and adds a context checkpoint before compaction in every session.",
 	"command": "bash \"$HOME/.claude/hooks/tool-call-checkpoint.sh\" claude",
 	"runtime": "claude",
 	"events": [
