@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Covers the shared tool-call checkpoint. Only sessions with an HCOM team tag
-# count tool events, and the planning and insights review workflows skip the
+# count rounds, and the planning and insights review workflows skip the
 # count. Claude counts one PostToolBatch per reply; Codex counts each
 # PreModelRequest and sends its saved note on the next PreToolUse. Every five
 # rounds the agent gets a note with its count, and at the limit it gets only the
@@ -29,7 +29,7 @@ HOOK="$REPO_DIR/src/hooks/shared/tool-call-checkpoint.sh"
 SESSION=""
 # The counter file the hook writes for the current session.
 STATE_FILE=""
-# The tool-call limit passed to the hook; an empty value leaves it unset.
+# The round limit passed to the hook; an empty value leaves it unset.
 LIMIT_OVERRIDE=""
 # The agent name passed to the hook; an empty value leaves it unset.
 AGENT_NAME=""
@@ -57,7 +57,7 @@ TRACE_ENABLED=""
 start_session() {
 	# The scenario name used to distinguish its session state.
 	local name="$1"
-	# The call limit supplied for this scenario.
+	# The round limit supplied for this scenario.
 	local limit_override="$2"
 	# The agent name supplied for this scenario, when present.
 	local agent_name="${3:-}"
@@ -220,12 +220,12 @@ assert_count_note() {
 	assert_equals "$(jq -r '.hookSpecificOutput.additionalContext' "$output_file")" "Tool rounds so far: $expected_count of $expected_limit."
 }
 
-# Sends counted events and checks each count note before the limit.
+# Sends counted rounds and checks each count note before the limit.
 #
 # @param  {string}  limit
-#     Limit whose final counted event is left for the caller to send.
+#     Limit whose final counted round is left for the caller to send.
 fill_to_limit() {
-	# The event limit; the loop stops one event short so the caller reaches it.
+	# The round limit; the loop stops one round short so the caller reaches it.
 	local limit="$1"
 	# The counter value expected after each silent event.
 	local count
@@ -475,7 +475,7 @@ assert_silent "Read" "1"
 fill_to_limit 20
 assert_advisory "Write"
 
-# Overridden limit: the advisory moves to the configured counted event.
+# Overridden limit: the advisory moves to the configured round.
 start_session "override" "5"
 assert_silent "Read" "1"
 assert_equals "$(cut -d ' ' -f 2 "$STATE_FILE")" "5"

@@ -23,10 +23,10 @@
 
 set -euo pipefail
 
-# Counted events before the advisory for an HCOM team without a
+# Counted rounds before the advisory for an HCOM team without a
 # role-specific limit.
 readonly DEFAULT_TOOL_CALL_LIMIT=20
-# Counted events before the advisory for HCOM Scouts and Implementers, whose
+# Counted rounds before the advisory for HCOM Scouts and Implementers, whose
 # startup reads need room before the first review point.
 readonly WORKER_TOOL_CALL_LIMIT=40
 # Advice shown before compaction, independent of the tool-call counter.
@@ -78,7 +78,7 @@ trace_event_structure() {
 	' >> "$trace_file" 2>/dev/null || true
 }
 
-# Prints the tool-call limit for this session: an explicit override, then a
+# Prints the round limit for this session: an explicit override, then a
 # Scout or Implementer role from HCOM_TAG, then the default.
 resolve_tool_call_limit() {
 	if [[ "${AGENT_TOOL_CALL_LIMIT:-}" =~ ^[1-9][0-9]*$ ]]; then
@@ -115,7 +115,7 @@ in_uninterrupted_workflow() {
 # Fails without changing the file once the count has reached the limit, so the
 # limit note is sent only once.
 update_stored_count() {
-	# Number of events already counted for this session.
+	# Number of rounds already counted for this session.
 	count=0
 	if [[ -f "$state_file" ]]; then
 		# The stored limit is ignored because the current limit applies.
