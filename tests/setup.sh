@@ -1202,8 +1202,13 @@ test_hcom_write_failure_does_not_stop_setup() {
 # it when the status is above 128, followed by the last 20 lines of its log.
 # Returns 1 if any case failed.
 run_setup_cases() {
-	# The cases, in the order that their results are reported.
+	# The cases, in the order that they start and their results are reported.
+	# The slowest cases come first, so they are not still running alone after
+	# every other case has finished.
 	local -a cases=(
+		test_trash_wrapper_links_once_for_each_mode
+		test_nothing_to_change_exits_cleanly
+		test_repository_skill_exclusions
 		test_help_hides_backup_bypass
 		test_public_backup_bypass_is_rejected
 		test_status_option_is_rejected_without_changes
@@ -1216,7 +1221,6 @@ run_setup_cases() {
 		test_missing_doc_paths_is_installed
 		test_codex_installs_missing_doc_paths
 		test_non_terminal_setup_applies
-		test_nothing_to_change_exits_cleanly
 		test_global_cli_style_install_with_bun
 		test_global_cli_style_install_with_npm
 		test_global_cli_style_install_not_on_path
@@ -1228,13 +1232,11 @@ run_setup_cases() {
 		test_claude_themes_are_linked_in_each_config_dir
 		test_claude_setup_preserves_user_theme
 		test_claude_theme_replacement_uses_backups_directory
-		test_trash_wrapper_links_once_for_each_mode
 		test_trash_wrapper_backs_up_existing_file
 		test_trash_wrapper_preserves_symlinked_bin_directory
 		test_stale_repo_link_has_no_backup
 		test_permission_profile_keeps_roots_and_drops_git_config_rule
 		test_skills_are_installed_and_editable
-		test_repository_skill_exclusions
 		test_removed_skill_options_are_unknown
 		test_unmanaged_skill_folder_is_backed_up
 		test_skip_backup_environment_does_not_bypass_backup
