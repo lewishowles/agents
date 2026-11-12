@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Covers the shared tool-call checkpoint. Only sessions with an HCOM team tag
 # count tool events, and the planning and insights review workflows skip the
-# count. Claude counts one PostToolBatch per reply; the advisory fires once
-# when the limit is reached, and nothing fires after it. HCOM Scouts and
-# Implementers get the larger worker limit from HCOM_TAG, and
+# count. Claude counts one PostToolBatch per reply; Codex counts each
+# PreModelRequest and sends its limit note on the next PreToolUse. HCOM Scouts
+# and Implementers get the larger worker limit from HCOM_TAG, and
 # AGENT_TOOL_CALL_LIMIT overrides every other limit for a session. PreCompact
 # returns the same handoff context with or without a team tag.
 
@@ -91,6 +91,41 @@ run_hook_event() {
 	local batch_count="$3"
 	# The file receiving this hook run's standard output.
 	local output_file="$4"
+
+	jq -n --arg session "$SESSION" --arg tool "$tool_name" --arg event "$event_name" --argjson batch_count "$batch_count" \
+		'if $event == "PostToolBatch" then {hook_event_name: $event, session_id: $session, tool_calls: [range(0; $batch_count) | {tool_name: $tool}]} else {hook_event_name: $event, session_id: $session, tool_name: $tool, tool_input: {}} end' \
+		| run_scenario_hook claude "$output_file"
+}
+
+# Runs a Codex hook event with the observed payload shape.
+#
+# @param  {string}  event_name
+#     Event to send to the hook.
+# @param  {string}  output_file
+#     File that receives the hook's standard output.
+run_codex_event() {
+	# Event sent in the Codex payload.
+	local event_name="$1"
+	# File receiving the hook output.
+	local output_file="$2"
+
+	jq -n --arg session "$SESSION" --arg event "$event_name" \
+		'if $event == "PreToolUse" then {hook_event_name: $event, session_id: $session, tool_name: "Bash", tool_input: {}} else {hook_event_name: $event, session_id: $session} end' \
+		| run_scenario_hook codex "$output_file"
+}
+
+# Runs the hook on the payload from standard input with the current
+# scenario's limit, agent name, tag, workflow flags and trace setting.
+#
+# @param  {string}  runtime
+#     Runtime argument passed to the hook: claude or codex.
+# @param  {string}  output_file
+#     File that receives the hook's standard output.
+run_scenario_hook() {
+	# Runtime the hook formats its output for.
+	local runtime="$1"
+	# File receiving the hook output.
+	local output_file="$2"
 	# The env command that runs the hook with this scenario's settings, without HCOM_TAG unless set below.
 	local -a hook_env=(env -u HCOM_TAG TMPDIR="$TEST_ROOT" AGENT_TOOL_CALL_LIMIT="$LIMIT_OVERRIDE" HCOM_NAME="$AGENT_NAME" HCOM_PLANNING_WORKFLOW="$PLANNING_WORKFLOW" HCOM_INSIGHTS_REVIEW_WORKFLOW="$INSIGHTS_REVIEW_WORKFLOW" AGENT_TOOL_CALL_CHECKPOINT_TRACE="$TRACE_ENABLED")
 
@@ -98,9 +133,7 @@ run_hook_event() {
 		hook_env+=("HCOM_TAG=$AGENT_TAG")
 	fi
 
-	jq -n --arg session "$SESSION" --arg tool "$tool_name" --arg event "$event_name" --argjson batch_count "$batch_count" \
-		'if $event == "PostToolBatch" then {hook_event_name: $event, session_id: $session, tool_calls: [range(0; $batch_count) | {tool_name: $tool}]} else {hook_event_name: $event, session_id: $session, tool_name: $tool, tool_input: {}} end' \
-		| "${hook_env[@]}" bash "$HOOK" claude > "$output_file"
+	"${hook_env[@]}" bash "$HOOK" "$runtime" > "$output_file"
 }
 
 # Sends one tool use followed by its completed batch.
@@ -217,6 +250,19 @@ for runtime in claude codex; do
 	fi
 done
 
+# Clearing a Codex session discards a pending note along with its count.
+start_session "codex-clear" "1"
+run_codex_event "PreModelRequest" "$TEST_ROOT/codex.json"
+assert_empty "$TEST_ROOT/codex.json"
+jq -n --arg session "$SESSION" '{hook_event_name: "SessionStart", source: "clear", session_id: $session}' \
+	| run_scenario_hook codex "$TEST_ROOT/codex.json"
+assert_empty "$TEST_ROOT/codex.json"
+# The Codex counter for the current scenario's session.
+codex_state_file="$TEST_ROOT/agent-tool-call-checkpoints/codex-$SESSION"
+assert_equals "$(cat "$codex_state_file")" "0 1"
+run_codex_event "PreToolUse" "$TEST_ROOT/codex.json"
+assert_empty "$TEST_ROOT/codex.json"
+
 # Default limit: replies with reads and edits count, the 20th batch fires, then the counter freezes.
 start_session "default" ""
 assert_silent "Read" "1"
@@ -259,20 +305,70 @@ assert_equals "$(jq -r '.[0].toolCallCount' -s "$STATE_FILE.trace.jsonl")" "2"
 assert_advisory "Write"
 assert_equals "$(cat "$STATE_FILE")" "2 2"
 
-# Codex still counts PreToolUse and returns the same event-specific limit note.
+# Codex counts model requests, then delivers its pending limit note once on a tool call.
 start_session "codex" "2"
 # The Codex counter lives beside the Claude counter for this scenario.
 codex_state_file="$TEST_ROOT/agent-tool-call-checkpoints/codex-$SESSION"
-# The count the Codex counter should show after each tool call.
+run_codex_event "PreToolUse" "$TEST_ROOT/codex.json"
+assert_empty "$TEST_ROOT/codex.json"
+if [[ -f "$codex_state_file" ]]; then
+	printf 'Codex PreToolUse counted before PreModelRequest\n' >&2
+	exit 1
+fi
+# The count the Codex counter should show after each model request.
 for count in 1 2; do
-	jq -n --arg session "$SESSION" '{hook_event_name: "PreToolUse", session_id: $session, tool_name: "Bash", tool_input: {}}' \
-		| env TMPDIR="$TEST_ROOT" AGENT_TOOL_CALL_LIMIT="$LIMIT_OVERRIDE" HCOM_TAG="Agents-reviewer" bash "$HOOK" codex > "$TEST_ROOT/codex.json"
+	run_codex_event "PreModelRequest" "$TEST_ROOT/codex.json"
 	assert_equals "$(cut -d ' ' -f 1 "$codex_state_file")" "$count"
-	if [[ "$count" == 1 ]]; then
-		assert_empty "$TEST_ROOT/codex.json"
-	fi
+	assert_empty "$TEST_ROOT/codex.json"
 done
+assert_equals "$(cat "$codex_state_file")" "2 2"
+run_codex_event "PreModelRequest" "$TEST_ROOT/codex.json"
+assert_empty "$TEST_ROOT/codex.json"
+assert_equals "$(cat "$codex_state_file")" "2 2"
+run_codex_event "PreToolUse" "$TEST_ROOT/codex.json"
 assert_equals "$(jq -r '.hookSpecificOutput.hookEventName' "$TEST_ROOT/codex.json")" "PreToolUse"
+jq -r '.hookSpecificOutput.additionalContext' "$TEST_ROOT/codex.json" > "$TEST_ROOT/codex-context.txt"
+assert_contains "$TEST_ROOT/codex-context.txt" 'limit of 2 reached'
+run_codex_event "PreToolUse" "$TEST_ROOT/codex.json"
+assert_empty "$TEST_ROOT/codex.json"
+assert_equals "$(cat "$codex_state_file")" "2 2"
+
+# Planning and insights review workflows skip Codex counting and note delivery;
+# a limit note saved outside the workflow waits until the workflow ends.
+# The workflow that runs in this pass of the scenario.
+for workflow in planning insights; do
+	start_session "codex-$workflow" "1"
+	if [[ "$workflow" == "planning" ]]; then
+		PLANNING_WORKFLOW="1"
+	else
+		INSIGHTS_REVIEW_WORKFLOW="1"
+	fi
+	run_codex_event "PreModelRequest" "$TEST_ROOT/codex.json"
+	assert_empty "$TEST_ROOT/codex.json"
+	run_codex_event "PreToolUse" "$TEST_ROOT/codex.json"
+	assert_empty "$TEST_ROOT/codex.json"
+	codex_state_file="$TEST_ROOT/agent-tool-call-checkpoints/codex-$SESSION"
+	if [[ -f "$codex_state_file" ]]; then
+		printf 'Skipped Codex workflow wrote a counter\n' >&2
+		exit 1
+	fi
+	PLANNING_WORKFLOW=""
+	INSIGHTS_REVIEW_WORKFLOW=""
+	run_codex_event "PreModelRequest" "$TEST_ROOT/codex.json"
+	assert_empty "$TEST_ROOT/codex.json"
+	assert_equals "$(cat "$codex_state_file")" "1 1"
+	if [[ "$workflow" == "planning" ]]; then
+		PLANNING_WORKFLOW="1"
+	else
+		INSIGHTS_REVIEW_WORKFLOW="1"
+	fi
+	run_codex_event "PreToolUse" "$TEST_ROOT/codex.json"
+	assert_empty "$TEST_ROOT/codex.json"
+	PLANNING_WORKFLOW=""
+	INSIGHTS_REVIEW_WORKFLOW=""
+	run_codex_event "PreToolUse" "$TEST_ROOT/codex.json"
+	assert_equals "$(jq -r '.hookSpecificOutput.hookEventName' "$TEST_ROOT/codex.json")" "PreToolUse"
+done
 
 # Clearing a session resets the count to 0, keeps the limit in the counter file,
 # and lets the checkpoint fire again. This returns to the default scenario,

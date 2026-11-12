@@ -1,5 +1,15 @@
 {
 	"hooks": {
+		"PreModelRequest": [
+			{
+				"hooks": [
+					{
+						"type": "command",
+						"command": "bash \"${CODEX_HOME:-$HOME/.codex}/hooks/tool-call-checkpoint.sh\" codex"
+					}
+				]
+			}
+		],
 		"PreToolUse": [
 			{
 				"hooks": [

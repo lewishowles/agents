@@ -2,11 +2,12 @@
 #
 # tool-call-checkpoint — advisory work-cycle boundary for Claude and Codex.
 #
-# Counts Claude PostToolBatch and Codex PreToolUse events per session in
-# temporary storage. The event that reaches the limit returns one advisory
-# checkpoint; a pre-compaction event returns a context checkpoint without
-# changing the counter. A clear-session start resets the same session's counter
-# without touching project or HCOM state.
+# Counts Claude PostToolBatch and Codex PreModelRequest events per session in
+# temporary storage. When the count reaches the limit, a Claude agent gets the
+# limit note straight away. A Codex agent gets it with its next tool call,
+# because Codex can't send the agent text from PreModelRequest. PreCompact
+# returns a context checkpoint without changing the counter. A cleared session
+# resets its counter without touching project or HCOM state.
 #
 # Only HCOM team sessions, which have HCOM_TAG set, are counted, and the
 # planning and insights review workflows skip the count. The pre-compaction
@@ -14,9 +15,10 @@
 #
 # A Claude reply counts once when all of its tool calls have finished, however
 # many it made in parallel. Read-only tools count the same as any other. Codex
-# counts each tool call. The limit is 20 by default and 40 for HCOM Scouts and
-# Implementers, recognised from the role suffix in HCOM_TAG. Setting
-# AGENT_TOOL_CALL_LIMIT overrides both for a session.
+# counts each model request, including retries and a final reply with no tool
+# calls. The limit is 20 by default and 40 for HCOM Scouts and Implementers,
+# recognised from the role suffix in HCOM_TAG. Setting AGENT_TOOL_CALL_LIMIT
+# overrides both for a session.
 
 set -euo pipefail
 
@@ -85,11 +87,22 @@ resolve_tool_call_limit() {
 }
 
 # Returns success when this event adds one to the session's count: a Claude
-# PostToolBatch or a Codex PreToolUse, outside the planning and insights review
-# workflows, which finish their packet without a mid-review stop.
+# PostToolBatch or a Codex PreModelRequest.
 should_count() {
-	[[ "${HCOM_PLANNING_WORKFLOW:-}" != "1" && "${HCOM_INSIGHTS_REVIEW_WORKFLOW:-}" != "1" ]] || return 1
-	[[ ( "$runtime" == "claude" && "$event_name" == "PostToolBatch" ) || ( "$runtime" == "codex" && "$event_name" == "PreToolUse" ) ]]
+	[[ ( "$runtime" == "claude" && "$event_name" == "PostToolBatch" ) || ( "$runtime" == "codex" && "$event_name" == "PreModelRequest" ) ]]
+}
+
+# Returns success when this event can send a Codex agent its saved limit note:
+# a Codex PreToolUse, the first event after the counting one that can reach the
+# agent.
+delivers_saved_note() {
+	[[ "$runtime" == "codex" && "$event_name" == "PreToolUse" ]]
+}
+
+# Returns success in the planning and insights review workflows, which finish
+# their packet without a mid-review stop, so they neither count nor get a note.
+in_uninterrupted_workflow() {
+	[[ "${HCOM_PLANNING_WORKFLOW:-}" == "1" || "${HCOM_INSIGHTS_REVIEW_WORKFLOW:-}" == "1" ]]
 }
 
 # Adds one to the session's stored count and sets count to the new value.
@@ -135,7 +148,7 @@ write_claude_posttoolbatch_output() {
 		'{hookSpecificOutput: {hookEventName: "PostToolBatch", additionalContext: $context}}'
 }
 
-# Writes the Codex limit note before the tool call that reached the limit.
+# Writes the pending Codex limit note before the next tool call.
 write_codex_pretooluse_output() {
 	jq -n \
 		--arg context "$checkpoint_context" \
@@ -170,9 +183,13 @@ fi
 [[ -n "${HCOM_TAG:-}" ]] || exit 0
 
 # A cleared session resets its counter below. Every other event stops here
-# unless it is one that counts.
+# unless it counts or can send a saved Codex note.
 if [[ "$event_name" != "SessionStart" ]]; then
-	should_count || exit 0
+	if in_uninterrupted_workflow; then
+		exit 0
+	fi
+
+	should_count || delivers_saved_note || exit 0
 fi
 
 # Session identifier used to keep counters separate.
@@ -187,6 +204,8 @@ mkdir -p "$state_dir" 2>/dev/null || exit 0
 # Holds "<count> <limit>" on one line; the Claude status line reads it to show
 # the count, so keep this format in step with statusline.sh.
 state_file="$state_dir/$runtime-$session_id"
+# Holds a Codex limit note until the next tool call sends it; empty otherwise.
+pending_note_file="$state_file.pending-note"
 # Trace of event shapes beside the session counter, written only when tracing is turned on.
 trace_file="$state_file.trace.jsonl"
 # Directory used as the counter's lock.
@@ -211,18 +230,36 @@ if [[ "$event_name" == "SessionStart" ]]; then
 	source="$(printf '%s' "$input" | jq -r '.source // empty' 2>/dev/null)" || exit 0
 	[[ "$source" == "clear" ]] || exit 0
 	printf '0 %s\n' "$TOOL_CALL_LIMIT" > "$state_file"
+
+	# A cleared Codex session also drops a limit note it has not yet sent.
+	if [[ "$runtime" == "codex" ]]; then
+		: > "$pending_note_file"
+	fi
+
 	exit 0
 fi
 
 trace_event_structure "$trace_file" "$input"
+
+# Send a saved Codex note once, then empty the file so it isn't sent again.
+if delivers_saved_note; then
+	[[ -s "$pending_note_file" ]] || exit 0
+	checkpoint_context="$(<"$pending_note_file")"
+	write_codex_pretooluse_output
+	: > "$pending_note_file"
+	exit 0
+fi
 
 update_stored_count || exit 0
 
 (( count == TOOL_CALL_LIMIT )) || exit 0
 
 load_checkpoint_context || exit 0
-if [[ "$runtime" == "claude" ]]; then
+
+# Claude can send the note now. Codex can't send text from PreModelRequest, so
+# the note waits for the next tool call.
+if [[ "$event_name" == "PostToolBatch" ]]; then
 	write_claude_posttoolbatch_output
 else
-	write_codex_pretooluse_output
+	printf '%s\n' "$checkpoint_context" > "$pending_note_file"
 fi
