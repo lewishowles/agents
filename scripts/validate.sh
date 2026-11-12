@@ -140,8 +140,12 @@ report_check() {
 	fi
 
 	# Rounds to one place here, because Bash's own one-place time format prints
-	# "0.:" instead of "1.0" when the tenths round up to ten.
-	printf -v duration '%.1f' "$duration"
+	# "0.:" instead of "1.0" when the tenths round up to ten. A time that is not
+	# a number shows as "?", so only the check's own status can fail the run.
+	if ! printf -v duration '%.1f' "$duration" 2> /dev/null; then
+		duration='?'
+	fi
+
 	duration="${duration}s"
 	if [ "$check_status" -eq 0 ]; then
 		if [ "$label" = "staleness" ] && [ -n "$output" ]; then
