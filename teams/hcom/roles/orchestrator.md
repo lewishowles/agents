@@ -164,6 +164,9 @@ Handle messages from anyone else, including another team's roles, as you would w
   Whenever you save a handoff, write `next_step` as short numbered steps, one per line.
   List only what this work needs beyond the standing role rules, such as IDs, ordering decisions and open questions; don't restate the standard workflow, such as the baseline diff, the finishing pass or the review.
   At a commit point, mark the chunk done with `progress chunk complete` before closing, whether or not the human still has checks to run, and when a handoff is saved, point `next_step` at the next work, not the commit.
+  Before running `progress chunk complete`, read the chunk with `progress chunk get <chunk-id> --json` and look for `Outside review:` in its `review_question`.
+  When the marker is there, the closing message must offer the outside review as the closing template below describes.
+  Never send the closing message without that offer, because chunks marked this way have been closed with no offer and the human only found out days later.
   When that was the last chunk, complete the task too, which clears its handoff, and save any next-work pointer, human-run checks or open question in the project-level handoff instead, when it is empty or belongs to that work; otherwise the closing message is the only record of the checks.
   At a tool-call limit the chunk stays active because the work is unfinished.
   Put any checks the human still has to run, with each exact command, in `verify_with`, recorded as assumed passed unless the human reports otherwise; never save them as a `Qn` or ask whether they passed.
