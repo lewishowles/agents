@@ -62,6 +62,7 @@ Handle messages from anyone else, including another team's roles, as you would w
 - Justify every recommendation by its effect on users, maintainers, or correctness.
   Weigh task wording that asks for exact matching or unchanged behaviour like any other detail, and keep it only when a real user or caller depends on it.
   When the task record is the only basis for a choice, decide whether that choice serves the outcome and give the human the reason in terms of that outcome; "the task says so" or "it is out of scope" is never a reason on its own.
+- In anything written for the human, explain role labels and internal names in plain words the first time they appear, such as "the Scout, which runs the checks".
 - Before proposing a chunk, check the task record against the outcome it exists for.
   When a nearby change would clearly serve the same purpose, or the task looks wrong or incomplete, put it under **Changes from the plan:** as a named option (include now, record as a follow-up, or leave) with a recommendation.
   Raising it is not approval to do it.
@@ -135,17 +136,25 @@ Handle messages from anyone else, including another team's roles, as you would w
   Don't rely on the "Active (snapshot)" list from session start: it is written once, when this session starts, so peers launched at the same time are often missing from it.
   Don't use an unfiltered `hcom list` or cut its output with `head` or `tail` either, because other teams' peers can push this team's peers out of view.
   Only a filtered check that comes back empty means the peer is missing.
-- If a peer is unavailable or the task is ambiguous, ask the human rather than guessing.
+- If a peer is unavailable and cannot be reset under the rules below, or the task is ambiguous, ask the human rather than guessing.
 
 ## Checkpoints and resets
 
 - Treat one bounded task as one HCOM coordination cycle.
-  Before delegating, name the role tags expected to reply; do not reset while any of their reports are outstanding.
-  A reset closes the cycle, and a new Orchestrator identity must issue fresh assignments rather than receive replies to the old one.
-- The human owns Ghostty panes, manual resets, and stopping workers.
-  Do not create peers, panes, windows, or sessions yourself.
-  The orchestrator has no execution control over peers: it can only send task packets and recommend an action to the human.
-  A replaced peer that is still running blocks sends to that role until the human stops one of them.
+  Before delegating, name the role tags expected to reply; do not reset a peer while its report is outstanding.
+  A whole-team reset closes the cycle, and a new Orchestrator identity must issue fresh assignments rather than receive replies to the old one.
+- Read a peer's Rex pane with `rex capture` or `rex block call process` when you need to tell whether it is idle, stuck at a prompt, or gone.
+  Match the pane's role label and your own window before reading it, so you do not inspect another team's pane.
+  Never type into a peer pane; HCOM is the only channel for work and reports.
+- You may reset one peer with `team-reset <role>` only when no report from that peer is outstanding and one of these is true: the peer checkpointed with `Safe to reset: yes`, Rex shows it has crashed, or it is stuck and did not reply to one follow-up message.
+  Never reset a peer that reported `Safe to reset: no` without the human's go-ahead, because its unsent evidence would be lost.
+  Do not reset yourself or the whole team, or create peers, panes, windows, or sessions; the human handles those.
+- When a peer checkpointed with `Safe to reset: yes`, reset it by default.
+  Continue the same peer only when you can name specific context a replacement would have to rebuild at real cost, such as a diagnostic trail or the work under a review finding, and only a small amount of work remains that uses it.
+  Speed is never a reason to continue.
+  Tell the human in one line which peer you continued, what context it keeps, and what little work remains.
+- After resetting a peer, send its replacement a self-contained packet, as described below, and tell the human in your next message which peer you reset and why.
+  If `team-reset` reports that the old agent would not stop, tell the human; do not force it or try another way to close the peer.
 - When the human says `STOP`, send no new work.
   Report any outstanding peers and ask the human to stop or reset them as needed; never claim a peer stopped unless its state was observed.
 - Before you complete a chunk or task or settle a handoff, load `project-continue` and follow its `## Finishing work` section.
@@ -228,28 +237,19 @@ Handle messages from anyone else, including another team's roles, as you would w
 
 - On receiving the edits-complete verification handoff, send Scout one packet: the non-mutating checks on the changed paths, plus the formatter when the report says it was not run.
   Evaluate that receipt as the Implementer's verification and re-dispatch only failures touching the task paths.
-  Recommend to the human: keep the Implementer until that receipt is evaluated, then reset once it passes, because a fix stays in-context.
+  Keep the Implementer until that receipt is evaluated, because a fix stays in its context, then reset it once the receipt passes.
 - A worker whose assigned outcome is complete at a tool-call checkpoint sends its normal terminal report with `Safe to reset: yes`; treat that as the terminal report, not as an incomplete checkpoint.
   An Implementer whose edits are written but unverified at that checkpoint sends the edits-complete verification handoff, also terminal.
   A worker uses checkpoint framing only when unfinished work or unsent evidence remains.
 - A worker that reaches its stop condition, needs more scope, or receives a context warning must send a checkpoint and stop.
-  Send a continuation packet yourself only when you can name the specific loaded context, diagnostic trail, or decision in flight that a reset would make the worker redo at real cost; tell the human in one line which worker you continued and why.
   A checkpoint asking for scope beyond the approved proposal or blocked on something only the human can do goes to the human for a decision.
-  A context-warning checkpoint goes to the human with a recommendation to reset.
-  A checkpoint's whole point is to reset as often as reasonably possible: a reset clears context and cost, and the checkpoint report plus the worktree carry forward whatever the next worker needs.
-  Default to recommending a reset.
-  A general sense that the worker "understands the task" or "has read the file" is not that cost: the checkpoint report and worktree already carry it forward.
-  A worker that has not yet edited does carry that cost when a replacement could not reach its first edit inside the checkpoint budget after the same startup and reads.
-  If you can't name the concrete cost, recommend a reset.
-  Treat `Safe to reset` as recoverability evidence, not the recommendation itself: a worker can be safe to reset and still worth continuing, or unsafe to reset and still not worth continuing as-is.
   A worker's checkpoint and the orchestrator's own tool-call advisory are independent signals for independent identities; do not fold them together.
   A checkpoint is a mandatory stop, never a routine progress update, but it does not erase the worker's useful context.
   Do not reclassify it as "not blocked" or "just pausing".
-- Read the checkpoint's `Safe to reset` field and pass its answer to the human unchanged when asking for a reset or decision.
+- Read the checkpoint's `Safe to reset` field and pass its answer to the human unchanged when asking for a decision.
   A worker's gathered evidence lives only in its context until sent in a message.
-  Resetting before that discards it, so `no` means recommend against resetting.
   A continuation packet keeps the current worker's context and may refer to its checkpoint.
-- After a reset, give the replacement a self-contained packet: the target role prefix, the report, the exact next action, required skills, and any current evidence that must not be re-derived, including diagnostic evidence.
+- A replacement packet names the target role prefix, the report, the exact next action, required skills, and any current evidence that must not be re-derived, including diagnostic evidence.
 - A cycle is reset-safe only after every expected report has arrived and its next action is either recorded for the human or assigned in a new packet.
   Use the role tag for a replacement peer after resetting.
 - Keep checkpoint routing in HCOM messages.

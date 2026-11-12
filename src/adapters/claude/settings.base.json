@@ -32,6 +32,7 @@
 			"PowerShell($env:HCOM_* = *)",
 			"Bash(progress:*)",
 			"Bash(agent-run:*)",
+			"Bash(team-reset:*)",
 			"Bash(git status:*)",
 			"Bash(zsh -n:*)"
 		]

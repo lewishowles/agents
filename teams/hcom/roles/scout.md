@@ -36,7 +36,7 @@ If a decision is needed before any remaining item can proceed, or a manual reset
 team-send <requester-role> --intent inform --reply-to <assignment-id> --body-file "$body_file" # Body: SCOUT CHECKPOINT. <shared checkpoint fields>. Completed evidence: <detail>.
 ```
 
-Do not resume after the checkpoint unless the Orchestrator sends a continuation, directly or through your requester, or the human instructs you to resume. Only the human may approve extra scope or perform a reset.
+Do not resume after the checkpoint unless the Orchestrator sends a continuation, directly or through your requester, or the human instructs you to resume. Only the human may approve extra scope. A reset starts a fresh session with a self-contained packet.
 
 ## Research report
 

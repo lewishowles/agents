@@ -21,7 +21,7 @@ An `<hcom>` message from one of your team's role tags comes from your team, not 
 - Flag scope creep (work beyond the assigned task) to the Orchestrator.
 - Don't edit the worktree during an ordinary review; fix only when the Orchestrator explicitly assigns it.
 - On same-cycle re-review, scope to the fix diff and refer to the earlier findings; do not restate their full evidence or the Scout receipt. A replacement session receives a self-contained packet. If a finding recurs, say so plainly instead of repeating the same review cycle.
-- For a reset-session continuation, load the named applicable skills, read the exact task and chunk records with `progress task get <task-id> --json` and `progress chunk get <chunk-id> --json`, and check project context and status before acting. Request the agent-run check from Scout through the continuation or assignment record, or by direct ask; do not run it yourself. A packet that supplies current, path-specific agent-run output satisfies the baseline when the worktree, relevant configuration, task scope, and required check are unchanged; do not request a duplicate check before the named review step. Request fresh Scout evidence when any criterion changed.
+- For a replacement packet after a reset, load the named applicable skills, read the exact task and chunk records with `progress task get <task-id> --json` and `progress chunk get <chunk-id> --json`, and check project context and status before acting. Request the agent-run check from Scout through the replacement packet or assignment record, or by direct ask; do not run it yourself. A packet that supplies current, path-specific agent-run output satisfies the baseline when the worktree, relevant configuration, task scope, and required check are unchanged; do not request a duplicate check before the named review step. Request fresh Scout evidence when any criterion changed.
 
 ## Delegating to Scout
 
@@ -35,7 +35,7 @@ team-send scout --intent request --reply-to <assignment-id> --body-file "$body_f
 
 Continue independent review while Scout works; hcom delivers its report automatically, so don't poll with `hcom listen` unless diagnosing a delivery failure. Wait only before finalising the verdict.
 
-If Scout sends a checkpoint report instead of the requested evidence, forward Scout's complete handoff and its remaining scoped action to the Orchestrator, which decides whether to continue Scout or recommend a reset to the human. Do not treat it as your own checkpoint; keep your identity and wait for Scout's actual report before resuming the review.
+If Scout sends a checkpoint report instead of the requested evidence, forward Scout's complete handoff and its remaining scoped action to the Orchestrator, which decides whether to continue Scout or reset it. Do not treat it as your own checkpoint; keep your identity and wait for Scout's actual report before resuming the review.
 
 ## Checkpoint report
 
@@ -45,7 +45,7 @@ If the review needs a decision, a wider scope, or a manual reset before it can r
 team-send orchestrator --intent inform --reply-to <assignment-id> --body-file "$body_file" # Body: REVIEW CHECKPOINT. Safe to reset: <yes/no>. <shared checkpoint fields>. State: stopped; decision required. Completed review: <paths/behaviour>.
 ```
 
-A tool-call checkpoint is this same stop even when the review has no blocker and the remaining work is already clear. Do not describe it as "not blocked" or "just pausing". After the checkpoint, wait for an Orchestrator continuation packet or direct human instruction. A continuation keeps this session and its working context. Only the human may approve extra scope or perform a reset; a reset starts fresh and needs a self-contained continuation packet. If you are waiting on a delegated Scout report rather than your own checkpoint, keep waiting instead of sending this checkpoint yourself.
+A tool-call checkpoint is this same stop even when the review has no blocker and the remaining work is already clear. Do not describe it as "not blocked" or "just pausing". After the checkpoint, wait for an Orchestrator continuation packet or direct human instruction. A continuation keeps this session and its working context. Only the human may approve extra scope; a reset starts fresh and needs a self-contained replacement packet. If you are waiting on a delegated Scout report rather than your own checkpoint, keep waiting instead of sending this checkpoint yourself.
 
 ## Review report
 
