@@ -1004,7 +1004,12 @@ test_repository_skill_exclusions() {
 	# A script copy that lets this case edit the repository exclude list.
 	local scripts_dir="$REPO_DIR/scripts"
 
-	trash "$scripts_dir"
+	unlink "$scripts_dir" || fail "Could not remove the scratch repository scripts link: $scripts_dir"
+
+	# The link points at the real checkout, so the copy below must never go through it.
+	if [[ -L "$scripts_dir" ]]; then
+		fail "The scratch repository scripts entry is still a link: $scripts_dir"
+	fi
 	/bin/cp -R "$SOURCE_REPO_DIR/scripts" "$scripts_dir"
 	run_setup "$home_dir" > /dev/null
 
