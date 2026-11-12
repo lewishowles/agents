@@ -25,8 +25,8 @@ declare -A remembered_link_targets=()
 
 # The number of required checks that found a problem.
 failed_checks=0
-# A temporary file created by this run, removed on exit.
-doctor_temp_file=""
+# The Codex config this run prepared, reused by the setup plan and removed on exit.
+prepared_codex_config=""
 
 trap cleanup_doctor EXIT
 
@@ -125,10 +125,10 @@ main() {
 	cli_status success 'No required problems found'
 }
 
-# Removes a comparison file if a check exits before normal cleanup.
+# Removes the Codex config this run prepared when doctor exits.
 cleanup_doctor() {
-	if [ -n "$doctor_temp_file" ]; then
-		rm -f "$doctor_temp_file"
+	if [ -n "$prepared_codex_config" ]; then
+		rm -f "$prepared_codex_config"
 	fi
 }
 
@@ -180,21 +180,20 @@ check_tools() {
 }
 
 # Fails the doctor when setup cannot build a new Codex config.toml from the
-# installed one, which also means the setup plan cannot compare them.
+# installed one, which also means the setup plan cannot compare them. When the
+# build succeeds, the new config is kept so the setup plan can compare it without
+# building it again.
 check_codex_config_read() {
 	# The temporary output of the config builder.
 	local proposed
-	# Whether the installed config can be read.
-	local readable=true
 	proposed=$(mktemp)
-	doctor_temp_file="$proposed"
+	prepared_codex_config="$proposed"
 	if ! prepare_codex_config "$CODEX_DIR/config.toml" "$proposed"; then
 		required_problem 'Codex config.toml' 'could not compare'
-		readable=false
+		rm -f "$proposed"
+		prepared_codex_config=""
+		return 1
 	fi
-	rm -f "$proposed"
-	doctor_temp_file=""
-	[ "$readable" = true ]
 }
 
 # Lists each change setup would make, grouped by kind, and counts every one as
@@ -214,7 +213,7 @@ report_setup_plan() {
 	# One kind of change, such as Links or Backups.
 	local kind
 
-	if ! build_setup_plan "$target"; then
+	if ! build_setup_plan "$target" "$prepared_codex_config"; then
 		cli_section 'Setup changes'
 		# check_tools has already counted the missing cli-style.
 		if cli_style_install_needed && ! choose_cli_style_install_command >/dev/null 2>&1; then

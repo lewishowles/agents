@@ -298,7 +298,12 @@ cli_group_status() {
 		return
 	fi
 
-	normalised_type=$(cli_normalise_status_type "$type")
+	# Convert the shell aliases to result types that cli-style accepts.
+	case "$type" in
+		error) normalised_type=failed ;;
+		muted) normalised_type=unchanged ;;
+		*) normalised_type="$type" ;;
+	esac
 
 	if [[ "$CLI_STYLE_GROUP_LABEL" == "" ]]; then
 		cli_status "$normalised_type" "$label" "$detail"
@@ -336,23 +341,6 @@ cli_group_end() {
 
 	cli_group "$result" "$CLI_STYLE_GROUP_LABEL" "$summary"
 	CLI_STYLE_GROUP_LABEL=""
-}
-
-# Normalises shell-friendly aliases to result types accepted by cli-style.
-#
-# @param  {string}  type
-#     Status result type or alias.
-# @returns  {string}
-#     Normalised status result type.
-cli_normalise_status_type() {
-	# The status result type or alias to convert.
-	local type="$1"
-
-	case "$type" in
-		error) printf 'failed' ;;
-		muted) printf 'unchanged' ;;
-		*) printf '%s' "$type" ;;
-	esac
 }
 
 # Counts one status row for the active group.

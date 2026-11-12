@@ -371,27 +371,19 @@ ensure_codex_section_settings() {
 	# Managed keys omitted from this update.
 	local omitted_keys="$3"
 	shift 3
-	# The file of managed key lines and the completed configuration.
+	# The base section and the completed configuration.
 	local managed temp
 
 	managed=$(mktemp)
 	temp=$(mktemp)
 
-	# Keep only the selected key lines from the base section.
-	codex_config_section "$section" | awk -v omitted="$omitted_keys" '
-		NR > 1 && /^[^#[:space:]][^=]*=/ {
-			key = $0
-			sub(/[[:space:]]*=.*/, "", key)
-			if (index(" " omitted " ", " " key " ") == 0) {
-				print
-			}
-		}
-	' > "$managed"
+	# Copy the base section; the rewrite below keeps only its selected keys.
+	codex_config_section "$section" > "$managed"
 
-	# The first input is the managed key lines, the second is the user's config.
-	# Managed and retired keys are dropped from the existing section, and the
-	# managed lines are written straight after its header.
-	awk -v header="[$section]" -v retired="$*" '
+	# The first input is the base section, and the second is the user's config.
+	# Selected managed keys replace existing keys in that section. Retired keys
+	# are removed, and the selected lines follow the section header.
+	awk -v header="[$section]" -v omitted="$omitted_keys" -v retired="$*" '
 		function key_of(line) {
 			sub(/^[[:space:]]+/, "", line)
 			sub(/[[:space:]]*=.*$/, "", line)
@@ -402,9 +394,14 @@ ensure_codex_section_settings() {
 				print lines[i]
 			}
 		}
-		FNR == NR {
-			lines[++count] = $0
-			drop[key_of($0)] = 1
+		FILENAME == ARGV[1] {
+			if (FNR > 1 && $0 ~ /^[^#[:space:]][^=]*=/) {
+				key = key_of($0)
+				if (index(" " omitted " ", " " key " ") == 0) {
+					lines[++count] = $0
+					drop[key] = 1
+				}
+			}
 			next
 		}
 		FNR == 1 {

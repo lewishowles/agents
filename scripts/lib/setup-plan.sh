@@ -20,9 +20,13 @@ load_managed_paths() {
 #
 # @param  {string}  target
 #     The agents to set up: claude, codex or both.
+# @param  {string}  prepared_codex_config
+#     A Codex config that is already prepared, or empty to prepare one here.
 build_setup_plan() {
 	# The agents to set up.
 	local target="$1"
+	# A Codex config that is already prepared, or empty.
+	local prepared_codex_config="${2:-}"
 	# The Git hook setting currently used by this checkout.
 	local hooks_path
 
@@ -45,7 +49,7 @@ build_setup_plan() {
 	fi
 
 	if [ "$target" = codex ] || [ "$target" = both ]; then
-		plan_codex_setup
+		plan_codex_setup "$prepared_codex_config"
 	fi
 
 	if [ ! -e "$HOME/.local/bin" ] && [ ! -L "$HOME/.local/bin" ]; then
@@ -127,11 +131,18 @@ plan_helper_command() {
 
 # Adds the Codex folders, links, config changes, HCOM folder additions and
 # missing helper commands to the setup plan.
+#
+# @param  {string}  prepared_config
+#     A Codex config that is already prepared, or empty to prepare one here.
 plan_codex_setup() {
+	# A Codex config that is already prepared, or empty.
+	local prepared_config="${1:-}"
 	# The helper command currently being checked.
 	local command_name
 	# The Codex config setup would write, compared with the user's current file.
 	local config_temp
+	# Whether this function must remove the config it creates.
+	local remove_config_temp=false
 
 	plan_container_dir "$HOME/.agents"
 	plan_container_dir "$HOME/.agents/skills"
@@ -147,15 +158,22 @@ plan_codex_setup() {
 	plan_prune_stale_repo_links "$CODEX_DIR/hooks" "$REPO_DIR/dist/codex/hooks"
 	managed_links codex hooks plan_link_path
 
-	config_temp=$(mktemp)
-	prepare_codex_config "$CODEX_DIR/config.toml" "$config_temp"
+	if [ -n "$prepared_config" ]; then
+		config_temp="$prepared_config"
+	else
+		config_temp=$(mktemp)
+		remove_config_temp=true
+		prepare_codex_config "$CODEX_DIR/config.toml" "$config_temp"
+	fi
 	if [ ! -f "$CODEX_DIR/config.toml" ] || ! cmp -s "$CODEX_DIR/config.toml" "$config_temp"; then
 		if [ -e "$CODEX_DIR/config.toml" ] || [ -L "$CODEX_DIR/config.toml" ]; then
 			plan_backup "$CODEX_DIR/config.toml"
 		fi
 		plan_change "Codex settings" "Write $(display_path "$CODEX_DIR/config.toml") with managed defaults, MCP servers, TUI settings, the permission profile and hooks"
 	fi
-	rm "$config_temp"
+	if [ "$remove_config_temp" = true ]; then
+		rm "$config_temp"
+	fi
 
 	plan_prune_stale_repo_links "$HOME/.agents/skills" "$REPO_DIR"
 	plan_prune_stale_repo_links "$CODEX_DIR/skills" "$REPO_DIR" 1
