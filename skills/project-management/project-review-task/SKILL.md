@@ -56,6 +56,7 @@ If the supplied ID or name does not resolve, or the lookup is ambiguous, stop an
 - **Outside review marker** — use the `project-plan-task` criteria to flag a milestone chunk without the marker or a routine chunk with one.
 - **Dependencies** — real prerequisites, cross-repository relationships, permission limits, and sequencing are named.
 - **Altitude** — enough detail to act safely, with no speculative architecture or line-by-line solution disguised as a requirement.
+- **Working path** — how soon the chunks produce output the user can run, whether a simpler path gets there sooner, and which real user or caller needs each proposed error state, option, and rule. Without this check, a plan can pass every clarity and correctness check and still reach 72 chunks without generating a single file.
 - **Maintainability** — existing helpers and patterns are considered; abstractions, flexibility, and process are proportionate to the evidence.
 - **Acceptance and verification** — each load-bearing claim has observable evidence, with static, executed, observed, or blocked checks distinguished where useful.
 - **Risks and proportionality** — concrete failure modes, recovery paths, and checks match the task's impact and complexity; every reservation must name an observed failure or a concrete unresolved scenario traced from changed lines to a real consumer or public contract, and must not withhold approval or reduce stated confidence because a linked issue or PR description is absent, untouched behaviour lacks tests, or a future defect is hypothetical.
@@ -65,6 +66,8 @@ If the supplied ID or name does not resolve, or the lookup is ambiguous, stop an
 - **Must-fix** — stale or false repository facts, missing contract or boundary, unsafe ambiguity, impossible acceptance, missing required verification, or a risk that blocks implementation.
 - **Recommended** — a material maintainability, evidence, failure-state, or clarity gap that should be corrected before implementation, including context-dependent shorthand that makes the contract harder to interpret safely.
 - **Nice-to-have** — useful polish that is neither required nor a reason to delay the task.
+
+For the working-path check, mark a simpler route to runnable output as Recommended. Mark a task meant to produce runnable output as Must-fix when none of its chunks reaches that output.
 
 Every finding names the task or evidence location where possible, the problem, its effect, and the smallest planning change that resolves it. Mark assumptions and blocked checks explicitly. If the evidence does not support a change, do not manufacture one.
 
