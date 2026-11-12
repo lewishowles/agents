@@ -1,7 +1,7 @@
 ---
 name: dependencies
 description: >
-  Use this skill whenever a package installation, npm/bun add, or new dependency is mentioned or considered — even if just suggesting a library. Covers when to add packages, what to avoid, the @lewishowles/helpers and @lewishowles/components libraries that replace common packages, and when to discuss before installing.
+  Use this skill whenever a package or new dependency is mentioned, considered or installed (npm/bun add), even if just suggesting a library, or when reading a package's docs. Covers when to add packages, what to avoid, the @lewishowles/helpers and @lewishowles/components libraries that replace common packages, and when to discuss first.
 ---
 
 # Dependencies
@@ -54,3 +54,7 @@ Dependency proposal: `package-name`
 - Dependency value: [why the package earns its maintenance cost]
 - Risk: [bundle size, maintenance, security, API churn]
 ```
+
+## Reading package docs
+
+When checking package docs, try `<docs-url>/llms.txt` first. It often contains curated links optimised for LLMs.
