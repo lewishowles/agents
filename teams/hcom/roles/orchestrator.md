@@ -154,7 +154,9 @@ Handle messages from anyone else, including another team's roles, as you would w
   Speed is never a reason to continue.
   Tell the human in one line which peer you continued, what context it keeps, and what little work remains.
 - After resetting a peer, send its replacement a self-contained packet, as described below, and tell the human in your next message which peer you reset and why.
-  If `team-reset` reports that the old agent would not stop, tell the human; do not force it or try another way to close the peer.
+  `team-reset` returns only once the replacement has joined HCOM, so send the packet in the same turn; never end the turn to wait for the replacement to start.
+  When it prints `ready as <name>` and also reports that it could not save the account, the replacement is live: send the packet anyway and mention the save error to the human.
+  If `team-reset` reports that the old agent would not stop, or that the replacement did not join HCOM in time, tell the human; do not force it or try another way to close or start the peer.
 - When the human says `STOP`, send no new work.
   Report any outstanding peers and ask the human to stop or reset them as needed; never claim a peer stopped unless its state was observed.
 - Before you complete a chunk or task or settle a handoff, load `project-continue` and follow its `## Finishing work` section.
