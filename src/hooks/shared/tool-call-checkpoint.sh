@@ -2,25 +2,29 @@
 #
 # tool-call-checkpoint — advisory work-cycle boundary for Claude and Codex.
 #
-# Counts PreToolUse events per runtime/session in temporary storage. The call
-# that reaches the limit returns one advisory checkpoint; a pre-compaction event
-# returns a context checkpoint without changing the counter. A clear-session
-# start resets the same session's counter without touching project or HCOM state.
+# Counts Claude PostToolBatch and Codex PreToolUse events per session in
+# temporary storage. The event that reaches the limit returns one advisory
+# checkpoint; a pre-compaction event returns a context checkpoint without
+# changing the counter. A clear-session start resets the same session's counter
+# without touching project or HCOM state.
 #
 # Only HCOM team sessions, which have HCOM_TAG set, are counted, and the
 # planning and insights review workflows skip the count. The pre-compaction
 # checkpoint runs in every session.
 #
-# Every tool call counts, including reads, because the limit bounds context
-# growth. The limit is 20 by default and 40 for HCOM Scouts and Implementers,
-# recognised from the role suffix in HCOM_TAG. Setting AGENT_TOOL_CALL_LIMIT
-# overrides both for a session.
+# A Claude reply counts once when all of its tool calls have finished, however
+# many it made in parallel. Read-only tools count the same as any other. Codex
+# counts each tool call. The limit is 20 by default and 40 for HCOM Scouts and
+# Implementers, recognised from the role suffix in HCOM_TAG. Setting
+# AGENT_TOOL_CALL_LIMIT overrides both for a session.
 
 set -euo pipefail
 
-# Calls before the advisory for any HCOM team session without a role-specific limit.
+# Counted events before the advisory for an HCOM team without a
+# role-specific limit.
 readonly DEFAULT_TOOL_CALL_LIMIT=20
-# Calls before the advisory for HCOM Scouts and Implementers, whose startup reads need room before the first review point.
+# Counted events before the advisory for HCOM Scouts and Implementers, whose
+# startup reads need room before the first review point.
 readonly WORKER_TOOL_CALL_LIMIT=40
 # Advice shown before compaction, independent of the tool-call counter.
 readonly COMPACTION_CONTEXT="CONTEXT CHECKPOINT: This session is about to compact. Before continuing, hand off or record the current scope, changed paths, verification, blockers and next decision. Do not expand scope or reset peers."
@@ -38,7 +42,7 @@ done
 # The folder that holds the real script, where its message file lives.
 SCRIPT_DIR="$(cd -P "$(dirname "$script_path")" && pwd)"
 readonly SCRIPT_DIR
-# File containing the advice shown when the call limit is reached.
+# File containing the advice shown when the limit is reached.
 readonly TOOL_CALL_CONTEXT_FILE="$SCRIPT_DIR/tool-call-checkpoint-message.md"
 
 # Writes an opt-in, non-sensitive summary of the received hook event.
@@ -60,7 +64,8 @@ trace_event_structure() {
 			eventName: .hook_event_name,
 			inputKeys: keys,
 			toolInputKeys: ((.tool_input // {}) | if type == "object" then keys else [] end),
-			toolName: (.tool_name // "unknown")
+			toolName: (.tool_name // "unknown"),
+			toolCallCount: ((.tool_calls // []) | if type == "array" then length else 0 end)
 		}
 	' >> "$trace_file" 2>/dev/null || true
 }
@@ -77,6 +82,64 @@ resolve_tool_call_limit() {
 	scout|implementer|*-scout|*-implementer) printf '%s\n' "$WORKER_TOOL_CALL_LIMIT" ;;
 	*) printf '%s\n' "$DEFAULT_TOOL_CALL_LIMIT" ;;
 	esac
+}
+
+# Returns success when this event adds one to the session's count: a Claude
+# PostToolBatch or a Codex PreToolUse, outside the planning and insights review
+# workflows, which finish their packet without a mid-review stop.
+should_count() {
+	[[ "${HCOM_PLANNING_WORKFLOW:-}" != "1" && "${HCOM_INSIGHTS_REVIEW_WORKFLOW:-}" != "1" ]] || return 1
+	[[ ( "$runtime" == "claude" && "$event_name" == "PostToolBatch" ) || ( "$runtime" == "codex" && "$event_name" == "PreToolUse" ) ]]
+}
+
+# Adds one to the session's stored count and sets count to the new value.
+# Fails without changing the file once the count has reached the limit, so the
+# limit note is sent only once.
+update_stored_count() {
+	# Number of events already counted for this session.
+	count=0
+	if [[ -f "$state_file" ]]; then
+		# The stored limit is ignored because the current limit applies.
+		read -r count _ < "$state_file" || true
+		[[ "$count" =~ ^[0-9]+$ ]] || count=0
+	fi
+
+	(( count < TOOL_CALL_LIMIT )) || return 1
+	count=$((count + 1))
+	printf '%s %s\n' "$count" "$TOOL_CALL_LIMIT" > "$state_file"
+}
+
+# Writes the context checkpoint in the format expected by the current runtime.
+write_precompact_output() {
+	if [[ "$runtime" == "claude" ]]; then
+		jq -n \
+			--arg context "$COMPACTION_CONTEXT" \
+			'{hookSpecificOutput: {hookEventName: "PreCompact", additionalContext: $context}}'
+	else
+		jq -n --arg context "$COMPACTION_CONTEXT" '{systemMessage: $context}'
+	fi
+}
+
+# Reads the limit note from its message file into checkpoint_context and fills
+# in this session's limit. Fails when the message file is missing.
+load_checkpoint_context() {
+	[[ -f "$TOOL_CALL_CONTEXT_FILE" ]] || return 1
+	checkpoint_context="$(<"$TOOL_CALL_CONTEXT_FILE")"
+	checkpoint_context="${checkpoint_context//\{\{TOOL_CALL_LIMIT\}\}/$TOOL_CALL_LIMIT}"
+}
+
+# Writes the Claude limit note after the reply's tools have finished.
+write_claude_posttoolbatch_output() {
+	jq -n \
+		--arg context "$checkpoint_context" \
+		'{hookSpecificOutput: {hookEventName: "PostToolBatch", additionalContext: $context}}'
+}
+
+# Writes the Codex limit note before the tool call that reached the limit.
+write_codex_pretooluse_output() {
+	jq -n \
+		--arg context "$checkpoint_context" \
+		'{hookSpecificOutput: {hookEventName: "PreToolUse", additionalContext: $context}}'
 }
 
 # Limit applied to this session's counter.
@@ -98,25 +161,18 @@ input="$(cat)"
 event_name="$(printf '%s' "$input" | jq -r '.hook_event_name // empty' 2>/dev/null)" || exit 0
 
 if [[ "$event_name" == "PreCompact" ]]; then
-	if [[ "$runtime" == "claude" ]]; then
-		jq -n \
-			--arg context "$COMPACTION_CONTEXT" \
-			'{hookSpecificOutput: {hookEventName: "PreCompact", additionalContext: $context}}'
-	else
-		jq -n --arg context "$COMPACTION_CONTEXT" '{systemMessage: $context}'
-	fi
+	write_precompact_output
 	exit 0
 fi
 
 # The checkpoint advice is written for HCOM team roles, so sessions without a
-# team tag skip the tool-call count. PreCompact is handled above and still runs.
-if [[ -z "${HCOM_TAG:-}" ]]; then
-	exit 0
-fi
+# team tag skip the count. PreCompact is handled above and still runs.
+[[ -n "${HCOM_TAG:-}" ]] || exit 0
 
-# Planning and insights review peers finish their packet without the mid-review call stop.
-if [[ "$event_name" == "PreToolUse" && ( "${HCOM_PLANNING_WORKFLOW:-}" == "1" || "${HCOM_INSIGHTS_REVIEW_WORKFLOW:-}" == "1" ) ]]; then
-	exit 0
+# A cleared session resets its counter below. Every other event stops here
+# unless it is one that counts.
+if [[ "$event_name" != "SessionStart" ]]; then
+	should_count || exit 0
 fi
 
 # Session identifier used to keep counters separate.
@@ -158,32 +214,15 @@ if [[ "$event_name" == "SessionStart" ]]; then
 	exit 0
 fi
 
-[[ "$event_name" == "PreToolUse" ]] || exit 0
-
 trace_event_structure "$trace_file" "$input"
 
-# Number of tool calls already counted for this session.
-count=0
-if [[ -f "$state_file" ]]; then
-	# Read the stored count and skip the stored limit, because the current limit applies.
-	read -r count _ < "$state_file" || true
-	[[ "$count" =~ ^[0-9]+$ ]] || count=0
-fi
-
-(( count < TOOL_CALL_LIMIT )) || exit 0
-
-count=$((count + 1))
-printf '%s %s\n' "$count" "$TOOL_CALL_LIMIT" > "$state_file"
+update_stored_count || exit 0
 
 (( count == TOOL_CALL_LIMIT )) || exit 0
 
-[[ -f "$TOOL_CALL_CONTEXT_FILE" ]] || exit 0
-
-# Checkpoint advice read from the companion message file.
-checkpoint_context="$(<"$TOOL_CALL_CONTEXT_FILE")"
-# Replace the message placeholder with the limit that fired for this session.
-checkpoint_context="${checkpoint_context//\{\{TOOL_CALL_LIMIT\}\}/$TOOL_CALL_LIMIT}"
-
-jq -n \
-	--arg context "$checkpoint_context" \
-	'{hookSpecificOutput: {hookEventName: "PreToolUse", additionalContext: $context}}'
+load_checkpoint_context || exit 0
+if [[ "$runtime" == "claude" ]]; then
+	write_claude_posttoolbatch_output
+else
+	write_codex_pretooluse_output
+fi

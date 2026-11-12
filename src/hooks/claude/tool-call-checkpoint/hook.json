@@ -5,7 +5,7 @@
 	"runtime": "claude",
 	"events": [
 		{
-			"event": "PreToolUse"
+			"event": "PostToolBatch"
 		},
 		{
 			"event": "PreCompact"

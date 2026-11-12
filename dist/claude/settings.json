@@ -66,14 +66,6 @@
 				]
 			},
 			{
-				"hooks": [
-					{
-						"type": "command",
-						"command": "bash \"$HOME/.claude/hooks/tool-call-checkpoint.sh\" claude"
-					}
-				]
-			},
-			{
 				"matcher": "Bash",
 				"hooks": [
 					{
@@ -125,6 +117,16 @@
 					{
 						"type": "command",
 						"command": "bash -c 'bash \"$HOME/.claude/hooks/test-skeleton-reminder.sh\"'"
+					}
+				]
+			}
+		],
+		"PostToolBatch": [
+			{
+				"hooks": [
+					{
+						"type": "command",
+						"command": "bash \"$HOME/.claude/hooks/tool-call-checkpoint.sh\" claude"
 					}
 				]
 			}

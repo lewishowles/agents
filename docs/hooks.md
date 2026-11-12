@@ -22,7 +22,7 @@ Hooks are shell scripts that Claude Code runs automatically at specific points i
 | `plan-verify` | Warns when an exited plan is missing a validation section. | PostToolUse (`ExitPlanMode`) | `silent` |
 | `retina-shrink-read` | Gives Claude Code a halved copy of a local Retina image when it reads one. | PreToolUse (`Read`) | `silent`; requires jq, retina-shrink |
 | `test-skeleton-reminder` | Suggests matching tests when implementation files change. | PreToolUse (`Write\|Edit`) | `silent`; requires jq |
-| `tool-call-checkpoint` | Adds one advisory checkpoint when an HCOM team session reaches its tool-call limit (20 by default, 40 for HCOM Scouts and Implementers), and a context checkpoint before compaction in every session. | PreToolUse, PreCompact, SessionStart (`clear`) | `silent`; requires jq |
+| `tool-call-checkpoint` | Adds one advisory checkpoint when an HCOM team session reaches its tool-call limit (20 by default, 40 for HCOM Scouts and Implementers), and a context checkpoint before compaction in every session. | PostToolBatch, PreCompact, SessionStart (`clear`) | `silent`; requires jq |
 | `tool-failure-log` | Records failed Claude tool calls for recurring friction analysis. | PostToolUseFailure | `silent` |
 <!-- END GENERATED: registered-hooks -->
 

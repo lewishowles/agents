@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Covers the shared tool-call checkpoint. Only sessions with an HCOM team tag
-# count tool calls, and the planning and insights review workflows skip the
-# count. For counted sessions, every tool call counts, the advisory fires once
+# count tool events, and the planning and insights review workflows skip the
+# count. Claude counts one PostToolBatch per reply; the advisory fires once
 # when the limit is reached, and nothing fires after it. HCOM Scouts and
 # Implementers get the larger worker limit from HCOM_TAG, and
 # AGENT_TOOL_CALL_LIMIT overrides every other limit for a session. PreCompact
@@ -37,6 +37,8 @@ AGENT_TAG=""
 PLANNING_WORKFLOW=""
 # The flag marking an insights review workflow for the hook.
 INSIGHTS_REVIEW_WORKFLOW=""
+# Enables the hook's structural trace for a scenario.
+TRACE_ENABLED=""
 
 # Starts a fresh counter scenario with its own session ID and limit override.
 #
@@ -48,7 +50,7 @@ INSIGHTS_REVIEW_WORKFLOW=""
 #     HCOM_NAME value for the scenario; empty leaves it unset.
 # @param  {string}  agent_tag
 #     HCOM_TAG value for the scenario. It defaults to a reviewer tag so the
-#     hook counts calls; pass an empty string for an empty tag, or __UNSET__
+#     hook counts events; pass an empty string for an empty tag, or __UNSET__
 #     to remove the variable.
 start_session() {
 	# The scenario name used to distinguish its session state.
@@ -57,7 +59,7 @@ start_session() {
 	local limit_override="$2"
 	# The agent name supplied for this scenario, when present.
 	local agent_name="${3:-}"
-	# The agent tag for this scenario; the default reviewer tag makes the hook count calls.
+	# The agent tag for this scenario; the default reviewer tag makes the hook count events.
 	local agent_tag="${4-Agents-reviewer}"
 
 	SESSION="checkpoint-test-$name-$$"
@@ -67,29 +69,57 @@ start_session() {
 	AGENT_TAG="$agent_tag"
 	PLANNING_WORKFLOW=""
 	INSIGHTS_REVIEW_WORKFLOW=""
+	TRACE_ENABLED=""
 }
 
-# Runs the hook with one PreToolUse payload and captures its standard output.
+# Runs one Claude hook event with the observed live payload shape.
 #
+# @param  {string}  event_name
+#     Event to send to the hook.
 # @param  {string}  tool_name
-#     Tool name presented to the hook.
+#     Name included in a PreToolUse payload.
+# @param  {number}  batch_count
+#     Number of tool calls included in a PostToolBatch payload.
 # @param  {string}  output_file
 #     File that receives the hook's standard output.
-run_hook() {
+run_hook_event() {
+	# Hook event sent in the payload.
+	local event_name="$1"
 	# The tool name sent in the hook payload.
-	local tool_name="$1"
+	local tool_name="$2"
+	# Number of tools in the batch payload.
+	local batch_count="$3"
 	# The file receiving this hook run's standard output.
-	local output_file="$2"
+	local output_file="$4"
 	# The env command that runs the hook with this scenario's settings, without HCOM_TAG unless set below.
-	local -a hook_env=(env -u HCOM_TAG TMPDIR="$TEST_ROOT" AGENT_TOOL_CALL_LIMIT="$LIMIT_OVERRIDE" HCOM_NAME="$AGENT_NAME" HCOM_PLANNING_WORKFLOW="$PLANNING_WORKFLOW" HCOM_INSIGHTS_REVIEW_WORKFLOW="$INSIGHTS_REVIEW_WORKFLOW")
+	local -a hook_env=(env -u HCOM_TAG TMPDIR="$TEST_ROOT" AGENT_TOOL_CALL_LIMIT="$LIMIT_OVERRIDE" HCOM_NAME="$AGENT_NAME" HCOM_PLANNING_WORKFLOW="$PLANNING_WORKFLOW" HCOM_INSIGHTS_REVIEW_WORKFLOW="$INSIGHTS_REVIEW_WORKFLOW" AGENT_TOOL_CALL_CHECKPOINT_TRACE="$TRACE_ENABLED")
 
 	if [[ "$AGENT_TAG" != "__UNSET__" ]]; then
 		hook_env+=("HCOM_TAG=$AGENT_TAG")
 	fi
 
-	jq -n --arg session "$SESSION" --arg tool "$tool_name" \
-		'{hook_event_name: "PreToolUse", session_id: $session, tool_name: $tool, tool_input: {}}' \
+	jq -n --arg session "$SESSION" --arg tool "$tool_name" --arg event "$event_name" --argjson batch_count "$batch_count" \
+		'if $event == "PostToolBatch" then {hook_event_name: $event, session_id: $session, tool_calls: [range(0; $batch_count) | {tool_name: $tool}]} else {hook_event_name: $event, session_id: $session, tool_name: $tool, tool_input: {}} end' \
 		| "${hook_env[@]}" bash "$HOOK" claude > "$output_file"
+}
+
+# Sends one tool use followed by its completed batch.
+#
+# @param  {string}  tool_name
+#     Tool used in the reply.
+# @param  {string}  output_file
+#     File that receives the batch hook's standard output.
+run_hook() {
+	# Tool used in the reply.
+	local tool_name="$1"
+	# File that receives the batch result.
+	local output_file="$2"
+	# File that receives the pre-tool result.
+	local pretool_output="$TEST_ROOT/pretool.txt"
+
+	run_hook_event "PreToolUse" "$tool_name" 0 "$pretool_output"
+	assert_empty "$pretool_output"
+	run_hook_event "PostToolBatch" "$tool_name" 1 "$output_file"
 }
 
 # Asserts the hook produced no output and left the counter at the expected value.
@@ -101,7 +131,7 @@ run_hook() {
 assert_silent() {
 	# The tool name sent to the hook.
 	local tool_name="$1"
-	# The counter value expected after the call.
+	# The counter value expected after the counted event.
 	local expected_count="$2"
 	# The file checked for unexpected hook output.
 	local output_file="$TEST_ROOT/silent.txt"
@@ -117,29 +147,29 @@ assert_silent() {
 	assert_equals "$actual_count" "$expected_count"
 }
 
-# Asserts the hook returned the advisory on this call.
+# Asserts the hook returned the advisory on this counted Claude event.
 #
 # @param  {string}  tool_name
 #     Tool name to send.
 assert_advisory() {
-	# The tool name whose call should trigger the advisory.
+	# The tool name whose event should trigger the advisory.
 	local tool_name="$1"
 	# The file holding the advisory returned by the hook.
 	local output_file="$TEST_ROOT/advisory.json"
 
 	run_hook "$tool_name" "$output_file"
 
-	assert_equals "$(jq -r '.hookSpecificOutput.hookEventName' "$output_file")" "PreToolUse"
+	assert_equals "$(jq -r '.hookSpecificOutput.hookEventName' "$output_file")" "PostToolBatch"
 }
 
-# Sends silent calls until the counter reaches one below the given limit.
+# Sends silent counted events until the counter reaches one below the limit.
 #
 # @param  {string}  limit
-#     Limit whose final call is left for the caller to send.
+#     Limit whose final counted event is left for the caller to send.
 fill_to_limit() {
-	# The call limit; the loop stops one call short so the caller makes the call that reaches it.
+	# The event limit; the loop stops one event short so the caller reaches it.
 	local limit="$1"
-	# The counter value expected after each silent call.
+	# The counter value expected after each silent event.
 	local count
 	# The count already saved when the loop starts.
 	local current_count
@@ -187,7 +217,7 @@ for runtime in claude codex; do
 	fi
 done
 
-# Default limit: reads and edits both count, the 20th call fires, then the counter freezes.
+# Default limit: replies with reads and edits count, the 20th batch fires, then the counter freezes.
 start_session "default" ""
 assert_silent "Read" "1"
 assert_equals "$(cut -d ' ' -f 2 "$STATE_FILE")" "20"
@@ -210,8 +240,44 @@ assert_not_contains "$TEST_ROOT/advisory-context.txt" 'Outside HCOM'
 assert_silent "Write" "20"
 assert_silent "Read" "20"
 
+# Two parallel tool uses leave the count unchanged until their one batch completes.
+start_session "parallel" "2"
+TRACE_ENABLED="1"
+run_hook_event "PreToolUse" "Read" 0 "$TEST_ROOT/parallel-pretool.json"
+assert_empty "$TEST_ROOT/parallel-pretool.json"
+run_hook_event "PreToolUse" "Bash" 0 "$TEST_ROOT/parallel-pretool.json"
+assert_empty "$TEST_ROOT/parallel-pretool.json"
+if [[ -f "$STATE_FILE" ]]; then
+	printf 'PreToolUse counted before PostToolBatch\n' >&2
+	exit 1
+fi
+run_hook_event "PostToolBatch" "" 2 "$TEST_ROOT/parallel-batch.json"
+assert_empty "$TEST_ROOT/parallel-batch.json"
+assert_equals "$(cat "$STATE_FILE")" "1 2"
+assert_equals "$(jq -r '.[0].eventName' -s "$STATE_FILE.trace.jsonl")" "PostToolBatch"
+assert_equals "$(jq -r '.[0].toolCallCount' -s "$STATE_FILE.trace.jsonl")" "2"
+assert_advisory "Write"
+assert_equals "$(cat "$STATE_FILE")" "2 2"
+
+# Codex still counts PreToolUse and returns the same event-specific limit note.
+start_session "codex" "2"
+# The Codex counter lives beside the Claude counter for this scenario.
+codex_state_file="$TEST_ROOT/agent-tool-call-checkpoints/codex-$SESSION"
+# The count the Codex counter should show after each tool call.
+for count in 1 2; do
+	jq -n --arg session "$SESSION" '{hook_event_name: "PreToolUse", session_id: $session, tool_name: "Bash", tool_input: {}}' \
+		| env TMPDIR="$TEST_ROOT" AGENT_TOOL_CALL_LIMIT="$LIMIT_OVERRIDE" HCOM_TAG="Agents-reviewer" bash "$HOOK" codex > "$TEST_ROOT/codex.json"
+	assert_equals "$(cut -d ' ' -f 1 "$codex_state_file")" "$count"
+	if [[ "$count" == 1 ]]; then
+		assert_empty "$TEST_ROOT/codex.json"
+	fi
+done
+assert_equals "$(jq -r '.hookSpecificOutput.hookEventName' "$TEST_ROOT/codex.json")" "PreToolUse"
+
 # Clearing a session resets the count to 0, keeps the limit in the counter file,
-# and lets the checkpoint fire again.
+# and lets the checkpoint fire again. This returns to the default scenario,
+# whose counter stopped at its limit above.
+start_session "default" ""
 jq -n --arg session "$SESSION" '{hook_event_name: "SessionStart", source: "clear", session_id: $session}' \
 	| env -u HCOM_TAG TMPDIR="$TEST_ROOT" AGENT_TOOL_CALL_LIMIT="$LIMIT_OVERRIDE" HCOM_NAME="$AGENT_NAME" HCOM_TAG="Agents-reviewer" \
 		bash "$HOOK" claude > "$TEST_ROOT/clear.txt"
@@ -221,7 +287,7 @@ assert_silent "Read" "1"
 fill_to_limit 20
 assert_advisory "Write"
 
-# Overridden limit: the advisory moves to the configured call.
+# Overridden limit: the advisory moves to the configured counted event.
 start_session "override" "5"
 assert_silent "Read" "1"
 assert_equals "$(cut -d ' ' -f 2 "$STATE_FILE")" "5"
