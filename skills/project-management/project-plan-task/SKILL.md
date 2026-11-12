@@ -142,9 +142,79 @@ Apply the clear planning language gate from `docs/progress-format.md` to task re
 
 ## Feature specs
 
-For larger spikes or ambiguous features, create or reference a per-feature spec under `.agent/specs/` instead of putting design history in task fields or chunks. Keep the task record focused on execution state and add the spec path to the task's `--file` or `--contract-step` value. Do not create specs for small changes, direct bug fixes, routine docs edits, or work fitting one task.
+For larger spikes or ambiguous features, create or reference a per-feature spec under `.agent/specs/<feature>.md` instead of putting design history in task fields or chunks. Keep the task record focused on execution state and add the spec path to the task's `--file` or `--contract-step` value. Read or update the spec only when working on that feature. Do not create specs for small changes, direct bug fixes, routine docs edits, or work fitting one task.
 
-Put planning content that release records can hold in `progress release add` or `progress release edit` and in discoveries and decisions attached with `--release`, not a separate spec file; keep the spec for design detail the records cannot hold. A spec explains why now, the problem, goals, non-goals, approach, entry point and files to inspect, API or schema changes, decisions and open questions, acceptance criteria, risks, and verification. Read or update it only when working on that feature. Full outline lives in the `project-setup` skill's feature-spec section.
+Put planning content that release records can hold in `progress release add` or `progress release edit` and in discoveries and decisions attached with `--release`, not a separate spec file; keep the spec for design detail the records cannot hold.
+
+Use this outline when a spec is warranted:
+
+```markdown
+# <Feature or spike name>
+
+## Why now
+
+Why this matters now, trigger, and consequence if not done.
+
+## Problem
+
+User or system problem.
+
+## Goals
+
+- Outcome that must be true
+
+## First usable version
+
+Smallest end-to-end path that solves the problem, including deliberate manual steps.
+
+## Current status
+
+Optional; omit if obvious or the spec is new. What's already done vs what's still outstanding, so a fresh agent can gauge progress without reading history.
+
+## Non-goals
+
+- Work deliberately out of scope
+
+## Proposed approach
+
+Intended solution shape, including important alternatives or tradeoffs.
+
+## High-cost assumptions
+
+Optional. Assumptions most costly if wrong, and the earliest evidence that can test them.
+
+## Entry point
+
+Optional; omit if obvious. Where an agent with zero prior context should start reading: the first file, command, or concept to look at.
+
+## Files to inspect
+
+Optional; omit if obvious. Files most relevant to understanding or continuing this work.
+
+## API, schema, or interface
+
+Commands, routes, data shape, UI states, or public contracts affected.
+
+## Decisions
+
+Optional; omit if none yet. Choices already made and why, so they aren't re-debated.
+
+## Open questions
+
+Optional; omit if none. What's still unresolved.
+
+## Acceptance criteria
+
+- Observable condition that proves the work is done
+
+## Risks
+
+- Risk, uncertainty, or dependency to monitor
+
+## Verification
+
+Focused checks, manual review, or evidence needed before handoff.
+```
 
 ## Task records and chunks
 

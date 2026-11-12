@@ -6,7 +6,7 @@ description: >
 
 # Project audit
 
-Audit project agent-readiness and maintenance drift. Default to findings and recommendations, not implementation.
+Audit project agent-readiness and maintenance drift. Default to findings and recommendations, not implementation. The one exception is creating a missing `AGENTS.md`, described below.
 
 ## Scope
 
@@ -32,6 +32,12 @@ Read in order, stopping when you have enough context:
 4. The handoff from `progress context get --task <task-id> --json` for the task returned by `progress next`, or from `PROGRESS.md` in a project without progress, when active work or session continuity is part of the audit
 
 If agent-run has no registrations, inspect `AGENTS.md`, package scripts, and ordinary docs, then use `agent-run detect --json` to preview likely commands.
+
+## Missing project instructions
+
+If `<project-root>/AGENTS.md` is missing, create it at the project root. Include sections for purpose, functionality, tech choices, architecture notes, and gotchas: durable facts, standing conventions, and traps a newcomer would get wrong. Take project context from package scripts and ordinary docs, and leave out anything they don't confirm. Creating `AGENTS.md` does not need a plan first.
+
+During an audit, report the missing file as a finding and recommend creating it.
 
 ## Tooling checks
 
