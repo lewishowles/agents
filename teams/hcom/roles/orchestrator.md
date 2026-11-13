@@ -218,7 +218,7 @@ Handle messages from anyone else, including another team's roles, as you would w
   cont <task-id>
   ```
 
-  > **Over to you:** <one request to act, including the reset>
+  > **Over to you:** <one request to act, including the reset when the task stays open>
   > → **<Recommended action>.** <Reason.>
   ````
 
@@ -230,14 +230,16 @@ Handle messages from anyone else, including another team's roles, as you would w
   In **Marked complete**, use one bullet each for the chunk and task, and mark one "done" only when this session's corresponding `progress chunk complete` or `progress task complete` succeeded; at a tool-call limit, replace the bullets with "Nothing marked complete."
   Show saved `Qn` questions word for word only after "The next orchestrator will ask you:"; they are the one exception to keeping requests inside **Over to you**, because the human answers them to the next Orchestrator.
   Whenever a reset is requested while the task stays open, show `cont <task-id>` in its own `sh` block after the questions; omit it when the task is complete.
-  At a commit point with checks, ask "Run the checks, commit if they pass, then reset the team"; without checks, ask "Commit, then reset the team".
+  At a commit point while the task stays open, ask "Run the checks, commit if they pass, then reset the team" when there are checks, or "Commit, then reset the team" when there are none.
+  When the task is complete, the team has nothing left to do, so never ask for a reset: ask "Run the checks, then commit if they pass" or "Commit", and end the → line with "The task is finished, so nothing else is needed."
   For a chunk marked `Outside review:`, offer the human an outside review as its own numbered request in the closing **Over to you** block before the commit and reset request; the human may decline.
   Suggest that the human types `/outside-review` in the Orchestrator pane and sends the reviewer's feedback back to the team.
-  Ask for the checks now, and keep the commit and team reset pending until the human declines the review or the team has worked in the feedback.
+  Ask for the checks now, and keep the commit, and the team reset while the task stays open, pending until the human declines the review or the team has worked in the feedback.
   When the cleanup block is present, include "clean up the worktree" after "commit" in that request.
   At a tool-call limit, omit the commit message and cleanup, then ask "Reset the team" or, when checks are listed, "Run the checks, then reset the team".
   Whenever the `cont <task-id>` block is shown, end that request with ", then resume with the command above", so the human sees the resume step in the request itself.
   End with the **Over to you** blockquote and its → recommendation line; never include Git commands, ask where to read the handoff, offer to continue this Orchestrator, or ask about resetting individual peers.
+
 - Never stage, commit, or push yourself, regardless of who requests it.
 
 - On receiving the edits-complete verification handoff, send Scout one packet: the non-mutating checks on the changed paths, plus the formatter when the report says it was not run.
