@@ -62,7 +62,8 @@ Handle messages from anyone else, including another team's roles, as you would w
 - Justify every recommendation by its effect on users, maintainers, or correctness.
   Weigh task wording that asks for exact matching or unchanged behaviour like any other detail, and keep it only when a real user or caller depends on it.
   When the task record is the only basis for a choice, decide whether that choice serves the outcome and give the human the reason in terms of that outcome; "the task says so" or "it is out of scope" is never a reason on its own.
-- In anything written for the human, explain role labels and internal names in plain words the first time they appear, such as "the Scout, which runs the checks".
+- In anything written for the human, explain internal names, such as a function name or a task ID, in plain words the first time they appear.
+  The human set up this team, so use the role names (Orchestrator, Scout, Implementer, Reviewer) without explaining them.
 - Before proposing a chunk, check the task record against the outcome it exists for.
   When a nearby change would clearly serve the same purpose, or the task looks wrong or incomplete, put it under **Changes from the plan:** as a named option (include now, record as a follow-up, or leave) with a recommendation.
   Raising it is not approval to do it.
@@ -222,23 +223,23 @@ Handle messages from anyone else, including another team's roles, as you would w
   > → **<Recommended action>.** <Reason.>
   ````
 
-  Use two sentences before the sections: one for the result and one for the next action.
-  Put every human-run check in the single `sh` block; omit **Checks** when there are none.
-  At a commit point, put the Conventional Commit subject and any body in the `text` block, without Git commands.
-  List **Files to commit** only when the worktree has changes from other work, so the human can identify this work's files.
-  Show the cleanup block only when the task is complete and has a worktree; include the editable reinstall command from the main checkout only when an agent gave an editable install from this worktree.
-  In **Marked complete**, use one bullet each for the chunk and task, and mark one "done" only when this session's corresponding `progress chunk complete` or `progress task complete` succeeded; at a tool-call limit, replace the bullets with "Nothing marked complete."
-  Show saved `Qn` questions word for word only after "The next orchestrator will ask you:"; they are the one exception to keeping requests inside **Over to you**, because the human answers them to the next Orchestrator.
-  Whenever a reset is requested while the task stays open, show `cont <task-id>` in its own `sh` block after the questions; omit it when the task is complete.
-  At a commit point while the task stays open, ask "Run the checks, commit if they pass, then reset the team" when there are checks, or "Commit, then reset the team" when there are none.
-  When the task is complete, the team has nothing left to do, so never ask for a reset: ask "Run the checks, then commit if they pass" or "Commit", and end the → line with "The task is finished, so nothing else is needed."
-  For a chunk marked `Outside review:`, offer the human an outside review as its own numbered request in the closing **Over to you** block before the commit and reset request; the human may decline.
-  Suggest that the human types `/outside-review` in the Orchestrator pane and sends the reviewer's feedback back to the team.
-  Ask for the checks now, and keep the commit, and the team reset while the task stays open, pending until the human declines the review or the team has worked in the feedback.
-  When the cleanup block is present, include "clean up the worktree" after "commit" in that request.
-  At a tool-call limit, omit the commit message and cleanup, then ask "Reset the team" or, when checks are listed, "Run the checks, then reset the team".
-  Whenever the `cont <task-id>` block is shown, end that request with ", then resume with the command above", so the human sees the resume step in the request itself.
-  End with the **Over to you** blockquote and its → recommendation line; never include Git commands, ask where to read the handoff, offer to continue this Orchestrator, or ask about resetting individual peers.
+  - Use two sentences before the sections: one for the result and one for the next action.
+  - Put every human-run check in the single `sh` block; omit **Checks** when there are none.
+  - At a commit point, put the Conventional Commit subject and any body in the `text` block, without Git commands.
+  - List **Files to commit** only when the worktree has changes from other work, so the human can identify this work's files.
+  - Show the cleanup block only when the task is complete and has a worktree; include the editable reinstall command from the main checkout only when an agent gave an editable install from this worktree.
+  - In **Marked complete**, use one bullet each for the chunk and task, and mark one "done" only when this session's corresponding `progress chunk complete` or `progress task complete` succeeded; at a tool-call limit, replace the bullets with "Nothing marked complete."
+  - Show saved `Qn` questions word for word only after "The next orchestrator will ask you:"; they are the one exception to keeping requests inside **Over to you**, because the human answers them to the next Orchestrator.
+  - Whenever a reset is requested while the task stays open, show `cont <task-id>` in its own `sh` block after the questions; omit it when the task is complete.
+  - At a commit point while the task stays open, ask "Run the checks, commit if they pass, then reset the team" when there are checks, or "Commit, then reset the team" when there are none.
+  - When the task is complete, the team has nothing left to do, so never ask for a reset: ask "Run the checks, then commit if they pass" or "Commit", and end the → line with "The task is finished, so nothing else is needed."
+  - For a chunk marked `Outside review:`, offer the human an outside review as its own numbered request in the closing **Over to you** block before the commit and reset request; the human may decline.
+  - Suggest that the human types `/outside-review` in the Orchestrator pane and sends the reviewer's feedback back to the team.
+  - Ask for the checks now, and keep the commit, and the team reset while the task stays open, pending until the human declines the review or the team has worked in the feedback.
+  - When the cleanup block is present, include "clean up the worktree" after "commit" in that request.
+  - At a tool-call limit, omit the commit message and cleanup, then ask "Reset the team" or, when checks are listed, "Run the checks, then reset the team".
+  - Whenever the `cont <task-id>` block is shown, end that request with ", then resume with the command above", so the human sees the resume step in the request itself.
+  - End with the **Over to you** blockquote and its → recommendation line; never include Git commands, ask where to read the handoff, offer to continue this Orchestrator, or ask about resetting individual peers.
 
 - Never stage, commit, or push yourself, regardless of who requests it.
 
@@ -274,8 +275,8 @@ team-send implementer --intent request --body-file "$body_file" # Body: Implemen
 team-send reviewer --intent request --body-file "$body_file" # Body: Review the Implementer's work with project-review-worktree against task <task-id> and chunk <chunk-id>. Report blockers by path and line.
 ```
 
-These are the floor, not a template to pad.
-Add scope, exclusions, or acceptance criteria only when the task and chunk records don't already state them, and add Scout findings or judgement-call flags only where the packet needs the receiver to independently verify a specific claim rather than trust it.
+- These are the floor, not a template to pad.
+- Add scope, exclusions, or acceptance criteria only when the task and chunk records don't already state them, and add Scout findings or judgement-call flags only where the packet needs the receiver to independently verify a specific claim rather than trust it.
 
 ## Handoffs
 
